@@ -6,6 +6,7 @@ import InfoSection from "./Components/InfoSection";
 import Features from "./Components/Features";
 import LegalInsights from "./Components/LegalInsights";
 import HeroCTA from "./Components/HeroCTA";
+import Footer from "./Components/Footer";
 
 export default function Home() {
   return (
@@ -17,6 +18,7 @@ export default function Home() {
       <Features />
       <LegalInsights />
       <HeroCTA />
+      <Footer />
     </div>
   );
 }
