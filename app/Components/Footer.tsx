@@ -12,7 +12,7 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <p className="text-sm text-black font-medium">
+        <p className="text-sm text-black font-medium font-['Geist']">
           © 2026 TheLegalSpace. All rights reserved.
         </p>
 
@@ -20,13 +20,13 @@ export default function Footer() {
         <div className="flex items-center gap-6">
           <Link
             href="/privacy"
-            className="text-sm text-black font-medium hover:text-gray-900 transition-colors duration-200"
+            className="text-sm text-black font-medium hover:text-gray-900 transition-colors duration-200 font-['Geist']"
           >
             Privacy
           </Link>
           <Link
             href="/terms"
-            className="text-sm text-black font-medium  hover:text-gray-900 transition-colors duration-200"
+            className="text-sm text-black font-medium  hover:text-gray-900 transition-colors duration-200 font-['Geist']"
           >
             Terms
           </Link>
