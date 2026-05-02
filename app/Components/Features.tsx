@@ -1,71 +1,76 @@
+// components/Features.tsx
 import Image from "next/image";
 
 export default function Features() {
+  const features = [
+    {
+      icon: "/AI-intake.png",
+      title: "TLS AI Intake",
+      description:
+        "A smarter way to explain your problem. Our AI helps structure your request so lawyers understand exactly what you need.",
+    },
+    {
+      icon: "/ghost.png",
+      title: "Anonymous First Contact",
+      description:
+        "No awkward calls. No exposure. You stay in control of when your identity is revealed.",
+    },
+    {
+      icon: "/NBA.png",
+      title: "Verified Lawyers Only",
+      description:
+        "All our lawyers are vetted and hold NBA credentials, ensuring you choose the right legal representation.",
+    },
+  ];
+
   return (
-    <section className="py-15 px-42 items-center text-center">
-      <div>
-        <p className="text-[#1A56DB] text-[16px] uppercase font-['Geist'] mt-3">
-          Features
-        </p>
-        <p className="text-[#0A0A0A] text-[40px] font-['Instrument_Serif'] leading-10">
-          Tools to simplify finding and connecting with legal professionals.
-        </p>
-        <Image
-          src="/mockup.png"
-          alt="Features"
-          width={700}
-          height={300}
-          className="w-full h-full object-cover rounded-3xl"
-        />
-        <div className="grid md:grid-cols-3 gap-10 mt-10">
-          <div className="text-center">
+    <section className="py-12 md:py-16 lg:py-20 px-4 sm:px-6 lg:px-12 xl:px-16">
+      <div className="max-w-6xl mx-auto text-center">
+        {/* Header */}
+        <div className="mb-8 md:mb-12">
+          <p className="text-[#1A56DB] text-sm uppercase tracking-wider font-medium mb-3">
+            Features
+          </p>
+          <h2 className="text-3xl md:text-4xl lg:text-[40px] text-[#0A0A0A] font-serif leading-tight max-w-3xl mx-auto">
+            Tools to simplify finding and connecting with legal professionals.
+          </h2>
+        </div>
+
+        {/* Mockup Image */}
+        <div className="relative w-full max-w-4xl mx-auto mb-12 md:mb-16">
+          <div className="relative aspect-video">
             <Image
-              src="/AI-intake.png"
-              alt="AI Intake"
-              width={50}
-              height={50}
-              className="mx-auto"
+              src="/mockup.png"
+              alt="Platform features mockup"
+              fill
+              className="object-cover rounded-2xl md:rounded-3xl"
+              sizes="(max-width: 1024px) 100vw, 896px"
+              priority
             />
-            <p className="text-[#000000] text-[20px] font-['Geist'] mt-3">
-              TLS AI Intake
-            </p>
-            <p className="text-15px text-[#6B7280] font-['Geist'] font-light">
-              A smarter way to explain your problem.Our AI helps structure your
-              request so lawyers understand exactly what you need.
-            </p>
           </div>
-          <div className="text-center">
-            <Image
-              src="/ghost.png"
-              alt="ghost"
-              width={50}
-              height={50}
-              className="mx-auto"
-            />
-            <p className="text-[#000000] text-[20px] font-['Geist'] mt-3">
-              Anonymous First Contact
-            </p>
-            <p className="text-15px text-[#6B7280] font-['Geist'] font-light">
-              No awkward calls. No exposure.You stay in control of when your
-              identity is revealed.
-            </p>
-          </div>
-          <div className="text-center">
-            <Image
-              src="/NBA.png"
-              alt="NBA"
-              width={50}
-              height={50}
-              className="mx-auto"
-            />
-            <p className="text-[#000000] text-[20px] font-['Geist'] mt-3">
-              Verified Lawyers Only
-            </p>
-            <p className="text-15px text-[#6B7280] font-['Geist'] font-light">
-              All our lawyers are vetted and hold NBA credentials, ensuring you
-              choose the right legal representation.
-            </p>
-          </div>
+        </div>
+
+        {/* Feature Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
+          {features.map((feature) => (
+            <div key={feature.title} className="text-center px-2">
+              <div className="relative w-12 h-12 mx-auto mb-4">
+                <Image
+                  src={feature.icon}
+                  alt={feature.title}
+                  fill
+                  className="object-contain"
+                  sizes="48px"
+                />
+              </div>
+              <h3 className="text-lg md:text-xl text-black font-medium mb-2">
+                {feature.title}
+              </h3>
+              <p className="text-[#6B7280] text-sm md:text-[15px] leading-relaxed font-light max-w-sm mx-auto">
+                {feature.description}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
