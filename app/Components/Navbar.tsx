@@ -4,6 +4,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import Link from "next/link";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,9 +24,12 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
-            <button className="text-sm text-gray-700 hover:text-gray-900 transition-colors">
+            <Link
+              href="/signin"
+              className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
+            >
               Lawyer Login
-            </button>
+            </Link>
             <button className="text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-lg hover:bg-[#1648b8] transition-colors">
               Find a Lawyer
             </button>
@@ -44,9 +48,12 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {isOpen && (
           <div className="md:hidden pt-4 pb-2 space-y-3 border-t border-gray-100 mt-4">
-            <button className="block w-full text-left text-sm text-gray-700 py-2">
+            <Link
+              href="/signin"
+              className="block w-full text-left text-sm text-gray-700 py-2"
+            >
               Lawyer Login
-            </button>
+            </Link>
             <button className="block w-full text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-lg text-center">
               Find a Lawyer
             </button>
