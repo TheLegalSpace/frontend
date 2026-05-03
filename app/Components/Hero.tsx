@@ -12,18 +12,18 @@ export default function Hero() {
             Verified Legal Help Across Nigeria
           </p>
 
-          <h1 className="text-4xl md:text-5xl lg:text-[54px] leading-tight lg:leading-15 tracking-tight font-serif">
+          <h1 className="text-4xl md:text-5xl lg:text-[54px] leading-tight lg:leading-15 tracking-tight font-['Instrument_Serif']">
             Find <span className="text-[#1A56DB]">trusted</span> legal help,
             <br className="hidden md:block" /> fast and privately
           </h1>
 
-          <p className="text-[#6B7280] text-base leading-relaxed max-w-lg">
+          <p className="text-[#6B7280] text-base leading-relaxed max-w-lg font-['Geist']">
             Describe your situation. Get matched with verified lawyers and law firms 
             based on your practice area, location, and budget. Stay anonymous until 
             you are ready to connect.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 font-[Geist]">
             <button className="bg-[#E8F0FE] text-[#1A56DB] px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-[#d1e3fc] transition-colors">
               I&apos;m a Legal Professional
             </button>
@@ -33,7 +33,7 @@ export default function Hero() {
           </div>
 
           {/* STATS */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-gray-100">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-gray-100 font-['Geist']">
             {[
               { value: "240+", label: "Verified Lawyers" },
               { value: "80+", label: "Law Firms" },

@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function InfoSection() {
   return (
-    <section className="bg-[#161C2D] py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-12 xl:px-16">
+    <section className="bg-[#161C2D] px-4 pt-4 pb-10 md:px-8 lg:px-42 md:pt-28 lg:pt-32 md:pb-16 font-['Geist']">
       <div className="max-w-7xl mx-auto space-y-16 md:space-y-20">
         {/* Row 1: Text Left, Image Right */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-center">

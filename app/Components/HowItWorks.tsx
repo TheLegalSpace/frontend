@@ -22,14 +22,14 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section className="bg-[#F9F9F9] border border-[#E5E7EB] py-12 md:py-16 lg:py-20 px-4 sm:px-6 lg:px-12 xl:px-16">
+    <section className="bg-[#F9F9F9] border border-[#E5E7EB] px-4 pt-4 pb-10 md:px-8 lg:px-42 md:pt-28 lg:pt-32 md:pb-16 font-['Geist']">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-left mb-8 md:mb-12">
           <p className="text-[#1A56DB] text-xs uppercase tracking-wider font-medium mb-3">
             How it works
           </p>
-          <h2 className="text-3xl md:text-4xl lg:text-[40px] font-serif leading-tight">
+          <h2 className="text-3xl md:text-4xl lg:text-[40px] font-['Instrument_Serif'] leading-tight">
             Legal help in three simple steps
           </h2>
           <p className="text-[#6B7280] text-base mt-2">
