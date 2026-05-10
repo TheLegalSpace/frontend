@@ -2,12 +2,39 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
+import { api } from "@/services/api";
+import { AxiosResponse } from "axios";
+import { loginUser } from "@/services/auth.services";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    // ✅ useEffect callback cannot be async — use an inner async function
+    const fetchData = async () => {
+      try {
+        var res = await loginUser({
+          authProvider: "email",
+          email: "adaeze@example.com",
+          password: "securePass123",
+        });
+        alert(JSON.stringify(res.data));
+      } catch (error: any) {
+        console.log("===== ERROR =====");
+        if (error.response) {
+          console.log("Status:", error.response.status);
+          console.log("Data:", error.response.data);
+        } else {
+          console.log(error.message);
+        }
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <nav className="border-b border-gray-100">

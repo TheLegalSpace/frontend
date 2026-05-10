@@ -3,6 +3,7 @@ import "./globals.css";
 import { ReactNode } from "react";
 import { Geist } from 'next/font/google'
 import { Instrument_Serif } from "next/font/google";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "TheLegalSpace",
@@ -29,7 +30,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geist.variable} ${instrumentSerif.variable} bg-page-bg`} suppressHydrationWarning>
-         <div>{children}</div>
+         <Providers>{children}</Providers>
       </body>
     </html>
   );
