@@ -7,6 +7,7 @@ import Features from "./Components/Features";
 import LegalInsights from "./Components/LegalInsights";
 import HeroCTA from "./Components/HeroCTA";
 import Footer from "./Components/Footer";
+import UseCaseSection from "./Components/UseCaseSection";
 
 export default function Home() {
   return (
@@ -17,6 +18,7 @@ export default function Home() {
       <InfoSection />
       <Features />
       <LegalInsights />
+      <UseCaseSection />
       <HeroCTA />
       <Footer />
     </div>

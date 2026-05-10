@@ -24,14 +24,14 @@ export default function Features() {
   ];
 
   return (
-    <section className="py-12 md:py-16 lg:py-20 px-4 sm:px-6 lg:px-12 xl:px-16">
+    <section className="px-4 pt-4 pb-10 md:px-8 lg:px-42 md:pt-28 lg:pt-32 md:pb-16 font-['Geist']">
       <div className="max-w-6xl mx-auto text-center">
         {/* Header */}
         <div className="mb-8 md:mb-12">
           <p className="text-[#1A56DB] text-sm uppercase tracking-wider font-medium mb-3">
             Features
           </p>
-          <h2 className="text-3xl md:text-4xl lg:text-[40px] text-[#0A0A0A] font-serif leading-tight max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-4xl lg:text-[40px] text-[#0A0A0A] font-['Instrument_Serif'] leading-tight max-w-3xl mx-auto">
             Tools to simplify finding and connecting with legal professionals.
           </h2>
         </div>

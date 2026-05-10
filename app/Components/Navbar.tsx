@@ -2,11 +2,39 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import { api } from "@/services/api";
+import { AxiosResponse } from "axios";
+// import { loginUser } from "@/services/auth.services";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+
+  // useEffect(() => {
+  //   // ✅ useEffect callback cannot be async — use an inner async function
+  //   const fetchData = async () => {
+  //     try {
+  //       var res = await loginUser({
+  //         authProvider: "email",
+  //         email: "adaeze@example.com",
+  //         password: "securePass123",
+  //       });
+  //       alert(JSON.stringify(res.data));
+  //     } catch (error: any) {
+  //       console.log("===== ERROR =====");
+  //       if (error.response) {
+  //         console.log("Status:", error.response.status);
+  //         console.log("Data:", error.response.data);
+  //       } else {
+  //         console.log(error.message);
+  //       }
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []);
 
   return (
     <nav className="border-b border-gray-100">
@@ -23,9 +51,12 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
-            <button className="text-sm text-gray-700 hover:text-gray-900 transition-colors">
+            <Link
+              href="/signin"
+              className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
+            >
               Lawyer Login
-            </button>
+            </Link>
             <button className="text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-lg hover:bg-[#1648b8] transition-colors">
               Find a Lawyer
             </button>
@@ -47,9 +78,12 @@ export default function Navbar() {
             <button className="block w-full text-left text-sm text-gray-700 py-2">
               Lawyer Login
             </button>
-            <button className="block w-full text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-lg text-center">
+            <Link
+              href="/signin"
+              className="block w-full text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-lg text-center"
+            >
               Find a Lawyer
-            </button>
+            </Link>
           </div>
         )}
       </div>

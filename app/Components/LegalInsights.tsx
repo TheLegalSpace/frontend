@@ -47,14 +47,14 @@ const articles: Article[] = [
 
 export default function LegalInsights() {
   return (
-    <section className="py-12 md:py-16 lg:py-20 px-4 sm:px-6 lg:px-12 xl:px-16 bg-[#F9F9F9]">
+    <section className="px-4 pt-4 pb-10 md:px-8 lg:px-42 md:pt-28 lg:pt-32 md:pb-16 font-['Geist'] bg-[#F9F9F9]">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8 md:mb-12">
           <p className="text-[#1A56DB] text-xs uppercase tracking-wider font-medium">
             Legal Insights
           </p>
-          <h2 className="text-3xl md:text-4xl lg:text-[40px] text-[#0A0A0A] font-serif leading-tight mt-2">
+          <h2 className="text-3xl md:text-4xl lg:text-[40px] text-[#0A0A0A] font-['Instrument_Serif'] leading-tight mt-2">
             Written by verified practitioners
           </h2>
         </div>
@@ -64,10 +64,10 @@ export default function LegalInsights() {
           {articles.map((article) => (
             <article
               key={article.id}
-              className="bg-white rounded-xl overflow-hidden border border-[#E5E7EB] hover:shadow-lg transition-shadow duration-300 group"
+              className="bg-white rounded-3xl overflow-hidden border border-[#E5E7EB] hover:shadow-lg transition-shadow duration-300 group"
             >
               {/* Image */}
-              <div className="relative aspect-4/3 overflow-hidden">
+              <div className="relative h-44 overflow-hidden">
                 <Image
                   src={article.image}
                   alt={article.title}
