@@ -1,5 +1,7 @@
 // services/api.ts
+"use client";
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import { useRouter } from "next/navigation";
 
 export const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL + process.env.NEXT_PUBLIC_API_PATH!,
@@ -8,18 +10,18 @@ export const api: AxiosInstance = axios.create({
 });
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("accessToken");
-    if (token) config.headers["Authorization"] = `Bearer ${token}`;
-  }
+  const token = localStorage.getItem("accessToken");
+  if (token) config.headers["Authorization"] = `Bearer ${token}`;
+
   return config;
 });
 
+ 
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
-
+    var router = useRouter();
     // Auto-refresh token on 401
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
@@ -28,20 +30,21 @@ api.interceptors.response.use(
         if (!refreshToken) throw new Error("No refresh token");
 
         const { data } = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}${process.env.NEXT_PUBLIC_API_PATH}auth/refresh`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`,
           { refreshToken },
         );
 
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
-
-        original.headers["Authorization"] = `Bearer ${data.accessToken}`;
-        return api(original); // retry original request
+        localStorage.setItem("accessToken", data.data.session.accessToken);
+        localStorage.setItem("refreshToken", data.data.session.refreshToken);
+        original.headers["Authorization"] =
+          `Bearer ${data.data.session.accessToken}`;
+        return api(original);
       } catch {
         // Refresh failed — log out
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        if (typeof window !== "undefined") window.location.href = "/signin";
+
+        router.push("/signin");
       }
     }
 

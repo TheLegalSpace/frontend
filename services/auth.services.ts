@@ -1,20 +1,54 @@
-// services/auth.service.ts
 import { api } from "./api";
 
 export interface LoginPayload {
   authProvider: "email" | "google";
   email?: string;
   password?: string;
+  fullName?: string;
   idToken?: string;
 }
+// services/auth.service.ts
+
+// services/auth.service.ts
+
+// services/auth.service.ts
 
 export interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-  user: {
-    id: string;
-    email: string;
-    role: "USER" | "LAWYER" | "FIRM" | "ADMIN";
+  error: boolean;
+  message: string;
+  data: {
+    account: {
+      id: string;
+      authUserId: string;
+      email: string;
+      fullName: string;
+      phone: string | null;
+      role: "USER" | "LAWYER" | "FIRM" | "ADMIN";
+      avatarUrl: string | null;
+      coverUrl: string | null;
+      bio: string | null;
+      locationCity: string | null;
+      locationCountry: string | null;
+      isAnonymous: boolean;
+      status: "active" | "inactive" | "suspended";
+      avgRating: string;
+      reviewCount: number;
+      connectionCount: number;
+      followerCount: number;
+      followingCount: number;
+      lastActiveAt: string;
+      createdAt: string;
+      updatedAt: string;
+      deletedAt: string | null;
+      lawyerProfile: null | Record<string, unknown>; // expand later when you have the shape
+      firmProfile: null | Record<string, unknown>; // expand later when you have the shape
+      practiceAreaLinks: unknown[];
+    };
+    session: {
+      accessToken: string;
+      refreshToken: string;
+      expiresAt: number;
+    };
   };
 }
 
