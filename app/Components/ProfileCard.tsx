@@ -70,7 +70,7 @@ export default function ProfileCard({ profile, isOwnProfile = false }: ProfileCa
 
         {/* Avatar row */}
         <div className="flex items-end justify-between flex-wrap gap-2 -mt-8 mb-3">
-          <div className="w-16 h-16 rounded-full border-[3px] border-white bg-gray-100 flex items-center justify-center text-lg font-medium text-gray-500 overflow-hidden flex-shrink-0">
+          <div className="w-16 h-16 rounded-full border-[3px] border-white bg-gray-100 flex items-center justify-center text-lg font-medium text-gray-500 overflow-hidden shrink-0">
             {profile.avatarUrl
               ? <img src={profile.avatarUrl} alt={profile.fullName} className="w-full h-full object-cover" />
               : getInitials(profile.fullName)
@@ -159,7 +159,7 @@ export default function ProfileCard({ profile, isOwnProfile = false }: ProfileCa
             { icon: Clock, text: `Active ${timeAgo(profile.lastActiveAt)}` },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-2 text-xs text-gray-400">
-              <Icon className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+              <Icon className="w-3.5 h-3.5 text-gray-300 shrink-0" />
               {text}
             </div>
           ))}
