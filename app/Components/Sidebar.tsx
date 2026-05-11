@@ -27,7 +27,6 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  console.log(user);
   const initials =
     user?.fullName
       ?.split(" ")
@@ -97,7 +96,7 @@ export default function Sidebar() {
         </div>
 
         <Link
-          href="/profile/me"
+          href="/dashboard/profile"
           className="w-full py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-800 flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors"
         >
           Visit Profile <ArrowRight className="w-3 h-3" />

@@ -1,13 +1,23 @@
-import React from "react";
+// app/(dashboard)/layout.tsx
+"use client"; // remove this if present
+
+// ❌ Remove this wrong import entirely
+// import { dynamic } from "next/dynamic";
+
+// ✅ This is the correct way — just export it as a const
+export const dynamic = "force-dynamic";
+
 import Sidebar from "../Components/Sidebar";
 
-const layout = ({ children }: { children: React.ReactNode }) => {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      {children}
+      <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
     </div>
   );
-};
-
-export default layout;
+}
