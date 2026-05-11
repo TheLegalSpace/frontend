@@ -19,7 +19,7 @@ export default function SignInPage() {
     setIsLoading(true);
     try {
       await login({ authProvider: "email", email, password });
-      router.push("/dashboard");
+      router.push("/dashboard/profile");
     } catch (err: any) {
       setError(err.response?.data?.message ?? "Login failed");
     } finally {
@@ -35,11 +35,13 @@ export default function SignInPage() {
         // Fetch user info from Google to get fullName
         const googleUser = await fetch(
           "https://www.googleapis.com/oauth2/v3/userinfo",
-          { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
+          {
+            headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+          },
         ).then((r) => r.json());
 
         await loginWithGoogle(tokenResponse.access_token, googleUser.name);
-        router.push("/feeds");
+        router.push("/dashboard/profile");
       } catch (err: any) {
         setError(err.response?.data?.message ?? "Google login failed");
       } finally {
