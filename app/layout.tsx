@@ -1,7 +1,7 @@
 import "./globals.css";
- import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { ReactNode } from "react";
-import { Geist } from 'next/font/google'
+import { Geist } from "next/font/google";
 import { Instrument_Serif } from "next/font/google";
 import { Providers } from "./providers";
 
@@ -29,8 +29,12 @@ const instrumentSerif = Instrument_Serif({
 const MainLayout = ({ children }: MainLayoutProps) => {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geist.variable} ${instrumentSerif.variable} bg-page-bg`} suppressHydrationWarning>
-         <Providers>{children}</Providers>
+      <body
+        className={`${geist.variable} ${instrumentSerif.variable} bg-page-bg`}
+        suppressHydrationWarning
+      >
+        {/* <Providers>{children}</Providers> */}
+        {children}
       </body>
     </html>
   );

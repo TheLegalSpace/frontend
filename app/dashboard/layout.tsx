@@ -1,11 +1,12 @@
 import React from "react";
 import Sidebar from "../Components/Sidebar";
+import { Providers } from "../providers";
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex">
       <Sidebar />
-      {children}
+      <Providers>{children}</Providers>
     </div>
   );
 };
