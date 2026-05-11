@@ -1,4 +1,5 @@
 import React from "react";
+export const dynamic = "force-dynamic"; // ← applies to all pages in this layout
 import Sidebar from "../Components/Sidebar";
 import { Providers } from "../providers";
 
