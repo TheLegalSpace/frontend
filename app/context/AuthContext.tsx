@@ -1,49 +1,101 @@
 // context/AuthContext.tsx
 "use client";
 
-import { AuthResponse, authService, LoginPayload } from "@/services/auth.services";
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
- 
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { useRouter } from "next/navigation";
+import {
+  AuthResponse,
+  authService,
+  LoginPayload,
+} from "@/services/auth.services";
+
+// context/AuthContext.tsx
+
+// context/AuthContext.tsx
+
 interface AuthContextType {
-  user: AuthResponse["user"] | null;
+  user: AuthResponse["data"]["account"] | null;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
+  loginWithGoogle: (idToken: string, fullName: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthResponse["user"] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<AuthResponse["data"]["account"] | null>(
+    null,
+  );
+  const [isLoading, setIsLoading] = useState(true); // ← must start as true
+  const router = useRouter();
 
   useEffect(() => {
-    // Restore user from localStorage on mount
     const token = localStorage.getItem("accessToken");
     const savedUser = localStorage.getItem("user");
-    if (token && savedUser) setUser(JSON.parse(savedUser));
-    setIsLoading(false);
+
+    if (token && savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch {
+        // Corrupted data — clear it
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+      }
+    } else {
+      if (
+        window.location.pathname !== "/signin" &&
+        window.location.pathname !== "/"
+      ) {
+        router.push("/signin");
+      }
+    }
+
+    setIsLoading(false); // ← always runs, even if no token
   }, []);
 
   const login = async (payload: LoginPayload) => {
-    const { data } = await authService.login(payload);
-    localStorage.setItem("accessToken", data.accessToken);
-    localStorage.setItem("refreshToken", data.refreshToken);
-    localStorage.setItem("user", JSON.stringify(data.user));
-    setUser(data.user);
-  };
+    const response = await authService.login(payload);
+    const { account, session } = response.data.data; // ← data.data because axios wraps in .data too
 
+    localStorage.setItem("accessToken", session.accessToken);
+    localStorage.setItem("refreshToken", session.refreshToken);
+    localStorage.setItem("user", JSON.stringify(account));
+    setUser(account);
+  };
+  const loginWithGoogle = async (idToken: string, fullName: string) => {
+    const response = await authService.login({
+      authProvider: "google",
+      idToken,
+      fullName,
+    });
+    const { account, session } = response.data.data;
+
+    localStorage.setItem("accessToken", session.accessToken);
+    localStorage.setItem("refreshToken", session.refreshToken);
+    localStorage.setItem("user", JSON.stringify(account));
+    setUser(account);
+  };
   const logout = async () => {
-    await authService.logout().catch(() => {}); // best-effort
+    await authService.logout().catch(() => {});
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     setUser(null);
-    window.location.href = "/signin";
+    if (typeof window !== "undefined") window.location.href = "/";
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, loginWithGoogle, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );
