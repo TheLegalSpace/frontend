@@ -150,7 +150,7 @@ export default function Sidebar() {
       <div className="p-3 border-t border-gray-100 flex flex-col gap-2">
         <Link
           href="/find-lawyer"
-          className="w-full py-2 border-[1.5px] border-gray-900 rounded-lg text-[13px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+          className="cursor-pointer w-full py-2 border-[1.5px] border-gray-900 rounded-lg text-[13px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
         >
           <Scale className="w-4 h-4" />
           Get a lawyer
