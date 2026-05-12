@@ -63,7 +63,7 @@ export default function EventsPanel() {
             href="mailto:events@thelegalspace.com"
             className="text-[12px] text-white underline underline-offset-2"
           >
-            events@thelegalspace.com
+            event@thelegalspace.com
           </a>
         </div>
       </div>
