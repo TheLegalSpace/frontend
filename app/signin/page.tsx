@@ -4,6 +4,8 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { AuthError } from "@supabase/supabase-js";
 
 export default function SignInPage() {
   const { login, loginWithGoogle } = useAuth();
@@ -28,28 +30,50 @@ export default function SignInPage() {
   };
 
   // Google login — gets idToken from Google, sends to your backend
-  const handleGoogleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setIsLoading(true);
-      try {
-        // Fetch user info from Google to get fullName
-        const googleUser = await fetch(
-          "https://www.googleapis.com/oauth2/v3/userinfo",
-          {
-            headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-          },
-        ).then((r) => r.json());
+  // const handleGoogleLogin = useGoogleLogin({
+  //   onSuccess: async (tokenResponse) => {
+  //     setIsLoading(true);
+  //     try {
+  //       // Fetch user info from Google to get fullName
+  //       const googleUser = await fetch(
+  //         "https://www.googleapis.com/oauth2/v3/userinfo",
+  //         {
+  //           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+  //         },
+  //       ).then((r) => r.json());
 
-        await loginWithGoogle(tokenResponse.access_token, googleUser.name);
-        router.push("/dashboard/profile");
-      } catch (err: any) {
-        setError(err.response?.data?.message ?? "Google login failed");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    onError: () => setError("Google login was cancelled or failed"),
-  });
+  //       await loginWithGoogle(tokenResponse.access_token, googleUser.name);
+  //       router.push("/dashboard/profile");
+  //     } catch (err: any) {
+  //       setError(err.response?.data?.message ?? "Google login failed");
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   },
+  //   onError: () => setError("Google login was cancelled or failed"),
+  // });
+
+  const handleGoogleLogin = async (): Promise<void> => {
+    setIsLoading(true);
+    setError("");
+    try {
+      const { error: authError }: { error: AuthError | null } =
+        await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+
+      if (authError) throw new Error(authError.message);
+      // Supabase handles the redirect — no further action needed
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Google sign in failed.";
+      setError(message);
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div>
