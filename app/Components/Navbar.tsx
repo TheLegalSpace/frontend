@@ -5,8 +5,8 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { api } from "@/services/api";
-import { AxiosResponse } from "axios";
+// import { api } from "@/services/api";
+// import { AxiosResponse } from "axios";
 // import { loginUser } from "@/services/auth.services";
 
 export default function Navbar() {
@@ -57,9 +57,12 @@ export default function Navbar() {
             >
               Lawyer Login
             </Link>
-            <button className="text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-lg hover:bg-[#1648b8] transition-colors">
+            <Link
+              href="/signin"
+              className="text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-lg hover:bg-[#1648b8] transition-colors"
+            >
               Find a Lawyer
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}

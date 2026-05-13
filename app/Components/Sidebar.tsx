@@ -36,7 +36,7 @@ export default function Sidebar() {
       .slice(0, 2) ?? "?";
 
   return (
-    <aside className="w-[220px] min-h-screen border-r border-gray-100 flex flex-col bg-white">
+    <aside className="w-55 min-h-screen border-r border-gray-100 flex flex-col bg-white">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100 flex items-center gap-2">
         <div className="w-7 h-7 bg-black rounded-md flex items-center justify-center text-white text-xs">
@@ -115,7 +115,7 @@ export default function Sidebar() {
                 : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
             }`}
           >
-            <Icon className="w-[17px] h-[17px] flex-shrink-0" />
+            <Icon className="w-4.25 h-4.25 shrink-0" />
             {label}
           </Link>
         ))}
