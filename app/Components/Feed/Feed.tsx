@@ -35,6 +35,7 @@ interface RawPost {
 const TABS: Tab[] = ["All", "Top Firms", "Top Lawyers", "Articles"];
 
 function getInitials(name: string) {
+  if (!name) return "??";
   return name
     .split(" ")
     .map((n) => n[0])
