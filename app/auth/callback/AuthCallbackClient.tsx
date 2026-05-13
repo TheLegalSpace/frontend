@@ -1,7 +1,7 @@
 // app/auth/callback/AuthCallbackClient.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
@@ -10,62 +10,91 @@ import { authService } from "@/services/auth.services";
 export default function AuthCallbackClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const hasProcessed = useRef(false); // ✅ prevent double execution
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session: Session | null) => {
-        console.log("Auth event:", event);
-        console.log("Full session:", JSON.stringify(session, null, 2));
+    const processSession = async (session: Session) => {
+      if (hasProcessed.current) return; // ✅ guard against double run
+      hasProcessed.current = true;
 
-        if (event === "SIGNED_IN" && session) {
-          try {
-            const idToken = session.access_token;
+      try {
+        const idToken: string | undefined =
+          session.provider_token ?? session.access_token ?? undefined;
 
-            console.log("provider_token:", session.provider_token);
-            console.log("access_token:", session.access_token);
-            console.log("Sending idToken:", idToken);
-
-            const response = await authService.login({
-              authProvider: "google",
-              idToken,
-            });
-
-            console.log("Backend response:", response.data);
-
-            if (!response.data?.data) {
-              console.error("Unexpected shape:", response.data);
-              router.replace("/signin?error=google_failed");
-              return;
-            }
-
-            const { account, session: appSession } = response.data.data;
-
-            localStorage.setItem("accessToken", appSession.accessToken);
-            localStorage.setItem("refreshToken", appSession.refreshToken);
-            localStorage.setItem("user", JSON.stringify(account));
-
-            const redirect = searchParams.get("redirect") ?? "/dashboard/feeds";
-            router.replace(redirect);
-          } catch (err: unknown) {
-            console.error("Full error object:", err);
-            if (typeof err === "object" && err !== null) {
-              const axiosErr = err as any;
-              console.error("Backend error status:", axiosErr?.response?.status);
-              console.error("Backend error data:", axiosErr?.response?.data);
-            }
-            router.replace("/signin?error=google_failed");
-          }
+        if (!idToken) {
+          console.error("No token available");
+          router.replace("/signin?error=google_failed");
+          return;
         }
 
-        if (event === "SIGNED_OUT") {
-          router.replace("/signin");
+        console.log("Sending to backend — authProvider: google");
+        console.log("Token starts with:", idToken.slice(0, 20) + "...");
+
+        const response = await authService.login({
+          authProvider: "google",
+          idToken,
+        });
+
+        console.log("Backend response:", response?.data);
+
+        if (!response?.data?.data) {
+          console.error("Unexpected shape:", response?.data);
+          router.replace("/signin?error=google_failed");
+          return;
+        }
+
+        const { account, session: appSession } = response.data.data;
+
+        localStorage.setItem("accessToken", appSession.accessToken);
+        localStorage.setItem("refreshToken", appSession.refreshToken);
+        localStorage.setItem("user", JSON.stringify(account));
+
+        const redirect = searchParams.get("redirect") ?? "/dashboard/feeds";
+        router.replace(redirect);
+      } catch (err: unknown) {
+        // ✅ Reset so user can retry
+        hasProcessed.current = false;
+
+        if (typeof err === "object" && err !== null) {
+          const axiosErr = err as any;
+          // ✅ This is what the backend is actually saying
+          console.error("Backend status:", axiosErr?.response?.status);
+          console.error("Backend message:", axiosErr?.response?.data);
+        }
+        router.replace("/signin?error=google_failed");
+      }
+    };
+
+    const handleCallback = async () => {
+      const hash = window.location.hash;
+
+      if (hash && hash.includes("access_token")) {
+        const { data, error } = await supabase.auth.getSession();
+        console.log("Session:", data?.session ? "found" : "null", "Error:", error?.message);
+
+        if (data.session) {
+          await processSession(data.session);
+          return;
         }
       }
-    );
 
-    return () => {
-      authListener.subscription.unsubscribe();
+      // Fallback listener
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        async (event, session: Session | null) => {
+          if (event === "SIGNED_IN" && session) {
+            await processSession(session);
+            authListener.subscription.unsubscribe();
+          }
+        }
+      );
+
+      setTimeout(() => {
+        authListener.subscription.unsubscribe();
+        router.replace("/signin?error=timeout");
+      }, 10000);
     };
+
+    handleCallback();
   }, []);
 
   return (

@@ -41,24 +41,24 @@ export interface CreateEventPayload {
 
 export const eventService = {
   list: (page = 1, limit = 20) =>
-    api.get<EventsResponse>("/api/v1/events", { params: { page, limit } }),
+    api.get<EventsResponse>("/events", { params: { page, limit } }),
 
   get: (id: string) =>
-    api.get<{ error: boolean; message: string; data: Event }>(`/api/v1/events/${id}`),
+    api.get<{ error: boolean; message: string; data: Event }>(`/events/${id}`),
 
   create: (payload: CreateEventPayload) =>
-    api.post<{ error: boolean; message: string; data: Event }>("/api/v1/events", payload),
+    api.post<{ error: boolean; message: string; data: Event }>("/events", payload),
 
   update: (id: string, payload: Partial<CreateEventPayload>) =>
-    api.patch<{ error: boolean; message: string; data: Event }>(`/api/v1/events/${id}`, payload),
+    api.patch<{ error: boolean; message: string; data: Event }>(`/events/${id}`, payload),
 
   delete: (id: string) =>
-    api.delete(`/api/v1/events/${id}`),
+    api.delete(`/events/${id}`),
 
   uploadCover: (id: string, file: File) => {
     const form = new FormData();
     form.append("file", file);
-    return api.post(`/api/v1/events/${id}/cover`, form, {
+    return api.post(`/events/${id}/cover`, form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
