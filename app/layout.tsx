@@ -1,9 +1,11 @@
+// app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
 import { Geist } from "next/font/google";
 import { Instrument_Serif } from "next/font/google";
 import { Providers } from "./providers";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "TheLegalSpace",
@@ -34,6 +36,12 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>
+
+        {/* ✅ Inside body, afterInteractive loads after page is ready */}
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
