@@ -89,34 +89,22 @@ export default function ProfileCard({
   const displayName = isAnonymous ? "Anonymous User" : profile.fullName;
   const displayEmail = isAnonymous ? maskEmail(profile.email) : profile.email;
 
-        {/* Avatar row */}
-        <div className="flex items-end justify-between flex-wrap gap-2 -mt-8 mb-3">
-          <div className="w-16 h-16 rounded-full border-[3px] border-white bg-gray-100 flex items-center justify-center text-lg font-medium text-gray-500 overflow-hidden shrink-0">
-            {profile.avatarUrl
-              ? <img src={profile.avatarUrl} alt={profile.fullName} className="w-full h-full object-cover" />
-              : getInitials(profile.fullName)
-            }
-          </div>
-          <div className="flex items-center gap-2 flex-wrap pt-9">
-            {!isOwnProfile && (
-              <>
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1A56DB] text-white text-xs font-medium hover:bg-[#1648b8] transition-colors border-0">
-                  <Scale className="w-3.5 h-3.5" /> Get a lawyer
-                </button>
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-medium hover:bg-gray-50 transition-colors">
-                  <UserPlus className="w-3.5 h-3.5" /> Connect
-                </button>
-              </>
-            )}
-            {isOwnProfile && (
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-medium hover:bg-gray-50 transition-colors">
-                Edit profile
-              </button>
-            )}
-            <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors" aria-label="Toggle anonymous">
-              <EyeOff className="w-4 h-4 text-gray-400" />
-            </button>
-          </div>
+  return (
+    <div className="w-full">
+      <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-[#F7F7F7]">
+        {/* Cover */}
+        <div className="relative h-45 w-full overflow-hidden bg-[#E5E7EB]">
+          {profile.coverUrl ? (
+            <img
+              src={profile.coverUrl}
+              alt="cover"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-[#ECECEC]">
+              <span className="text-sm text-gray-400">No cover image</span>
+            </div>
+          )}
         </div>
 
         {/* Main content */}
@@ -279,20 +267,44 @@ export default function ProfileCard({
               </div>
             </div>
 
-        <hr className="border-gray-100 mb-4" />
-
-        {/* Details */}
-        <p className="text-xs font-medium mb-2.5">Details</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {[
-            { icon: MapPin, text: [profile.locationCity, profile.locationCountry].filter(Boolean).join(", ") || "No location" },
-            { icon: Phone, text: profile.phone ?? "No phone added" },
-            { icon: Calendar, text: `Joined ${formatDate(profile.createdAt)}` },
-            { icon: Clock, text: `Active ${timeAgo(profile.lastActiveAt)}` },
-          ].map(({ icon: Icon, text }) => (
-            <div key={text} className="flex items-center gap-2 text-xs text-gray-400">
-              <Icon className="w-3.5 h-3.5 text-gray-300 shrink-0" />
-              {text}
+            {/* Reviews list */}
+            <div className="mt-6 border-t border-[#E5E7EB] pt-6">
+              {[1, 2].map((item) => (
+                <div
+                  key={item}
+                  className="border-b border-[#E5E7EB] pb-5 mb-5 last:border-0 last:mb-0"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F4DDE7] text-sm font-medium text-[#8B3A5A]">
+                        TI
+                      </div>
+                      <div>
+                        <h4 className="font-[Instrument_Serif] text-[14px] font-medium text-[#1F2937]">
+                          Olaniwun Ajayi LP
+                        </h4>
+                        <div className="mt-1.5 flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className="h-4 w-4 fill-[#E4B04A] text-[#E4B04A]"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-[12px] text-[#6B7280] whitespace-nowrap">
+                      Jan 20, 2024
+                    </p>
+                  </div>
+                  <p className="mt-3 text-[13px] leading-relaxed text-[#4B5563]">
+                    Working with Oluwaseun was smooth. He communicated his needs
+                    clearly, enhancing our workflow. His openness to feedback
+                    and quick decisions made the project efficient and
+                    enjoyable. I look forward to future collaborations.
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
