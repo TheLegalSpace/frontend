@@ -58,7 +58,7 @@ export default function Sidebar() {
       .slice(0, 2) ?? "?";
 
   const sidebarContent = (
-    <aside className="w-[220px] h-full border-r border-gray-100 flex flex-col bg-white">
+    <aside className="w-55 h-full border-r border-gray-100 flex flex-col bg-white">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ export default function Sidebar() {
                 : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
             }`}
           >
-            <Icon className="w-[17px] h-[17px] shrink-0" />
+            <Icon className="w-4.25 h-4.25 shrink-0" />
             {label}
           </Link>
         ))}
@@ -179,7 +179,7 @@ export default function Sidebar() {
 
       {/* Desktop sidebar — always visible */}
       <div className="hidden md:flex md:shrink-0">
-        <div className="w-[220px] min-h-screen sticky top-0">
+        <div className="w-55 min-h-screen sticky top-0">
           {sidebarContent}
         </div>
       </div>

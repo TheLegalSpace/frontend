@@ -91,9 +91,9 @@ export default function ProfileCard({
 
   return (
     <div className="w-full">
-      <div className="overflow-hidden rounded-[16px] border border-[#E5E7EB] bg-[#F7F7F7]">
+      <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-[#F7F7F7]">
         {/* Cover */}
-        <div className="relative h-[180px] w-full overflow-hidden bg-[#E5E7EB]">
+        <div className="relative h-45 w-full overflow-hidden bg-[#E5E7EB]">
           {profile.coverUrl ? (
             <img
               src={profile.coverUrl}
