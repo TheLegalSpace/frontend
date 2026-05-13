@@ -1,7 +1,13 @@
-import React from "react";
+"use client";
 
-const page = () => {
-  return <div>Feedss</div>;
-};
+import { useAuth } from "@/app/context/AuthContext";
+import MessagesPage from "@/app/Components/Messages/MessagesPage";
 
-export default page;
+export default function Page() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return null;
+  if (!user) return null;
+
+  return <MessagesPage />;
+}
