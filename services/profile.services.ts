@@ -1,18 +1,31 @@
 // services/profile.service.ts
 import { api } from "./api";
+import { AuthResponse } from "./auth.services";
+
+type ProfileData = AuthResponse["data"]["account"] & {
+  isFollowing: boolean;
+  practiceAreas: string[];
+};
+
+interface ProfileResponse {
+  error: boolean;
+  message: string;
+  data: ProfileData;
+}
 
 export const profileService = {
-  getMe: () => api.get("/api/v1/profile/me"),
+  getMe: () => api.get<ProfileResponse>("/profile/me"),
 
-  getById: (accountId: string) => api.get(`/api/v1/profile/${accountId}`),
+  getById: (accountId: string) =>
+    api.get<ProfileResponse>(`/profile/${accountId}`),
 
   updateMe: (payload: Record<string, unknown>) =>
-    api.patch("/api/v1/profile/me", payload),
+    api.patch<ProfileResponse>("/profile/me", payload),
 
   uploadAvatar: (file: File) => {
     const form = new FormData();
     form.append("file", file);
-    return api.post("/api/v1/profile/me/avatar", form, {
+    return api.post("/profile/me/avatar", form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
@@ -20,20 +33,26 @@ export const profileService = {
   uploadCover: (file: File) => {
     const form = new FormData();
     form.append("file", file);
-    return api.post("/api/v1/profile/me/cover", form, {
+    return api.post("/profile/me/cover", form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
 
   toggleAnonymous: (isAnonymous: boolean) =>
-    api.patch("/api/v1/profile/me/anonymous", { isAnonymous }),
+    api.patch("/profile/me/anonymous", { isAnonymous }),
 
   updatePracticeAreas: (practiceAreaIds: string[]) =>
-    api.patch("/api/v1/profile/me/practice-areas", { practiceAreaIds }),
+    api.patch("/profile/me/practice-areas", { practiceAreaIds }),
 
   getConnections: (accountId: string, page = 1, limit = 20) =>
-    api.get(`/api/v1/profile/${accountId}/connections`, { params: { page, limit } }),
+    api.get(`/profile/${accountId}/connections`, { params: { page, limit } }),
 
   getArticles: (accountId: string, page = 1, limit = 20) =>
-    api.get(`/api/v1/profile/${accountId}/articles`, { params: { page, limit } }),
+    api.get(`/profile/${accountId}/articles`, { params: { page, limit } }),
+
+  getReviews: (accountId: string, page = 1, limit = 20) =>
+    api.get(`/profile/${accountId}/reviews`, { params: { page, limit } }),
+
+  getPosts: (accountId: string, page = 1, limit = 20) =>
+    api.get(`/profile/${accountId}/posts`, { params: { page, limit } }),
 };
