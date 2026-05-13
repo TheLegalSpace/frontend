@@ -1,5 +1,6 @@
 "use client";
 
+import { ThumbsUp, ThumbsDown, BadgeCheck, Clock } from "lucide-react";
 import Avatar from "./Avatar";
 import ArticleCard from "./ArticleCard";
 
@@ -33,22 +34,22 @@ export default function PostCard({ post, onReact }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <Avatar
-            initials={post.authorInitials}
-            avatarUrl={post.avatarUrl}
-          />
+          <Avatar initials={post.authorInitials} avatarUrl={post.avatarUrl} />
 
           <div className="flex items-center gap-1">
             <span className="font-bold text-[15px] text-gray-900">
               {post.author}
             </span>
 
-            {post.isVerified && <span>✓</span>}
+            {post.isVerified && (
+              <BadgeCheck size={16} className="text-blue-500" />
+            )}
           </div>
         </div>
 
-        <span className="text-xs text-gray-400">
-          🕐 {post.timeAgo}
+        <span className="flex items-center gap-1 text-xs text-gray-400">
+          <Clock size={12} />
+          {post.timeAgo}
         </span>
       </div>
 
@@ -64,24 +65,26 @@ export default function PostCard({ post, onReact }: Props) {
       <div className="flex gap-2 mt-4">
         <button
           onClick={() => onReact(post.id, "like")}
-          className={`px-3 py-1.5 rounded-full border text-sm transition ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition ${
             post.userReaction === "like"
               ? "bg-blue-100 border-blue-300 text-blue-700"
-              : "border-gray-200 text-gray-500"
+              : "border-gray-200 text-gray-500 hover:border-gray-300"
           }`}
         >
-          👍 {post.likes > 0 ? post.likes : ""}
+          <ThumbsUp size={14} />
+          {post.likes > 0 && post.likes}
         </button>
 
         <button
           onClick={() => onReact(post.id, "dislike")}
-          className={`px-3 py-1.5 rounded-full border text-sm transition ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition ${
             post.userReaction === "dislike"
               ? "bg-red-100 border-red-300 text-red-700"
-              : "border-gray-200 text-gray-500"
+              : "border-gray-200 text-gray-500 hover:border-gray-300"
           }`}
         >
-          👎 {post.dislikes > 0 ? post.dislikes : ""}
+          <ThumbsDown size={14} />
+          {post.dislikes > 0 && post.dislikes}
         </button>
       </div>
     </div>
