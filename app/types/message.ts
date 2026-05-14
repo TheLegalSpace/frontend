@@ -1,11 +1,11 @@
 export interface Participant {
     id: string;
-    name: string;
+    fullName: string;
     avatarUrl?: string;
 }
 export interface Conversation {
     id: string;
-    participant: Participant;
+    otherParty: Participant;
     lastMessage: string;
     lastMessageAt: string;
     status: "open" | "closed";

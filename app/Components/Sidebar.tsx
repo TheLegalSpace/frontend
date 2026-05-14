@@ -58,7 +58,7 @@ export default function Sidebar() {
       .slice(0, 2) ?? "?";
 
   const sidebarContent = (
-    <aside className="w-55 h-full border-r border-gray-100 flex flex-col bg-white">
+    <aside className="w-55 h-screen fixed top-0 left-0 border-r border-gray-100 flex flex-col bg-white">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-2">

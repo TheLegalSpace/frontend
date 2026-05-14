@@ -1,7 +1,8 @@
-import React from "react";
+// app/dashboard/settings/page.tsx
+"use client";
 
-const page = () => {
-  return <div>Feedss</div>;
-};
+import SettingsPage from "@/app/Components/Settings";
 
-export default page;
+export default function SettingsRoute() {
+  return <SettingsPage />;
+}
