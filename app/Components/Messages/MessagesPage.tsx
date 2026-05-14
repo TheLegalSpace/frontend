@@ -108,7 +108,7 @@ export default function MessagesPage() {
         {activeId && activeConvo ? (
           <ChatWindow
             conversationId={activeId}
-            participantName={activeConvo.participant.name}
+            participantName={activeConvo.otherParty.name}
             currentAccountId={user?.id ?? ""}
             isAnonymous={isAnonymous}
             onAnonymousToggle={setIsAnonymous}
