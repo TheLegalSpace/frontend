@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Lock } from "lucide-react";
 import { Message } from "@/app/types/message";
 import { messagesService } from "@/services/messages.services";
 import { connectSocket, disconnectSocket } from "@/services/socket.services";
@@ -199,39 +199,50 @@ export default function ChatWindow({
             No messages yet. Say hello!
           </div>
         ) : (
-          grouped.map((group) => (
-            <div key={group.date}>
-              <div className="text-center text-[11px] text-gray-400 my-2">
-                {group.date} · Conversation started
+          <>
+            {/* Encryption notice */}
+            <div className="flex justify-center my-3">
+              <div className="flex items-center gap-2 border-amber-100 rounded-xl px-4 py-2.5 max-w-sm text-center">
+                <Lock size={13} className="text-amber-600 shrink-0" />
+                <p className="text-[11px] text-[#374151] leading-relaxed">
+                  Messages use end-to-end encryption, allowing only chat participants to read them. Messages will be deleted after 14 days.
+                </p>
               </div>
-              {group.messages.map((msg) => {
-                const isSent = msg.senderAccountId === currentAccountId;
-                return (
-                  <div
-                    key={msg.id}
-                    className={`flex mb-2 ${isSent ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[65%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                        isSent
-                          ? "bg-blue-700 text-white rounded-br-sm"
-                          : "bg-gray-100 text-gray-800 border border-gray-200 rounded-bl-sm"
-                      }`}
-                    >
-                      <p>{msg.body}</p>
-                      <p className={`text-[11px] mt-1 ${isSent ? "text-blue-200" : "text-gray-400"}`}>
-                        {formatTime(msg.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
-          ))
+            {grouped.map((group) => (
+              <div key={group.date}>
+                <div className="text-center text-[11px] text-gray-400 my-2">
+                  {group.date} · Conversation started
+                </div>
+                {group.messages.map((msg) => {
+                  const isSent = msg.senderAccountId === currentAccountId;
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex mb-2 ${isSent ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-[65%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                          isSent
+                            ? "bg-blue-700 text-white rounded-br-sm"
+                            : "bg-gray-100 text-gray-800 border border-gray-200 rounded-bl-sm"
+                        }`}
+                      >
+                        <p>{msg.body}</p>
+                        <p className={`text-[11px] mt-1 ${isSent ? "text-blue-200" : "text-gray-400"}`}>
+                          {formatTime(msg.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </>
         )}
         <div ref={bottomRef} />
       </div>
- 
+
       {/* Input */}
       <div className="px-4 py-3 border-t border-gray-200 bg-white flex items-center gap-3">
         <input

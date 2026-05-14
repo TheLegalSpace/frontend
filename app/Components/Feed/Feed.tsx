@@ -2,37 +2,61 @@
 
 import { useCallback, useEffect, useState } from "react";
 import PostCard, { Post } from "./PostCard";
-import { useAuth } from "@/app/context/AuthContext";
-
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ??
-  "https://legalspace.onrender.com";
+import { api } from "@/services/api";
 
 type Tab = "All" | "Top Firms" | "Top Lawyers" | "Articles";
 
+// Matches the actual API response
 interface RawPost {
-  id: number;
-  content: string;
+  id: string;
+  authorAccountId: string;
+  body: string;
+  attachedArticleId: string | null;
+  likeCount: number;
+  dislikeCount: number;
   createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
   author: {
-    name: string;
+    id: string;
+    fullName: string;
     avatarUrl?: string;
-    isVerified?: boolean;
+    isAnonymous?: boolean;
+    avgRating?: string;
+    role?: string;
   };
-  article?: {
+  attachedArticle: {
     title: string;
     slug: string;
     publishedAt: string;
     readCount: number;
-  };
-  _count?: {
-    likes: number;
-    dislikes: number;
-  };
-  userReaction?: "like" | "dislike" | null;
+  } | null;
 }
 
 const TABS: Tab[] = ["All", "Top Firms", "Top Lawyers", "Articles"];
+
+// ── Reaction cache helpers ────────────────────────────────────────────────────
+function getCachedReactions(): Record<string, "like" | "dislike"> {
+  try {
+    const raw = localStorage.getItem("post_reactions");
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function setCachedReaction(id: string, reaction: "like" | "dislike" | null) {
+  try {
+    const current = getCachedReactions();
+    if (reaction === null) {
+      delete current[id];
+    } else {
+      current[id] = reaction;
+    }
+    localStorage.setItem("post_reactions", JSON.stringify(current));
+  } catch {}
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function getInitials(name: string) {
   if (!name) return "??";
@@ -54,105 +78,118 @@ function timeAgo(dateStr: string) {
   return `${days} day${days !== 1 ? "s" : ""} ago`;
 }
 
-function normalizePost(raw: RawPost): Post {
+function normalizePost(raw: RawPost, cachedReactions: Record<string, "like" | "dislike">): Post {
   return {
     id: raw.id,
-    author: raw.author.name,
-    authorInitials: getInitials(raw.author.name),
-    avatarUrl: raw.author.avatarUrl,
-    isVerified: raw.author.isVerified ?? false,
+    author: raw.author?.fullName ?? "Unknown",
+    authorInitials: getInitials(raw.author?.fullName ?? ""),
+    avatarUrl: raw.author?.avatarUrl,
+    isVerified: false, // not in API response
     timeAgo: timeAgo(raw.createdAt),
-    body: raw.content,
-    article: raw.article
+    body: raw.body,
+    article: raw.attachedArticle
       ? {
-          title: raw.article.title,
-          slug: raw.article.slug,
-          reads: raw.article.readCount,
-          date: new Date(raw.article.publishedAt).toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          }),
+          title: raw.attachedArticle.title,
+          slug: raw.attachedArticle.slug,
+          reads: raw.attachedArticle.readCount,
+          date: new Date(raw.attachedArticle.publishedAt).toLocaleDateString(
+            "en-US",
+            { month: "long", day: "numeric", year: "numeric" }
+          ),
         }
       : undefined,
-    likes: raw._count?.likes ?? 0,
-    dislikes: raw._count?.dislikes ?? 0,
-    userReaction: raw.userReaction ?? null,
+    likes: raw.likeCount,
+    dislikes: raw.dislikeCount,
+    userReaction: cachedReactions[raw.id] ?? null, // ← from localStorage
   };
 }
 
-
-async function fetchFeed(token: string, tab: Tab) {
-  try {
-    const params = new URLSearchParams({
-      page: "1",
-      limit: "20",
+async function fetchFeed(tab: Tab) {
+  const { data } = await api.get("/feed/", {
+    params: {
+      page: 1,
+      limit: 20,
       filter: tab === "All" ? "all" : tab.toLowerCase().replace(" ", "_"),
-    });
-
-    const url = `${BASE_URL}/api/v1/feed/?${params}`;
-    console.log("Fetching:", url);
-
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        accept: "*/*",
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
-
-    console.log("STATUS:", res.status);
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Backend Error:", errorText);
-      throw new Error(`HTTP Error: ${res.status}`);
-    }
-
-    const data = await res.json();
-    console.log("Feed response:", data);
-
-    const raw: RawPost[] = data?.data?.items ?? [];
-    return raw.map(normalizePost);
-  } catch (error) {
-    console.error("Feed fetch failed:", error);
-    return [];
-  }
+    },
+  });
+  return (data?.data?.items ?? []) as RawPost[];
 }
 
 export default function Feed() {
-  const [token, setToken] = useState<string | null>(null); // ← null = not ready yet
   const [activeTab, setActiveTab] = useState<Tab>("All");
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setToken(localStorage.getItem("accessToken")); // ← read token on mount
+  const loadFeed = useCallback(async (tab: Tab) => {
+    setLoading(true);
+    try {
+      const items = await fetchFeed(tab);
+      const cachedReactions = getCachedReactions();
+      setPosts(items.map((raw) => normalizePost(raw, cachedReactions)));
+    } catch (err) {
+      console.error("Feed fetch failed:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
-
-  const loadFeed = useCallback(
-    async (tab: Tab) => {
-      if (!token) return; // ← wait until token is ready
-      setLoading(true);
-      try {
-        const data = await fetchFeed(token, tab);
-        setPosts(data);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [token]
-  );
 
   useEffect(() => {
     loadFeed(activeTab);
   }, [activeTab, loadFeed]);
 
-  function handleReact(id: number, reaction: "like" | "dislike") {
+  async function handleReact(id: string, reaction: "like" | "dislike") {
+    const post = posts.find((p) => p.id === id);
+    if (!post) return;
+
+    const isSameReaction = post.userReaction === reaction;
+    const newReaction = isSameReaction ? null : reaction;
+
+    // Save to localStorage immediately so it survives refresh
+    setCachedReaction(id, newReaction);
+
+    // Optimistic UI update
     setPosts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, userReaction: reaction } : p))
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        if (isSameReaction) {
+          return {
+            ...p,
+            userReaction: null,
+            likes: reaction === "like" ? p.likes - 1 : p.likes,
+            dislikes: reaction === "dislike" ? p.dislikes - 1 : p.dislikes,
+          };
+        }
+        return {
+          ...p,
+          userReaction: reaction,
+          likes:
+            reaction === "like"
+              ? p.likes + 1
+              : p.userReaction === "like"
+              ? p.likes - 1
+              : p.likes,
+          dislikes:
+            reaction === "dislike"
+              ? p.dislikes + 1
+              : p.userReaction === "dislike"
+              ? p.dislikes - 1
+              : p.dislikes,
+        };
+      })
     );
+
+    try {
+      if (isSameReaction) {
+        await api.delete(`/posts/${id}/reactions`);
+      } else {
+        await api.post(`/posts/${id}/reactions`, { type: reaction });
+      }
+    } catch (err) {
+      console.error("React failed:", err);
+      // Revert cache and reload on failure
+      setCachedReaction(id, post.userReaction);
+      loadFeed(activeTab);
+    }
   }
 
   return (

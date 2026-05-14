@@ -84,35 +84,37 @@ export default function ConversationList({conversations, activeId, onSelect, loa
               }`}
             >
               {/* Avatar */}
+              {/* Avatar container */}
               <div
                 className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${avatarColor(
-                  convo.participant.name
+                  convo.otherParty?.fullName ?? ""
                 )}`}
               >
-                {convo.participant.avatarUrl ? (
+                {convo.otherParty?.avatarUrl ? (
                   <img
-                    src={convo.participant.avatarUrl}
-                    alt={convo.participant.name}
+                    src={convo.otherParty.avatarUrl}
+                    alt={convo.otherParty?.fullName ?? ""}
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
-                  getInitials(convo.participant.name)
+                  getInitials(convo.otherParty?.fullName ?? "")
                 )}
               </div>
- 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] font-medium text-gray-900 truncate">
-                    {convo.participant.name}
-                  </span>
-                  <span className="text-[11px] text-gray-400 shrink-0 ml-1">
-                    {timeAgo(convo.lastMessageAt)}
-                  </span>
-                </div>
-                <p className="text-[12px] text-gray-500 truncate mt-0.5">
-                  {convo.lastMessage}
-                </p>
-              </div>
+
+              {/* Name */}
+              <span className="text-[13px] font-medium text-gray-900 truncate">
+                {convo.otherParty?.fullName ?? "Unknown"}
+              </span>
+
+              {/* // Time — guard lastMessageAt too since it may also be missing */}
+              <span className="text-[11px] text-gray-400 shrink-0 ml-1">
+                {convo.lastMessageAt ? timeAgo(convo.lastMessageAt) : ""}
+              </span>
+
+              {/* // Preview */}
+              <p className="text-[12px] text-gray-500 truncate mt-0.5">
+                {convo.lastMessage ?? "No messages yet"}
+              </p>
             </button>
           ))
         )}

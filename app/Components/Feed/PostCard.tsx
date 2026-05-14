@@ -5,7 +5,7 @@ import Avatar from "./Avatar";
 import ArticleCard from "./ArticleCard";
 
 export interface Post {
-  id: number;
+  id: string; // ← was number, API returns UUID string
   author: string;
   authorInitials: string;
   avatarUrl?: string;
@@ -25,7 +25,7 @@ export interface Post {
 
 interface Props {
   post: Post;
-  onReact: (id: number, reaction: "like" | "dislike") => void;
+  onReact: (id: string, reaction: "like" | "dislike") => void;
 }
 
 export default function PostCard({ post, onReact }: Props) {

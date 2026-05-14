@@ -20,6 +20,7 @@ export default function MessagesPage() {
     try {
       const data = await messagesService.getConversations();
       const items: Conversation[] = data?.data?.items ?? data?.data ?? [];
+      console.log("First convo:", items[0]); // ← add this
       setConversations(items);
       // Auto-select first on initial load
       if (items.length > 0 && !activeId) {
@@ -39,6 +40,7 @@ export default function MessagesPage() {
   // Page-level socket events
   useEffect(() => {
     const token = localStorage.getItem("accessToken") ?? "";
+    console.log("Connecting socket with token:", token);
     const socket = connectSocket(token);
 
     // Lawyer accepted a match → new conversation created
@@ -108,7 +110,7 @@ export default function MessagesPage() {
         {activeId && activeConvo ? (
           <ChatWindow
             conversationId={activeId}
-            participantName={activeConvo.participant.name}
+            participantName={activeConvo.otherParty?.fullName ?? "Unknown"}
             currentAccountId={user?.id ?? ""}
             isAnonymous={isAnonymous}
             onAnonymousToggle={setIsAnonymous}
