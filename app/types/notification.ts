@@ -31,12 +31,15 @@ export interface Notification {
 }
 
 export interface NotificationsResponse {
-    data: {
-        items: Notification[];
-        total: number;
-        page: number;
-        limit: number;
-    }
+  data: {
+    items: Notification[];
+    pagination: {        // ← was flat fields, now nested
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
 }
 
 export interface UnreadCountResponse {

@@ -23,25 +23,22 @@ export default function NotificationsPage() {
 
   const loadNotifications = useCallback(
     async (pageNum: number, append = false) => {
-      try {
-        const data = await notificationsService.getNotifications(
-          pageNum,
-          PAGE_LIMIT
-        );
-        const items: Notification[] = data?.data?.items ?? [];
-        const totalCount: number = data?.data?.total ?? 0;
+        try {
+        const res = await notificationsService.getNotifications(pageNum, PAGE_LIMIT);
+        const items: Notification[] = res?.data?.items ?? [];
+        const totalCount: number = res?.data?.pagination?.total ?? 0; // ← pagination.total
 
         setTotal(totalCount);
         setNotifications((prev) => (append ? [...prev, ...items] : items));
-      } catch (err) {
+        } catch (err) {
         console.error("Failed to load notifications:", err);
-      } finally {
+        } finally {
         setLoading(false);
         setLoadingMore(false);
-      }
+        }
     },
-    [] // no stale closure risk — no outside state referenced
-  );
+    []
+    );
 
   // Initial load
   useEffect(() => {

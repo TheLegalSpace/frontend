@@ -1,15 +1,14 @@
-export interface Participant {
+export interface Conversation {
+  id: string;
+  otherParty?: {        // ← was "participant"
     id: string;
     fullName: string;
     avatarUrl?: string;
-}
-export interface Conversation {
-    id: string;
-    otherParty: Participant;
-    lastMessage: string;
-    lastMessageAt: string;
-    status: "open" | "closed";
-    unread?: number
+  };
+  lastMessage?: string;
+  lastMessageAt?: string;
+  status: "open" | "closed";
+  unread?: number;
 }
 export interface Message {
     id: string;
