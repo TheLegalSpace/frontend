@@ -58,7 +58,7 @@ export default function Sidebar() {
       .slice(0, 2) ?? "?";
 
   const sidebarContent = (
-    <aside className="w-55 h-full border-r border-gray-100 flex flex-col bg-white">
+    <aside className="w-55 h-screen fixed top-0 left-0 border-r border-gray-100 flex flex-col bg-white">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -149,7 +149,7 @@ export default function Sidebar() {
       {/* Footer */}
       <div className="p-3 border-t border-gray-100 flex flex-col gap-2">
         <Link
-          href="/find-lawyer"
+          href="/dashboard/find-lawyer"
           className="cursor-pointer w-full py-2 border-[1.5px] border-gray-900 rounded-lg text-[13px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
         >
           <Scale className="w-4 h-4" />
