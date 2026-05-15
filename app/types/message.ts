@@ -2,7 +2,7 @@ export interface Conversation {
   id: string;
   otherParty?: {        // ← was "participant"
     id: string;
-    ame: string;
+    fullName: string;
     avatarUrl?: string;
   };
   lastMessage?: string;
