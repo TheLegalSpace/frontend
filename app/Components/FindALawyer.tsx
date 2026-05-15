@@ -99,7 +99,7 @@ function LawyerCard({
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
         <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center text-[12px] font-medium flex-shrink-0 overflow-hidden ${getAvatarColor(account.fullName)}`}
+          className={`w-10 h-10 rounded-full flex items-center justify-center text-[12px] font-medium shrink-0 overflow-hidden ${getAvatarColor(account.fullName)}`}
         >
           {account.avatarUrl ? (
             <img
@@ -118,7 +118,7 @@ function LawyerCard({
               {account.fullName}
             </p>
             {score > 0 && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 flex-shrink-0">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 shrink-0">
                 {score}% match
               </span>
             )}
@@ -375,7 +375,7 @@ export default function FindALawyer() {
     <div className="flex flex-col h-[calc(100vh-64px)] max-w-2xl mx-auto">
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white shrink-0">
         <h1 className="text-[15px] font-medium text-gray-900">Get A Lawyer</h1>
         {isComplete && (
           <button
@@ -482,7 +482,7 @@ export default function FindALawyer() {
       </div>
 
       {/* Input */}
-      <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
+      <div className="shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
         <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-2.5">
           <input
             type="text"
@@ -502,7 +502,7 @@ export default function FindALawyer() {
             disabled={
               !inputValue.trim() || isComplete || searchLawyers.isPending
             }
-            className="w-8 h-8 bg-[#1A56DB] rounded-lg flex items-center justify-center disabled:opacity-40 transition-opacity flex-shrink-0"
+            className="w-8 h-8 bg-[#1A56DB] rounded-lg flex items-center justify-center disabled:opacity-40 transition-opacity shrink-0"
             aria-label="Send"
           >
             <Send className="w-3.5 h-3.5 text-white" />
