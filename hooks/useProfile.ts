@@ -1,7 +1,7 @@
 // hooks/useProfile.ts
 import { profileService } from "@/services/profile.services";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
- 
+
 export const useMe = () =>
   useQuery({
     queryKey: ["profile", "me"],

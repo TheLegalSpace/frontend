@@ -11,6 +11,9 @@ interface ProfileResponse {
   error: boolean;
   message: string;
   data: ProfileData;
+  email?: string;
+  isAnonymous?: boolean;
+  fullName?: string;
 }
 
 export const profileService = {
