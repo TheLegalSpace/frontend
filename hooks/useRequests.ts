@@ -5,6 +5,7 @@ import {
   RequestStatus,
   LegalRequest,
   CreateRequestPayload,
+  SendRequestPayload,
 } from "@/services/requests.services";
 
 export const useRequests = (status?: RequestStatus) =>
@@ -39,6 +40,17 @@ export const useCreateRequest = () => {
   return useMutation({
     mutationFn: (payload: CreateRequestPayload) =>
       requestsService.create(payload).then((r) => r.data.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["requests"] });
+    },
+  });
+};
+
+export const useSendRequest = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: SendRequestPayload) =>
+      requestsService.sendRequest(payload).then((r) => r.data.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["requests"] });
     },

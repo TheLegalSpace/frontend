@@ -83,6 +83,17 @@ export function formatBudget(budget: string): string {
   return map[budget] ?? budget;
 }
 
+export interface SendRequestPayload {
+  lawyerAccountId: string;
+  intakePayload: {
+    matter: string;
+    budget: string;
+    location: string;
+    preference: string;
+    freeText: string;
+  };
+}
+
 export const requestsService = {
   list: (status?: RequestStatus, page = 1, limit = 20) =>
     api.get<RequestsResponse>("/requests", {
@@ -95,6 +106,12 @@ export const requestsService = {
     ),
 
   create: (payload: CreateRequestPayload) =>
+    api.post<{ error: boolean; message: string; data: LegalRequest }>(
+      "/requests",
+      payload,
+    ),
+
+  sendRequest: (payload: SendRequestPayload) =>
     api.post<{ error: boolean; message: string; data: LegalRequest }>(
       "/requests",
       payload,
