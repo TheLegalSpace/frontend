@@ -1,3 +1,4 @@
+// Avatar.tsx
 "use client";
 
 import Image from "next/image";
@@ -11,7 +12,7 @@ interface AvatarProps {
 export default function Avatar({
   initials,
   avatarUrl,
-  size = 40,
+  size = 44,
 }: AvatarProps) {
   const colors: Record<string, string> = {
     TI: "#1a4a8a",
