@@ -1,37 +1,39 @@
-// components/intake/FindALawyer.tsx
+ // components/intake/FindALawyer.tsx
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  Send,
+  Loader2,
+  MapPin,
   RotateCcw,
+  Send,
+  ShieldCheck,
   Star,
   Users,
-  MapPin,
-  Loader2,
   Check,
-  ShieldCheck,
-} from "lucide-react"; 
-import { MatchResult, SearchPayload, buildIntakeSteps } from "@/services/intake.services";
+} from "lucide-react";
+
+import {
+  MatchResult,
+  SearchPayload,
+  ExtractedIntake,
+} from "@/services/intake.services";
+
 import { SendRequestPayload } from "@/services/requests.services";
 import { usePracticeAreas } from "@/hooks/usePracticeAreas";
-import { useSearchLawyers } from "@/hooks/useIntake";
+import { useSearchLawyers, useSearchByText } from "@/hooks/useIntake";
 import { useSendRequest } from "@/hooks/useRequests";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface Message {
-  id: string;
-  type: "bot" | "user" | "results";
-  text?: string;
-  options?: { label: string; value: string }[];
-  stepIndex?: number;
-  results?: MatchResult[];
+interface SearchState {
+  results: MatchResult[];
+  extracted: ExtractedIntake;
   searchPayload?: SearchPayload;
+  total: number;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function getInitials(name: string): string {
   if (!name) return "?";
+
   return name
     .split(" ")
     .map((n) => n[0])
@@ -80,17 +82,18 @@ function LawyerCard({
       const payload: SendRequestPayload = {
         lawyerAccountId: account.id,
         intakePayload: {
-          matter: searchPayload.matter,
-          budget: searchPayload.budget,
-          location: searchPayload.location,
-          preference: searchPayload.preference,
-          freeText: searchPayload.freeText,
+          matter: extracted.matter?.id ?? "",
+          budget: extracted.budget ?? "",
+          location: extracted.location ?? "",
+          preference: extracted.preference ?? "either",
+          freeText: "",
         },
       };
+
       await sendRequest.mutateAsync(payload);
       setSent(true);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? "Failed to send request.");
+      setError(err?.response?.data?.message ?? "Failed to send request");
     }
   };
 
@@ -177,27 +180,32 @@ function LawyerCard({
         </div>
       )}
 
-      {error && <p className="text-[11px] text-red-500 mb-2">{error}</p>}
+      {error && (
+        <p className="text-[12px] text-red-500 mt-4">
+          {error}
+        </p>
+      )}
 
-      {/* Actions */}
-      <div className="flex gap-2">
-        <button className="flex-1 py-2 border border-gray-200 rounded-lg text-[12px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-          Profile
+      <div className="grid grid-cols-2 gap-3 mt-6">
+        <button className="h-11 rounded-2xl border border-[#EAEAEA] text-[13px] font-medium text-[#444] hover:bg-[#FAFAFA] transition-colors">
+          View Profile
         </button>
+
         <button
           onClick={handleSend}
           disabled={sent || sendRequest.isPending}
-          className={`flex-1 py-2 rounded-lg text-[12px] font-medium transition-colors flex items-center justify-center gap-1.5 ${
+          className={`h-11 rounded-2xl text-[13px] font-medium transition-all flex items-center justify-center gap-2 ${
             sent
               ? "bg-green-500 text-white"
-              : "bg-[#1A56DB] text-white hover:bg-[#1648b8] disabled:opacity-50"
+              : "bg-[#1D4ED8] text-white hover:bg-[#1B46C4]"
           }`}
         >
           {sendRequest.isPending ? (
-            <Loader2 className="w-3 h-3 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : sent ? (
             <>
-              <Check className="w-3 h-3" /> Sent
+              <Check className="w-4 h-4" />
+              Sent
             </>
           ) : (
             "Send Request"
@@ -208,305 +216,286 @@ function LawyerCard({
   );
 }
 
-// ─── Option Pill ──────────────────────────────────────────────────────────────
-function OptionPill({
-  label,
-  onClick,
-  disabled,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className="px-4 py-1.5 rounded-full border border-gray-200 text-[12px] text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-    >
-      {label}
-    </button>
-  );
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 export default function FindALawyer() {
-  const { data: practiceAreas, isLoading: areasLoading } = usePracticeAreas();
-  const INTAKE_STEPS = practiceAreas ? buildIntakeSteps(practiceAreas) : [];
+  const { data: practiceAreas } = usePracticeAreas();
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [answers, setAnswers] = useState<Partial<SearchPayload>>({});
   const [inputValue, setInputValue] = useState("");
-  const [isComplete, setIsComplete] = useState(false);
+  const [searchState, setSearchState] = useState<SearchState | null>(null);
+  const [validationError, setValidationError] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const searchByText = useSearchByText();
   const searchLawyers = useSearchLawyers();
-  const initialized = useRef(false);
 
-  // ✅ Initialize first message once practice areas load
-  useEffect(() => {
-    if (INTAKE_STEPS.length > 0 && !initialized.current) {
-      initialized.current = true;
-      setMessages([
-        {
-          id: "1",
-          type: "bot",
-          text: INTAKE_STEPS[0].question,
-          options: INTAKE_STEPS[0].options,
-          stepIndex: 0,
-        },
-      ]);
-    }
-  }, [INTAKE_STEPS.length]);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Auto scroll to bottom on new message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [searchState]);
 
-  const addMessage = (msg: Omit<Message, "id">) => {
-    setMessages((prev) => [
-      ...prev,
-      { ...msg, id: `${Date.now()}-${Math.random().toString(36).slice(2)}` },
-    ]);
-  };
+  const handleSearch = async (text: string) => {
+    if (text.length < 10) {
+      setValidationError(
+        "Please describe your situation in at least 10 characters"
+      );
+      return;
+    }
 
-  const handleAnswer = async (value: string, label: string) => {
-    if (isComplete || INTAKE_STEPS.length === 0) return;
+    setValidationError("");
+    setHasSearched(true);
 
-    const step = INTAKE_STEPS[currentStep];
-    const newAnswers = { ...answers, [step.key]: value };
-    setAnswers(newAnswers);
+    try {
+      const result = await searchByText.mutateAsync({ text });
 
-    // Show human-readable label in chat, send UUID/value to API
-    addMessage({ type: "user", text: label });
-
-    const nextStep = currentStep + 1;
-
-    if (nextStep < INTAKE_STEPS.length) {
-      setTimeout(() => {
-        addMessage({
-          type: "bot",
-          text: INTAKE_STEPS[nextStep].question,
-          options: INTAKE_STEPS[nextStep].options,
-          stepIndex: nextStep,
-        });
-        setCurrentStep(nextStep);
-      }, 400);
-    } else {
-      // All steps answered — search
-      setIsComplete(true);
-      const payload = newAnswers as SearchPayload;
-
-      setTimeout(async () => {
-        addMessage({
-          type: "bot",
-          text: "Finding the best lawyers for you...",
-        });
-        try {
-          const result = await searchLawyers.mutateAsync({
-            matter: payload.matter,
-            budget: payload.budget,
-            location: payload.location,
-            preference: payload.preference,
-            freeText: inputValue.trim(),
-          });
-          addMessage({
-            type: "results",
-            results: result.items,
-            searchPayload: {
-              ...payload,
-              freeText: inputValue.trim(),
-            },
-          });
-        } catch (err: any) {
-          addMessage({
-            type: "bot",
-            text:
-              err?.response?.data?.message ??
-              "Could not find results. Please try again.",
-          });
-          setIsComplete(false);
-        }
-      }, 500);
+      setSearchState({
+        results: result.items,
+        extracted: result.extracted,
+        total: result.pagination.total,
+      });
+    } catch (err: any) {
+      setValidationError(
+        err?.response?.data?.message ?? "Search failed"
+      );
     }
   };
 
-  const handleTextSubmit = () => {
-    if (!inputValue.trim() || isComplete || INTAKE_STEPS.length === 0) return;
-    handleAnswer(inputValue.trim(), inputValue.trim());
-    setInputValue("");
+  const handleSubmit = () => {
+    const text = inputValue.trim();
+
+    if (!text || searchByText.isPending) return;
+
+    handleSearch(text);
   };
 
   const handleRestart = () => {
-    if (INTAKE_STEPS.length === 0) return;
-    initialized.current = false;
-    setTimeout(() => {
-      initialized.current = true;
-      setMessages([
-        {
-          id: Date.now().toString(),
-          type: "bot",
-          text: INTAKE_STEPS[0].question,
-          options: INTAKE_STEPS[0].options,
-          stepIndex: 0,
-        },
-      ]);
-    }, 0);
-    setCurrentStep(0);
-    setAnswers({});
-    setIsComplete(false);
     setInputValue("");
+    setSearchState(null);
+    setValidationError("");
+    setHasSearched(false);
+
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   };
 
-  if (areasLoading) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-64px)]">
-        <div className="flex items-center gap-2 text-[13px] text-gray-400">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          Loading...
-        </div>
-      </div>
-    );
-  }
+  const extracted = searchState?.extracted;
+
+  const isSearching =
+    searchByText.isPending || searchLawyers.isPending;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] max-w-2xl mx-auto">
+    <div className="grid grid-cols-[55%_45%] h-[calc(100vh-64px)] bg-[#FAFAFA] overflow-hidden">
+      {/* LEFT PANEL */}
+      <div className="bg-white border-r border-[#ECECEC] flex flex-col overflow-hidden">
+        {/* HEADER */}
+        <div className="h-[72px] border-b border-[#F0F0F0] px-8 flex items-center justify-between flex-shrink-0">
+          <div>
+            <h1 className="text-[28px] font-serif text-[#202020]">
+              Get A Lawyer
+            </h1>
+          </div>
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white shrink-0">
-        <h1 className="text-[15px] font-medium text-gray-900">Get A Lawyer</h1>
-        {isComplete && (
-          <button
-            onClick={handleRestart}
-            className="flex items-center gap-1.5 text-[12px] text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Restart search
-          </button>
-        )}
+          {hasSearched && (
+            <button
+              onClick={handleRestart}
+              className="rounded-full bg-[#F7F7F7] px-4 py-2 text-[12px] text-[#555] hover:bg-[#EFEFEF] transition-colors flex items-center gap-2"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Restart search
+            </button>
+          )}
+        </div>
+
+        {/* CONVERSATION */}
+        <div className="flex-1 overflow-y-auto px-8 py-8">
+          {!hasSearched && (
+            <div className="max-w-xl pt-12">
+              <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] flex items-center justify-center mb-8">
+                <Send className="w-6 h-6 text-[#1D4ED8]" />
+              </div>
+
+              <h2 className="text-[40px] leading-tight font-serif text-[#202020] max-w-lg">
+                Tell us about your legal situation.
+              </h2>
+
+              <p className="mt-6 text-[15px] leading-8 text-[#6B6B6B] max-w-xl">
+                Describe your issue naturally. Mention your location,
+                approximate budget, and the kind of legal help you need.
+              </p>
+
+              <div className="mt-10 rounded-3xl border border-[#ECECEC] bg-[#FCFCFC] p-6">
+                <p className="text-[13px] text-[#9B9B9B] uppercase tracking-wide mb-3">
+                  Example
+                </p>
+
+                <p className="text-[15px] leading-8 text-[#444]">
+                  “My landlord is trying to evict me illegally in Lagos and I
+                  can pay around ₦150k for legal representation.”
+                </p>
+              </div>
+            </div>
+          )}
+
+          {isSearching && (
+            <div className="h-full flex items-center justify-center">
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 className="w-8 h-8 text-[#1D4ED8] animate-spin" />
+
+                <div className="text-center">
+                  <p className="text-[16px] font-medium text-[#202020]">
+                    Analysing your request
+                  </p>
+
+                  <p className="text-[14px] text-[#777] mt-1">
+                    Finding the best legal matches for you...
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isSearching && searchState && extracted && (
+            <div className="max-w-2xl space-y-8">
+              <QuestionBlock
+                question="What is your legal matter about?"
+                answer={extracted.matter?.name || "General Legal Matter"}
+              />
+
+              <QuestionBlock
+                question="What is your budget?"
+                answer={formatBudgetLabel(extracted.budget) || "Flexible"}
+              />
+
+              <QuestionBlock
+                question="Where do you need legal help?"
+                answer={extracted.location || "Anywhere"}
+              />
+
+              <QuestionBlock
+                question="Who would you prefer?"
+                answer={extracted.preference || "Either"}
+              />
+            </div>
+          )}
+
+          <div ref={bottomRef} />
+        </div>
+
+        {/* INPUT */}
+        <div className="border-t border-[#ECECEC] bg-white px-6 py-5 flex-shrink-0">
+          {validationError && (
+            <p className="text-[12px] text-red-500 mb-3">
+              {validationError}
+            </p>
+          )}
+
+          <div className="flex items-end gap-3 rounded-3xl border border-[#EAEAEA] bg-white px-5 py-4 shadow-sm">
+            <textarea
+              ref={inputRef}
+              rows={1}
+              value={inputValue}
+              disabled={isSearching}
+              placeholder="Describe your legal situation..."
+              onChange={(e) => {
+                setInputValue(e.target.value);
+
+                e.target.style.height = "auto";
+                e.target.style.height = `${Math.min(
+                  e.target.scrollHeight,
+                  140
+                )}px`;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+              className="flex-1 resize-none bg-transparent outline-none text-[15px] leading-7 text-[#202020] placeholder:text-[#999] max-h-[140px]"
+            />
+
+            <button
+              onClick={handleSubmit}
+              disabled={!inputValue.trim() || isSearching}
+              className="w-12 h-12 rounded-2xl bg-[#1D4ED8] flex items-center justify-center hover:bg-[#1947C6] transition-colors disabled:opacity-40 flex-shrink-0"
+            >
+              {isSearching ? (
+                <Loader2 className="w-4 h-4 text-white animate-spin" />
+              ) : (
+                <Send className="w-4 h-4 text-white" />
+              )}
+            </button>
+          </div>
+
+          <p className="text-center text-[11px] text-[#B0B0B0] mt-3">
+            Press Enter to search · Shift + Enter for new line
+          </p>
+        </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {messages.map((msg) => (
-          <div key={msg.id}>
+      {/* RIGHT PANEL */}
+      <div className="bg-[#FCFCFC] overflow-y-auto">
+        <div className="px-8 py-8 max-w-3xl">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-[42px] font-serif text-[#202020] leading-none">
+                Search Result
+              </h2>
 
-            {/* Bot message */}
-            {msg.type === "bot" && (
-              <div className="flex flex-col gap-2 max-w-xs">
-                <p className="text-[13px] text-gray-800">{msg.text}</p>
-                {msg.options && (
-                  <div className="flex flex-wrap gap-2">
-                    {msg.options.map((opt) => (
-                      <OptionPill
-                        key={opt.value}
-                        label={opt.label}
-                        disabled={
-                          isComplete ||
-                          searchLawyers.isPending ||
-                          msg.stepIndex !== currentStep
-                        }
-                        onClick={() => handleAnswer(opt.value, opt.label)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+              {searchState && (
+                <p className="text-[14px] text-[#777] mt-3">
+                  {searchState.total} lawyer
+                  {searchState.total !== 1 ? "s" : ""} matched
+                  your request
+                </p>
+              )}
+            </div>
+          </div>
 
-            {/* User message */}
-            {msg.type === "user" && (
-              <div className="flex justify-end">
-                <span className="px-4 py-1.5 bg-[#1A56DB] text-white text-[12px] rounded-full max-w-xs text-right">
-                  {msg.text}
-                </span>
-              </div>
-            )}
-
-            {/* Results */}
-            {msg.type === "results" && (
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[14px] font-medium text-gray-900">
-                    Search Result
-                  </p>
-                  <button
-                    onClick={handleRestart}
-                    className="text-[12px] text-gray-400 hover:underline"
-                  >
-                    Back to Feeds
-                  </button>
+          {!hasSearched && (
+            <div className="h-[70vh] flex items-center justify-center">
+              <div className="text-center max-w-sm">
+                <div className="w-16 h-16 rounded-3xl bg-white border border-[#EFEFEF] shadow-sm mx-auto flex items-center justify-center mb-6">
+                  <Users className="w-7 h-7 text-[#999]" />
                 </div>
 
-                {msg.results && msg.results.length > 0 ? (
-                  <>
-                    {msg.results.map((match) => (
-                      <LawyerCard
-                        key={match.account.id}
-                        match={match}
-                        searchPayload={msg.searchPayload!}
-                      />
-                    ))}
-                    <button className="w-full py-2 text-[12px] text-gray-400 hover:text-gray-600">
-                      Show More ↓
-                    </button>
-                  </>
-                ) : (
-                  <div className="py-8 text-center text-[13px] text-gray-400 border border-gray-100 rounded-xl">
-                    No lawyers found matching your criteria.
-                    <br />
-                    <button
-                      onClick={handleRestart}
-                      className="text-[12px] text-blue-600 hover:underline mt-2 block mx-auto"
-                    >
-                      Try different criteria
-                    </button>
-                  </div>
-                )}
+                <h3 className="text-[20px] font-semibold text-[#202020]">
+                  Lawyer matches will appear here
+                </h3>
+
+                <p className="text-[15px] leading-7 text-[#777] mt-4">
+                  Once you describe your legal situation, we will find the best
+                  lawyers based on expertise, budget, and location.
+                </p>
               </div>
-            )}
-          </div>
-        ))}
+            </div>
+          )}
 
-        {/* Searching indicator */}
-        {searchLawyers.isPending && (
-          <div className="flex items-center gap-2 text-[12px] text-gray-400">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            Searching...
-          </div>
-        )}
+          {!isSearching && searchState && (
+            <div className="space-y-5">
+              {searchState.results.length > 0 ? (
+                searchState.results.map((match) => (
+                  <LawyerCard
+                    key={match.account.id}
+                    match={match}
+                    extracted={searchState.extracted}
+                  />
+                ))
+              ) : (
+                <div className="rounded-3xl border border-[#ECECEC] bg-white p-10 text-center">
+                  <h3 className="text-[18px] font-semibold text-[#202020]">
+                    No matching lawyers found
+                  </h3>
 
-        <div ref={bottomRef} />
-      </div>
-
-      {/* Input */}
-      <div className="shrink-0 px-4 py-3 border-t border-gray-100 bg-white">
-        <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-2.5">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleTextSubmit();
-            }}
-            placeholder={
-              isComplete ? "Search complete" : "Type something..."
-            }
-            disabled={isComplete || searchLawyers.isPending}
-            className="flex-1 bg-transparent text-[13px] text-gray-700 outline-none placeholder:text-gray-400 disabled:cursor-not-allowed"
-          />
-          <button
-            onClick={handleTextSubmit}
-            disabled={
-              !inputValue.trim() || isComplete || searchLawyers.isPending
-            }
-            className="w-8 h-8 bg-[#1A56DB] rounded-lg flex items-center justify-center disabled:opacity-40 transition-opacity shrink-0"
-            aria-label="Send"
-          >
-            <Send className="w-3.5 h-3.5 text-white" />
-          </button>
+                  <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
+                    Try adjusting your legal description, budget, or preferred
+                    location to broaden the search.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
