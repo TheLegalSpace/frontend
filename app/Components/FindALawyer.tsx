@@ -44,6 +44,7 @@ function getInitials(name: string): string {
 
 function getAvatarColor(name: string): string {
   if (!name) return "bg-gray-100 text-gray-500";
+
   const colors = [
     "bg-blue-100 text-blue-700",
     "bg-purple-100 text-purple-700",
@@ -51,6 +52,7 @@ function getAvatarColor(name: string): string {
     "bg-amber-100 text-amber-700",
     "bg-pink-100 text-pink-700",
   ];
+
   return colors[name.charCodeAt(0) % colors.length];
 }
 
@@ -59,18 +61,60 @@ function formatFeeRange(min: number, max: number): string {
     n >= 1000000
       ? `₦${(n / 1000000).toFixed(1)}M`
       : `₦${(n / 1000).toFixed(0)}k`;
-  return `${fmt(min)} – ${fmt(max)}`;
+
+  return `${fmt(min)} - ${fmt(max)}`;
 }
 
-// ─── Lawyer Card ──────────────────────────────────────────────────────────────
+function formatBudgetLabel(budget: string | null): string {
+  if (!budget) return "";
+
+  const map: Record<string, string> = {
+    under_50k: "Under ₦50k",
+    "50k_to_100k": "₦50k - ₦100k",
+    "100k_to_500k": "₦100k - ₦500k",
+    "500k_to_1m": "₦500k - ₦1M",
+    above_1m: "Above ₦1M",
+    under_100k: "Under ₦100k",
+    "500k_to_2m": "₦500k - ₦2M",
+    above_2m: "Above ₦2M",
+  };
+
+  return map[budget] ?? budget.replace(/_/g, " ");
+}
+
+function QuestionBlock({
+  question,
+  answer,
+}: {
+  question: string;
+  answer: string;
+}) {
+  return (
+    <div className="pb-8 border-b border-[#EFEFEF] last:border-none">
+      <div className="inline-flex items-center rounded-full border border-[#E67E22] px-5 py-2.5 bg-white shadow-sm">
+        <p className="text-[14px] font-medium text-[#202020]">
+          {question}
+        </p>
+      </div>
+
+      <div className="mt-5">
+        <div className="inline-flex items-center rounded-2xl bg-[#EEF4FF] px-5 py-3 text-[14px] font-medium text-[#2D6BFF] shadow-sm">
+          {answer}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LawyerCard({
   match,
-  searchPayload,
+  extracted,
 }: {
   match: MatchResult;
-  searchPayload: SearchPayload;
+  extracted: ExtractedIntake;
 }) {
   const sendRequest = useSendRequest();
+
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
 
@@ -78,6 +122,7 @@ function LawyerCard({
 
   const handleSend = async () => {
     setError("");
+
     try {
       const payload: SendRequestPayload = {
         lawyerAccountId: account.id,
@@ -98,84 +143,82 @@ function LawyerCard({
   };
 
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-4 mb-3">
-      {/* Header */}
-      <div className="flex items-start gap-3 mb-3">
-        <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center text-[12px] font-medium shrink-0 overflow-hidden ${getAvatarColor(account.fullName)}`}
-        >
-          {account.avatarUrl ? (
-            <img
-              src={account.avatarUrl}
-              alt={account.fullName}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            getInitials(account.fullName)
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[13px] font-medium text-gray-900 truncate">
-              {account.fullName}
-            </p>
-            {score > 0 && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 shrink-0">
-                {score}% match
-              </span>
-            )}
+    <div className="rounded-3xl border border-[#F0F0F0] bg-white p-5 transition-all hover:shadow-xl hover:-translate-y-0.5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex gap-4 min-w-0">
+          <div
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center font-semibold text-sm flex-shrink-0 ${getAvatarColor(
+              account.fullName
+            )}`}
+          >
+            {getInitials(account.fullName)}
           </div>
-          {account.bio && (
-            <p className="text-[11px] text-gray-400 mt-0.5 truncate">
-              {account.bio}
-            </p>
-          )}
-          {account.lawyerProfile?.verificationStatus === "verified" && (
-            <div className="flex items-center gap-1 mt-0.5">
-              <ShieldCheck className="w-3 h-3 text-blue-500" />
-              <span className="text-[10px] text-blue-500">Verified</span>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-[15px] font-semibold text-[#202020] truncate">
+                {account.fullName}
+              </h3>
+
+              {account.lawyerProfile?.verificationStatus === "verified" && (
+                <div className="inline-flex items-center gap-1 rounded-full bg-[#EEF4FF] px-2 py-1 text-[11px] text-[#2D6BFF]">
+                  <ShieldCheck className="w-3 h-3" />
+                  Verified
+                </div>
+              )}
             </div>
-          )}
+
+            {account.bio && (
+              <p className="text-[13px] text-[#707070] mt-1 line-clamp-2 leading-relaxed">
+                {account.bio}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-2 mt-4">
+              {account.locationCity && (
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F7F7F7] px-3 py-1.5 text-[12px] text-[#666]">
+                  <MapPin className="w-3 h-3" />
+                  {account.locationCity}, {account.locationCountry}
+                </div>
+              )}
+
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F7F7F7] px-3 py-1.5 text-[12px] text-[#666]">
+                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                {parseFloat(account.avgRating || "0").toFixed(1)}
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F7F7F7] px-3 py-1.5 text-[12px] text-[#666]">
+                <Users className="w-3 h-3" />
+                {account.connectionCount}+ connections
+              </div>
+
+              {account.lawyerProfile && (
+                <div className="inline-flex items-center rounded-full bg-[#F7F7F7] px-3 py-1.5 text-[12px] text-[#666]">
+                  {formatFeeRange(
+                    account.lawyerProfile.feeRangeMin,
+                    account.lawyerProfile.feeRangeMax
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-[#EFFAF2] px-3 py-2 text-center min-w-[70px] flex-shrink-0">
+          <p className="text-[16px] font-bold text-[#159947]">{score}%</p>
+          <p className="text-[11px] text-[#159947]">Match</p>
         </div>
       </div>
 
-      {/* Tags */}
-      <div className="flex flex-wrap gap-1.5 mb-2">
-        {account.locationCity && (
-          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
-            <MapPin className="w-2.5 h-2.5" />
-            {account.locationCity}, {account.locationCountry}
-          </span>
-        )}
-        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
-          <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
-          {parseFloat(account.avgRating || "0").toFixed(1)}
-        </span>
-        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
-          <Users className="w-2.5 h-2.5" />
-          {account.connectionCount}+ connections
-        </span>
-        {account.lawyerProfile && (
-          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 border border-gray-100">
-            {formatFeeRange(
-              account.lawyerProfile.feeRangeMin,
-              account.lawyerProfile.feeRangeMax,
-            )}
-          </span>
-        )}
-      </div>
-
-      {/* Matched factors */}
       {matchedFactors.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-3">
-          {matchedFactors.map((f) => (
-            <span
-              key={f}
-              className="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 capitalize"
+        <div className="flex flex-wrap gap-2 mt-5">
+          {matchedFactors.map((factor) => (
+            <div
+              key={factor}
+              className="rounded-full border border-[#ECECEC] px-3 py-1 text-[11px] text-[#666] capitalize"
             >
-              {f.replace(/_/g, " ")}
-            </span>
+              {factor.replace(/_/g, " ")}
+            </div>
           ))}
         </div>
       )}
