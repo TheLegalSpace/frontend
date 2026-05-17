@@ -1,34 +1,46 @@
 "use client";
 
-import { FileText, MessageSquare, AlertTriangle, ShieldAlert, UserPlus, Star, CheckCircle, XCircle, Bell, BookOpen, Calendar } from "lucide-react";
-import { NotificationType, Notification } from "@/app/types/notification";
+import {
+  FileText,
+  MessageSquare,
+  AlertTriangle,
+  ShieldAlert,
+  UserPlus,
+  Star,
+  CheckCircle,
+  XCircle,
+  Bell,
+  BookOpen,
+  Calendar,
+} from "lucide-react";
+import { Notification, NotificationType } from "@/app/types/notification";
 
 function timeAgo(dateStr: string) {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `${mins}m ago`
-    const hrs = Math.floor(mins/60);
-    if(hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs/24);
-    if(days < 7) return `${days}d ago`
-    const weeks = Math.floor(days/7);
-    return `${weeks}w ago`
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  const weeks = Math.floor(days / 7);
+  return `${weeks}w ago`;
 }
 
 function formatDate(dateStr: string) {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-    });
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function getNotificationMeta(type: NotificationType): {
-    icon: React.ReactNode;
-    label: string;
+  icon: React.ReactNode;
+  label: string;
 } {
-    switch(type) {
-        case "new_article":
+  switch (type) {
+    case "new_article":
       return { icon: <FileText size={15} />, label: "New Article" };
     case "new_message":
       return { icon: <MessageSquare size={15} />, label: "New Message" };
@@ -46,7 +58,7 @@ function getNotificationMeta(type: NotificationType): {
       return { icon: <XCircle size={15} />, label: "Request Declined" };
     default:
       return { icon: <Bell size={15} />, label: "Notification" };
-    }
+  }
 }
 
 function ArticlePreview({
@@ -59,13 +71,11 @@ function ArticlePreview({
       href={`/articles/${article.slug}`}
       className="mt-3 flex items-center gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50 transition"
     >
-      {/* Thumbnail */}
       <div className="w-12 h-12 rounded-lg bg-gray-900 flex flex-col items-center justify-center shrink-0">
         <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400">
           Article
         </span>
       </div>
- 
       <div className="flex-1 min-w-0">
         <p className="text-[13px] font-semibold text-gray-900 leading-snug truncate">
           {article.title}
@@ -88,13 +98,13 @@ function ArticlePreview({
     </a>
   );
 }
- 
+
 function getBodyText(notif: Notification): {
   primary: string | React.ReactNode;
   secondary?: string;
 } {
   const actor = notif.payload.actorName;
- 
+
   switch (notif.type) {
     case "new_article":
       return {
@@ -104,7 +114,8 @@ function getBodyText(notif: Notification): {
             published a new article.
           </>
         ),
-        secondary: "Stay informed with insights that may be relevant to your situation.",
+        secondary:
+          "Stay informed with insights that may be relevant to your situation.",
       };
     case "new_message":
       return {
@@ -114,7 +125,8 @@ function getBodyText(notif: Notification): {
             responded to your request.
           </>
         ),
-        secondary: "Open the conversation to review their message and continue when you're ready.",
+        secondary:
+          "Open the conversation to review their message and continue when you're ready.",
       };
     case "chat_expiry_warning":
       return {
@@ -165,28 +177,30 @@ function getBodyText(notif: Notification): {
         ),
       };
     default:
-      return { primary: notif.payload.message ?? "You have a new notification." };
+      return {
+        primary: notif.payload.message ?? "You have a new notification.",
+      };
   }
 }
- 
+
 interface Props {
   notification: Notification;
   onMarkRead: (id: string) => void;
 }
- 
+
 export default function NotificationCard({ notification, onMarkRead }: Props) {
   const { icon, label } = getNotificationMeta(notification.type);
   const { primary, secondary } = getBodyText(notification);
   const isUnread = !notification.readAt;
- 
+
   function handleClick() {
     if (isUnread) onMarkRead(notification.id);
   }
- 
+
   return (
     <div
       onClick={handleClick}
-      className={`px-5 py-4 border-b border-gray-100 cursor-pointer transition hover:bg-gray-50/60 ${
+      className={`px-4 md:px-5 py-4 border-b border-gray-100 cursor-pointer transition hover:bg-gray-50/60 ${
         isUnread ? "bg-white" : "bg-gray-50/30"
       }`}
     >
@@ -205,15 +219,13 @@ export default function NotificationCard({ notification, onMarkRead }: Props) {
           {timeAgo(notification.createdAt)}
         </span>
       </div>
- 
+
       {/* Body */}
-      <div className={`text-[13px] text-gray-600 leading-relaxed ${isUnread ? "" : "pl-0"}`}>
+      <div className="text-[13px] text-gray-600 leading-relaxed">
         <p>{primary}</p>
-        {secondary && (
-          <p className="mt-0.5 text-gray-500">{secondary}</p>
-        )}
+        {secondary && <p className="mt-0.5 text-gray-500">{secondary}</p>}
       </div>
- 
+
       {/* Article preview */}
       {notification.payload.article && (
         <ArticlePreview article={notification.payload.article} />
