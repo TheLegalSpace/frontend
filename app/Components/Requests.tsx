@@ -119,10 +119,10 @@ function RequestCard({
                 <img
                   src={lawyerAccount.avatarUrl}
                   alt={lawyerAccount.fullName}
-                  className="w-11 h-11 rounded-lg object-cover flex-shrink-0"
+                  className="w-11 h-11 rounded-lg object-cover shrink-0"
                 />
               ) : (
-                <div className="w-11 h-11 bg-[#1e293b] rounded-lg flex items-center justify-center text-[11px] font-medium text-white flex-shrink-0">
+                <div className="w-11 h-11 bg-[#1e293b] rounded-lg flex items-center justify-center text-[11px] font-medium text-white shrink-0">
                   {getInitials(lawyerAccount.fullName)}
                 </div>
               )}
@@ -135,7 +135,7 @@ function RequestCard({
                 </p>
                 {lawyerAccount.locationCity && (
                   <div className="flex items-center gap-1 mt-0.5">
-                    <MapPin className="w-3 h-3 text-gray-300 flex-shrink-0" />
+                    <MapPin className="w-3 h-3 text-gray-300 shrink-0" />
                     <span className="text-[11px] text-gray-400">
                       {lawyerAccount.locationCity}, {lawyerAccount.locationCountry}
                     </span>
@@ -145,7 +145,7 @@ function RequestCard({
             </div>
 
             {/* Right side */}
-            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+            <div className="flex flex-col items-end gap-1 shrink-0">
               <div className="flex items-center gap-1 text-[12px] text-gray-400">
                 <Clock className="w-3.5 h-3.5" />
                 {timeAgo(createdAt)}

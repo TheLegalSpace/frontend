@@ -16,13 +16,15 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [isAnonymous, setIsAnonymous] = useState(true);
 
+  // On mobile, track whether we're showing the chat or the list
+  const [mobileView, setMobileView] = useState<"list" | "chat">("list");
+
   const loadConversations = useCallback(async () => {
     try {
       const data = await messagesService.getConversations();
       const items: Conversation[] = data?.data?.items ?? data?.data ?? [];
-      console.log("First convo:", items[0]); // ← add this
       setConversations(items);
-      // Auto-select first on initial load
+      // Only auto-select on desktop (don't push mobile to chat view on load)
       if (items.length > 0 && !activeId) {
         setActiveId(items[0].id);
       }
@@ -40,10 +42,8 @@ export default function MessagesPage() {
   // Page-level socket events
   useEffect(() => {
     const token = localStorage.getItem("accessToken") ?? "";
-    console.log("Connecting socket with token:", token);
     const socket = connectSocket(token);
 
-    // Lawyer accepted a match → new conversation created
     socket.on(
       "request:status_changed",
       ({
@@ -56,13 +56,13 @@ export default function MessagesPage() {
       }) => {
         if (status === "accepted" && conversationId) {
           socket.emit("conversation:join", { conversationId });
-          loadConversations(); // refresh sidebar
-          setActiveId(conversationId); // auto-open the new convo
+          loadConversations();
+          setActiveId(conversationId);
+          setMobileView("chat");
         }
       }
     );
 
-    // Conversation closed by the other party
     socket.on("conversation:updated", (conv: { id: string; status: string }) => {
       if (conv.status === "closed") {
         setConversations((prev) =>
@@ -71,8 +71,7 @@ export default function MessagesPage() {
       }
     });
 
-    // Token expired — reconnect
-    socket.on("connect_error", (err: { message: string; }) => {
+    socket.on("connect_error", (err: { message: string }) => {
       if (err.message === "invalid token") {
         const newToken = localStorage.getItem("accessToken") ?? "";
         disconnectSocket();
@@ -80,7 +79,6 @@ export default function MessagesPage() {
       }
     });
 
-    // On reconnect, backfill in case we missed anything
     socket.on("connect", () => {
       loadConversations();
     });
@@ -95,33 +93,59 @@ export default function MessagesPage() {
 
   const activeConvo = conversations.find((c) => c.id === activeId) ?? null;
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-start justify-center py-8 px-4">
-      <div className="w-full max-w-4xl bg-white border border-gray-200 rounded-2xl overflow-hidden flex h-150 shadow-sm">
-        {/* Sidebar */}
-        <ConversationList
-          conversations={conversations}
-          activeId={activeId}
-          onSelect={setActiveId}
-          loading={loading}
-        />
+  function handleSelectConvo(id: string) {
+    setActiveId(id);
+    setMobileView("chat"); // push to chat view on mobile
+  }
 
-        {/* Chat area */}
-        {activeId && activeConvo ? (
-          <ChatWindow
-            conversationId={activeId}
-            participantName={activeConvo.otherParty?.fullName ?? "Unknown"}
-            currentAccountId={user?.id ?? ""}
-            isAnonymous={isAnonymous}
-            onAnonymousToggle={setIsAnonymous}
-            onClose={() => {}}
-          />
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
-            <MessageSquare size={32} strokeWidth={1.5} />
-            <p className="text-sm">Select a conversation to start chatting</p>
+  function handleBackToList() {
+    setMobileView("list"); // back button on mobile
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 md:flex md:items-start md:justify-center md:py-8 md:px-4">
+      <div className="w-full md:max-w-4xl bg-white md:border md:border-gray-200 md:rounded-2xl overflow-hidden md:flex md:h-150 md:shadow-sm h-screen flex flex-col">
+
+        {/* ── Mobile: show list OR chat, never both ── */}
+        <div className="flex flex-1 overflow-hidden">
+
+          {/* Sidebar — always visible on md+, conditionally on mobile */}
+          <div className={`
+            ${mobileView === "list" ? "flex" : "hidden"}
+            md:flex flex-col w-full md:w-auto
+          `}>
+            <ConversationList
+              conversations={conversations}
+              activeId={activeId}
+              onSelect={handleSelectConvo}
+              loading={loading}
+            />
           </div>
-        )}
+
+          {/* Chat — always visible on md+ if active, conditionally on mobile */}
+          <div className={`
+            ${mobileView === "chat" ? "flex" : "hidden"}
+            md:flex flex-1 flex-col min-w-0
+          `}>
+            {activeId && activeConvo ? (
+              <ChatWindow
+                conversationId={activeId}
+                participantName={activeConvo.otherParty?.fullName ?? "Unknown"}
+                currentAccountId={user?.id ?? ""}
+                isAnonymous={isAnonymous}
+                onAnonymousToggle={setIsAnonymous}
+                onClose={handleBackToList}
+                showBackButton={true}
+              />
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
+                <MessageSquare size={32} strokeWidth={1.5} />
+                <p className="text-sm">Select a conversation to start chatting</p>
+              </div>
+            )}
+          </div>
+
+        </div>
       </div>
     </div>
   );
