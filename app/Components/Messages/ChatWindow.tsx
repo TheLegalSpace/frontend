@@ -72,7 +72,7 @@ export default function ChatWindow({
   const loadMessages = useCallback(async () => {
     try {
       const data = await messagesService.getMessages(conversationId);
-      const items: Message[] = data?.data?.items ?? data?.data ?? [];
+      const items: Message[] = (data?.data?.items ?? data?.data ?? []).reverse();
       setCachedMessages(conversationId, items);
       setMessages(items);
     } catch (err) {
@@ -231,7 +231,7 @@ export default function ChatWindow({
               <ArrowLeft size={18} className="text-gray-600" />
             </button>
           )}
-          <span className="text-[15px] font-semibold text-gray-900">
+          <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
             {participantName}
           </span>
         </div>
@@ -249,7 +249,7 @@ export default function ChatWindow({
       <AnonymousBanner isAnonymous={isAnonymous} onToggle={onAnonymousToggle} />
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 font-['Geist'] justify-end">
         {loading ? (
           <div className="flex items-center justify-center h-full text-sm text-gray-400">
             <Loader2 size={18} className="animate-spin mr-2" /> Loading...

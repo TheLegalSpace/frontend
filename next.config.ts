@@ -1,12 +1,5 @@
-<<<<<<< HEAD
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-=======
-// next.config.ts
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
->>>>>>> 6dce097a1a76d945ce252ff47423aa37e78624f8
   images: {
     remotePatterns: [
       {
