@@ -1,4 +1,4 @@
- // components/intake/FindALawyer.tsx
+// components/intake/FindALawyer.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -92,9 +92,7 @@ function QuestionBlock({
   return (
     <div className="pb-8 border-b border-[#EFEFEF] last:border-none">
       <div className="inline-flex items-center rounded-full border border-[#E67E22] px-5 py-2.5 bg-white shadow-sm">
-        <p className="text-[14px] font-medium text-[#202020]">
-          {question}
-        </p>
+        <p className="text-[14px] font-medium text-[#202020]">{question}</p>
       </div>
 
       <div className="mt-5">
@@ -146,12 +144,21 @@ function LawyerCard({
     <div className="rounded-3xl border border-[#F0F0F0] bg-white p-5 transition-all hover:shadow-xl hover:-translate-y-0.5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex gap-4 min-w-0">
+          {/* Avatar: show image if available, otherwise initials */}
           <div
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center font-semibold text-sm flex-shrink-0 ${getAvatarColor(
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center font-semibold text-sm shrink-0 overflow-hidden ${getAvatarColor(
               account.fullName
             )}`}
           >
-            {getInitials(account.fullName)}
+            {account.avatarUrl ? (
+              <img
+                src={account.avatarUrl}
+                alt={account.fullName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              getInitials(account.fullName)
+            )}
           </div>
 
           <div className="min-w-0">
@@ -204,7 +211,7 @@ function LawyerCard({
           </div>
         </div>
 
-        <div className="rounded-2xl bg-[#EFFAF2] px-3 py-2 text-center min-w-[70px] flex-shrink-0">
+        <div className="rounded-2xl bg-[#EFFAF2] px-3 py-2 text-center min-w-17.5 shrink-0">
           <p className="text-[16px] font-bold text-[#159947]">{score}%</p>
           <p className="text-[11px] text-[#159947]">Match</p>
         </div>
@@ -223,11 +230,7 @@ function LawyerCard({
         </div>
       )}
 
-      {error && (
-        <p className="text-[12px] text-red-500 mt-4">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-[12px] text-red-500 mt-4">{error}</p>}
 
       <div className="grid grid-cols-2 gap-3 mt-6">
         <button className="h-11 rounded-2xl border border-[#EAEAEA] text-[13px] font-medium text-[#444] hover:bg-[#FAFAFA] transition-colors">
@@ -297,9 +300,7 @@ export default function FindALawyer() {
         total: result.pagination.total,
       });
     } catch (err: any) {
-      setValidationError(
-        err?.response?.data?.message ?? "Search failed"
-      );
+      setValidationError(err?.response?.data?.message ?? "Search failed");
     }
   };
 
@@ -324,15 +325,14 @@ export default function FindALawyer() {
 
   const extracted = searchState?.extracted;
 
-  const isSearching =
-    searchByText.isPending || searchLawyers.isPending;
+  const isSearching = searchByText.isPending || searchLawyers.isPending;
 
   return (
     <div className="grid grid-cols-[55%_45%] h-[calc(100vh-64px)] bg-[#FAFAFA] overflow-hidden">
       {/* LEFT PANEL */}
       <div className="bg-white border-r border-[#ECECEC] flex flex-col overflow-hidden">
         {/* HEADER */}
-        <div className="h-[72px] border-b border-[#F0F0F0] px-8 flex items-center justify-between flex-shrink-0">
+        <div className="h-18 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-[28px] font-serif text-[#202020]">
               Get A Lawyer
@@ -363,8 +363,8 @@ export default function FindALawyer() {
               </h2>
 
               <p className="mt-6 text-[15px] leading-8 text-[#6B6B6B] max-w-xl">
-                Describe your issue naturally. Mention your location,
-                approximate budget, and the kind of legal help you need.
+                Describe your issue naturally. Mention your location, approximate
+                budget, and the kind of legal help you need.
               </p>
 
               <div className="mt-10 rounded-3xl border border-[#ECECEC] bg-[#FCFCFC] p-6">
@@ -373,8 +373,8 @@ export default function FindALawyer() {
                 </p>
 
                 <p className="text-[15px] leading-8 text-[#444]">
-                  “My landlord is trying to evict me illegally in Lagos and I
-                  can pay around ₦150k for legal representation.”
+                  "My landlord is trying to evict me illegally in Lagos and I can
+                  pay around ₦150k for legal representation."
                 </p>
               </div>
             </div>
@@ -426,11 +426,9 @@ export default function FindALawyer() {
         </div>
 
         {/* INPUT */}
-        <div className="border-t border-[#ECECEC] bg-white px-6 py-5 flex-shrink-0">
+        <div className="border-t border-[#ECECEC] bg-white px-6 py-5 shrink-0">
           {validationError && (
-            <p className="text-[12px] text-red-500 mb-3">
-              {validationError}
-            </p>
+            <p className="text-[12px] text-red-500 mb-3">{validationError}</p>
           )}
 
           <div className="flex items-end gap-3 rounded-3xl border border-[#EAEAEA] bg-white px-5 py-4 shadow-sm">
@@ -455,13 +453,13 @@ export default function FindALawyer() {
                   handleSubmit();
                 }
               }}
-              className="flex-1 resize-none bg-transparent outline-none text-[15px] leading-7 text-[#202020] placeholder:text-[#999] max-h-[140px]"
+              className="flex-1 resize-none bg-transparent outline-none text-[15px] leading-7 text-[#202020] placeholder:text-[#999] max-h-35"
             />
 
             <button
               onClick={handleSubmit}
               disabled={!inputValue.trim() || isSearching}
-              className="w-12 h-12 rounded-2xl bg-[#1D4ED8] flex items-center justify-center hover:bg-[#1947C6] transition-colors disabled:opacity-40 flex-shrink-0"
+              className="w-12 h-12 rounded-2xl bg-[#1D4ED8] flex items-center justify-center hover:bg-[#1947C6] transition-colors disabled:opacity-40 shrink-0"
             >
               {isSearching ? (
                 <Loader2 className="w-4 h-4 text-white animate-spin" />
@@ -489,8 +487,7 @@ export default function FindALawyer() {
               {searchState && (
                 <p className="text-[14px] text-[#777] mt-3">
                   {searchState.total} lawyer
-                  {searchState.total !== 1 ? "s" : ""} matched
-                  your request
+                  {searchState.total !== 1 ? "s" : ""} matched your request
                 </p>
               )}
             </div>

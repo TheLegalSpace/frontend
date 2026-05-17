@@ -1,4 +1,4 @@
-// Avatar.tsx
+// app/Components/Feed/Avatar.tsx
 "use client";
 
 import Image from "next/image";
