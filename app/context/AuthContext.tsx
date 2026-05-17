@@ -8,9 +8,14 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { AuthResponse, authService, LoginPayload } from "@/services/auth.services";
- import { profileService } from "@/services/profile.services";
+import {
+  AuthResponse,
+  authService,
+  LoginPayload,
+} from "@/services/auth.services";
+import { profileService } from "@/services/profile.services";
 import { parseApiError } from "@/lib/error";
+import { useRouter } from "next/navigation";
 
 export type AuthErrorCode =
   | "INVALID_CREDENTIALS"
@@ -31,15 +36,22 @@ interface AuthContextType {
   user: AuthResponse["data"]["account"] | null;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
-  loginWithGoogle: (idToken: string, fullName: string, avatarUrl?: string) => Promise<void>;
+  loginWithGoogle: (
+    idToken: string,
+    fullName: string,
+    avatarUrl?: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthResponse["data"]["account"] | null>(null);
+  const [user, setUser] = useState<AuthResponse["data"]["account"] | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter(); // ✅ router at top level of component
 
   // Restore session from localStorage on mount
   useEffect(() => {
@@ -55,6 +67,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
       }
+
+      // ✅ Optionally refresh from API to get latest role
+      profileService
+        .getMe()
+        .then((r) => {
+          const fresh = r.data.data;
+          localStorage.setItem("user", JSON.stringify(fresh));
+          setUser(fresh); // ← overrides with latest from server
+        })
+        .catch(() => {}) // silent fail — cached data still works
+        .finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
     }
     setIsLoading(false);
   }, []);
@@ -66,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
       setUser(null);
+      router.replace("/signin"); // ✅ navigate from event too
     };
     window.addEventListener("auth:logout", handleAuthLogout);
     return () => window.removeEventListener("auth:logout", handleAuthLogout);
@@ -83,17 +109,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { status, message, code } = parseApiError(err);
 
     if (code === "NETWORK_ERROR") {
-      return { code: "NETWORK_ERROR", message: "No internet connection. Please check your network." };
+      return {
+        code: "NETWORK_ERROR",
+        message: "No internet connection. Please check your network.",
+      };
     }
     if (status >= 500) {
-      return { code: "SERVER_ERROR", message: "Our servers are having issues. Please try again." };
+      return {
+        code: "SERVER_ERROR",
+        message: "Our servers are having issues. Please try again.",
+      };
     }
     if (
       status === 404 ||
       message.toLowerCase().includes("account not found") ||
       message.toLowerCase().includes("not found")
     ) {
-      return { code: "ACCOUNT_NOT_FOUND", message: "Account not found. Please register first." };
+      return {
+        code: "ACCOUNT_NOT_FOUND",
+        message: "Account not found. Please register first.",
+      };
     }
     if (
       status === 401 ||
@@ -101,14 +136,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       message.toLowerCase().includes("incorrect") ||
       message.toLowerCase().includes("wrong password")
     ) {
-      return { code: "INVALID_CREDENTIALS", message: "Incorrect email or password." };
+      return {
+        code: "INVALID_CREDENTIALS",
+        message: "Incorrect email or password.",
+      };
     }
     if (
       status === 409 ||
       message.toLowerCase().includes("already exists") ||
       message.toLowerCase().includes("conflict")
     ) {
-      return { code: "ACCOUNT_EXISTS", message: "An account with this email already exists." };
+      return {
+        code: "ACCOUNT_EXISTS",
+        message: "An account with this email already exists.",
+      };
     }
 
     return {
@@ -123,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const blob = await imageResponse.blob();
     const file = new File([blob], "avatar.jpg", { type: blob.type });
     await profileService.uploadAvatar(file);
-    setUser((prev) => prev ? { ...prev, avatarUrl: googleAvatarUrl } : prev);
+    setUser((prev) => (prev ? { ...prev, avatarUrl: googleAvatarUrl } : prev));
   };
 
   const login = async (payload: LoginPayload): Promise<void> => {
@@ -133,7 +174,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!response?.data?.data) {
         throw {
           code: "UNKNOWN_ERROR",
-          message: response?.data?.message ?? "Unexpected response from server.",
+          message:
+            response?.data?.message ?? "Unexpected response from server.",
         };
       }
 
@@ -184,7 +226,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Existing user
       const response = await attemptLogin();
       await handlePostLogin(response.data.data, avatarUrl);
-
     } catch (err: unknown) {
       const authError = classifyError(err);
       console.log("Google login error:", authError);
@@ -203,7 +244,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log("Registered — logging in...");
           const response = await attemptLogin();
           await handlePostLogin(response.data.data, avatarUrl);
-
         } catch (registerErr: unknown) {
           const registerError = classifyError(registerErr);
           console.error("Registration error:", registerError);
@@ -243,11 +283,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
       setUser(null);
+      router.replace("/signin"); // ✅ navigate directly — don't rely on ProtectedRoute
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, loginWithGoogle, logout }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, loginWithGoogle, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

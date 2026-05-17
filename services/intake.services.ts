@@ -16,7 +16,42 @@ export interface LawyerProfile {
   createdAt: string;
   updatedAt: string;
 }
+// services/intake.services.ts - add to existing file
 
+export interface TextSearchPayload {
+  text: string;
+}
+
+export interface ExtractedIntake {
+  matter: { id: string; name: string } | null;
+  budget: string | null;
+  location: string | null;
+  preference: string | null;
+}
+
+export interface TextSearchResponse {
+  error: boolean;
+  message: string;
+  data: {
+    items: MatchResult[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+    extracted: ExtractedIntake; // ← only in text search
+  };
+}
+
+// add to intakeService object
+// export const intakeService = {
+//   search: (payload: SearchPayload) =>
+//     api.post<SearchResponse>("/matchmaking/search", payload),
+
+//   searchByText: (payload: TextSearchPayload) =>
+//     api.post<TextSearchResponse>("/matchmaking/search-by-text", payload),
+// };
 export interface PracticeAreaLink {
   id: string;
   accountId: string;
@@ -131,4 +166,11 @@ export function buildIntakeSteps(practiceAreas: PracticeArea[]) {
 export const intakeService = {
   search: (payload: SearchPayload) =>
     api.post<SearchResponse>("/matchmaking/search", payload),
+
+
+//    search: (payload: SearchPayload) =>
+// //     api.post<SearchResponse>("/matchmaking/search", payload),
+
+  searchByText: (payload: TextSearchPayload) =>
+    api.post<TextSearchResponse>("/matchmaking/search-by-text", payload),
 };
