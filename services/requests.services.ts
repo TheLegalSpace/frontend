@@ -40,6 +40,15 @@ export interface LegalRequest {
   userAccountId: string;
   lawyerAccountId: string;
   intakePayload: IntakePayload;
+  matter: {
+    id: string;
+    name: string;
+  };
+  name: string;
+  budget: string;
+  location: string;
+  preference: string;
+  freeText: string;
   relevanceScore: number;
   status: RequestStatus;
   conversationId: string | null;
