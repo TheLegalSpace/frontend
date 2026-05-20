@@ -219,7 +219,7 @@ export default function SettingsPage() {
               onClick={() => handleToggleAnonymous(!isAnonymous)}
               disabled={toggleAnonymous.isPending}
               aria-label="Toggle anonymous mode"
-              className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-200 disabled:opacity-50 ${
+              className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 disabled:opacity-50 ${
                 isAnonymous ? "bg-gray-900" : "bg-gray-200"
               }`}
             >
@@ -259,7 +259,7 @@ export default function SettingsPage() {
             </div>
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full border border-red-100 bg-red-50 hover:bg-red-100 transition-colors"
+              className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full border border-red-100 bg-red-50 hover:bg-red-100 transition-colors"
               aria-label="Delete account"
             >
               <Trash2 className="w-4 h-4 text-red-500" />
@@ -281,7 +281,7 @@ export default function SettingsPage() {
         >
           <div className="w-full max-w-sm bg-white rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+              <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-4 h-4 text-red-500" />
               </div>
               <div>

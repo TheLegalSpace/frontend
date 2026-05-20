@@ -2,9 +2,21 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, Loader2, AlertTriangle, MapPin, X, XCircle } from "lucide-react";
-import { useRequests, useRequestStats, useCancelRequest } from "@/hooks/useRequests";
+import {
+  Clock,
+  Loader2,
+  AlertTriangle,
+  MapPin,
+  X,
+  XCircle,
+} from "lucide-react";
+import {
+  useRequests,
+  useRequestStats,
+  useCancelRequest,
+} from "@/hooks/useRequests";
 import { formatBudget, LegalRequest } from "@/services/requests.services";
+import { usePracticeAreaMap } from "@/hooks/usePracticeAreas";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -28,7 +40,19 @@ function getInitials(name: string): string {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 }
 
-// ─── Cancel Modal ────────────────────────────────────────────────────────────
+// ✅ Resolves matter — handles both UUID and name string
+function resolveMatter(
+  matter: string,
+  practiceAreaMap: Record<string, string>,
+): string {
+  if (!matter) return "Unknown";
+  // If it's a UUID in the map → return the name
+  if (practiceAreaMap[matter]) return practiceAreaMap[matter];
+  // If it's already a name string (e.g. "Aviation Law") → return as-is
+  return matter;
+}
+
+// ─── Cancel Modal ─────────────────────────────────────────────────────────────
 function CancelConfirmModal({
   onConfirm,
   onClose,
@@ -60,8 +84,8 @@ function CancelConfirmModal({
           Are you sure?
         </h3>
         <p className="text-[13px] text-gray-500 leading-relaxed mb-6">
-          This will withdraw your request from the lawyer. You can submit a
-          new request anytime.
+          This will withdraw your request from the lawyer. You can submit a new
+          request anytime.
         </p>
 
         <div className="flex flex-col gap-2">
@@ -92,14 +116,19 @@ function RequestCard({
   onCancel,
   isCancelling,
   showCancel = true,
+  practiceAreaMap, // ✅ passed as prop — no hook call inside non-hook
 }: {
   request: LegalRequest;
   onCancel: (id: string) => void;
   isCancelling: boolean;
   showCancel?: boolean;
+  practiceAreaMap: Record<string, string>;
 }) {
   const [showConfirm, setShowConfirm] = useState(false);
   const { intakePayload, lawyerAccount, createdAt, expiresAt, status } = request;
+
+  // ✅ Resolves UUID → name, or returns name string as-is
+  const matterName = resolveMatter(intakePayload.matter, practiceAreaMap);
 
   return (
     <>
@@ -107,7 +136,7 @@ function RequestCard({
         <p className="text-[13px] text-gray-800 mb-2.5">
           {intakePayload.freeText && intakePayload.freeText !== "..."
             ? intakePayload.freeText
-            : `Looking for legal help with ${intakePayload.matter}`}
+            : `Looking for legal help with ${matterName}`}
         </p>
 
         <div className="bg-white border border-gray-100 rounded-xl px-4 py-3.5">
@@ -131,13 +160,14 @@ function RequestCard({
                   {lawyerAccount.fullName}
                 </p>
                 <p className="text-[12px] text-gray-400">
-                  {intakePayload.matter} · {formatBudget(intakePayload.budget)}
+                  {matterName} · {formatBudget(intakePayload.budget)}
                 </p>
                 {lawyerAccount.locationCity && (
                   <div className="flex items-center gap-1 mt-0.5">
                     <MapPin className="w-3 h-3 text-gray-300 shrink-0" />
                     <span className="text-[11px] text-gray-400">
-                      {lawyerAccount.locationCity}, {lawyerAccount.locationCountry}
+                      {lawyerAccount.locationCity},{" "}
+                      {lawyerAccount.locationCountry}
                     </span>
                   </div>
                 )}
@@ -184,7 +214,6 @@ function RequestCard({
         )}
       </div>
 
-      {/* ✅ Modal outside card flow so it overlays correctly */}
       {showConfirm && (
         <CancelConfirmModal
           isLoading={isCancelling}
@@ -202,7 +231,7 @@ function RequestCard({
 // ─── Section Header ───────────────────────────────────────────────────────────
 function SectionHeader({ title }: { title: string }) {
   return (
-    <h2 className="text-[18px] font-[Instrument_Serif] font-bold text-gray-900 mb-5 pb-3 border-b border-gray-100">
+    <h2 className="text-[18px] font-medium text-gray-900 mb-5 pb-3 border-b border-gray-100">
       {title}
     </h2>
   );
@@ -221,6 +250,9 @@ function EmptyState({ message }: { message: string }) {
 export default function RequestsPage() {
   const { data, isLoading, error, refetch } = useRequests();
   const cancelRequest = useCancelRequest();
+
+  // ✅ One hook call at the top level — passed down as prop
+  const practiceAreaMap = usePracticeAreaMap();
 
   const items = data?.items ?? [];
   const stats = useRequestStats(items);
@@ -260,9 +292,21 @@ export default function RequestsPage() {
     );
   }
 
+  // ✅ Helper to render RequestCard with map injected
+  const renderCard = (r: LegalRequest, showCancel = true) => (
+    <RequestCard
+      key={r.id}
+      request={r}
+      onCancel={(id) => cancelRequest.mutate(id)}
+      isCancelling={cancelRequest.isPending}
+      showCancel={showCancel}
+      practiceAreaMap={practiceAreaMap} // ✅ passed as prop
+    />
+  );
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
-      <h1 className="text-[22px] font-[Instrument_Serif] text-gray-900 mb-5 pb-4 border-b border-gray-100">
+      <h1 className="text-[22px] font-medium text-gray-900 mb-5 pb-4 border-b border-gray-100">
         Requests
       </h1>
 
@@ -275,17 +319,13 @@ export default function RequestsPage() {
           </p>
           <p className="text-[12px] text-green-600">All time</p>
         </div>
-
         <div className="bg-white border border-gray-100 rounded-xl p-4">
           <p className="text-[12px] text-gray-400 mb-2">Active Requests</p>
           <p className="text-[32px] font-light text-gray-900 leading-none mb-1.5">
             {stats.active}
           </p>
-          <p className="text-[12px] text-green-600">
-            ↑ {stats.pending} pending
-          </p>
+          <p className="text-[12px] text-green-600">↑ {stats.pending} pending</p>
         </div>
-
         <div className="bg-white border border-gray-100 rounded-xl p-4">
           <p className="text-[12px] text-gray-400 mb-2">Declined Requests</p>
           <p className="text-[32px] font-light text-gray-900 leading-none mb-1.5">
@@ -299,31 +339,15 @@ export default function RequestsPage() {
 
       {/* Pending */}
       <SectionHeader title="Pending Requests" />
-      {pending.length === 0 ? (
-        <EmptyState message="No pending requests" />
-      ) : (
-        pending.map((r) => (
-          <RequestCard
-            key={r.id}
-            request={r}
-            onCancel={(id) => cancelRequest.mutate(id)}
-            isCancelling={cancelRequest.isPending}
-          />
-        ))
-      )}
+      {pending.length === 0
+        ? <EmptyState message="No pending requests" />
+        : pending.map((r) => renderCard(r))}
 
       {/* Active */}
       {active.length > 0 && (
         <>
           <SectionHeader title="Active Requests" />
-          {active.map((r) => (
-            <RequestCard
-              key={r.id}
-              request={r}
-              onCancel={(id) => cancelRequest.mutate(id)}
-              isCancelling={cancelRequest.isPending}
-            />
-          ))}
+          {active.map((r) => renderCard(r))}
         </>
       )}
 
@@ -331,15 +355,7 @@ export default function RequestsPage() {
       {completed.length > 0 && (
         <>
           <SectionHeader title="Completed Requests" />
-          {completed.map((r) => (
-            <RequestCard
-              key={r.id}
-              request={r}
-              onCancel={() => {}}
-              isCancelling={false}
-              showCancel={false}
-            />
-          ))}
+          {completed.map((r) => renderCard(r, false))}
         </>
       )}
 
@@ -347,15 +363,7 @@ export default function RequestsPage() {
       {declined.length > 0 && (
         <>
           <SectionHeader title="Declined Requests" />
-          {declined.map((r) => (
-            <RequestCard
-              key={r.id}
-              request={r}
-              onCancel={() => {}}
-              isCancelling={false}
-              showCancel={false}
-            />
-          ))}
+          {declined.map((r) => renderCard(r, false))}
         </>
       )}
     </div>

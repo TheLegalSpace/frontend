@@ -7,12 +7,14 @@ export interface PracticeArea {
   slug: string;
   isActive: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface PracticeAreasResponse {
   error: boolean;
   message: string;
   data: PracticeArea[];
+
 }
 
 export const practiceAreasService = {

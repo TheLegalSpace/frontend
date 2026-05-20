@@ -5,12 +5,19 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 // import { api } from "@/services/api";
 // import { AxiosResponse } from "axios";
 // import { loginUser } from "@/services/auth.services";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const loginType = (type: "lawyer" | "user") => {
+    localStorage.setItem("loginType", type);
+    router.push("/signin");
+  };
 
   // useEffect(() => {
   //   // ✅ useEffect callback cannot be async — use an inner async function
@@ -55,13 +62,18 @@ export default function Navbar() {
               href="/signin"
               className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
             >
-              Lawyer Login
+              <button
+                onClick={() => loginType("lawyer")}
+                className="px-4 py-2.5 rounded-lg"
+              >
+                Lawyer Login
+              </button>
             </Link>
             <Link
               href="/signin"
               className="text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-lg hover:bg-[#1648b8] transition-colors"
             >
-              Find a Lawyer
+              <button onClick={() => loginType("user")}>Find a Lawyer</button>
             </Link>
           </div>
 
