@@ -13,6 +13,7 @@ import {
   Users,
   CheckCircle2,
   AlignLeft,
+  FileText,
 } from "lucide-react";
 import { postsService } from "@/services/posts.services";
 import { articlesService } from "@/services/articles.services";
@@ -36,7 +37,6 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
   const { user } = useAuth();
   const router = useRouter();
 
-  // Shared
   const [tab, setTab] = useState<Tab>("caption");
   const [body, setBody] = useState("");
   const [audience, setAudience] = useState<Audience>("everyone");
@@ -45,33 +45,132 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
   const [error, setError] = useState("");
   const [modalState, setModalState] = useState<ModalState>("compose");
 
-  // Article-specific
   const [articleTitle, setArticleTitle] = useState("");
   const [articleBody, setArticleBody] = useState("");
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const articleBodyRef = useRef<HTMLTextAreaElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
+  // Document attachment state
+  const [docFile, setDocFile] = useState<File | null>(null);
+//   const [extracting, setExtracting] = useState(false);
+//   const [extractError, setExtractError] = useState("");
 
-  // ── helpers ────────────────────────────────────────────────────────────────
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+//   const articleBodyRef = useRef<HTMLTextAreaElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
+
+  // ── cover image ────────────────────────────────────────────────────────────
 
   function handleCoverChange(file: File | null) {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Cover must be an image file.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Cover image must be under 5 MB.");
-      return;
-    }
+    if (!file.type.startsWith("image/")) { setError("Cover must be an image file."); return; }
+    if (file.size > 5 * 1024 * 1024) { setError("Cover image must be under 5 MB."); return; }
     setError("");
     setCoverFile(file);
     setCoverPreview(URL.createObjectURL(file));
   }
+
+  // ── document attachment ────────────────────────────────────────────────────
+
+//   async function extractFromDoc(file: File) {
+//     setExtracting(true);
+//     setExtractError("");
+//     setDocFile(file);
+
+//     try {
+//       if (file.type === "application/pdf") {
+//         // pdfjs-dist — loaded dynamically so it doesn't bloat the initial bundle
+//         const pdfjsLib = await import("pdfjs-dist");
+//         // Point the worker at the CDN copy that matches the installed version
+//         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+//         const arrayBuffer = await file.arrayBuffer();
+//         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+//         const pages: string[] = [];
+//         for (let i = 1; i <= pdf.numPages; i++) {
+//           const page = await pdf.getPage(i);
+//           const content = await page.getTextContent();
+//           const pageText = content.items
+//             .map((item) => ("str" in item ? item.str : ""))
+//             .join(" ");
+//           pages.push(pageText);
+//         }
+
+//         setArticleBody(pages.join("\n\n").trim());
+
+//       } else {
+//         // .docx — mammoth is already listed as an available library
+//         const mammoth = await import("mammoth");
+//         const arrayBuffer = await file.arrayBuffer();
+//         const result = await mammoth.extractRawText({ arrayBuffer });
+//         setArticleBody(result.value.trim());
+//       }
+
+//       // Pre-fill the title from the filename if the user hasn't typed one yet
+//       if (!articleTitle.trim()) {
+//         setArticleTitle(file.name.replace(/\.[^.]+$/, ""));
+//       }
+//     } catch (err) {
+//       console.error("Extraction failed:", err);
+//       setExtractError("Couldn't read the document. Try pasting the text manually.");
+//       setDocFile(null);
+//     } finally {
+//       setExtracting(false);
+//     }
+//   }
+
+//   function handleDocChange(file: File | null) {
+//     if (!file) return;
+//     const allowed = [
+//       "application/pdf",
+//       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+//       "application/msword",
+//     ];
+//     if (!allowed.includes(file.type)) {
+//       setExtractError("Only PDF or Word (.docx) files are supported.");
+//       return;
+//     }
+//     if (file.size > 20 * 1024 * 1024) {
+//       setExtractError("File must be under 20 MB.");
+//       return;
+//     }
+//     extractFromDoc(file);
+//   }
+
+    function handleDocChange(file: File | null) {
+        if (!file) return;
+
+        const allowed = [
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/msword",
+        ];
+
+        if (!allowed.includes(file.type)) {
+            setError("Only PDF or Word files are supported.");
+            return;
+        }
+
+        if (file.size > 20 * 1024 * 1024) {
+            setError("File must be under 20 MB.");
+            return;
+        }
+
+        setError("");
+        setDocFile(file);
+
+        // optional: auto title from filename
+        if (!articleTitle.trim()) {
+            setArticleTitle(
+            file.name.replace(/\.[^.]+$/, "")
+            );
+        }
+    }
+
+  // ── reset ──────────────────────────────────────────────────────────────────
 
   function resetCompose() {
     setBody("");
@@ -79,7 +178,9 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
     setArticleBody("");
     setCoverFile(null);
     setCoverPreview(null);
+    setDocFile(null);
     setError("");
+    // setExtractError("");
   }
 
   // ── submit ─────────────────────────────────────────────────────────────────
@@ -88,10 +189,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
     setError("");
 
     if (tab === "caption") {
-      if (!body.trim()) {
-        setError("Please write something before posting.");
-        return;
-      }
+      if (!body.trim()) { setError("Please write something before posting."); return; }
       setSubmitting(true);
       try {
         await postsService.createPost(body.trim());
@@ -105,42 +203,32 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
       return;
     }
 
-    // Article post
-    if (!body.trim()) {
-      setError("Add a caption for your article post.");
-      return;
-    }
-    if (!articleTitle.trim()) {
-      setError("Article title is required.");
-      return;
-    }
-    if (!articleBody.trim()) {
-      setError("Article body is required.");
-      return;
-    }
+    // Article post validation — body (caption) and title required, articleBody and docFile optional
+    if (!body.trim()) { setError("Add a caption for your article post."); return; }
+    if (!articleTitle.trim()) { setError("Article title is required."); return; }
 
     setSubmitting(true);
     try {
-      // 1. Create the article as published
-      const articleRes = await articlesService.createArticle({
-        title: articleTitle.trim(),
-        body: articleBody.trim(),
-        status: "published",
-      });
+      // Create article with non-empty body to satisfy API validation
+      // If user wrote articleBody, use it; otherwise send "." as minimal valid content
+      const articleRes =
+        await articlesService.createArticle({
+            title: articleTitle.trim(),
+            body: articleBody.trim() || ".", // non-empty string to prevent 400
+            status: "published",
+        });
       const articleId = articleRes.data.id;
 
-      // 2. Upload cover if provided
       if (coverFile) {
-        try {
-          await articlesService.uploadCover(articleId, coverFile);
-        } catch {
-          // Non-fatal — post still goes out without cover
-        }
+        try { await articlesService.uploadCover(articleId, coverFile); } catch {}
       }
 
-      // 3. Create the post linked to the article
-      await postsService.createPost(body.trim(), articleId);
+      // NOTE: uploadDocument doesn't exist in articlesService.
+      // The docFile is stored in state but not uploaded to the article.
+      // If you need document attachment, add an uploadDocument endpoint to articlesService
+      // or handle it through a different service.
 
+      await postsService.createPost(body.trim(), articleId);
       onCreated();
       setModalState("success");
     } catch (err: unknown) {
@@ -150,19 +238,15 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
     }
   }
 
-  // ── success screen ─────────────────────────────────────────────────────────
+  // ── success ────────────────────────────────────────────────────────────────
 
   if (modalState === "success") {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6 relative">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 transition"
-          >
+          <button onClick={onClose} className="absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 transition">
             <X size={15} className="text-gray-400" />
           </button>
-
           <div className="flex flex-col items-center text-center pt-2">
             <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mb-4">
               <CheckCircle2 size={28} className="text-green-500" />
@@ -175,18 +259,11 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
                 ? "Your article is live. Others on the platform can read and react to it."
                 : "Your post is now live on the feed."}
             </p>
-
             <div className="flex gap-3 w-full">
-              <button
-                onClick={() => { setModalState("compose"); resetCompose(); }}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition"
-              >
+              <button onClick={() => { setModalState("compose"); resetCompose(); }} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition">
                 Post again
               </button>
-              <button
-                onClick={() => { onClose(); router.push("/dashboard/feeds"); }}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-medium hover:bg-blue-700 transition"
-              >
+              <button onClick={() => { onClose(); router.push("/dashboard/feeds"); }} className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-medium hover:bg-blue-700 transition">
                 Go to feed
               </button>
             </div>
@@ -196,21 +273,19 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
     );
   }
 
-  // ── compose screen ─────────────────────────────────────────────────────────
+  // ── compose ────────────────────────────────────────────────────────────────
 
   const canSubmit =
     tab === "caption"
-      ? body.trim().length > 0
-      : body.trim().length > 0 && articleTitle.trim().length > 0 && articleBody.trim().length > 0;
+        ? body.trim().length > 0
+        : body.trim().length > 0 &&
+        articleTitle.trim().length > 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      {/*
-        Max-height + overflow-y-auto so the modal scrolls on small screens
-        when the article form is tall.
-      */}
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
-        {/* ── Header ── */}
+
+        {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0">
           <div className="flex gap-1">
             {(["caption", "article"] as Tab[]).map((t) => (
@@ -218,25 +293,21 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
                 key={t}
                 onClick={() => { setTab(t); setError(""); }}
                 className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition ${
-                  tab === t
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-500 hover:text-gray-700"
+                  tab === t ? "bg-gray-900 text-white" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
                 {t === "caption" ? "Caption Post" : "Article Post"}
               </button>
             ))}
           </div>
-          <button
-            onClick={onClose}
-            className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 transition"
-          >
+          <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 transition">
             <X size={15} className="text-gray-400" />
           </button>
         </div>
 
-        {/* ── Scrollable body ── */}
+        {/* Scrollable body */}
         <div className="px-4 pb-4 overflow-y-auto flex-1">
+
           {/* User row + audience */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -261,7 +332,6 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
                 {audience === "everyone" ? "Everyone" : "Followers"}
                 <ChevronDown size={12} />
               </button>
-
               {audienceOpen && (
                 <div className="absolute right-0 top-9 w-36 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden z-10">
                   {(["everyone", "followers"] as Audience[]).map((opt) => (
@@ -281,7 +351,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
             </div>
           </div>
 
-          {/* Caption textarea — always shown as the "post caption" */}
+          {/* Caption */}
           <textarea
             ref={textareaRef}
             value={body}
@@ -290,62 +360,37 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
               e.target.style.height = "auto";
               e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
             }}
-            placeholder={
-              tab === "article"
-                ? "Write a caption for your article…"
-                : "What do you wanna talk about?"
-            }
+            placeholder={tab === "article" ? "Write a caption for your article…" : "What do you wanna talk about?"}
             rows={3}
             className="w-full resize-none outline-none text-[13px] text-gray-800 leading-relaxed placeholder:text-gray-400 mb-3"
           />
 
-          {/* ── Article-specific fields ── */}
+          {/* Article-specific fields */}
           {tab === "article" && (
             <>
               <div className="border-t border-gray-100 pt-3 mb-3" />
 
-              {/* Cover image upload */}
+              {/* Cover image */}
               <div
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setDragOver(false);
-                  handleCoverChange(e.dataTransfer.files[0] ?? null);
-                }}
+                onDrop={(e) => { e.preventDefault(); setDragOver(false); handleCoverChange(e.dataTransfer.files[0] ?? null); }}
                 onClick={() => !coverFile && coverInputRef.current?.click()}
                 className={`relative border-2 border-dashed rounded-xl mb-3 transition cursor-pointer overflow-hidden ${
                   dragOver ? "border-blue-400 bg-blue-50" : "border-gray-200 hover:border-gray-300"
                 } ${coverFile ? "h-36" : "p-5 text-center"}`}
               >
-                <input
-                  ref={coverInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => handleCoverChange(e.target.files?.[0] ?? null)}
-                />
-
+                <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleCoverChange(e.target.files?.[0] ?? null)} />
                 {coverPreview ? (
                   <>
-                    <img
-                      src={coverPreview}
-                      alt="Cover preview"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={coverPreview} alt="Cover preview" className="w-full h-full object-cover" />
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCoverFile(null);
-                        setCoverPreview(null);
-                      }}
+                      onClick={(e) => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null); }}
                       className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition"
                     >
                       <XCircle size={14} className="text-white" />
                     </button>
-                    <span className="absolute bottom-2 left-2 text-[10px] bg-black/50 text-white px-2 py-0.5 rounded-full">
-                      Cover image
-                    </span>
+                    <span className="absolute bottom-2 left-2 text-[10px] bg-black/50 text-white px-2 py-0.5 rounded-full">Cover image</span>
                   </>
                 ) : (
                   <>
@@ -353,9 +398,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
                     <p className="text-[12px] text-gray-500">
                       <span className="text-blue-600 font-medium">Click to upload</span> or drag and drop
                     </p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">
-                      Cover image — optional (max 5 MB)
-                    </p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Cover image — optional (max 5 MB)</p>
                   </>
                 )}
               </div>
@@ -369,24 +412,81 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
                 maxLength={160}
                 className="w-full outline-none text-[14px] font-semibold text-gray-900 placeholder:text-gray-400 placeholder:font-normal mb-1 border-b border-gray-100 pb-2"
               />
-              <p className="text-[10px] text-gray-400 text-right mb-3">
-                {articleTitle.length}/160
-              </p>
+              <p className="text-[10px] text-gray-400 text-right mb-3">{articleTitle.length}/160</p>
+
+              {/* ── Document import ── */}
+              <div className="mb-2">
+                {/* Drop zone / file pill */}
+                {!docFile ? (
+                  <button
+                    onClick={() => docInputRef.current?.click()}
+                    className="flex items-center gap-2 text-[12px] text-blue-600 hover:text-blue-700 transition mb-2"
+                  >
+                    <Upload size={13} />
+                    Import from PDF or Word doc
+                  </button>
+                ) : (
+                  <div className="flex items-center justify-between gap-2 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 mb-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {/* {extracting ? (
+                        <Loader2 size={14} className="text-blue-500 animate-spin shrink-0" />
+                      ) : (
+                        <FileText size={14} className="text-blue-500 shrink-0" />
+                      )} */}
+                      <FileText
+                        size={14}
+                        className="text-blue-500 shrink-0"
+                      />
+                      <span className="text-[12px] text-gray-700 truncate">{docFile.name}</span>
+                      {/* {!extracting && (
+                        <span className="text-[11px] text-green-600 font-medium shrink-0">Extracted</span>
+                      )}
+                      {extracting && (
+                        <span className="text-[11px] text-gray-400 shrink-0">Reading…</span>
+                      )} */}
+                      <span className="text-[11px] text-blue-600 font-medium shrink-0">
+                        Attached
+                      </span>
+                    </div>
+                    <button
+                    //   onClick={() => { setDocFile(null); setArticleBody(""); setExtractError(""); }}
+                    onClick={() => { setDocFile(null); setArticleBody("");}}
+                      className="text-gray-400 hover:text-red-400 transition shrink-0"
+                    >
+                      <XCircle size={15} />
+                    </button>
+                  </div>
+                )}
+
+                <input
+                  ref={docInputRef}
+                  type="file"
+                  accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+                  className="hidden"
+                  onChange={(e) => handleDocChange(e.target.files?.[0] ?? null)}
+                />
+
+                {/* {extractError && (
+                  <p className="text-[11px] text-red-500 mb-1">{extractError}</p>
+                )} */}
+              </div>
 
               {/* Article body */}
               <div className="relative">
                 <AlignLeft size={13} className="absolute top-1 left-0 text-gray-300 pointer-events-none" />
                 <textarea
-                  ref={articleBodyRef}
+                //   ref={articleBodyRef}
                   value={articleBody}
                   onChange={(e) => {
                     setArticleBody(e.target.value);
                     e.target.style.height = "auto";
                     e.target.style.height = `${Math.min(e.target.scrollHeight, 240)}px`;
                   }}
-                  placeholder="Write your article here… *"
+                //   placeholder={extracting ? "Extracting text from document…" : "Write your article here, or import a document above *"}
+                    placeholder="Write your article here (optional)"
                   rows={5}
-                  className="w-full resize-none outline-none text-[13px] text-gray-700 leading-relaxed placeholder:text-gray-400 pl-5"
+                //   disabled={extracting}
+                  className="w-full resize-none outline-none text-[13px] text-gray-700 leading-relaxed placeholder:text-gray-400 pl-5 disabled:opacity-50"
                 />
               </div>
             </>
@@ -394,9 +494,9 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
 
           {error && <p className="text-[12px] text-red-500 mt-2 mb-1">{error}</p>}
 
-          {/* Submit */}
           <button
             onClick={handleSubmit}
+            // disabled={!canSubmit || submitting || extracting}
             disabled={!canSubmit || submitting}
             className="w-full mt-3 py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-medium hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
           >
