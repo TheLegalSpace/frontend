@@ -145,12 +145,21 @@ function LawyerCard({
     <div className="rounded-3xl border border-[#F0F0F0] bg-white p-5 transition-all hover:shadow-xl hover:-translate-y-0.5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex gap-4 min-w-0">
+          {/* Avatar: show image if available, otherwise initials */}
           <div
             className={`w-14 h-14 rounded-2xl flex items-center justify-center font-semibold text-sm shrink-0 ${getAvatarColor(
               account.fullName,
             )}`}
           >
-            {getInitials(account.fullName)}
+            {account.avatarUrl ? (
+              <img
+                src={account.avatarUrl}
+                alt={account.fullName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              getInitials(account.fullName)
+            )}
           </div>
 
           <div className="min-w-0">
@@ -356,8 +365,8 @@ export default function FindALawyer() {
               </h2>
 
               <p className="mt-6 text-[15px] leading-8 text-[#6B6B6B] max-w-xl">
-                Describe your issue naturally. Mention your location,
-                approximate budget, and the kind of legal help you need.
+                Describe your issue naturally. Mention your location, approximate
+                budget, and the kind of legal help you need.
               </p>
 
               <div className="mt-10 rounded-3xl border border-[#ECECEC] bg-[#FCFCFC] p-6">
@@ -366,8 +375,8 @@ export default function FindALawyer() {
                 </p>
 
                 <p className="text-[15px] leading-8 text-[#444]">
-                  “My landlord is trying to evict me illegally in Lagos and I
-                  can pay around ₦150k for legal representation.”
+                  "My landlord is trying to evict me illegally in Lagos and I can
+                  pay around ₦150k for legal representation."
                 </p>
               </div>
             </div>
@@ -446,7 +455,7 @@ export default function FindALawyer() {
                   handleSubmit();
                 }
               }}
-              className="flex-1 resize-none bg-transparent outline-none text-[15px] leading-7 text-[#202020] placeholder:text-[#999] max-h-[140px]"
+              className="flex-1 resize-none bg-transparent outline-none text-[15px] leading-7 text-[#202020] placeholder:text-[#999] max-h-35"
             />
 
             <button

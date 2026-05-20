@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Bell, CheckCheck, ChevronDown, Loader2 } from "lucide-react";
-import { Notification } from "@/app/types/notification"; 
-import { notificationsService } from "@/services/notifications.services"; 
-import { getSocket, connectSocket } from "@/services/socket.services"; 
+import { Notification } from "@/app/types/notification";
+import { notificationsService } from "@/services/notifications.services";
+import { connectSocket } from "@/services/socket.services";
 import NotificationCard from "./NotificationsCard";
 
 const PAGE_LIMIT = 20;
@@ -17,30 +17,31 @@ export default function NotificationsPage() {
   const [total, setTotal] = useState(0);
   const [markingAll, setMarkingAll] = useState(false);
 
-  // Derived — no state needed
   const hasMore = notifications.length < total;
   const unreadCount = notifications.filter((n) => !n.readAt).length;
 
   const loadNotifications = useCallback(
     async (pageNum: number, append = false) => {
-        try {
-        const res = await notificationsService.getNotifications(pageNum, PAGE_LIMIT);
+      try {
+        const res = await notificationsService.getNotifications(
+          pageNum,
+          PAGE_LIMIT
+        );
         const items: Notification[] = res?.data?.items ?? [];
-        const totalCount: number = res?.data?.pagination?.total ?? 0; // ← pagination.total
+        const totalCount: number = res?.data?.pagination?.total ?? 0;
 
         setTotal(totalCount);
         setNotifications((prev) => (append ? [...prev, ...items] : items));
-        } catch (err) {
+      } catch (err) {
         console.error("Failed to load notifications:", err);
-        } finally {
+      } finally {
         setLoading(false);
         setLoadingMore(false);
-        }
+      }
     },
     []
-    );
+  );
 
-  // Initial load
   useEffect(() => {
     loadNotifications(1);
   }, [loadNotifications]);
@@ -55,7 +56,6 @@ export default function NotificationsPage() {
         if (prev.find((n) => n.id === notif.id)) return prev;
         return [notif, ...prev];
       });
-      // bump total so hasMore stays accurate
       setTotal((prev) => prev + 1);
     });
 
@@ -102,10 +102,12 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+    // Full screen on mobile, centred card on desktop
+    <div className="min-h-screen bg-white md:bg-gray-50 md:py-8 md:px-4">
+      <div className="w-full md:max-w-2xl md:mx-auto md:bg-white md:border md:border-gray-200 md:rounded-2xl md:overflow-hidden md:shadow-sm">
+
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 md:px-5 py-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <h1 className="text-[15px] font-semibold text-gray-900">
               Notifications
@@ -128,7 +130,7 @@ export default function NotificationsPage() {
               ) : (
                 <CheckCheck size={13} />
               )}
-              Mark all as read
+              <span className="hidden sm:inline">Mark all as read</span>
             </button>
           )}
         </div>

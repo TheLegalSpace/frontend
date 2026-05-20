@@ -84,7 +84,7 @@ export default function EventsPanel() {
                 <img
                   src={activeEvent.coverUrl}
                   alt={activeEvent.title}
-                  className="w-full h-[260px] object-cover"
+                  className="w-full h-65 object-cover"
                 />
               )}
               <div className="absolute left-1/2 -translate-x-1/2 bottom-3">
