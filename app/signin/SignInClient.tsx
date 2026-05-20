@@ -153,7 +153,8 @@ export default function SignInClient() {
           {error && <p className="text-[12px] text-red-500">{error}</p>}
 
           <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-[12px] text-gray-500 cursor-pointer">
+            <label />
+            {/* <label className="flex items-center gap-2 text-[12px] text-gray-500 cursor-pointer">
               <input
                 type="checkbox"
                 className="rounded"
@@ -161,7 +162,7 @@ export default function SignInClient() {
                 // onChange={(e) => setRememberMe(e.target.checked)}
               />
               Remember me
-            </label>
+            </label> */}
             <button
               type="button"
               className="text-[12px] text-[#1A56DB] hover:underline"
@@ -195,7 +196,7 @@ export default function SignInClient() {
           className="text-center text-[12px] text-gray-400 mt-4"
         >
           Don&apos;t have an account?{" "}
-          <button className="text-[#1A56DB] hover:underline font-medium">
+          <button className="text-[#1A56DB] hover:underline font-medium cursor-pointer">
             Create one
           </button>
         </Link>
