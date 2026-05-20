@@ -147,8 +147,8 @@ function LawyerCard({
         <div className="flex gap-4 min-w-0">
           {/* Avatar: show image if available, otherwise initials */}
           <div
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center font-semibold text-sm shrink-0 ${getAvatarColor(
-              account.fullName,
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center font-semibold text-sm shrink-0 overflow-hidden ${getAvatarColor(
+              account.fullName
             )}`}
           >
             {account.avatarUrl ? (
@@ -212,7 +212,7 @@ function LawyerCard({
           </div>
         </div>
 
-        <div className="rounded-2xl bg-[#EFFAF2] px-3 py-2 text-center min-w-[70px] shrink-0">
+        <div className="rounded-2xl bg-[#EFFAF2] px-3 py-2 text-center min-w-17.5 shrink-0">
           <p className="text-[16px] font-bold text-[#159947]">{score}%</p>
           <p className="text-[11px] text-[#159947]">Match</p>
         </div>
@@ -334,7 +334,7 @@ export default function FindALawyer() {
       {/* LEFT PANEL */}
       <div className="bg-white border-r border-[#ECECEC] flex flex-col overflow-hidden">
         {/* HEADER */}
-        <div className="h-[72px] border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0">
+        <div className="h-18 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-[28px] font-serif text-[#202020]">
               Get A Lawyer

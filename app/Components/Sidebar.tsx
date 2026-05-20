@@ -124,7 +124,8 @@ export default function Sidebar() {
   }, [mobileOpen]);
 
   const sidebarContent = (
-    <aside className="w-[220px] h-screen fixed top-0 left-0 border-r border-gray-100 flex flex-col bg-white">
+    <aside className="w-55 h-screen fixed top-0 left-0 border-r border-gray-100 flex flex-col bg-white">
+
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -295,7 +296,7 @@ export default function Sidebar() {
 
       {/* Desktop sidebar */}
       <div className="hidden md:flex md:shrink-0">
-        <div className="w-[220px] min-h-screen sticky top-0">
+        <div className="w-55 min-h-screen sticky top-0">
           {sidebarContent}
         </div>
       </div>
