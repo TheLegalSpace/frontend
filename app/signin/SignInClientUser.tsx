@@ -4,7 +4,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthError, useAuth } from "../context/AuthContext";
- 
+import Image from "next/image";
+import logo from "../../public/logowhite.png";
+
 declare const google: any;
 
 export default function SignInClient() {
@@ -44,7 +46,9 @@ export default function SignInClient() {
             router.push(searchParams.get("redirect") ?? "/dashboard/feeds");
           } catch (err: unknown) {
             const authErr = err as AuthError;
-            setError(authErr?.message ?? "Google sign in failed. Please try again.");
+            setError(
+              authErr?.message ?? "Google sign in failed. Please try again.",
+            );
           } finally {
             setIsLoading(false);
           }
@@ -55,7 +59,7 @@ export default function SignInClient() {
         google.accounts.id.renderButton(googleButtonRef.current, {
           theme: "filled_black",
           size: "large",
-          width: "320",
+          width: "100%",
           text: "continue_with",
           shape: "pill",
         });
@@ -87,24 +91,18 @@ export default function SignInClient() {
       {/* Logo — top left */}
       <div className="px-8 py-6">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-white/10 backdrop-blur-sm border border-white/20 rounded-md flex items-center justify-center text-white text-xs">
-            ⚖
-          </div>
-          <span className="text-sm font-medium text-white/90">
-            The Legal Space
-          </span>
+          <Image src={logo} alt="logo" width={200} height={200} />
         </div>
       </div>
 
       {/* Center card */}
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-[360px] bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-8 py-10 text-center">
-
           {/* Heading */}
-          <h1 className="text-[26px] font-light text-white mb-2 leading-tight">
+          <h1 className="text-[26px] font-light text-white mb-2 leading-tight font-[Instrument_Serif]">
             Get started with TheLegalSpace
           </h1>
-          <p className="text-[14px] text-white/60 mb-8">
+          <p className="text-[14px] text-white/60 mb-8 font-[Instrument_Serif]">
             Access legal help faster. No passwords. No hassle.
           </p>
 
@@ -121,17 +119,15 @@ export default function SignInClient() {
           )}
 
           {/* Loading */}
-          {isLoading && (
+          {isLoading ? (
             <div className="mb-4 px-3 py-2.5 bg-white/10 border border-white/20 rounded-xl">
               <p className="text-[12px] text-white/70">Signing you in...</p>
             </div>
+          ) : (
+            <div className=" w-full rounded-full p-px bg-linear-to-r from-white/10 via-white/5 to-lime-400/10 shadow-[0_0_30px_rgba(163,230,53,0.08)] backdrop-blur-xl">
+              <div ref={googleButtonRef} />
+            </div>
           )}
-
-          {/* Google button */}
-          <div
-            ref={googleButtonRef}
-            className="w-full flex justify-center"
-          />
         </div>
       </div>
     </div>
