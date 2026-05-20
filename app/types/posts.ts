@@ -9,15 +9,12 @@ export interface MyPost {
   id: string;
   body: string;
   authorAccountId: string;
-  attachedArticleId: string | null;
   likeCount: number;
   dislikeCount: number;
   createdAt: string;
   updatedAt: string;
   author: PostAuthor;
-  attachedArticle?: {
-    id: string;
-    title: string;
-    slug: string;
-  } | null;
+  pdfUrl?: string | null;
+  pdfName?: string | null;
+  pdfSizeBytes?: number | null;
 }

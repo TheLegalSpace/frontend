@@ -46,6 +46,9 @@ export default function PostsPage() {
         params: { page: 1, limit: 50 },
       });
       const items: MyPost[] = data?.data?.items ?? data?.data ?? [];
+        console.log("raw API response:", data);       // full response shape
+        console.log("posts loaded:", items);           // all posts with all fields
+        setPosts(items);
       setPosts(items);
       setReactions(getCachedReactions());
     } catch (err) {
@@ -70,8 +73,8 @@ export default function PostsPage() {
 
   const filteredPosts = posts.filter((p) =>
     activeTab === "articles"
-      ? p.attachedArticleId !== null
-      : p.attachedArticleId === null
+        ? !!p.pdfUrl
+        : !p.pdfUrl
   );
 
   return (

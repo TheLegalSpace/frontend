@@ -1,10 +1,17 @@
 import { api } from "./api";
 
 export const postsService = {
-  async createPost(body: string, attachedArticleId?: string) {
-    const { data } = await api.post("/posts/", {
-      body,
-      ...(attachedArticleId && { attachedArticleId }),
+  async createPost(body: string) {
+    const { data } = await api.post("/posts", { body });
+    return data;
+  },
+
+  async createArticlePost(body: string, pdf: File) {
+    const form = new FormData();
+    form.append("body", body);
+    form.append("pdf", pdf);
+    const { data } = await api.post("/posts/article", form, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return data;
   },

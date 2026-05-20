@@ -6,12 +6,10 @@ import { api } from "@/services/api";
 
 type Tab = "All" | "Top Firms" | "Top Lawyers" | "Articles";
 
-// Matches the actual API response
 interface RawPost {
   id: string;
   authorAccountId: string;
   body: string;
-  attachedArticleId: string | null;
   likeCount: number;
   dislikeCount: number;
   createdAt: string;
@@ -25,12 +23,10 @@ interface RawPost {
     avgRating?: string;
     role?: string;
   };
-  attachedArticle: {
-    title: string;
-    slug: string;
-    publishedAt: string;
-    readCount: number;
-  } | null;
+  // ✅ flat PDF fields, no attachedArticle
+  pdfUrl?: string | null;
+  pdfName?: string | null;
+  pdfSizeBytes?: number | null;
 }
 
 const TABS: Tab[] = ["All", "Top Firms", "Top Lawyers", "Articles"];
@@ -84,23 +80,16 @@ function normalizePost(raw: RawPost, cachedReactions: Record<string, "like" | "d
     author: raw.author?.fullName ?? "Unknown",
     authorInitials: getInitials(raw.author?.fullName ?? ""),
     avatarUrl: raw.author?.avatarUrl,
-    isVerified: false, // not in API response
+    isVerified: false,
     timeAgo: timeAgo(raw.createdAt),
     body: raw.body,
-    article: raw.attachedArticle
-      ? {
-          title: raw.attachedArticle.title,
-          slug: raw.attachedArticle.slug,
-          reads: raw.attachedArticle.readCount,
-          date: new Date(raw.attachedArticle.publishedAt).toLocaleDateString(
-            "en-US",
-            { month: "long", day: "numeric", year: "numeric" }
-          ),
-        }
-      : undefined,
+    // ✅ use flat PDF fields
+    pdfUrl: raw.pdfUrl ?? null,
+    pdfName: raw.pdfName ?? null,
+    pdfSizeBytes: raw.pdfSizeBytes ?? null,
     likes: raw.likeCount,
     dislikes: raw.dislikeCount,
-    userReaction: cachedReactions[raw.id] ?? null, // ← from localStorage
+    userReaction: cachedReactions[raw.id] ?? null,
   };
 }
 

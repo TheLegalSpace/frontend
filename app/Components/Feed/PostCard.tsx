@@ -1,7 +1,7 @@
 // PostCard.tsx
 "use client";
 
-import { ThumbsUp, ThumbsDown, BadgeCheck } from "lucide-react";
+import { ThumbsUp, ThumbsDown, BadgeCheck, FileText } from "lucide-react";
 import Avatar from "./Avatar";
 import ArticleCard from "./ArticleCard";
 
@@ -13,12 +13,10 @@ export interface Post {
   isVerified: boolean;
   timeAgo: string;
   body: string;
-  article?: {
-    title: string;
-    date: string;
-    reads: number;
-    slug: string;
-  };
+  // ✅ replace article object with flat fields
+  pdfUrl?: string | null;
+  pdfName?: string | null;
+  pdfSizeBytes?: number | null;
   likes: number;
   dislikes: number;
   userReaction: "like" | "dislike" | null;
@@ -55,13 +53,28 @@ export default function PostCard({ post, onReact }: Props) {
         {post.body}
       </p>
 
-      {/* Article: Same width as body */}
-      {post.article && (
-        <div className="mb-3">
-          <ArticleCard article={post.article} />
+      {post.pdfUrl && (
+      <a
+        href={post.pdfUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-full flex items-center gap-2.5 mt-2 mb-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition group text-left"
+      >
+        <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
+          <FileText size={15} className="text-red-500" />
         </div>
-      )}
-
+        <div className="min-w-0">
+          <p className="text-[12px] font-semibold text-gray-800 truncate group-hover:text-blue-600 transition">
+            {post.pdfName ?? "Attached Article"}
+          </p>
+          <p className="text-[11px] text-gray-400">
+            {post.pdfSizeBytes
+              ? `${(post.pdfSizeBytes / (1024 * 1024)).toFixed(1)} MB · PDF`
+              : "PDF · tap to read"}
+          </p>
+        </div>
+      </a>
+    )}
       {/* Reactions: No top border, just icons */}
       <div className="flex items-center gap-5">
         <button
