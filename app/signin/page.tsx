@@ -1,10 +1,24 @@
 // app/signin/page.tsx
-import { Suspense } from "react";
+"use client";
+import { Suspense, useEffect, useState } from "react";
 import SignInClient from "./SignInClient";
+import { useRouter } from "next/navigation";
+import SignInClientUser from "./SignInClientUser";
 
 export const dynamic = "force-dynamic";
 
 export default function SignInPage() {
+  const [loginType, setLoginType] = useState("user");
+  const router = useRouter();
+  useEffect(() => {
+    const loginType = localStorage.getItem("loginType");
+    if (loginType) {
+      setLoginType(loginType);
+    } else {
+      router.push("/");
+    }
+  }, []);
+
   return (
     <Suspense
       fallback={
@@ -13,7 +27,7 @@ export default function SignInPage() {
         </div>
       }
     >
-      <SignInClient />
+      {loginType === "lawyer" ? <SignInClient /> : <SignInClientUser />}
     </Suspense>
   );
 }

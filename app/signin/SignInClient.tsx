@@ -2,9 +2,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
- import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LoginPayload } from "@/services/auth.services";
 import { AuthError, useAuth } from "../context/AuthContext";
+import Link from "next/link";
 
 declare const google: any;
 
@@ -100,7 +101,6 @@ export default function SignInClient() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm bg-white border border-gray-100 rounded-xl p-8">
-
         {/* Logo */}
         <div className="flex items-center gap-2 mb-6">
           <div className="w-7 h-7 bg-black rounded-md flex items-center justify-center text-white text-xs">
@@ -114,7 +114,9 @@ export default function SignInClient() {
         <h1 className="text-[20px] font-medium text-gray-900 mb-1">
           Welcome back
         </h1>
-        <p className="text-[13px] text-gray-400 mb-6">Sign in to your account</p>
+        <p className="text-[13px] text-gray-400 mb-6">
+          Sign in to your account
+        </p>
 
         {/* Callback errors */}
         {callbackError && (
@@ -152,7 +154,12 @@ export default function SignInClient() {
 
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-2 text-[12px] text-gray-500 cursor-pointer">
-              <input type="checkbox" className="rounded" />
+              <input
+                type="checkbox"
+                className="rounded"
+                // checked={rememberMe}
+                // onChange={(e) => setRememberMe(e.target.checked)}
+              />
               Remember me
             </label>
             <button
@@ -173,22 +180,25 @@ export default function SignInClient() {
         </form>
 
         {/* Divider */}
-        <div className="flex items-center gap-3 mb-4">
+        {/* <div className="flex items-center gap-3 mb-4">
           <hr className="flex-1 border-gray-100" />
           <span className="text-[11px] text-gray-400">or continue with</span>
           <hr className="flex-1 border-gray-100" />
-        </div>
+        </div> */}
 
         {/* Google button */}
-        <div ref={googleButtonRef} className="w-full" />
+        {/* <div ref={googleButtonRef} className="w-full" /> */}
 
         {/* Register link */}
-        <p className="text-center text-[12px] text-gray-400 mt-4">
+        <Link
+          href="/signup"
+          className="text-center text-[12px] text-gray-400 mt-4"
+        >
           Don&apos;t have an account?{" "}
           <button className="text-[#1A56DB] hover:underline font-medium">
             Create one
           </button>
-        </p>
+        </Link>
       </div>
     </div>
   );

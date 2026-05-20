@@ -122,6 +122,7 @@ function LawyerCard({
     setError("");
 
     try {
+      const freeText = localStorage.getItem("freeText");
       const payload: SendRequestPayload = {
         lawyerAccountId: account.id,
         intakePayload: {
@@ -129,7 +130,7 @@ function LawyerCard({
           budget: extracted.budget ?? "",
           location: extracted.location ?? "",
           preference: extracted.preference ?? "either",
-          freeText: "",
+          freeText: freeText ?? "null",
         },
       };
 
@@ -203,7 +204,7 @@ function LawyerCard({
                 <div className="inline-flex items-center rounded-full bg-[#F7F7F7] px-3 py-1.5 text-[12px] text-[#666]">
                   {formatFeeRange(
                     account.lawyerProfile.feeRangeMin,
-                    account.lawyerProfile.feeRangeMax
+                    account.lawyerProfile.feeRangeMax,
                   )}
                 </div>
               )}
@@ -263,8 +264,7 @@ function LawyerCard({
 }
 
 export default function FindALawyer() {
-  const { data: practiceAreas } = usePracticeAreas();
-
+  const practiceAreas = usePracticeAreas();
   const [inputValue, setInputValue] = useState("");
   const [searchState, setSearchState] = useState<SearchState | null>(null);
   const [validationError, setValidationError] = useState("");
@@ -278,18 +278,20 @@ export default function FindALawyer() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    practiceAreas.refetch();
   }, [searchState]);
 
   const handleSearch = async (text: string) => {
     if (text.length < 10) {
       setValidationError(
-        "Please describe your situation in at least 10 characters"
+        "Please describe your situation in at least 10 characters",
       );
       return;
     }
 
     setValidationError("");
     setHasSearched(true);
+    localStorage.setItem("freeText", text);
 
     try {
       const result = await searchByText.mutateAsync({ text });
@@ -444,7 +446,7 @@ export default function FindALawyer() {
                 e.target.style.height = "auto";
                 e.target.style.height = `${Math.min(
                   e.target.scrollHeight,
-                  140
+                  140,
                 )}px`;
               }}
               onKeyDown={(e) => {
@@ -470,7 +472,7 @@ export default function FindALawyer() {
           </div>
 
           <p className="text-center text-[11px] text-[#B0B0B0] mt-3">
-            Press Enter to search · Shift + Enter for new line
+            Press Enter to search
           </p>
         </div>
       </div>

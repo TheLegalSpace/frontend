@@ -19,6 +19,11 @@ import {
   Users,
   FileText,
   Building2,
+  BookOpenText,
+  FolderSearch,
+  BookText,
+  PackageSearch,
+  MessageSquareMore,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -33,42 +38,61 @@ interface NavItem {
 // ✅ Nav items per role
 const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   USER: [
-    { label: "Feeds",         href: "/dashboard/feeds",         icon: LayoutGrid },
-    { label: "Messages",      href: "/dashboard/messages",      icon: MessageCircle },
-    { label: "Requests",      href: "/dashboard/requests",      icon: Briefcase },
+    { label: "Feeds", href: "/dashboard/feeds", icon: LayoutGrid },
+    { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
+    { label: "Requests", href: "/dashboard/requests", icon: Briefcase },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
-    { label: "Settings",      href: "/dashboard/settings",      icon: Settings },
+    { label: "Settings", href: "/dashboard/settings", icon: Settings },
   ],
   LAWYER: [
-    { label: "Feeds",         href: "/dashboard/feeds",         icon: LayoutGrid },
-    { label: "Leads",         href: "/dashboard/leads",         icon: Users },
-    { label: "Messages",      href: "/dashboard/messages",      icon: MessageCircle },
-    { label: "Posts",         href: "/dashboard/posts",         icon: FileText },
+    { label: "Feeds", href: "/dashboard/feeds", icon: LayoutGrid },
+    { label: "Leads", href: "/dashboard/leads", icon: Users },
+    { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
+    { label: "Posts", href: "/dashboard/posts", icon: FileText },
+    {
+      label: "TLS Research",
+      href: "/dashboard/tls-research",
+      icon: FolderSearch,
+    },
+    { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
+    {
+      label: "Legal Library",
+      href: "/dashboard/legal-library",
+      icon: BookText,
+    },
+    {
+      label: "TLS Services",
+      href: "/dashboard/tls-services",
+      icon: PackageSearch,
+    },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
-    { label: "Settings",      href: "/dashboard/settings",      icon: Settings },
+    { label: "Settings", href: "/dashboard/settings", icon: Settings },
   ],
   FIRM: [
-    { label: "Feeds",         href: "/dashboard/feeds",         icon: LayoutGrid },
-    { label: "Leads",         href: "/dashboard/leads",         icon: Users },
-    { label: "Messages",      href: "/dashboard/messages",      icon: MessageCircle },
-    { label: "Posts",         href: "/dashboard/posts",         icon: FileText },
+    { label: "Feeds", href: "/dashboard/feeds", icon: LayoutGrid },
+    { label: "Leads", href: "/dashboard/leads", icon: Users },
+    { label: "Messages", href: "/dashboard/messages", icon: MessageSquareMore },
+    { label: "Posts", href: "/dashboard/posts", icon: FileText },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
-    { label: "Settings",      href: "/dashboard/settings",      icon: Settings },
+    { label: "Settings", href: "/dashboard/settings", icon: Settings },
   ],
   ADMIN: [
-    { label: "Feeds",         href: "/dashboard/feeds",         icon: LayoutGrid },
-    { label: "Messages",      href: "/dashboard/messages",      icon: MessageCircle },
+    { label: "Feeds", href: "/dashboard/feeds", icon: LayoutGrid },
+    { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
-    { label: "Settings",      href: "/dashboard/settings",      icon: Settings },
+    { label: "Settings", href: "/dashboard/settings", icon: Settings },
   ],
 };
 
 // ✅ Footer CTA per role
-const FOOTER_CTA: Record<UserRole, { label: string; href: string; icon: React.ElementType } | null> = {
-  USER:   { label: "Get a lawyer", href: "/dashboard/find-lawyer", icon: Scale },
+const FOOTER_CTA: Record<
+  UserRole,
+  { label: string; href: string; icon: React.ElementType } | null
+> = {
+  USER: { label: "Get a lawyer", href: "/dashboard/find-lawyer", icon: Scale },
   LAWYER: null, // lawyers don't need "Get a lawyer"
-  FIRM:   null,
-  ADMIN:  null,
+  FIRM: null,
+  ADMIN: null,
 };
 
 export default function Sidebar() {
@@ -94,7 +118,9 @@ export default function Sidebar() {
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [mobileOpen]);
 
   const sidebarContent = (
@@ -134,7 +160,9 @@ export default function Sidebar() {
           )}
         </div>
 
-        <p className="text-[13px] font-medium text-gray-900">{user?.fullName}</p>
+        <p className="text-[13px] font-medium text-gray-900">
+          {user?.fullName}
+        </p>
 
         {/* Role badge */}
         <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
@@ -167,7 +195,10 @@ export default function Sidebar() {
               {Array.from(
                 { length: Math.round(parseFloat(user?.avgRating ?? "0")) },
                 (_, i) => (
-                  <Star key={`filled-${i}`} className="w-3 h-3 text-amber-400 fill-amber-400" />
+                  <Star
+                    key={`filled-${i}`}
+                    className="w-3 h-3 text-amber-400 fill-amber-400"
+                  />
                 ),
               )}
               {Array.from(
