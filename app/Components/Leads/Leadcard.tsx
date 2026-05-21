@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Clock, Loader2 } from "lucide-react";
 import { Lead } from "@/app/types/leads";
 import { leadsService } from "@/services/leads.services";
@@ -65,6 +66,8 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
   const [declining, setDeclining] = useState(false);
   const [error, setError] = useState("");
 
+  const router = useRouter();
+
   const { userAccount, intakePayload, createdAt, status, relevanceScore } = lead;
   const isPending = status === "pending";
 
@@ -78,8 +81,14 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
     setError("");
     setAccepting(true);
     try {
-      await leadsService.acceptLead(lead.id);
+      const res = await leadsService.acceptLead(lead.id);
+      const conversationId = res?.data?.conversation?.id;
       onUpdate(lead.id, "accepted");
+      if (conversationId) {
+        router.push(`/dashboard/messages?conversation=${conversationId}`);
+      } else {
+        setError("Lead accepted but no conversation was created.");
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to accept");
     } finally {

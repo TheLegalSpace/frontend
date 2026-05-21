@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { MessageSquare } from "lucide-react";
 import { Conversation } from "@/app/types/message";
 import { messagesService } from "@/services/messages.services";
@@ -11,20 +12,23 @@ import { useAuth } from "@/app/context/AuthContext";
 
 export default function MessagesPage() {
   const { user } = useAuth();
+  const isLawyer = user?.role === "LAWYER";
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAnonymous, setIsAnonymous] = useState(true);
 
-  // On mobile, track whether we're showing the chat or the list
-  const [mobileView, setMobileView] = useState<"list" | "chat">("list");
+  // isAnonymous for the CLIENT: initialized as null until we know the real value
+  // from the conversation data. null = "not yet loaded" so we don't flash the banner.
+  const [isAnonymous, setIsAnonymous] = useState<boolean | null>(null);
+
+  const searchParams = useSearchParams();
 
   const loadConversations = useCallback(async () => {
     try {
       const data = await messagesService.getConversations();
       const items: Conversation[] = data?.data?.items ?? data?.data ?? [];
       setConversations(items);
-      // Only auto-select on desktop (don't push mobile to chat view on load)
       if (items.length > 0 && !activeId) {
         setActiveId(items[0].id);
       }
@@ -34,6 +38,43 @@ export default function MessagesPage() {
       setLoading(false);
     }
   }, [activeId]);
+
+  /** Re-fetch a single conversation and update it in the list */
+  const refreshConversation = useCallback(async (id: string) => {
+    try {
+      const data = await messagesService.getConversation(id);
+      const convo: Conversation = data?.data ?? data;
+      console.log("[refreshConversation] fetched:", convo);
+      if (convo?.id) {
+        setConversations((prev) =>
+          prev.map((c) => (c.id === convo.id ? convo : c))
+        );
+      }
+    } catch (err) {
+      console.error("Failed to refresh conversation:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    const id = searchParams.get("conversation");
+    if (!id) return;
+    setActiveId(id);
+    setMobileView("chat");
+    const alreadyLoaded = conversations.find((c) => c.id === id);
+    if (!alreadyLoaded) {
+      messagesService.getConversation(id).then((data) => {
+        const convo: Conversation = data?.data ?? data;
+        if (convo?.id) {
+          setConversations((prev) => {
+            if (prev.find((c) => c.id === convo.id)) return prev;
+            return [convo, ...prev];
+          });
+        }
+      }).catch(console.error);
+    }
+  }, [searchParams, conversations]);
+
+  const [mobileView, setMobileView] = useState<"list" | "chat">("list");
 
   useEffect(() => {
     loadConversations();
@@ -63,13 +104,30 @@ export default function MessagesPage() {
       }
     );
 
-    socket.on("conversation:updated", (conv: { id: string; status: string }) => {
-      if (conv.status === "closed") {
-        setConversations((prev) =>
-          prev.map((c) => (c.id === conv.id ? { ...c, status: "closed" } : c))
-        );
+    socket.on(
+      "conversation:updated",
+      (conv: { id: string; status?: string; isAnonymous?: boolean }) => {
+        console.log("[MessagesPage] conversation:updated", conv);
+
+        if (conv.status === "closed") {
+          setConversations((prev) =>
+            prev.map((c) => (c.id === conv.id ? { ...c, status: "closed" } : c))
+          );
+        }
+
+        if (conv.isAnonymous === false) {
+          refreshConversation(conv.id);
+        }
       }
-    });
+    );
+
+    socket.on(
+      "participant:updated",
+      (payload: { conversationId: string; isAnonymous: boolean }) => {
+        console.log("[MessagesPage] participant:updated", payload);
+        refreshConversation(payload.conversationId);
+      }
+    );
 
     socket.on("connect_error", (err: { message: string }) => {
       if (err.message === "invalid token") {
@@ -86,34 +144,95 @@ export default function MessagesPage() {
     return () => {
       socket.off("request:status_changed");
       socket.off("conversation:updated");
+      socket.off("participant:updated");
       socket.off("connect_error");
       socket.off("connect");
     };
-  }, [loadConversations]);
+  }, [loadConversations, refreshConversation]);
 
   const activeConvo = conversations.find((c) => c.id === activeId) ?? null;
 
+  // If the active conversation has no otherParty data, re-fetch it
+  useEffect(() => {
+    if (activeId && activeConvo && !activeConvo.otherParty?.fullName) {
+      console.log("[MessagesPage] otherParty missing, re-fetching conversation:", activeId);
+      refreshConversation(activeId);
+    }
+  }, [activeId, activeConvo, refreshConversation]);
+
+  // Sync isAnonymous from the active conversation's own participant data.
+  // The API returns the client's own anonymity state via `myParticipant.isAnonymous`
+  // (or equivalent). Fall back to `otherParty.isAnonymous` if that's what the shape is.
+  // We only do this for clients — lawyers read the OTHER party's isAnonymous separately.
+  useEffect(() => {
+    if (isLawyer) return;
+    if (!activeConvo) return;
+
+    // Prefer `myParticipant` if the API exposes it, otherwise read from the
+    // conversation's own `isAnonymous` field (some backends put it at the root).
+    const serverValue =
+      (activeConvo as unknown as { myParticipant?: { isAnonymous: boolean } })
+        .myParticipant?.isAnonymous ??
+      (activeConvo as unknown as { isAnonymous?: boolean }).isAnonymous;
+
+    if (typeof serverValue === "boolean") {
+      console.log("[MessagesPage] syncing isAnonymous from conversation:", serverValue);
+      setIsAnonymous(serverValue);
+    }
+  }, [activeConvo, isLawyer]);
+
   function handleSelectConvo(id: string) {
     setActiveId(id);
-    setMobileView("chat"); // push to chat view on mobile
+    setMobileView("chat");
+    // Reset anonymous state when switching conversations so we re-sync
+    // from the newly active conversation's data rather than keeping stale state.
+    if (!isLawyer) setIsAnonymous(null);
   }
 
   function handleBackToList() {
-    setMobileView("list"); // back button on mobile
+    setMobileView("list");
   }
+
+  function handleConversationClosed() {
+    setConversations((prev) =>
+      prev.map((c) => (c.id === activeId ? { ...c, status: "closed" } : c))
+    );
+  }
+
+  /** Called by client's AnonymousBanner after successful API call */
+  function handleAnonymousToggle(val: boolean) {
+    setIsAnonymous(val);
+    if (activeId) {
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === activeId
+            ? {
+                ...c,
+                otherParty: c.otherParty
+                  ? { ...c.otherParty, isAnonymous: val }
+                  : c.otherParty,
+              }
+            : c
+        )
+      );
+      refreshConversation(activeId);
+    }
+  }
+
+  // For the client: if isAnonymous is still null (loading), default to true
+  // so we don't flash the "revealed" state before data arrives.
+  const activeIsAnonymous = isLawyer
+    ? (activeConvo?.otherParty?.isAnonymous ?? true)
+    : (isAnonymous ?? true);
 
   return (
     <div className="min-h-screen bg-gray-50 md:flex md:items-start md:justify-center md:py-8 md:px-4">
       <div className="w-full md:max-w-4xl bg-white md:border md:border-gray-200 md:rounded-2xl overflow-hidden md:flex md:h-150 md:shadow-sm h-screen flex flex-col">
-
-        {/* ── Mobile: show list OR chat, never both ── */}
         <div className="flex flex-1 overflow-hidden">
-
-          {/* Sidebar — always visible on md+, conditionally on mobile */}
-          <div className={`
-            ${mobileView === "list" ? "flex" : "hidden"}
-            md:flex flex-col w-full md:w-auto
-          `}>
+          {/* Sidebar */}
+          <div
+            className={`${mobileView === "list" ? "flex" : "hidden"} md:flex flex-col w-full md:w-auto`}
+          >
             <ConversationList
               conversations={conversations}
               activeId={activeId}
@@ -122,18 +241,23 @@ export default function MessagesPage() {
             />
           </div>
 
-          {/* Chat — always visible on md+ if active, conditionally on mobile */}
-          <div className={`
-            ${mobileView === "chat" ? "flex" : "hidden"}
-            md:flex flex-1 flex-col min-w-0
-          `}>
+          {/* Chat */}
+          <div
+            className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-w-0`}
+          >
             {activeId && activeConvo ? (
               <ChatWindow
                 conversationId={activeId}
-                participantName={activeConvo.otherParty?.fullName ?? "Unknown"}
+                participantName={
+                  activeConvo.otherParty?.isAnonymous
+                    ? "Anonymous User"
+                    : (activeConvo.otherParty?.fullName || "Loading...")
+                }
                 currentAccountId={user?.id ?? ""}
-                isAnonymous={isAnonymous}
-                onAnonymousToggle={setIsAnonymous}
+                conversationStatus={activeConvo.status}
+                onConversationClosed={handleConversationClosed}
+                isAnonymous={activeIsAnonymous}
+                onAnonymousToggle={handleAnonymousToggle}
                 onClose={handleBackToList}
                 showBackButton={true}
               />
@@ -144,7 +268,6 @@ export default function MessagesPage() {
               </div>
             )}
           </div>
-
         </div>
       </div>
     </div>

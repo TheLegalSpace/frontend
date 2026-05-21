@@ -107,7 +107,7 @@ export default function ConversationList({
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
-                  getInitials(convo.otherParty?.fullName ?? "")
+                  getInitials(convo.otherParty?.isAnonymous ? "Anonymous User" : (convo.otherParty?.fullName ?? ""))
                 )}
               </div>
 
@@ -115,14 +115,16 @@ export default function ConversationList({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[13px] font-medium text-gray-900 truncate">
-                    {convo.otherParty?.fullName ?? "Unknown"}
+                    {convo.otherParty?.isAnonymous
+                    ? "Anonymous User"
+                    : (convo.otherParty?.fullName ?? "Unknown")}
                   </span>
                   <span className="text-[11px] text-gray-400 shrink-0">
                     {convo.lastMessageAt ? timeAgo(convo.lastMessageAt) : ""}
                   </span>
                 </div>
                 <p className="text-[12px] text-gray-500 truncate mt-0.5">
-                  {convo.lastMessage ?? "No messages yet"}
+                  {convo.lastMessagePreview ?? "No messages yet"}
                 </p>
               </div>
             </button>

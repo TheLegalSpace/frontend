@@ -1,74 +1,81 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { TrendingUp } from "lucide-react";
-import { Lead } from "@/app/types/leads";
+import { leadsService } from "@/services/leads.services";
 
 interface Props {
-  leads: Lead[];
-  total: number;
-  profileViews?: number; // optional — wire up when API supports it
+  profileViews?: number; // wire up later
 }
 
-function countThisMonth(leads: Lead[]): number {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  return leads.filter((l) => new Date(l.createdAt) >= startOfMonth).length;
-}
+export default function LeadsStatsRow({ profileViews = 0 }: Props) {
+  const [totalLeads, setTotalLeads] = useState<number | null>(null);
+  const [newLeads, setNewLeads] = useState<number | null>(null);
+  const [responseRate, setResponseRate] = useState<number | null>(null);
 
-function countThisWeek(leads: Lead[]): number {
-  const now = new Date();
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
-  startOfWeek.setHours(0, 0, 0, 0);
-  return leads.filter((l) => new Date(l.createdAt) >= startOfWeek).length;
-}
+  useEffect(() => {
+    async function fetchCounts() {
+      try {
+        const [totalRes, pendingRes, acceptedRes, declinedRes, expiredRes] =
+          await Promise.all([
+            leadsService.getLeads(undefined,  1, 1),
+            leadsService.getLeads("pending",  1, 1),
+            leadsService.getLeads("accepted", 1, 1),
+            leadsService.getLeads("declined", 1, 1),
+            leadsService.getLeads("expired",  1, 1),
+          ]);
 
-function calcResponseRate(leads: Lead[]): number {
-  if (leads.length === 0) return 0;
-  const responded = leads.filter(
-    (l) => l.status === "accepted" || l.status === "declined"
-  ).length;
-  return Math.round((responded / leads.length) * 100);
-}
+        const total    = totalRes?.data?.pagination?.total    ?? 0;
+        const pending  = pendingRes?.data?.pagination?.total  ?? 0;
+        const accepted = acceptedRes?.data?.pagination?.total ?? 0;
+        const declined = declinedRes?.data?.pagination?.total ?? 0;
+        const expired  = expiredRes?.data?.pagination?.total  ?? 0;
 
-function responseRateLabel(rate: number): string {
-  if (rate >= 90) return "Excellent";
-  if (rate >= 70) return "Good";
-  if (rate >= 50) return "Average";
-  return "Needs improvement";
-}
+        setTotalLeads(total);
+        setNewLeads(pending);
 
-export default function LeadsStatsRow({ leads, total, profileViews = 0 }: Props) {
-  const thisMonth = countThisMonth(leads);
-  const thisWeek = countThisWeek(
-    leads.filter((l) => l.status === "pending")
-  );
-  const responseRate = calcResponseRate(leads);
+        // Response rate = accepted out of all leads that have been resolved
+        const resolved = accepted + declined + expired;
+        setResponseRate(resolved > 0 ? Math.round((accepted / resolved) * 100) : 0);
+      } catch (err) {
+        console.error("Failed to fetch lead stats:", err);
+      }
+    }
+
+    fetchCounts();
+  }, []);
+
+  function rateLabel(rate: number) {
+    if (rate >= 90) return "Excellent";
+    if (rate >= 70) return "Good";
+    if (rate >= 50) return "Average";
+    return "Needs improvement";
+  }
 
   const stats = [
     {
       label: "Total Leads",
-      value: total,
-      sub: thisMonth > 0 ? `↑ ${thisMonth} this month` : "No new leads this month",
-      positive: thisMonth > 0,
+      value: totalLeads ?? "—",
+      sub: "All time",
+      positive: typeof totalLeads === "number" && totalLeads > 0,
     },
     {
       label: "New Leads",
-      value: leads.filter((l) => l.status === "pending").length,
-      sub: thisWeek > 0 ? `↑ ${thisWeek} this week` : "None this week",
-      positive: thisWeek > 0,
+      value: newLeads ?? "—",
+      sub: "Pending",
+      positive: typeof newLeads === "number" && newLeads > 0,
     },
     {
       label: "Profile Views",
-      value: profileViews,
-      sub: profileViews > 0 ? `${profileViews} total views` : "No data yet",
+      value: profileViews > 0 ? profileViews : "—",
+      sub: profileViews > 0 ? "This month" : "Coming soon",
       positive: profileViews > 0,
     },
     {
       label: "Response Rate",
-      value: `${responseRate}%`,
-      sub: responseRateLabel(responseRate),
-      positive: responseRate >= 70,
+      value: responseRate !== null ? `${responseRate}%` : "—",
+      sub: responseRate !== null ? rateLabel(responseRate) : "",
+      positive: typeof responseRate === "number" && responseRate >= 70,
     },
   ];
 
@@ -83,11 +90,7 @@ export default function LeadsStatsRow({ leads, total, profileViews = 0 }: Props)
           <p className="text-[32px] font-semibold text-gray-900 leading-none">
             {stat.value}
           </p>
-          <p
-            className={`text-[12px] mt-2 flex items-center gap-1 ${
-              stat.positive ? "text-green-600" : "text-gray-400"
-            }`}
-          >
+          <p className={`text-[12px] mt-2 flex items-center gap-1 ${stat.positive ? "text-green-600" : "text-gray-400"}`}>
             {stat.positive && <TrendingUp size={11} />}
             {stat.sub}
           </p>
