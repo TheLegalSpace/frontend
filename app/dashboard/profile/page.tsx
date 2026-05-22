@@ -1,7 +1,7 @@
 // app/(dashboard)/profile/page.tsx
 "use client";
 
-import ProfileCard from "@/app/Components/ProfileCard";
+import ProfileCard, { ProfileData } from "@/app/Components/ProfileCard";
 import EventsPanel from "@/app/Components/EventPanel";
 import { useMe } from "@/hooks/useProfile";
 
@@ -19,9 +19,7 @@ export default function ProfilePage() {
   if (error || !profile) {
     return (
       <div className="flex items-center justify-center h-[70vh]">
-        <p className="text-sm text-gray-400">
-          Failed to load profile.
-        </p>
+        <p className="text-sm text-gray-400">Failed to load profile.</p>
       </div>
     );
   }
@@ -41,7 +39,14 @@ export default function ProfilePage() {
           {/* Left */}
           <div className="min-w-0">
             <ProfileCard
-              profile={profile.data}
+              profile={{
+                ...(profile?.data as ProfileData),
+                // ✅ Map objects to name strings before passing
+                practiceAreas:
+                  profile.data.practiceAreas?.map((area: any) =>
+                    typeof area === "string" ? area : area.name,
+                  ) ?? [],
+              }}
               isOwnProfile={true}
             />
           </div>

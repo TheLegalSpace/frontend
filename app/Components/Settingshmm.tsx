@@ -9,6 +9,7 @@ import {
   Loader2,
   Check,
   AlertTriangle,
+  Phone,
 } from "lucide-react";
 import { useMe } from "@/hooks/useProfile";
 import {
@@ -18,9 +19,10 @@ import {
 } from "@/hooks/useSettings";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
+import { USER_ROLES } from "../types/types";
 
 export default function SettingsPage() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { data: profile, isLoading } = useMe();
   const router = useRouter();
 
@@ -31,25 +33,37 @@ export default function SettingsPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const isLawyer = user?.role === USER_ROLES.LAWYER;
+  const isFirm = user?.role === USER_ROLES.FIRM;
+  const isUser = user?.role === USER_ROLES.USER;
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
 
   useEffect(() => {
     if (!profile) return;
 
     // ✅ Handle both shapes — profile or profile.data
     const data = (profile as any)?.data ?? profile;
-
-    console.log("Settings profile data:", data); // ← verify shape
+    console.log("user?.role", user?.role);
+    console.log(
+      "isLawyer, isFirm, isUser, isAdmin",
+      isLawyer,
+      isFirm,
+      isUser,
+      isAdmin,
+    ); // ← verify type
 
     const fullName: string = data?.fullName ?? "";
     const parts = fullName.trim().split(" ");
     setFirstName(parts[0] ?? "");
     setLastName(parts.slice(1).join(" ") ?? "");
     setEmail(data?.email ?? "");
+    setPhone(data?.phone ?? "");
     setIsAnonymous(data?.isAnonymous ?? false);
   }, [profile]);
 
@@ -157,24 +171,43 @@ export default function SettingsPage() {
           </div>
 
           {/* Email — locked */}
-          <div className="flex flex-col gap-1.5 mb-5">
-            <label className="text-[11px] text-gray-400">Email Address</label>
-            <div className="relative w-full sm:w-[calc(50%-8px)]">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-              <input
-                type="email"
-                value={email}
-                disabled
-                readOnly
-                className={`${disabledField} pl-9`}
-                placeholder="Email"
-              />
-              {/* ✅ Black lock icon signals disabled */}
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-900" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div className="flex flex-col gap-1.5 mb-5">
+              <label className="text-[11px] text-gray-400">Email Address</label>
+              <div className="relative w-full ">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <input
+                  type="email"
+                  value={email}
+                  disabled
+                  readOnly
+                  className={`${disabledField} pl-9`}
+                  placeholder="Email"
+                />
+                {/* ✅ Black lock icon signals disabled */}
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-900" />
+              </div>
+              <p className="text-[10px] text-gray-400">
+                Email address cannot be changed.
+              </p>
             </div>
-            <p className="text-[10px] text-gray-400">
-              Email address cannot be changed.
-            </p>
+            <div className="flex flex-col gap-1.5 mb-5">
+              <label className="text-[11px] text-gray-400">Email Address</label>
+              <div className="relative w-full ">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <input
+                  type="email"
+                  value={phone ?? ""}
+                  className={`w-full px-3 py-2.5 pr-10 text-[13px] border border-gray-200 rounded-xl outline-none bg-gray-50 text-black  select-none pl-9`}
+                  placeholder="Phone Number"
+                />
+                {/* ✅ Black lock icon signals disabled */}
+                {/* <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-900" /> */}
+              </div>
+              <p className="text-[10px] text-gray-400">
+                Email address cannot be changed.
+              </p>
+            </div>
           </div>
 
           {saveError && (
@@ -204,46 +237,48 @@ export default function SettingsPage() {
         </div>
 
         {/* Anonymous */}
-        <div className="px-6 py-6 border-b border-gray-100">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-[13px] font-semibold text-gray-900 mb-1">
-                Anonymous
-              </h2>
-              <p className="text-[12px] text-gray-400 leading-relaxed max-w-md">
-                Stay anonymous while chatting. Your identity will only be shared
-                when you choose to reveal it.
-              </p>
-            </div>
-            <button
-              onClick={() => handleToggleAnonymous(!isAnonymous)}
-              disabled={toggleAnonymous.isPending}
-              aria-label="Toggle anonymous mode"
-              className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 disabled:opacity-50 ${
-                isAnonymous ? "bg-gray-900" : "bg-gray-200"
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
-                  isAnonymous ? "translate-x-5" : "translate-x-0"
+        {isUser && (
+          <div className="px-6 py-6 border-b border-gray-100">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-[13px] font-semibold text-gray-900 mb-1">
+                  Anonymous
+                </h2>
+                <p className="text-[12px] text-gray-400 leading-relaxed max-w-md">
+                  Stay anonymous while chatting. Your identity will only be
+                  shared when you choose to reveal it.
+                </p>
+              </div>
+              <button
+                onClick={() => handleToggleAnonymous(!isAnonymous)}
+                disabled={toggleAnonymous.isPending}
+                aria-label="Toggle anonymous mode"
+                className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 disabled:opacity-50 ${
+                  isAnonymous ? "bg-gray-900" : "bg-gray-200"
                 }`}
-              />
-            </button>
-          </div>
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                    isAnonymous ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
 
-          {toggleAnonymous.isPending && (
-            <div className="flex items-center gap-1.5 mt-2 text-[11px] text-gray-400">
-              <Loader2 className="w-3 h-3 animate-spin" />
-              Updating...
-            </div>
-          )}
-          {toggleAnonymous.isSuccess && !toggleAnonymous.isPending && (
-            <div className="flex items-center gap-1.5 mt-2 text-[11px] text-green-600">
-              <Check className="w-3 h-3" />
-              {isAnonymous ? "You are now anonymous" : "You are now visible"}
-            </div>
-          )}
-        </div>
+            {toggleAnonymous.isPending && (
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-gray-400">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Updating...
+              </div>
+            )}
+            {toggleAnonymous.isSuccess && !toggleAnonymous.isPending && (
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-green-600">
+                <Check className="w-3 h-3" />
+                {isAnonymous ? "You are now anonymous" : "You are now visible"}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Delete Account */}
         <div className="px-6 py-6">

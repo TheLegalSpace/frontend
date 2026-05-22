@@ -91,11 +91,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
       setUser(null);
-      router.replace("/signin"); // ✅ navigate from event too
+      router.replace("/");
     };
     window.addEventListener("auth:logout", handleAuthLogout);
     return () => window.removeEventListener("auth:logout", handleAuthLogout);
-  }, []);
+  }, [router]);
 
   const saveSession = (data: AuthResponse["data"]) => {
     const { account, session } = data;
@@ -283,7 +283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
       setUser(null);
-      router.replace("/signin"); // ✅ navigate directly — don't rely on ProtectedRoute
+      router.replace("/");
     }
   };
 

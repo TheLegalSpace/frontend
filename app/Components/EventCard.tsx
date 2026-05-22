@@ -53,18 +53,19 @@ export default function EventsPanel() {
           </div>
         </div>
         <div className="relative z-10">
-          <h2 className="text-[18px] leading-tight font-medium text-white mb-1.5">
+          <h2 className="text-[18px] font-[Instrument_Serif] leading-tight font-medium text-white mb-1.5">
             On The Docket
           </h2>
-          <p className="text-[12px] text-blue-100">
-            Want to feature your event?
+          <p className="text-[12px] text-blue-100 font-[Geist]">
+            Want to feature your event with The Legal Space? Request coverage,
+            promotion, or partnership through TLS Services.
           </p>
-          <a
+          {/* <a
             href="mailto:events@thelegalspace.com"
             className="text-[12px] text-white underline underline-offset-2"
           >
             events@thelegalspace.com
-          </a>
+          </a> */}
         </div>
       </div>
 
