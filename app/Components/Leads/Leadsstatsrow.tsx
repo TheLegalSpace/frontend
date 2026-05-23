@@ -1,49 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { TrendingUp } from "lucide-react";
-import { leadsService } from "@/services/leads.services";
+
+interface LeadStats {
+  total: number;
+  pending: number;
+  accepted: number;
+  declined: number;
+  expired: number;
+}
 
 interface Props {
+  // FIX: Stats are now fetched once by LeadsPage and passed here.
+  // LeadsStatsRow no longer makes any API calls of its own —
+  // that was causing 5 extra requests on every mount.
+  stats: LeadStats | null;
   profileViews?: number; // wire up later
 }
 
-export default function LeadsStatsRow({ profileViews = 0 }: Props) {
-  const [totalLeads, setTotalLeads] = useState<number | null>(null);
-  const [newLeads, setNewLeads] = useState<number | null>(null);
-  const [responseRate, setResponseRate] = useState<number | null>(null);
-
-  useEffect(() => {
-    async function fetchCounts() {
-      try {
-        const [totalRes, pendingRes, acceptedRes, declinedRes, expiredRes] =
-          await Promise.all([
-            leadsService.getLeads(undefined,  1, 1),
-            leadsService.getLeads("pending",  1, 1),
-            leadsService.getLeads("accepted", 1, 1),
-            leadsService.getLeads("declined", 1, 1),
-            leadsService.getLeads("expired",  1, 1),
-          ]);
-
-        const total    = totalRes?.data?.pagination?.total    ?? 0;
-        const pending  = pendingRes?.data?.pagination?.total  ?? 0;
-        const accepted = acceptedRes?.data?.pagination?.total ?? 0;
-        const declined = declinedRes?.data?.pagination?.total ?? 0;
-        const expired  = expiredRes?.data?.pagination?.total  ?? 0;
-
-        setTotalLeads(total);
-        setNewLeads(pending);
-
-        // Response rate = accepted out of all leads that have been resolved
-        const resolved = accepted + declined + expired;
-        setResponseRate(resolved > 0 ? Math.round((accepted / resolved) * 100) : 0);
-      } catch (err) {
-        console.error("Failed to fetch lead stats:", err);
-      }
-    }
-
-    fetchCounts();
-  }, []);
+export default function LeadsStatsRow({ stats, profileViews = 0 }: Props) {
+  const responseRate = (() => {
+    if (!stats) return null;
+    const resolved = stats.accepted + stats.declined + stats.expired;
+    return resolved > 0 ? Math.round((stats.accepted / resolved) * 100) : 0;
+  })();
 
   function rateLabel(rate: number) {
     if (rate >= 90) return "Excellent";
@@ -52,18 +32,18 @@ export default function LeadsStatsRow({ profileViews = 0 }: Props) {
     return "Needs improvement";
   }
 
-  const stats = [
+  const items = [
     {
       label: "Total Leads",
-      value: totalLeads ?? "—",
+      value: stats ? stats.total : "—",
       sub: "All time",
-      positive: typeof totalLeads === "number" && totalLeads > 0,
+      positive: !!stats && stats.total > 0,
     },
     {
       label: "New Leads",
-      value: newLeads ?? "—",
+      value: stats ? stats.pending : "—",
       sub: "Pending",
-      positive: typeof newLeads === "number" && newLeads > 0,
+      positive: !!stats && stats.pending > 0,
     },
     {
       label: "Profile Views",
@@ -81,7 +61,7 @@ export default function LeadsStatsRow({ profileViews = 0 }: Props) {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-      {stats.map((stat) => (
+      {items.map((stat) => (
         <div
           key={stat.label}
           className="bg-white border border-gray-100 rounded-xl px-5 py-4"
@@ -90,7 +70,11 @@ export default function LeadsStatsRow({ profileViews = 0 }: Props) {
           <p className="text-[32px] font-semibold text-gray-900 leading-none">
             {stat.value}
           </p>
-          <p className={`text-[12px] mt-2 flex items-center gap-1 ${stat.positive ? "text-green-600" : "text-gray-400"}`}>
+          <p
+            className={`text-[12px] mt-2 flex items-center gap-1 ${
+              stat.positive ? "text-green-600" : "text-gray-400"
+            }`}
+          >
             {stat.positive && <TrendingUp size={11} />}
             {stat.sub}
           </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { MessageSquare } from "lucide-react";
 import { Conversation } from "@/app/types/message";
@@ -10,6 +10,26 @@ import ConversationList from "./ConversationList";
 import ChatWindow from "./ChatWindow";
 import { useAuth } from "@/app/context/AuthContext";
 
+// ── Persist anonymous state per conversation in localStorage ─────────────────
+// Key is namespaced by role so a lawyer tab and client tab open in the same
+// browser don't share the same key and corrupt each other's state.
+function getStoredAnonymous(conversationId: string, role: string): boolean | null {
+  try {
+    const raw = localStorage.getItem(`anon:${role}:${conversationId}`);
+    if (raw === null) return null;
+    return raw === "true";
+  } catch {
+    return null;
+  }
+}
+
+function storeAnonymous(conversationId: string, role: string, value: boolean) {
+  try {
+    localStorage.setItem(`anon:${role}:${conversationId}`, String(value));
+  } catch {}
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function MessagesPage() {
   const { user } = useAuth();
   const isLawyer = user?.role === "LAWYER";
@@ -18,26 +38,36 @@ export default function MessagesPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // isAnonymous for the CLIENT: initialized as null until we know the real value
-  // from the conversation data. null = "not yet loaded" so we don't flash the banner.
+  // isAnonymous for the CLIENT.
+  // null = not yet loaded (so we don't flash the wrong banner).
   const [isAnonymous, setIsAnonymous] = useState<boolean | null>(null);
 
   const searchParams = useSearchParams();
+
+  // Keep a ref so effects that close over it always see the latest list
+  // without needing to add `conversations` to their dependency arrays
+  // (which caused the duplicate-entry bug).
+  const conversationsRef = useRef<Conversation[]>([]);
+  conversationsRef.current = conversations;
 
   const loadConversations = useCallback(async () => {
     try {
       const data = await messagesService.getConversations();
       const items: Conversation[] = data?.data?.items ?? data?.data ?? [];
+
       setConversations(items);
-      if (items.length > 0 && !activeId) {
-        setActiveId(items[0].id);
-      }
+
+      // Only auto-select the first conversation if nothing is active yet
+      setActiveId((prev) => {
+        if (prev) return prev;
+        return items.length > 0 ? items[0].id : null;
+      });
     } catch (err) {
       console.error("Failed to load conversations:", err);
     } finally {
       setLoading(false);
     }
-  }, [activeId]);
+  }, []); // no deps — stable reference
 
   /** Re-fetch a single conversation and update it in the list */
   const refreshConversation = useCallback(async (id: string) => {
@@ -55,24 +85,33 @@ export default function MessagesPage() {
     }
   }, []);
 
+  // ── Handle ?conversation= query param ──────────────────────────────────────
+  // FIX: `conversations` removed from dep array entirely.
+  // We use `conversationsRef` (a ref) to check for existing entries so the
+  // effect only re-runs when `searchParams` changes — not on every list update.
   useEffect(() => {
     const id = searchParams.get("conversation");
     if (!id) return;
+
     setActiveId(id);
     setMobileView("chat");
-    const alreadyLoaded = conversations.find((c) => c.id === id);
-    if (!alreadyLoaded) {
-      messagesService.getConversation(id).then((data) => {
+
+    const alreadyLoaded = conversationsRef.current.find((c) => c.id === id);
+    if (alreadyLoaded) return; // already in the list — nothing to do
+
+    messagesService
+      .getConversation(id)
+      .then((data) => {
         const convo: Conversation = data?.data ?? data;
-        if (convo?.id) {
-          setConversations((prev) => {
-            if (prev.find((c) => c.id === convo.id)) return prev;
-            return [convo, ...prev];
-          });
-        }
-      }).catch(console.error);
-    }
-  }, [searchParams, conversations]);
+        if (!convo?.id) return;
+        setConversations((prev) => {
+          // Double-check inside the setter in case it arrived in the meantime
+          if (prev.find((c) => c.id === convo.id)) return prev;
+          return [convo, ...prev];
+        });
+      })
+      .catch(console.error);
+  }, [searchParams]); // ← ONLY searchParams, not conversations
 
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
 
@@ -80,7 +119,7 @@ export default function MessagesPage() {
     loadConversations();
   }, [loadConversations]);
 
-  // Page-level socket events
+  // ── Page-level socket events ───────────────────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("accessToken") ?? "";
     const socket = connectSocket(token);
@@ -111,7 +150,9 @@ export default function MessagesPage() {
 
         if (conv.status === "closed") {
           setConversations((prev) =>
-            prev.map((c) => (c.id === conv.id ? { ...c, status: "closed" } : c))
+            prev.map((c) =>
+              c.id === conv.id ? { ...c, status: "closed" } : c
+            )
           );
         }
 
@@ -152,41 +193,64 @@ export default function MessagesPage() {
 
   const activeConvo = conversations.find((c) => c.id === activeId) ?? null;
 
-  // If the active conversation has no otherParty data, re-fetch it
+  // If the active conversation loaded without otherParty data, re-fetch once
   useEffect(() => {
     if (activeId && activeConvo && !activeConvo.otherParty?.fullName) {
-      console.log("[MessagesPage] otherParty missing, re-fetching conversation:", activeId);
+      console.log(
+        "[MessagesPage] otherParty missing, re-fetching conversation:",
+        activeId
+      );
       refreshConversation(activeId);
     }
   }, [activeId, activeConvo, refreshConversation]);
 
-  // Sync isAnonymous from the active conversation's own participant data.
-  // The API returns the client's own anonymity state via `myParticipant.isAnonymous`
-  // (or equivalent). Fall back to `otherParty.isAnonymous` if that's what the shape is.
-  // We only do this for clients — lawyers read the OTHER party's isAnonymous separately.
+  // ── Sync isAnonymous from the active conversation (client only) ────────────
+  // Priority order:
+  //   1. Locally stored value (survives refresh, set on every toggle)
+  //   2. myParticipant.isAnonymous from the API
+  //   3. Root-level isAnonymous on the conversation object
+  //   4. null (still loading — fallback to true in the render)
   useEffect(() => {
     if (isLawyer) return;
+    if (!activeId) return;
+
+    // Always try localStorage first so the value survives a page refresh.
+    // Role is included in the key so lawyer and client tabs in the same
+    // browser never read each other's stored value.
+    const role = user?.role ?? "client";
+    const stored = getStoredAnonymous(activeId, role);
+    if (stored !== null) {
+      setIsAnonymous(stored);
+      return;
+    }
+
     if (!activeConvo) return;
 
-    // Prefer `myParticipant` if the API exposes it, otherwise read from the
-    // conversation's own `isAnonymous` field (some backends put it at the root).
     const serverValue =
       (activeConvo as unknown as { myParticipant?: { isAnonymous: boolean } })
         .myParticipant?.isAnonymous ??
       (activeConvo as unknown as { isAnonymous?: boolean }).isAnonymous;
 
     if (typeof serverValue === "boolean") {
-      console.log("[MessagesPage] syncing isAnonymous from conversation:", serverValue);
+      console.log(
+        "[MessagesPage] syncing isAnonymous from conversation:",
+        serverValue
+      );
       setIsAnonymous(serverValue);
+      storeAnonymous(activeId, role, serverValue); // persist for next refresh
     }
-  }, [activeConvo, isLawyer]);
+  }, [activeConvo, activeId, isLawyer, user?.role]);
 
+  // ── Conversation selection ─────────────────────────────────────────────────
   function handleSelectConvo(id: string) {
     setActiveId(id);
     setMobileView("chat");
-    // Reset anonymous state when switching conversations so we re-sync
-    // from the newly active conversation's data rather than keeping stale state.
-    if (!isLawyer) setIsAnonymous(null);
+
+    if (!isLawyer) {
+      // Restore from localStorage immediately — no flicker
+      const stored = getStoredAnonymous(id, user?.role ?? "client");
+      setIsAnonymous(stored); // null if never stored; will sync from convo data
+    }
   }
 
   function handleBackToList() {
@@ -199,10 +263,14 @@ export default function MessagesPage() {
     );
   }
 
-  /** Called by client's AnonymousBanner after successful API call */
+  /** Called by client's AnonymousBanner after a successful API call */
   function handleAnonymousToggle(val: boolean) {
     setIsAnonymous(val);
+
+    // Persist so the value survives a page refresh
     if (activeId) {
+      storeAnonymous(activeId, user?.role ?? "client", val);
+
       setConversations((prev) =>
         prev.map((c) =>
           c.id === activeId
@@ -220,10 +288,19 @@ export default function MessagesPage() {
   }
 
   // For the client: if isAnonymous is still null (loading), default to true
-  // so we don't flash the "revealed" state before data arrives.
+  // so we don't accidentally flash the revealed state before data arrives.
   const activeIsAnonymous = isLawyer
     ? (activeConvo?.otherParty?.isAnonymous ?? true)
     : (isAnonymous ?? true);
+
+  // ── Derive participant name safely ─────────────────────────────────────────
+  // FIX: previously `!isAnonymous` (falsy) would show "Loading..." when
+  // isAnonymous was undefined/null. Now we check explicitly for `=== false`.
+  function getParticipantName(convo: Conversation): string {
+    if (!convo.otherParty) return "Loading...";
+    if (convo.otherParty.isAnonymous !== false) return "Anonymous User";
+    return convo.otherParty.fullName || "Loading...";
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 md:flex md:items-start md:justify-center md:py-8 md:px-4">
@@ -231,7 +308,9 @@ export default function MessagesPage() {
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar */}
           <div
-            className={`${mobileView === "list" ? "flex" : "hidden"} md:flex flex-col w-full md:w-auto`}
+            className={`${
+              mobileView === "list" ? "flex" : "hidden"
+            } md:flex flex-col w-full md:w-auto`}
           >
             <ConversationList
               conversations={conversations}
@@ -243,16 +322,14 @@ export default function MessagesPage() {
 
           {/* Chat */}
           <div
-            className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-w-0`}
+            className={`${
+              mobileView === "chat" ? "flex" : "hidden"
+            } md:flex flex-1 flex-col min-w-0`}
           >
             {activeId && activeConvo ? (
               <ChatWindow
                 conversationId={activeId}
-                participantName={
-                  activeConvo.otherParty?.isAnonymous
-                    ? "Anonymous User"
-                    : (activeConvo.otherParty?.fullName || "Loading...")
-                }
+                participantName={getParticipantName(activeConvo)}
                 currentAccountId={user?.id ?? ""}
                 conversationStatus={activeConvo.status}
                 onConversationClosed={handleConversationClosed}
@@ -264,7 +341,9 @@ export default function MessagesPage() {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
                 <MessageSquare size={32} strokeWidth={1.5} />
-                <p className="text-sm">Select a conversation to start chatting</p>
+                <p className="text-sm">
+                  Select a conversation to start chatting
+                </p>
               </div>
             )}
           </div>
