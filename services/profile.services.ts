@@ -25,6 +25,7 @@ export type ProfileResponse = {
   isAnonymous?: boolean;
   fullName?: string;
   phone?:string
+  role?:string
 };
 export interface Review {
   id: string;

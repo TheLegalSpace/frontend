@@ -1,37 +1,59 @@
 // components/settings/PersonalInfoSection.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Lock, Mail, Loader2 } from "lucide-react";
 import { useUpdatePersonalInfo } from "@/hooks/useSettings";
+import { useToast } from "@/app/context/ToastContext";
 
 interface Props {
   fullName: string;
   email: string;
   phone: string | null;
+  role: string;
 }
 
 export default function PersonalInfoSection({
   fullName: initialFullName,
   email,
   phone: initialPhone,
+  role,
 }: Props) {
   const [editing, setEditing] = useState(false);
-  const [fullName, setFullName] = useState(initialFullName ?? "");
-  const [phone, setPhone] = useState(
-    initialPhone?.replace("+234", "").trim() ?? "",
-  );
   const [error, setError] = useState("");
-
   const updateInfo = useUpdatePersonalInfo();
+  const { showSuccess, showError } = useToast();
+  // ✅ Derive first/last from fullName
+  const splitName = (name: string) => {
+    const parts = name.trim().split(" ");
+    return {
+      first: parts[0] ?? "",
+      last: parts.slice(1).join(" "),
+    };
+  };
 
-  // ✅ Split for display only — sent as fullName to API
-  const nameParts = fullName.trim().split(" ");
-  const displayFirst = nameParts[0] ?? "";
-  const displayLast = nameParts.slice(1).join(" ");
+  const cleanPhone = (raw: string | null) =>
+    raw?.replace("+234", "").trim() ?? "";
 
-  const [firstName, setFirstName] = useState(displayFirst);
-  const [lastName, setLastName] = useState(displayLast);
+  const [firstName, setFirstName] = useState(
+    () => splitName(initialFullName).first,
+  );
+  const [lastName, setLastName] = useState(
+    () => splitName(initialFullName).last,
+  );
+  const [phone, setPhone] = useState(() => cleanPhone(initialPhone));
+
+  // ✅ Sync local state when props update
+  // This fires when the parent re-renders with fresh data from useMe()
+  useEffect(() => {
+    if (!editing) {
+      // Only sync when not actively editing — don't overwrite user's in-progress edits
+      const { first, last } = splitName(initialFullName);
+      setFirstName(first);
+      setLastName(last);
+      setPhone(cleanPhone(initialPhone));
+    }
+  }, [initialFullName, initialPhone, editing]);
 
   const handleSave = async () => {
     setError("");
@@ -42,28 +64,30 @@ export default function PersonalInfoSection({
     }
     try {
       await updateInfo.mutateAsync({
-        fullName: combined, // ✅ sent as fullName
+        fullName: combined,
         phone: phone ? `+234${phone}` : "",
+        role,
       });
-      setFullName(combined);
       setEditing(false);
+      showSuccess("Changes saved successfully");
     } catch (err: any) {
+      showError("Error saving changes. Retry!");
       setError(err?.response?.data?.message ?? "Failed to save changes.");
     }
   };
 
   const handleCancel = () => {
-    // Reset to saved values
-    const parts = fullName.trim().split(" ");
-    setFirstName(parts[0] ?? "");
-    setLastName(parts.slice(1).join(" "));
-    setPhone(initialPhone?.replace("+234", "").trim() ?? "");
+    // ✅ Reset to current prop values
+    const { first, last } = splitName(initialFullName);
+    setFirstName(first);
+    setLastName(last);
+    setPhone(cleanPhone(initialPhone));
     setError("");
     setEditing(false);
   };
 
   return (
-    <div className="pb-6 border-b border-gray-100 pt-4">
+    <div className="pb-6 border-b border-gray-100">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-[15px] font-semibold text-gray-900">
           Personal Information
@@ -109,7 +133,7 @@ export default function PersonalInfoSection({
         {/* First Name */}
         <div>
           <label className="block text-[12px] text-gray-500 mb-1.5">
-            First Name
+            {role?.toLowerCase() === "firm" ? "Firm" : "First"} Name
           </label>
           <div className="relative">
             <input
@@ -126,23 +150,27 @@ export default function PersonalInfoSection({
         </div>
 
         {/* Last Name */}
-        <div>
-          <label className="block text-[12px] text-gray-500 mb-1.5">
-            Last Name
-          </label>
-          <div className="relative">
-            <input
-              type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              disabled={!editing}
-              className="w-full px-3 py-2.5 pr-9 border border-gray-200 rounded-lg text-[13px] text-gray-800 outline-none focus:border-[#2563EB] disabled:bg-gray-50 disabled:text-gray-600 transition-colors"
-            />
-            {!editing && (
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300" />
-            )}
+        {role?.toLowerCase() !== "firm" ? (
+          <div>
+            <label className="block text-[12px] text-gray-500 mb-1.5">
+              Last Name
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                disabled={!editing}
+                className="w-full px-3 py-2.5 pr-9 border border-gray-200 rounded-lg text-[13px] text-gray-800 outline-none focus:border-[#2563EB] disabled:bg-gray-50 disabled:text-gray-600 transition-colors"
+              />
+              {!editing && (
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300" />
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div></div>
+        )}
 
         {/* Email — always locked */}
         <div>
@@ -173,7 +201,7 @@ export default function PersonalInfoSection({
                 : "border-gray-200 bg-gray-50"
             }`}
           >
-            <span className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-gray-500 border-r border-gray-200 bg-gray-50 shrink-0">
+            <span className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-gray-500 border-r border-gray-200 bg-gray-50 flex-shrink-0">
               +234
             </span>
             <input

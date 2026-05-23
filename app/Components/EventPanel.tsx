@@ -43,7 +43,7 @@ export default function EventsPanel() {
   const activeEvent = events[current];
 
   return (
-    <div className="flex flex-col gap-3 lg:sticky lg:top-4 font-[Instrument_Serif]">
+    <div className="flex flex-col gap-3 lg:sticky lg:top-4 font-[Instrument_Serif] p-2">
       {/* Banner */}
       <div className="relative overflow-hidden rounded-xl bg-[#1D4ED8] px-4 py-5">
         <div className="absolute inset-0 opacity-10">

@@ -3,8 +3,9 @@
 
 import { useState } from "react";
 import { X, Search, Plus, Check, Loader2 } from "lucide-react";
- import { useUpdatePracticeAreas } from "@/hooks/useSettings";
+import { useUpdatePracticeAreas } from "@/hooks/useSettings";
 import { PracticeArea } from "@/services/practice-areas.services";
+import { useToast } from "@/app/context/ToastContext";
 
 interface Props {
   practiceAreas: PracticeArea[];
@@ -26,11 +27,12 @@ export default function PracticeAreasModal({
   const [primaryId, setPrimaryId] = useState(initialPrimary);
   const [secondaryId, setSecondaryId] = useState(initialSecondary);
   const [error, setError] = useState("");
+  const { showSuccess, showError } = useToast();
 
   const updateAreas = useUpdatePracticeAreas();
 
   const filtered = practiceAreas.filter((a) =>
-    a.name.toLowerCase().includes(search.toLowerCase())
+    a.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   const getAreaName = (id: string) =>
@@ -45,31 +47,53 @@ export default function PracticeAreasModal({
     } else {
       const next = [...selectedIds, id];
       setSelectedIds(next);
-      if (!primaryId) { setPrimaryId(id); return; }
-      if (!secondaryId) { setSecondaryId(id); return; }
+      if (!primaryId) {
+        setPrimaryId(id);
+        return;
+      }
+      if (!secondaryId) {
+        setSecondaryId(id);
+        return;
+      }
     }
   };
 
   const handleSave = async () => {
     setError("");
-    if (!primaryId) { setError("Please select a primary area."); return; }
+    if (!primaryId) {
+      setError("Please select a primary area.");
+      return;
+    }
     try {
-      await updateAreas.mutateAsync({ practiceAreaIds: selectedIds, primaryAreaId: primaryId, secondaryAreaId: secondaryId });
+      await updateAreas.mutateAsync({
+        practiceAreaIds: selectedIds,
+        primaryAreaId: primaryId,
+        secondaryAreaId: secondaryId,
+      });
       onClose();
+      showSuccess("Changes saved successfully");
     } catch (err: any) {
       setError(err?.response?.data?.message ?? "Failed to save.");
+      showError("Error saving changes. Retry!");
     }
   };
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="w-full max-w-md bg-white rounded-2xl p-6 shadow-xl">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-[15px] font-semibold text-gray-900">Practice Areas</h3>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+          <h3 className="text-[15px] font-semibold text-gray-900">
+            Practice Areas
+          </h3>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+          >
             <X className="w-3.5 h-3.5 text-gray-600" />
           </button>
         </div>
@@ -133,22 +157,26 @@ export default function PracticeAreasModal({
                 }`}
               >
                 {area.name}
-                {isSelected ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                {isSelected ? (
+                  <Check className="w-3 h-3" />
+                ) : (
+                  <Plus className="w-3 h-3" />
+                )}
               </button>
             );
           })}
         </div>
 
-        {error && (
-          <p className="text-[12px] text-red-500 mb-3">{error}</p>
-        )}
+        {error && <p className="text-[12px] text-red-500 mb-3">{error}</p>}
 
         <button
           onClick={handleSave}
           disabled={updateAreas.isPending}
           className="w-full py-3 bg-[#2563EB] text-white text-[13px] font-medium rounded-xl hover:bg-[#1d4ed8] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          {updateAreas.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+          {updateAreas.isPending && (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          )}
           {updateAreas.isPending ? "Saving..." : "Save and Continue"}
         </button>
       </div>

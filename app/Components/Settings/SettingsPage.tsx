@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const isLawyer = user?.role === USER_ROLES.LAWYER;
   const isFirm = user?.role === USER_ROLES.FIRM;
   const isLawyerOrFirm = isLawyer || isFirm;
+
   const isUser = user?.role === USER_ROLES.USER;
   if (isLoading || !profile) {
     return (
@@ -58,18 +59,19 @@ export default function SettingsPage() {
   const lastName = nameParts.slice(1).join(" ");
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="max-w-2xl mx-auto px-4 py-6 pt-3">
       <h1 className="text-[22px] font-semibold text-gray-900 mb-6">Settings</h1>
 
-      <div className="bg-white rounded-2xl border border-gray-100 px-6 divide-y divide-gray-100">
+      <div className="bg-white rounded-2xl border border-gray-100 px-6 divide-y divide-gray-100 py-3">
         {/* Personal Information — all roles */}
         <PersonalInfoSection
           fullName={account.fullName ?? ""} // ✅ pass as fullName
           email={account.email ?? ""}
           phone={account.phone ?? ""}
+          role={account.role ?? "USER"}
         />
         {isUser && (
-          <AnonymousSection isAnonymous={profile.isAnonymous ?? false} />
+          <AnonymousSection isAnonymous={account.isAnonymous ?? false} />
         )}
         {/* Practice Areas — lawyers & firms only */}
         {isLawyerOrFirm && (

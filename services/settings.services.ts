@@ -11,6 +11,7 @@ export interface UpdateProfilePayload {
 export interface UpdatePersonalInfoPayload {
   fullName: string;   // ✅ not firstName/lastName
   phone: string;
+  role: string;
   bio?: string;
   locationCity?: string;
   locationCountry?: string;

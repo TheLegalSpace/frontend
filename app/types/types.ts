@@ -6,6 +6,7 @@ export const USER_ROLES = {
     LAWYER: "LAWYER",
     FIRM: "FIRM",
     ADMIN: "ADMIN",
+    PENDING_PROFESSIONAL: "PENDING_PROFESSIONAL",
   } as const;
   
   // ✅ Type derived from the constant — stays in sync automatically

@@ -1,4 +1,4 @@
-// context/AuthContext.tsx
+// context/AuthContext.tsx — full updated version
 "use client";
 
 import {
@@ -36,24 +36,32 @@ interface AuthContextType {
   user: AuthResponse["data"]["account"] | null;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
-  loginWithGoogle: (
-    idToken: string,
-    fullName: string,
-    avatarUrl?: string,
-  ) => Promise<void>;
+  loginWithGoogle: (idToken: string, fullName: string, avatarUrl?: string) => Promise<void>;
   logout: () => Promise<void>;
+  saveSession: (data: AuthResponse["data"]) => void; // ✅ exposed for register flow
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// ✅ Routing helper — shared between login and register
+export function getPostAuthRoute(account: AuthResponse["data"]["account"]): string {
+   if (account.role === "PENDING_PROFESSIONAL") {
+    return "/register/lawyer-setup";
+  }
+  if (account.role === "LAWYER" && !account.lawyerProfile) {
+    return "/register/lawyer-setup";
+  }
+  if (account.role === "FIRM" && !account.firmProfile) {
+    return "/register/firm-setup";
+  }
+  return "/dashboard/feeds";
+}
+ 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthResponse["data"]["account"] | null>(
-    null,
-  );
+  const [user, setUser] = useState<AuthResponse["data"]["account"] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter(); // ✅ router at top level of component
+  const router = useRouter();
 
-  // Restore session from localStorage on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
     const token = localStorage.getItem("accessToken");
@@ -66,37 +74,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
+        setIsLoading(false);
+        return;
       }
 
-      // ✅ Optionally refresh from API to get latest role
       profileService
         .getMe()
         .then((r) => {
           const fresh = r.data.data;
           localStorage.setItem("user", JSON.stringify(fresh));
-          setUser(fresh); // ← overrides with latest from server
+          setUser(fresh);
         })
-        .catch(() => {}) // silent fail — cached data still works
+        .catch(() => {})
         .finally(() => setIsLoading(false));
     } else {
       setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
-  // Listen for logout events from api.ts interceptor
   useEffect(() => {
     const handleAuthLogout = () => {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
       setUser(null);
-      router.replace("/");
+      router.replace("/signin");
     };
     window.addEventListener("auth:logout", handleAuthLogout);
     return () => window.removeEventListener("auth:logout", handleAuthLogout);
   }, [router]);
 
+  // ✅ Exposed so RegisterFlow can call it after OTP verify
   const saveSession = (data: AuthResponse["data"]) => {
     const { account, session } = data;
     localStorage.setItem("accessToken", session.accessToken);
@@ -105,88 +113,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(account);
   };
 
-  const classifyError = (err: unknown): AuthError => {
-    const { status, message, code } = parseApiError(err);
-
-    if (code === "NETWORK_ERROR") {
-      return {
-        code: "NETWORK_ERROR",
-        message: "No internet connection. Please check your network.",
-      };
-    }
-    if (status >= 500) {
-      return {
-        code: "SERVER_ERROR",
-        message: "Our servers are having issues. Please try again.",
-      };
-    }
-    if (
-      status === 404 ||
-      message.toLowerCase().includes("account not found") ||
-      message.toLowerCase().includes("not found")
-    ) {
-      return {
-        code: "ACCOUNT_NOT_FOUND",
-        message: "Account not found. Please register first.",
-      };
-    }
-    if (
-      status === 401 ||
-      message.toLowerCase().includes("invalid") ||
-      message.toLowerCase().includes("incorrect") ||
-      message.toLowerCase().includes("wrong password")
-    ) {
-      return {
-        code: "INVALID_CREDENTIALS",
-        message: "Incorrect email or password.",
-      };
-    }
-    if (
-      status === 409 ||
-      message.toLowerCase().includes("already exists") ||
-      message.toLowerCase().includes("conflict")
-    ) {
-      return {
-        code: "ACCOUNT_EXISTS",
-        message: "An account with this email already exists.",
-      };
-    }
-
-    return {
-      code: "UNKNOWN_ERROR",
-      message: message || "Something went wrong. Please try again.",
-    };
+  const clearSession = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    setUser(null);
   };
 
-  // Fetch Google avatar and upload to backend
-  const syncGoogleAvatar = async (googleAvatarUrl: string): Promise<void> => {
-    const imageResponse = await fetch(googleAvatarUrl);
-    const blob = await imageResponse.blob();
-    const file = new File([blob], "avatar.jpg", { type: blob.type });
-    await profileService.uploadAvatar(file);
-    setUser((prev) => (prev ? { ...prev, avatarUrl: googleAvatarUrl } : prev));
+  const classifyError = (err: unknown): AuthError => {
+    const { status, message, code } = parseApiError(err);
+    if (code === "NETWORK_ERROR") return { code: "NETWORK_ERROR", message: "No internet connection." };
+    if (status >= 500) return { code: "SERVER_ERROR", message: "Server error. Please try again." };
+    if (status === 404 || message.toLowerCase().includes("not found")) return { code: "ACCOUNT_NOT_FOUND", message: "Account not found." };
+    if (status === 401 || message.toLowerCase().includes("invalid") || message.toLowerCase().includes("incorrect")) return { code: "INVALID_CREDENTIALS", message: "Incorrect email or password." };
+    if (status === 409 || message.toLowerCase().includes("already exists")) return { code: "ACCOUNT_EXISTS", message: "An account with this email already exists." };
+    return { code: "UNKNOWN_ERROR", message: message || "Something went wrong." };
+  };
+
+  const syncGoogleAvatar = async (googleAvatarUrl: string) => {
+    try {
+      const imageResponse = await fetch(googleAvatarUrl);
+      const blob = await imageResponse.blob();
+      const file = new File([blob], "avatar.jpg", { type: blob.type });
+      await profileService.uploadAvatar(file);
+      setUser((prev) => prev ? { ...prev, avatarUrl: googleAvatarUrl } : prev);
+    } catch {
+      console.warn("Avatar sync failed");
+    }
   };
 
   const login = async (payload: LoginPayload): Promise<void> => {
     try {
       const response = await authService.login(payload);
+      if (!response?.data?.data) throw { code: "UNKNOWN_ERROR", message: "Unexpected response." };
 
-      if (!response?.data?.data) {
-        throw {
-          code: "UNKNOWN_ERROR",
-          message:
-            response?.data?.message ?? "Unexpected response from server.",
-        };
-      }
+      const data = response.data.data;
+      saveSession(data);
 
-      saveSession(response.data.data);
+      // ✅ Route based on profile completion — handles incomplete setup
+      const route = getPostAuthRoute(data.account);
+      router.replace(route);
     } catch (err: unknown) {
-      if (typeof err === "object" && err !== null && "code" in err) {
-        throw err; // already an AuthError
-      }
-      const authError = classifyError(err);
-      console.error("Login error:", authError);
-      throw authError;
+      if (typeof err === "object" && err !== null && "code" in err) throw err;
+      throw classifyError(err);
     }
   };
 
@@ -195,60 +164,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fullName: string,
     avatarUrl?: string,
   ): Promise<void> => {
-    const attemptLogin = async () => {
-      const response = await authService.login({
-        authProvider: "google",
-        idToken,
-        fullName,
-      });
-      return response;
-    };
+    const attemptLogin = async () =>
+      authService.login({ authProvider: "google", idToken, fullName });
 
-    const handlePostLogin = async (
-      data: AuthResponse["data"],
-      googleAvatarUrl?: string,
-    ) => {
+    const handlePostLogin = async (data: AuthResponse["data"], googleAvatarUrl?: string) => {
       saveSession(data);
-
-      // Sync avatar for any user with no avatar
-      const hasNoAvatar = !data.account.avatarUrl;
-      if (googleAvatarUrl && hasNoAvatar) {
-        try {
-          console.log("Syncing Google avatar...");
-          await syncGoogleAvatar(googleAvatarUrl);
-        } catch (avatarErr) {
-          console.warn("Avatar sync failed — non-critical:", avatarErr);
-        }
+      if (googleAvatarUrl && !data.account.avatarUrl) {
+        await syncGoogleAvatar(googleAvatarUrl);
       }
+      // ✅ Route based on profile completion
+      const route = getPostAuthRoute(data.account);
+      router.replace(route);
     };
 
     try {
-      // Existing user
       const response = await attemptLogin();
       await handlePostLogin(response.data.data, avatarUrl);
     } catch (err: unknown) {
       const authError = classifyError(err);
-      console.log("Google login error:", authError);
-
-      // Account doesn't exist — auto register
       if (authError.code === "ACCOUNT_NOT_FOUND") {
         try {
-          console.log("Auto-registering:", fullName);
-
-          await authService.registerUser({
-            authProvider: "google",
-            idToken,
-            fullName,
-          });
-
-          console.log("Registered — logging in...");
+          await authService.registerUser({ authProvider: "google", idToken, fullName });
           const response = await attemptLogin();
           await handlePostLogin(response.data.data, avatarUrl);
         } catch (registerErr: unknown) {
           const registerError = classifyError(registerErr);
-          console.error("Registration error:", registerError);
-
-          // Race condition — account created between login and register
           if (registerError.code === "ACCOUNT_EXISTS") {
             try {
               const response = await attemptLogin();
@@ -258,17 +198,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             return;
           }
-
           throw registerError;
         }
         return;
       }
-
       if (authError.code === "SESSION_EXPIRED") {
         window.dispatchEvent(new Event("auth:logout"));
         throw authError;
       }
-
       throw authError;
     }
   };
@@ -276,21 +213,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async (): Promise<void> => {
     try {
       await authService.logout();
-    } catch {
-      // best effort
-    } finally {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
-      setUser(null);
-      router.replace("/");
+    } catch {}
+    finally {
+      clearSession();
+      router.replace("/signin");
     }
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, isLoading, login, loginWithGoogle, logout }}
-    >
+    <AuthContext.Provider value={{ user, isLoading, login, loginWithGoogle, logout, saveSession }}>
       {children}
     </AuthContext.Provider>
   );

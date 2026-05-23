@@ -1,10 +1,11 @@
 // components/settings/AnonymousSection.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { profileService } from "@/services/profile.services";
 import { useQueryClient } from "@tanstack/react-query";
+import { useToggleAnonymous } from "@/hooks/useSettings";
+import { useToast } from "@/app/context/ToastContext";
 
 interface Props {
   isAnonymous: boolean;
@@ -12,20 +13,32 @@ interface Props {
 
 export default function AnonymousSection({ isAnonymous: initialValue }: Props) {
   const [isAnonymous, setIsAnonymous] = useState(initialValue);
-  const [isToggling, setIsToggling] = useState(false);
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToast();
+
+  // ✅ Hook called at top level — not inside handleToggle
+  const toggleAnonymous = useToggleAnonymous();
+
+  // ✅ Sync when prop changes after refetch
+  useEffect(() => {
+    setIsAnonymous(initialValue);
+  }, [initialValue]);
 
   const handleToggle = async () => {
-    if (isToggling) return;
-    setIsToggling(true);
+    if (toggleAnonymous.isPending) return;
+
+    const newValue = !isAnonymous;
+    setIsAnonymous(newValue); // optimistic update
+
     try {
-      await profileService.toggleAnonymous(!isAnonymous);
-      setIsAnonymous((prev) => !prev);
-      queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+      // ✅ Call mutateAsync on the mutation object — not the hook itself
+      await toggleAnonymous.mutateAsync(newValue);
+      await queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+      showSuccess(newValue ? "You are now anonymous." : "You are now visible."); // ✅
     } catch (err) {
       console.error("Failed to toggle anonymous:", err);
-    } finally {
-      setIsToggling(false);
+      setIsAnonymous(!newValue); // revert on failure
+      showError("Failed to update anonymous status."); // ✅
     }
   };
 
@@ -42,16 +55,16 @@ export default function AnonymousSection({ isAnonymous: initialValue }: Props) {
           </p>
         </div>
 
-        {/* ✅ Fixed toggle */}
+        {/* Toggle */}
         <button
           onClick={handleToggle}
-          disabled={isToggling}
+          disabled={toggleAnonymous.isPending}
           aria-label="Toggle anonymous mode"
           role="switch"
           aria-checked={isAnonymous}
-          className="shrink-0 mt-0.5 disabled:opacity-60"
+          className="shrink-0 mt-0.5 disabled:opacity-60 cursor-pointer"
         >
-          {isToggling ? (
+          {toggleAnonymous.isPending ? (
             <div className="w-11 h-6 flex items-center justify-center">
               <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
             </div>
@@ -63,7 +76,7 @@ export default function AnonymousSection({ isAnonymous: initialValue }: Props) {
             >
               <span
                 className={`absolute top-[3px] w-[18px] h-[18px] bg-white rounded-full shadow-sm transition-transform duration-200 ${
-                  isAnonymous ? "translate-x-[22p right-1" : "translate-x-[3px] left-1"
+                  isAnonymous ? "right-1" : "left-1"
                 }`}
               />
             </div>

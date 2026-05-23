@@ -19,7 +19,7 @@ export interface AuthResponse {
       email: string;
       fullName: string;
       phone: string | null;
-      role: "USER" | "LAWYER" | "FIRM" | "ADMIN";
+      role: "USER" | "LAWYER" | "FIRM" | "ADMIN" | "PENDING_PROFESSIONAL";
       avatarUrl: string | null;
       coverUrl: string | null;
       bio: string | null;
