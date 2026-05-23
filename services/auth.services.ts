@@ -7,6 +7,7 @@ export interface LoginPayload {
   password?: string;
   idToken?: string;
   fullName?: string;
+  role?: "USER" | "LAWYER" | "FIRM" | "ADMIN" | "PENDING_PROFESSIONAL";
 }
 
 export interface AuthResponse {
