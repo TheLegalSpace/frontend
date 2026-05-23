@@ -49,7 +49,6 @@ export default function SettingsPage() {
     ? practiceAreaIds.map((id, i) => ({
         id,
         name: practiceAreaNames[i] ?? "",
-        services: [], // TODO: fetch from API when endpoint available
       }))
     : [];
 
@@ -85,7 +84,7 @@ export default function SettingsPage() {
         )}
 
         {/* Services & Pricing — lawyers & firms only */}
-        {isLawyerOrFirm && <ServicesPricingSection areas={servicesAreas} />}
+        {isLawyerOrFirm && <ServicesPricingSection practiceAreas={servicesAreas} />}
 
         {/* Notifications — lawyers & firms only */}
         {isLawyerOrFirm && <NotificationsSection />}

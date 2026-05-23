@@ -1,7 +1,7 @@
 // hooks/useSettings.ts
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
  import { authService } from "@/services/auth.services";
-import { settingsService, UpdatePersonalInfoPayload, UpdatePracticeAreasPayload, UpdateProfilePayload, UpdateServicesPayload } from "@/services/settings.services";
+import { ServiceRow, settingsService, UpdatePersonalInfoPayload, UpdatePracticeAreasPayload, UpdateProfilePayload, UpdateServicesPayload } from "@/services/settings.services";
  
 export const useUpdatePersonalInfo = () => {
   const queryClient = useQueryClient();
@@ -28,9 +28,10 @@ export const useUpdatePracticeAreas = () => {
 export const useUpdateServices = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: UpdateServicesPayload) =>
-      settingsService.updateServices(payload),
+    mutationFn: (services: ServiceRow[]) =>
+      settingsService.updateServices(services),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["services"] });
       queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
     },
   });
@@ -63,3 +64,13 @@ export const useDeleteAccount = () => {
     mutationFn: () => settingsService.deleteAccount(),
   });
 };
+
+export const useServices = (enabled = true) =>
+  useQuery({
+    queryKey: ["services"],
+    queryFn: () => settingsService.getServices().then((r) => r.data.data),
+    enabled,
+    staleTime: 1000 * 60 * 2,
+  });
+
+

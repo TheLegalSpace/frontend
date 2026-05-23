@@ -55,6 +55,9 @@ export const authService = {
   registerUser: (payload: LoginPayload & { fullName: string }) =>
     api.post<AuthResponse>("/auth/register/user", payload),
 
+  registerGoogleUser: (payload: LoginPayload & { fullName: string }) =>
+    api.post<AuthResponse>("/auth/register/google", payload),
+
   registerLawyer: (payload: Record<string, unknown>) =>
     api.post<AuthResponse>("/auth/register/lawyer", payload),
 

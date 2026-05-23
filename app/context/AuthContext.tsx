@@ -36,7 +36,11 @@ interface AuthContextType {
   user: AuthResponse["data"]["account"] | null;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
-  loginWithGoogle: (idToken: string, fullName: string, avatarUrl?: string) => Promise<void>;
+  loginWithGoogle: (
+    idToken: string,
+    fullName: string,
+    avatarUrl?: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
   saveSession: (data: AuthResponse["data"]) => void; // ✅ exposed for register flow
 }
@@ -44,8 +48,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 // ✅ Routing helper — shared between login and register
-export function getPostAuthRoute(account: AuthResponse["data"]["account"]): string {
-   if (account.role === "PENDING_PROFESSIONAL") {
+export function getPostAuthRoute(
+  account: AuthResponse["data"]["account"],
+): string {
+  if (account.role === "PENDING_PROFESSIONAL") {
     return "/register/lawyer-setup";
   }
   if (account.role === "LAWYER" && !account.lawyerProfile) {
@@ -56,9 +62,11 @@ export function getPostAuthRoute(account: AuthResponse["data"]["account"]): stri
   }
   return "/dashboard/feeds";
 }
- 
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthResponse["data"]["account"] | null>(null);
+  const [user, setUser] = useState<AuthResponse["data"]["account"] | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -122,12 +130,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const classifyError = (err: unknown): AuthError => {
     const { status, message, code } = parseApiError(err);
-    if (code === "NETWORK_ERROR") return { code: "NETWORK_ERROR", message: "No internet connection." };
-    if (status >= 500) return { code: "SERVER_ERROR", message: "Server error. Please try again." };
-    if (status === 404 || message.toLowerCase().includes("not found")) return { code: "ACCOUNT_NOT_FOUND", message: "Account not found." };
-    if (status === 401 || message.toLowerCase().includes("invalid") || message.toLowerCase().includes("incorrect")) return { code: "INVALID_CREDENTIALS", message: "Incorrect email or password." };
-    if (status === 409 || message.toLowerCase().includes("already exists")) return { code: "ACCOUNT_EXISTS", message: "An account with this email already exists." };
-    return { code: "UNKNOWN_ERROR", message: message || "Something went wrong." };
+    if (code === "NETWORK_ERROR")
+      return { code: "NETWORK_ERROR", message: "No internet connection." };
+    if (status >= 500)
+      return {
+        code: "SERVER_ERROR",
+        message: "Server error. Please try again.",
+      };
+    if (status === 404 || message.toLowerCase().includes("not found"))
+      return { code: "ACCOUNT_NOT_FOUND", message: "Account not found." };
+    if (
+      status === 401 ||
+      message.toLowerCase().includes("invalid") ||
+      message.toLowerCase().includes("incorrect")
+    )
+      return {
+        code: "INVALID_CREDENTIALS",
+        message: "Incorrect email or password.",
+      };
+    if (status === 409 || message.toLowerCase().includes("already exists"))
+      return {
+        code: "ACCOUNT_EXISTS",
+        message: "An account with this email already exists.",
+      };
+    return {
+      code: "UNKNOWN_ERROR",
+      message: message || "Something went wrong.",
+    };
   };
 
   const syncGoogleAvatar = async (googleAvatarUrl: string) => {
@@ -136,7 +165,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const blob = await imageResponse.blob();
       const file = new File([blob], "avatar.jpg", { type: blob.type });
       await profileService.uploadAvatar(file);
-      setUser((prev) => prev ? { ...prev, avatarUrl: googleAvatarUrl } : prev);
+      setUser((prev) =>
+        prev ? { ...prev, avatarUrl: googleAvatarUrl } : prev,
+      );
     } catch {
       console.warn("Avatar sync failed");
     }
@@ -145,7 +176,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (payload: LoginPayload): Promise<void> => {
     try {
       const response = await authService.login(payload);
-      if (!response?.data?.data) throw { code: "UNKNOWN_ERROR", message: "Unexpected response." };
+      if (!response?.data?.data)
+        throw { code: "UNKNOWN_ERROR", message: "Unexpected response." };
 
       const data = response.data.data;
       saveSession(data);
@@ -167,7 +199,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const attemptLogin = async () =>
       authService.login({ authProvider: "google", idToken, fullName });
 
-    const handlePostLogin = async (data: AuthResponse["data"], googleAvatarUrl?: string) => {
+    const handlePostLogin = async (
+      data: AuthResponse["data"],
+      googleAvatarUrl?: string,
+    ) => {
       saveSession(data);
       if (googleAvatarUrl && !data.account.avatarUrl) {
         await syncGoogleAvatar(googleAvatarUrl);
@@ -184,7 +219,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const authError = classifyError(err);
       if (authError.code === "ACCOUNT_NOT_FOUND") {
         try {
-          await authService.registerUser({ authProvider: "google", idToken, fullName });
+          await authService.registerGoogleUser({
+            authProvider: "google",
+            idToken,
+            fullName,
+            role: "USER",
+          });
           const response = await attemptLogin();
           await handlePostLogin(response.data.data, avatarUrl);
         } catch (registerErr: unknown) {
@@ -213,15 +253,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async (): Promise<void> => {
     try {
       await authService.logout();
-    } catch {}
-    finally {
+    } catch {
+    } finally {
       clearSession();
       router.replace("/signin");
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, loginWithGoogle, logout, saveSession }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, loginWithGoogle, logout, saveSession }}
+    >
       {children}
     </AuthContext.Provider>
   );
