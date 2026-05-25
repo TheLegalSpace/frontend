@@ -2,18 +2,83 @@
 import { api } from "./api";
 import { AuthResponse } from "./auth.services";
 
-type ProfileData = AuthResponse["data"]["account"] & {
+export type PracticeAreaRef =
+  | string
+  | {
+      id: string;
+      name: string;
+      slug?: string;
+      isActive?: boolean;
+      createdAt?: string;
+    };
+
+export type ProfileData = AuthResponse["data"]["account"] & {
   isFollowing: boolean;
-  practiceAreas: string[];
+  practiceAreas: PracticeAreaRef[];
 };
 
-interface ProfileResponse {
+export type ProfileResponse = {
   error: boolean;
   message: string;
   data: ProfileData;
   email?: string;
   isAnonymous?: boolean;
   fullName?: string;
+  phone?:string
+  role?:string
+};
+export interface Review {
+  id: string;
+  reviewerAccountId: string;
+  reviewedAccountId: string;
+  rating: number;
+  body: string;
+  createdAt: string;
+  reviewer: {
+    id: string;
+    fullName: string;
+    avatarUrl: string | null;
+    role: string;
+  };
+}
+export interface ReviewsResponse {
+  error: boolean;
+  message: string;
+  data: {
+    items: Review[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+}
+
+export interface ProfileArticle {
+  id: string;
+  title: string;
+  slug: string;
+  body?: string | null;
+  excerpt?: string | null;
+  readCount: number;
+  publishedAt: string;
+  pdfUrl?: string | null;
+  createdAt?: string;
+}
+
+export interface ProfileArticlesResponse {
+  error: boolean;
+  message: string;
+  data: {
+    items: ProfileArticle[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
 }
 
 export const profileService = {
@@ -51,10 +116,15 @@ export const profileService = {
     api.get(`/profile/${accountId}/connections`, { params: { page, limit } }),
 
   getArticles: (accountId: string, page = 1, limit = 20) =>
-    api.get(`/profile/${accountId}/articles`, { params: { page, limit } }),
-
+    api.get<ProfileArticlesResponse>(`/profile/${accountId}/articles`, {
+      params: { page, limit },
+    }),
   getReviews: (accountId: string, page = 1, limit = 20) =>
-    api.get(`/profile/${accountId}/reviews`, { params: { page, limit } }),
+    api.get<ReviewsResponse>(`/profile/${accountId}/reviews`, {
+      params: { page, limit },
+    }),
+  // getReviews: (accountId: string, page = 1, limit = 20) =>
+  //   api.get(`/profile/${accountId}/reviews`, { params: { page, limit } }),
 
   getPosts: (accountId: string, page = 1, limit = 20) =>
     api.get(`/profile/${accountId}/posts`, { params: { page, limit } }),

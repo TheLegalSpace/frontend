@@ -9,6 +9,22 @@ export const useMe = () =>
     staleTime: 1000 * 60 * 5, // cache for 5 min
   });
 
+export const useProfileArticles = (
+  accountId: string,
+  page = 1,
+  limit = 5,
+  enabled = true,
+) =>
+  useQuery({
+    queryKey: ["profile", accountId, "articles", page, limit],
+    queryFn: () =>
+      profileService
+        .getArticles(accountId, page, limit)
+        .then((r) => r.data.data),
+    enabled: !!accountId && enabled,
+    staleTime: 1000 * 60 * 5,
+  });
+
 export const useUpdateMe = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -19,3 +35,19 @@ export const useUpdateMe = () => {
     },
   });
 };
+
+export const useProfileReviews = (
+  accountId: string,
+  page = 1,
+  limit = 20,
+  enabled = true,
+) =>
+  useQuery({
+    queryKey: ["profile", accountId, "reviews", page],
+    queryFn: () =>
+      profileService
+        .getReviews(accountId, page, limit)
+        .then((r) => r.data.data),
+    enabled: !!accountId && enabled,
+    staleTime: 1000 * 60 * 2,
+  });

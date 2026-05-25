@@ -1,19 +1,58 @@
 // app/(dashboard)/layout.tsx
-"use client"; // remove this if present
+"use client";
 
-// ❌ Remove this wrong import entirely
-// import { dynamic } from "next/dynamic";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Sidebar from "../Components/Sidebar";
+import { useAuth } from "../context/AuthContext";
 
-// ✅ This is the correct way — just export it as a const
 export const dynamic = "force-dynamic";
 
-import Sidebar from "../Components/Sidebar";
+function hasSession() {
+  return (
+    typeof window !== "undefined" && !!localStorage.getItem("accessToken")
+  );
+}
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user || !hasSession()) {
+      router.replace("/");
+    }
+  }, [user, isLoading, router]);
+
+  // Re-check auth when restored from browser back/forward cache
+  useEffect(() => {
+    const redirectIfUnauthenticated = () => {
+      if (!hasSession()) {
+        router.replace("/");
+      }
+    };
+
+    window.addEventListener("pageshow", redirectIfUnauthenticated);
+    window.addEventListener("popstate", redirectIfUnauthenticated);
+    return () => {
+      window.removeEventListener("pageshow", redirectIfUnauthenticated);
+      window.removeEventListener("popstate", redirectIfUnauthenticated);
+    };
+  }, [router]);
+
+  if (isLoading || !user || !hasSession()) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="w-7 h-7 rounded-full border-2 border-gray-300 border-t-black animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />

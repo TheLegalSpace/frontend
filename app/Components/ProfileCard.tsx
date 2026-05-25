@@ -1,13 +1,44 @@
 // components/profile/ProfileCard.tsx
 "use client";
 
-import { EyeOff, Eye, Star } from "lucide-react";
+import {
+  EyeOff,
+  Eye,
+  Star,
+  MapPin,
+  ThumbsUp,
+  ThumbsDown,
+  Trash2,
+  Clock,
+  BookOpen,
+  Pencil,
+} from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { profileService } from "@/services/profile.services";
+import {
+  profileService,
+  type ProfileArticle,
+} from "@/services/profile.services";
+import { useProfileArticles, useProfileReviews } from "@/hooks/useProfile";
 
-interface ProfileData {
+import type { Review } from "@/services/profile.services";
+import { useAuth } from "../context/AuthContext";
+import { USER_ROLES } from "../types/types";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface LawyerProfile {
+  id: string;
+  accountId: string;
+  scn: string;
+  callToBarYear: number;
+  nbaBranch: string;
+  feeRangeMin: number;
+  feeRangeMax: number;
+  verificationStatus: "verified" | "pending" | "rejected";
+}
+
+export interface ProfileData {
   id: string;
   fullName: string;
   email: string;
@@ -28,7 +59,17 @@ interface ProfileData {
   lastActiveAt: string;
   createdAt: string;
   isFollowing: boolean;
-  practiceAreas: string[];
+  lawyerProfile: LawyerProfile | null;
+  firmProfile: Record<string, unknown> | null;
+  practiceAreas:
+    | string[]
+    | {
+        id: string;
+        name: string;
+        slug: string;
+        isActive: boolean;
+        createdAt: string;
+      }[];
 }
 
 interface ProfileCardProps {
@@ -36,8 +77,9 @@ interface ProfileCardProps {
   isOwnProfile?: boolean;
 }
 
-// ✅ Helper functions defined before component
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function getInitials(name: string): string {
+  if (!name) return "?";
   return name
     .split(" ")
     .map((n) => n[0])
@@ -50,36 +92,260 @@ function maskEmail(email: string): string {
   const [local, domain] = email.split("@");
   if (!local || !domain) return email;
   if (local.length <= 2) return `${local[0]}*@${domain}`;
-  const masked =
-    local[0] + "*".repeat(local.length - 2) + local[local.length - 1];
-  return `${masked}@${domain}`;
+  return `${local[0]}${"*".repeat(local.length - 2)}${local[local.length - 1]}@${domain}`;
 }
 
+function normalizePracticeAreas(areas: ProfileData["practiceAreas"]): string[] {
+  return areas.map((a) => (typeof a === "string" ? a : a.name));
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)} day${Math.floor(hrs / 24) !== 1 ? "s" : ""} ago`;
+}
+
+function formatArticleDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getArticlePreview(article: ProfileArticle): string | null {
+  const text = article.excerpt ?? article.body;
+  if (!text) return null;
+  if (text.length <= 220) return text;
+  return `${text.slice(0, 220).trim()}…`;
+}
+
+// ─── Article Card ─────────────────────────────────────────────────────────────
+function ProfileArticleCard({
+  article,
+  profile,
+  isOwnProfile,
+}: {
+  article: ProfileArticle;
+  profile: ProfileData;
+  isOwnProfile: boolean;
+}) {
+  const initials = getInitials(profile.fullName);
+  const preview = getArticlePreview(article);
+  const publishedAt = article.publishedAt ?? article.createdAt ?? "";
+
+  return (
+    <div className="border-b border-[#E5E7EB] pb-5 mb-5 last:border-0 last:mb-0">
+      {/* Author row */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-[#374151] flex items-center justify-center text-[11px] font-medium text-white shrink-0 overflow-hidden">
+            {profile.avatarUrl ? (
+              <img
+                src={profile.avatarUrl}
+                alt={profile.fullName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              initials
+            )}
+          </div>
+          <span className="text-[13px] font-medium text-[#1F2937]">
+            {profile.fullName}
+          </span>
+        </div>
+        {publishedAt && (
+          <div className="flex items-center gap-1 text-[12px] text-[#6B7280]">
+            <Clock className="w-3.5 h-3.5" />
+            <span>{timeAgo(publishedAt)}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Preview text */}
+      {preview && (
+        <p className="text-[13px] text-[#4B5563] leading-relaxed mb-3">
+          {preview}
+        </p>
+      )}
+
+      {/* Article card */}
+      <div className="border border-[#E5E7EB] rounded-xl overflow-hidden mb-3">
+        <div className="flex items-center gap-3 p-3">
+          <div className="w-12 h-12 bg-[#1F2937] rounded-lg flex items-center justify-center shrink-0">
+            <span className="text-white text-[9px] font-bold tracking-wide">
+              ARTICLE
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-medium text-[#1F2937] leading-tight line-clamp-2">
+              {article.title}
+            </p>
+            {publishedAt && (
+              <div className="flex items-center gap-1 mt-1">
+                <Clock className="w-3 h-3 text-[#9CA3AF]" />
+                <span className="text-[11px] text-[#9CA3AF]">
+                  {formatArticleDate(publishedAt)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-3 py-2 border-t border-[#F3F4F6]">
+          <div className="flex items-center gap-1">
+            <BookOpen className="w-3.5 h-3.5 text-[#9CA3AF]" />
+            <span className="text-[11px] text-[#9CA3AF]">
+              {article.readCount ?? 0} Reads
+            </span>
+          </div>
+          <Link
+            href={article.pdfUrl ?? "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-[11px] text-[#6B7280] hover:text-[#1F2937] transition-colors"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            Read Article
+          </Link>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          className="p-1.5 text-[#9CA3AF] hover:text-[#1F2937] transition-colors"
+        >
+          <ThumbsUp className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          className="p-1.5 text-[#9CA3AF] hover:text-[#1F2937] transition-colors"
+        >
+          <ThumbsDown className="w-4 h-4" />
+        </button>
+        {isOwnProfile && (
+          <button
+            type="button"
+            className="p-1.5 text-[#9CA3AF] hover:text-red-500 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Review Card ──────────────────────────────────────────────────────────────
+function ReviewCard({ review }: { review: Review }) {
+  return (
+    <div className="mb-5 last:mb-0">
+      <div className="flex items-start justify-between gap-4 mb-2">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F4DDE7] text-[12px] font-medium text-[#8B3A5A] overflow-hidden">
+            {review.reviewer.avatarUrl ? (
+              <img
+                src={review.reviewer.avatarUrl}
+                alt={review.reviewer.fullName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              getInitials(review.reviewer.fullName)
+            )}
+          </div>
+          <div>
+            <h4 className="text-[13px] font-medium text-[#1F2937]">
+              {review.reviewer.fullName}
+            </h4>
+            <div className="flex gap-0.5 mt-0.5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  className={`h-3.5 w-3.5 ${
+                    star <= review.rating
+                      ? "fill-amber-400 text-amber-400"
+                      : "fill-[#D1D5DB] text-[#D1D5DB]"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <p className="text-[12px] text-[#9CA3AF] whitespace-nowrap shrink-0">
+          {new Date(review.createdAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </p>
+      </div>
+      {review.body && (
+        <p className="text-[13px] leading-relaxed text-[#4B5563]">
+          {review.body}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function ProfileCard({
   profile,
   isOwnProfile = false,
 }: ProfileCardProps) {
   const rating = parseFloat(profile.avgRating || "0");
-  const [isAnonymous, setIsAnonymous] = useState<boolean>(profile.isAnonymous);
-  const [showTooltip, setShowTooltip] = useState<boolean>(false);
-  const [isToggling, setIsToggling] = useState<boolean>(false);
+  const [isAnonymous, setIsAnonymous] = useState(profile.isAnonymous);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  // ✅ Sync with server state if profile refreshes
+  const isLawyer = profile.role === USER_ROLES.LAWYER;
+  const isFirm = profile.role === USER_ROLES.FIRM;
+  const isUser = profile.role === USER_ROLES.USER;
+  const showArticles = isLawyer || isFirm;
+  const practiceAreaNames = normalizePracticeAreas(profile.practiceAreas);
+
+  // ─── Data fetching ──────────────────────────────────────────────────────────
+  const {
+    data: articlesData,
+    isLoading: articlesLoading,
+    error: articlesError,
+  } = useProfileArticles(profile.id, 1, 5, showArticles);
+
+  const { data: reviewsData, isLoading: reviewsLoading } = useProfileReviews(
+    profile.id,
+  );
+
+  const articles = articlesData?.items ?? [];
+  const reviews = reviewsData?.items ?? [];
+
+  // ✅ Compute real rating breakdown from fetched reviews
+  const ratingBreakdown = [5, 4, 3, 2, 1].map((star) => {
+    const count = reviews.filter((r) => Math.round(r.rating) === star).length;
+    const value =
+      reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
+    return { star, value, count };
+  });
+
   useEffect(() => {
     setIsAnonymous(profile.isAnonymous);
   }, [profile.isAnonymous]);
 
-  const handleToggleAnonymous = async (): Promise<void> => {
+  const handleToggleAnonymous = async () => {
     if (!isOwnProfile) return;
     setIsToggling(true);
     try {
       await profileService.toggleAnonymous(!isAnonymous);
-      setIsAnonymous((prev: boolean) => !prev); // ✅ typed prev
+      setIsAnonymous((prev) => !prev);
       setShowTooltip(true);
       setTimeout(() => setShowTooltip(false), 3000);
       queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Failed to toggle anonymous:", err);
     } finally {
       setIsToggling(false);
@@ -91,9 +357,9 @@ export default function ProfileCard({
 
   return (
     <div className="w-full">
-      <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-[#F7F7F7]">
+      <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white">
         {/* Cover */}
-        <div className="relative h-45 w-full overflow-hidden bg-[#E5E7EB]">
+        <div className="relative h-44 w-full overflow-hidden bg-[#E5E7EB]">
           {profile.coverUrl ? (
             <img
               src={profile.coverUrl}
@@ -101,19 +367,17 @@ export default function ProfileCard({
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full items-center justify-center bg-[#ECECEC]">
-              <span className="text-sm text-gray-400">No cover image</span>
-            </div>
+            <div className="h-full w-full bg-linear-to-br from-gray-100 to-gray-200" />
           )}
         </div>
 
-        {/* Main content */}
-        <div className="bg-[#F7F7F7] px-5 pb-6 pt-4">
-          <div className="relative flex gap-3">
+        {/* Profile header */}
+        <div className="px-5 pt-4 pb-5 border-b border-[#E5E7EB]">
+          <div className="flex gap-4">
             {/* Avatar */}
-            <div className="mb-3 px-1">
+            <div className="mt-1 shrink-0">
               <div
-                className={`h-24 w-24 overflow-hidden rounded-full border-[3px] border-[#2A2A2A] transition-all duration-300 ${
+                className={`h-20 w-20 overflow-hidden rounded-full border-[3px] border-white shadow-sm transition-all duration-300 ${
                   isAnonymous ? "blur-sm" : ""
                 }`}
               >
@@ -131,182 +395,281 @@ export default function ProfileCard({
               </div>
             </div>
 
-            <div className="flex-1">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h1 className="font-[Instrument_Serif] text-[24px] leading-tight font-medium tracking-[-0.5px] text-[#1F2937]">
+            {/* Name + actions */}
+            <div className="flex-1 min-w-0 pt-1">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h1 className="text-[20px] font-semibold text-[#1F2937] leading-tight truncate">
                     {displayName}
                   </h1>
-                  <p className="font-[Geist] mt-1 text-[13px] text-[#6B7280]">
-                    {displayEmail}
-                  </p>
+                  {profile.bio && (
+                    <p className="text-[13px] text-[#6B7280] mt-0.5 line-clamp-2">
+                      {profile.bio}
+                    </p>
+                  )}
                 </div>
 
-                {/* Anonymous toggle */}
-                {isOwnProfile && (
-                  <div className="relative">
-                    <button
-                      onClick={handleToggleAnonymous}
-                      disabled={isToggling}
-                      aria-label="Toggle anonymous"
-                      className={`flex h-8 w-8 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
-                        isAnonymous
-                          ? "bg-[#111827] text-white"
-                          : "hover:bg-[#EAEAEA] text-[#111827]"
-                      }`}
-                    >
-                      {isAnonymous ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
+                {/* Actions */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {isOwnProfile ? (
+                    <>
+                      <Link
+                        href="/dashboard/settings"
+                        className="text-[12px] font-medium text-[#2563EB] hover:underline whitespace-nowrap"
+                      >
+                        Profile Management
+                      </Link>
 
-                    {/* Tooltip */}
-                    {showTooltip && (
-                      <div className="absolute right-0 top-10 z-10 w-48 rounded-xl border border-[#E5E7EB] bg-white px-3 py-2.5">
-                        <div className="absolute -top-1.5 right-2.5 h-3 w-3 rotate-45 border-l border-t border-[#E5E7EB] bg-white" />
-                        <p className="text-[12px] text-[#374151] text-center leading-relaxed">
-                          You are now{" "}
-                          <span className="font-medium">
-                            {isAnonymous ? "anonymous" : "visible"}
-                          </span>{" "}
-                          on <br />
-                          The Legal Space
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      {/* Anonymous toggle — users only */}
+                      {isUser && (
+                        <div className="relative">
+                          <button
+                            onClick={handleToggleAnonymous}
+                            disabled={isToggling}
+                            aria-label="Toggle anonymous"
+                            className={`flex h-7 w-7 items-center justify-center rounded-full transition-all disabled:opacity-50 ${
+                              isAnonymous
+                                ? "bg-[#111827] text-white"
+                                : "bg-gray-100 hover:bg-gray-200 text-[#374151]"
+                            }`}
+                          >
+                            {isAnonymous ? (
+                              <EyeOff className="h-3.5 w-3.5" />
+                            ) : (
+                              <Eye className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+
+                          {showTooltip && (
+                            <div className="absolute right-0 top-9 z-10 w-44 rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 shadow-sm">
+                              <div className="absolute -top-1.5 right-2.5 h-3 w-3 rotate-45 border-l border-t border-[#E5E7EB] bg-white" />
+                              <p className="text-[12px] text-[#374151] text-center leading-relaxed">
+                                You are now{" "}
+                                <span className="font-medium">
+                                  {isAnonymous ? "anonymous" : "visible"}
+                                </span>{" "}
+                                on The Legal Space
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    (isLawyer || isFirm) && (
+                      <Link
+                        href="/dashboard/find-lawyer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E5F5EA] text-[#16A34A] text-[12px] font-medium rounded-full hover:opacity-90 transition-opacity"
+                      >
+                        Get a lawyer ⚖️
+                      </Link>
+                    )
+                  )}
+                </div>
               </div>
 
               {/* Tags */}
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                {!isOwnProfile && (
-                  <Link
-                    href="/find-lawyer"
-                    className="flex h-9 items-center justify-center bg-[#E5F5EA] px-4 text-[12px] font-medium text-[#16A34A] transition hover:opacity-90"
-                  >
-                    Get a lawyer ⚖️
-                  </Link>
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                {profile.locationCity && (
+                  <div className="flex items-center gap-1 px-2.5 py-1 bg-[#E5F5EA] rounded-full">
+                    <MapPin className="w-3 h-3 text-[#16A34A]" />
+                    <span className="text-[12px] font-medium text-[#16A34A]">
+                      {profile.locationCity}
+                      {profile.locationCountry
+                        ? `, ${profile.locationCountry}`
+                        : ""}
+                    </span>
+                    {(isLawyer || isFirm) && (
+                      <span className="text-[12px] text-[#16A34A]">⚖️</span>
+                    )}
+                  </div>
                 )}
-                <div className="flex h-9 items-center justify-center  bg-[#F5C4511A] px-4 text-[12px] font-medium text-[#D89A17]">
-                  {rating.toFixed(1)} ⭐
+                <div className="flex items-center gap-1 px-2.5 py-1 bg-[#FEF9C3] rounded-full">
+                  <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                  <span className="text-[12px] font-medium text-amber-700">
+                    {rating.toFixed(1)}
+                  </span>
                 </div>
-                <div className="flex h-9 items-center justify-center r bg-[#0084FF1A] px-4 text-[12px] font-medium text-[#2563EB]">
-                  {profile.connectionCount}+ Connections
+                <div className="flex items-center px-2.5 py-1 bg-[#EFF6FF] rounded-full">
+                  <span className="text-[12px] font-medium text-[#2563EB]">
+                    {profile.connectionCount}+ Connections
+                  </span>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Divider */}
-          <div className="my-5 h-px w-full bg-[#E5E7EB]" />
+        {/* Call to bar — lawyers only */}
+        {isLawyer && profile.lawyerProfile && (
+          <div className="px-5 py-4 border-b border-[#E5E7EB]">
+            <div className="flex items-center justify-between">
+              <span className="text-[13px] font-medium text-[#1F2937]">
+                Call to bar
+              </span>
+              <span className="text-[13px] text-[#6B7280]">
+                {profile.lawyerProfile.callToBarYear}
+              </span>
+            </div>
+          </div>
+        )}
 
-          {/* Ratings & Reviews */}
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-[16px] font-medium text-[#111827]">
-                Ratings & Reviews
-              </h2>
-              <button className="text-[12px] font-medium text-[#2563EB] hover:underline">
-                View all
-              </button>
+        {/* Practice Areas */}
+        {practiceAreaNames.length > 0 && (
+          <div className="px-5 py-4 border-b border-[#E5E7EB]">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[13px] font-medium text-[#1F2937]">
+                Practice Areas
+              </span>
+              {isOwnProfile && (
+                <button className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">
+                  <Pencil className="w-3 h-3" />
+                  Edit
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {practiceAreaNames.map((area, i) => (
+                <span
+                  key={i}
+                  className="px-3 py-1.5 bg-[#EFF6FF] border border-[#BFDBFE] text-[#2563EB] text-[12px] font-medium rounded-full"
+                >
+                  {area}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Articles — lawyers & firms only */}
+        {showArticles && (
+          <div className="px-5 py-4 border-b border-[#E5E7EB]">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[13px] font-medium text-[#1F2937]">
+                Recent Articles
+              </span>
+              {articles.length > 0 && (
+                <Link
+                  href="/dashboard/posts"
+                  // type="button"
+                  className="text-[12px] font-medium text-[#2563EB] hover:underline"
+                >
+                  View All Articles
+                </Link>
+              )}
             </div>
 
-            {/* Summary */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[160px_1fr]">
-              <div>
-                <div className="text-[40px] leading-none font-medium text-black">
-                  {rating.toFixed(1)}
-                </div>
-                <div className="mt-3 flex items-center gap-0.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`h-5 w-5 ${
-                        star <= Math.round(rating)
-                          ? "fill-[#E4B04A] text-[#E4B04A]"
-                          : "text-[#CFCFCF]"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p className="mt-2 text-[12px] text-[#6B7280]">
-                  ({profile.reviewCount} Reviews)
-                </p>
+            {articlesLoading ? (
+              <div className="flex justify-center py-6">
+                <div className="w-5 h-5 rounded-full border-2 border-gray-300 border-t-black animate-spin" />
               </div>
+            ) : articlesError ? (
+              <p className="text-center text-[13px] text-[#9CA3AF] py-4">
+                Failed to load articles.
+              </p>
+            ) : articles.length === 0 ? (
+              <p className="text-center text-[13px] text-[#9CA3AF] py-4">
+                No articles yet
+              </p>
+            ) : (
+              // pick only two articles
+              articles
+                .slice(0, 2)
+                .map((article) => (
+                  <ProfileArticleCard
+                    key={article.id}
+                    article={article}
+                    profile={profile}
+                    isOwnProfile={isOwnProfile}
+                  />
+                ))
+            )}
+            {/* articles.map((article) => (
+                <ProfileArticleCard
+                  key={article.id}
+                  article={article}
+                  profile={profile}
+                  isOwnProfile={isOwnProfile}
+                />
+              ))
+            )} */}
+          </div>
+        )}
 
-              {/* Breakdown */}
-              <div className="flex flex-col justify-center gap-2.5 pt-1">
-                {[
-                  { star: 5, value: 88, count: 488 },
-                  { star: 4, value: 32, count: 74 },
-                  { star: 3, value: 6, count: 14 },
-                  { star: 2, value: 0, count: 0 },
-                  { star: 1, value: 0, count: 0 },
-                ].map((item) => (
-                  <div
-                    key={item.star}
-                    className="grid grid-cols-[52px_1fr_32px] items-center gap-2"
-                  >
-                    <span className="text-[12px] text-[#111827]">
-                      {item.star} stars
-                    </span>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-[#E5E7EB]">
-                      <div
-                        className="h-full rounded-full bg-[#D6A041]"
-                        style={{ width: `${item.value}%` }}
-                      />
-                    </div>
-                    <span className="text-right text-[12px] text-[#111827]">
-                      {item.count}
-                    </span>
-                  </div>
+        {/* Ratings & Reviews */}
+        <div className="px-5 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[13px] font-medium text-[#1F2937]">
+              Ratings & Reviews
+            </span>
+            <button className="text-[12px] font-medium text-[#2563EB] hover:underline">
+              View all
+            </button>
+          </div>
+
+          {/* Summary */}
+          <div className="grid grid-cols-[auto_1fr] gap-6 mb-6">
+            <div>
+              <div className="text-[40px] font-bold text-[#1F2937] leading-none">
+                {rating.toFixed(1)}
+              </div>
+              <div className="mt-2 flex items-center gap-0.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`h-4 w-4 ${
+                      star <= Math.round(rating)
+                        ? "fill-amber-400 text-amber-400"
+                        : "text-[#D1D5DB] fill-[#D1D5DB]"
+                    }`}
+                  />
                 ))}
               </div>
+              <p className="mt-1.5 text-[12px] text-[#6B7280]">
+                ({profile.reviewCount} Reviews)
+              </p>
             </div>
 
-            {/* Reviews list */}
-            <div className="mt-6 border-t border-[#E5E7EB] pt-6">
-              {[1, 2].map((item) => (
+            {/* ✅ Real breakdown from fetched reviews */}
+            <div className="flex flex-col justify-center gap-1.5">
+              {ratingBreakdown.map((item) => (
                 <div
-                  key={item}
-                  className="border-b border-[#E5E7EB] pb-5 mb-5 last:border-0 last:mb-0"
+                  key={item.star}
+                  className="grid grid-cols-[48px_1fr_28px] items-center gap-2"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F4DDE7] text-sm font-medium text-[#8B3A5A]">
-                        TI
-                      </div>
-                      <div>
-                        <h4 className="font-[Instrument_Serif] text-[14px] font-medium text-[#1F2937]">
-                          Olaniwun Ajayi LP
-                        </h4>
-                        <div className="mt-1.5 flex gap-0.5">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className="h-4 w-4 fill-[#E4B04A] text-[#E4B04A]"
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-[12px] text-[#6B7280] whitespace-nowrap">
-                      Jan 20, 2024
-                    </p>
+                  <span className="text-[11px] text-[#6B7280]">
+                    {item.star} stars
+                  </span>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-[#E5E7EB]">
+                    <div
+                      className="h-full rounded-full bg-amber-400 transition-all duration-500"
+                      style={{ width: `${item.value}%` }}
+                    />
                   </div>
-                  <p className="mt-3 text-[13px] leading-relaxed text-[#4B5563]">
-                    Working with Oluwaseun was smooth. He communicated his needs
-                    clearly, enhancing our workflow. His openness to feedback
-                    and quick decisions made the project efficient and
-                    enjoyable. I look forward to future collaborations.
-                  </p>
+                  <span className="text-right text-[11px] text-[#374151]">
+                    {item.count}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
+
+          {/* ✅ Real review list */}
+          {reviewsLoading ? (
+            <div className="flex justify-center py-6">
+              <div className="w-5 h-5 rounded-full border-2 border-gray-300 border-t-black animate-spin" />
+            </div>
+          ) : reviews.length === 0 ? (
+            <p className="text-center text-[13px] text-[#9CA3AF] py-6">
+              No reviews yet
+            </p>
+          ) : (
+            <div className="border-t border-[#E5E7EB] pt-4">
+              {reviews.map((review) => (
+                <ReviewCard key={review.id} review={review} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

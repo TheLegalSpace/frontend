@@ -43,7 +43,7 @@ export default function EventsPanel() {
   const activeEvent = events[current];
 
   return (
-    <div className="flex flex-col gap-3 lg:sticky lg:top-4 font-[Instrument_Serif]">
+    <div className="flex flex-col gap-3 lg:sticky lg:top-4 font-[Instrument_Serif] p-2">
       {/* Banner */}
       <div className="relative overflow-hidden rounded-xl bg-[#1D4ED8] px-4 py-5">
         <div className="absolute inset-0 opacity-10">
@@ -53,18 +53,19 @@ export default function EventsPanel() {
           </div>
         </div>
         <div className="relative z-10 font-['Geist']">
-          <h2 className="text-[16px] font-medium text-white mb-1 ">
+          <h2 className="text-[16px] font-[Instrument_Serif] font-medium text-white mb-1 ">
             On The Docket
           </h2>
-          <p className="text-[12px] text-blue-100">
-            Want to feature your event?
+          <p className="text-[12px] text-blue-100 font-[Geist]">
+            Want to feature your event with The Legal Space? Request coverage,
+            promotion, or partnership through TLS Services.{" "}
           </p>
-          <a
+          {/* <a
             href="mailto:events@thelegalspace.com"
             className="text-[12px] text-white underline underline-offset-2"
           >
             event@thelegalspace.com
-          </a>
+          </a> */}
         </div>
       </div>
 
