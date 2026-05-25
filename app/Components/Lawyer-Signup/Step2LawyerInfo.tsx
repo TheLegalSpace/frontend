@@ -1,308 +1,521 @@
-// components/lawyer-signup/Step2LawyerInfo.tsx
+// app/Components/Lawyer-Signup/Step2LawyerInfo.tsx
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, ChevronDown } from "lucide-react";
-import AccountTypeBadge from "./AccountTypeBadge";
-import PracticeAreaPicker from "./PracticeAreaPicker";
-import SpecializationPricing from "./SpecializationPricing";
+import { Lock, Mail, Search, Plus, Check } from "lucide-react";
 import { usePracticeAreas } from "@/hooks/usePracticeAreas";
 
-const CITIES = [
+interface Props {
+  subStep: number;
+  email: string;
+  onNext: (data: any) => void;
+}
+
+const NIGERIAN_CITIES = [
   "Lagos",
   "Abuja",
   "Port Harcourt",
   "Kano",
   "Ibadan",
-  "Benin City",
   "Enugu",
-  "Calabar",
+  "Benin City",
+  "Kaduna",
+  "Uyo",
   "Warri",
-  "Owerri",
 ];
 
-export interface LawyerFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  callToBarYear: string;
-  locationCity: string;
-  scn: string;
-  nbaBranch: string;
-  practiceAreaIds: string[];
-  primaryAreaId: string;
-  secondaryAreaId: string;
-  areaServices: Record<string, { service: string; pricing: string }[]>;
-  feeRangeMin: string;
-  feeRangeMax: string;
-}
-const LABELS = [
-  "Personal Information",
-  "Practice Areas",
-  "Specialization & Pricing",
-];
+export default function Step2LawyerInfo({ subStep, email, onNext }: Props) {
+  // Sub-step 1
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [callToBarYear, setCallToBarYear] = useState("");
+  const [locationCity, setLocationCity] = useState("");
 
-interface Props {
-  onNext: (data: LawyerFormData) => void;
-  subStep: number; // ← from parent
-  onSubStepChange: (n: number) => void; // ← from parent
-}
+  // Sub-step 2
+  const { data: allAreas = [] } = usePracticeAreas();
+  const [search, setSearch] = useState("");
+  const [primaryId, setPrimaryId] = useState("");
+  const [secondaryId, setSecondaryId] = useState("");
 
-export default function Step2LawyerInfo({
-  onNext,
-  subStep,
-  onSubStepChange,
-}: Props) {
-  //   const [subStep, setSubStep] = useState(1);
-  const [showPw, setShowPw] = useState(false);
-  const [cityOpen, setCityOpen] = useState(false);
+  // Sub-step 3
+  const [areaServices, setAreaServices] = useState<
+    Record<string, { service: string; pricing: string }[]>
+  >({});
+
   const [error, setError] = useState("");
 
-  const { data: practiceAreas = [] } = usePracticeAreas();
+  const filteredAreas = allAreas.filter((a) =>
+    a.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
-  const [form, setForm] = useState<LawyerFormData>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    callToBarYear: "",
-    locationCity: "",
-    scn: "",
-    nbaBranch: "",
-    practiceAreaIds: [],
-    primaryAreaId: "",
-    secondaryAreaId: "",
-    areaServices: {},
-    feeRangeMin: "",
-    feeRangeMax: "",
-  });
+  const getAreaName = (id: string) =>
+    allAreas.find((a) => a.id === id)?.name ?? "";
 
-  const set = (key: keyof LawyerFormData, val: any) =>
-    setForm((p) => ({ ...p, [key]: val }));
-
-  const toggleArea = (id: string) => {
-    const current = form.practiceAreaIds;
-    let next: string[];
-    if (current.includes(id)) {
-      next = current.filter((i) => i !== id);
-      // Clear primary/secondary if removed
-      if (form.primaryAreaId === id) set("primaryAreaId", "");
-      if (form.secondaryAreaId === id) set("secondaryAreaId", "");
-    } else {
-      if (current.length >= 7) return;
-      next = [...current, id];
-      // Auto-assign primary/secondary
-      if (!form.primaryAreaId) {
-        setForm((p) => ({ ...p, practiceAreaIds: next, primaryAreaId: id }));
-        return;
-      }
-      if (!form.secondaryAreaId) {
-        setForm((p) => ({ ...p, practiceAreaIds: next, secondaryAreaId: id }));
-        return;
-      }
+  // ✅ Lawyers: only primary + secondary (max 2)
+  // Clicking primary again → deselects
+  // Clicking secondary again → deselects
+  const handleAreaClick = (id: string) => {
+    if (primaryId === id) {
+      // Deselect primary — promote secondary to primary if exists
+      setPrimaryId(secondaryId);
+      setSecondaryId("");
+      return;
     }
-    set("practiceAreaIds", next);
+    if (secondaryId === id) {
+      // Deselect secondary
+      setSecondaryId("");
+      return;
+    }
+    // Select new area
+    if (!primaryId) {
+      setPrimaryId(id);
+      return;
+    }
+    if (!secondaryId) {
+      setSecondaryId(id);
+      return;
+    }
+    // Both slots taken — replace secondary
+    setSecondaryId(id);
   };
+
+  const selectedIds = [primaryId, secondaryId].filter(Boolean);
 
   const handleNext = () => {
     setError("");
+
     if (subStep === 1) {
       if (
-        !form.firstName ||
-        !form.lastName ||
-        !form.email ||
-        !form.phone ||
-        !form.callToBarYear ||
-        !form.locationCity
+        !firstName ||
+        !lastName ||
+        !phone ||
+        !callToBarYear ||
+        !locationCity
       ) {
         setError("Please fill in all required fields.");
         return;
       }
-      onSubStepChange(2); // ← was setSubStep(2)
+      onNext({ firstName, lastName, phone, callToBarYear, locationCity });
     } else if (subStep === 2) {
-      if (form.practiceAreaIds.length === 0) {
-        setError("Please select at least one practice area.");
+      if (!primaryId) {
+        setError("Please select a primary practice area.");
         return;
       }
-      onSubStepChange(3); // ← was setSubStep(3)
-    } else {
-      onNext(form);
+      // ✅ Init services for selected areas
+      const initServices: Record<
+        string,
+        { service: string; pricing: string }[]
+      > = {};
+      selectedIds.forEach((id) => {
+        initServices[id] = [{ service: "", pricing: "" }];
+      });
+      setAreaServices(initServices);
+      onNext({
+        practiceAreaIds: selectedIds,
+        primaryAreaId: primaryId,
+        secondaryAreaId: secondaryId || null,
+      });
+    } else if (subStep === 3) {
+      const areaIds = Object.keys(areaServices);
+
+      if (areaIds.length === 0) {
+        setError("Please add at least one service.");
+        return;
+      }
+
+      for (const areaId of areaIds) {
+        const rows = areaServices[areaId] ?? [];
+        const hasFilledService = rows.some((row) => row.service.trim() !== "");
+        const areaName = getAreaName(areaId);
+
+        if (!hasFilledService) {
+          setError(`Please add at least one service for ${areaName}.`);
+          return;
+        }
+
+        // ✅ Also validate pricing is filled for any service that has a name
+        for (const row of rows) {
+          if (row.service.trim() && !row.pricing.trim()) {
+            setError(
+              `Please add a price for "${row.service}" under ${areaName}.`,
+            );
+            return;
+          }
+        }
+      }
+      onNext({ areaServices });
     }
   };
 
-  return (
-    <div className="flex-1 overflow-y-auto px-4 py-6">
-      <AccountTypeBadge type="lawyer" />
-      <div className="max-w-sm mx-auto">
-        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+  // ─── Sub-step 1: Personal Info ─────────────────────────────────────────────
+  if (subStep === 1) {
+    return (
+      <div className="w-full max-w-sm mx-auto">
+        <div className="border border-gray-100 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-5">
-            <p className="text-[14px] font-medium text-gray-900">
-              {LABELS[subStep - 1]}
-            </p>
-            <span className="text-[12px] text-gray-400">{subStep}/3</span>
+            <h2 className="text-[15px] font-semibold text-gray-900">
+              Personal Information
+            </h2>
+            <span className="text-[12px] text-gray-400">1/3</span>
           </div>
 
-          {error && (
-            <div className="mb-4 px-3 py-2 bg-red-50 border border-red-100 rounded-lg">
-              <p className="text-[12px] text-red-500">{error}</p>
+          {error && <p className="text-[12px] text-red-500 mb-4">{error}</p>}
+
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+                First Name <span className="text-red-400">*</span>
+              </label>
+              <input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Oluwaseun"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-[13px] outline-none focus:border-[#1A56DB] transition-colors"
+              />
             </div>
-          )}
 
-          {/* Sub-step 1: Personal */}
-          {subStep === 1 && (
-            <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[12px] text-gray-500 mb-1.5">
-                    First Name <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.firstName}
-                    onChange={(e) => set("firstName", e.target.value)}
-                    placeholder="Tunde"
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-[13px] outline-none focus:border-[#1A56DB] transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[12px] text-gray-500 mb-1.5">
-                    Last Name <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.lastName}
-                    onChange={(e) => set("lastName", e.target.value)}
-                    placeholder="Lawal"
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-[13px] outline-none focus:border-[#1A56DB] transition-colors"
-                  />
-                </div>
-              </div>
+            <div>
+              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+                Last Name <span className="text-red-400">*</span>
+              </label>
+              <input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Adedada"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-[13px] outline-none focus:border-[#1A56DB] transition-colors"
+              />
+            </div>
 
-              <div>
-                <label className="block text-[12px] text-gray-500 mb-1.5">
-                  Email Address <span className="text-red-400">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => set("email", e.target.value)}
-                    placeholder="tunde@example.com"
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-[13px] outline-none focus:border-[#1A56DB] transition-colors"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[12px] text-gray-500 mb-1.5">
-                  WhatsApp Number <span className="text-red-400">*</span>
-                </label>
-                <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:border-[#1A56DB] transition-colors">
-                  <span className="px-3 py-2.5 text-[13px] text-gray-500 border-r border-gray-200 bg-gray-50 shrink-0">
-                    +234
-                  </span>
-                  <input
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => set("phone", e.target.value)}
-                    placeholder="704 2321 221"
-                    className="flex-1 px-3 py-2.5 text-[13px] outline-none bg-transparent"
-                  />
-                </div>
-                <p className="text-[11px] text-gray-400 mt-1">
-                  Your number will remain confidential and will only be shared
-                  if you choose to do so.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-[12px] text-gray-500 mb-1.5">
-                  Call to Bar Year <span className="text-red-400">*</span>
-                </label>
+            <div>
+              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+                Email Address <span className="text-red-400">*</span>
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                 <input
-                  type="number"
-                  value={form.callToBarYear}
-                  onChange={(e) => set("callToBarYear", e.target.value)}
-                  placeholder="2021"
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-[13px] outline-none focus:border-[#1A56DB] transition-colors"
+                  value={email}
+                  disabled
+                  className="w-full pl-9 pr-9 py-2.5 border border-gray-200 rounded-xl text-[13px] text-gray-500 bg-gray-50 outline-none"
+                />
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+                WhatsApp Number <span className="text-red-400">*</span>
+              </label>
+              <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden focus-within:border-[#1A56DB] transition-colors">
+                <span className="px-3 py-2.5 text-[13px] text-gray-500 bg-gray-50 border-r border-gray-200 shrink-0">
+                  +234
+                </span>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="704 2321 221"
+                  className="flex-1 px-3 py-2.5 text-[13px] outline-none"
                 />
               </div>
-
-              <div>
-                <label className="block text-[12px] text-gray-500 mb-1.5">
-                  Location <span className="text-red-400">*</span>
-                </label>
-                <div className="relative">
-                  <button
-                    onClick={() => setCityOpen(!cityOpen)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 border border-gray-200 rounded-lg text-[13px] bg-white hover:border-gray-300 transition-colors"
-                  >
-                    <span
-                      className={
-                        form.locationCity ? "text-gray-900" : "text-gray-400"
-                      }
-                    >
-                      {form.locationCity || "Select location"}
-                    </span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-gray-400 transition-transform ${cityOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                  {cityOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
-                      {CITIES.map((city) => (
-                        <button
-                          key={city}
-                          onClick={() => {
-                            set("locationCity", city);
-                            setCityOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2.5 text-[13px] hover:bg-gray-50 transition-colors ${form.locationCity === city ? "text-[#1A56DB] bg-blue-50" : "text-gray-700"}`}
-                        >
-                          {city}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <p className="text-[11px] text-gray-400 mt-1">
+                Your number will remain confidential and will only be shared if
+                you choose to do so.
+              </p>
             </div>
-          )}
 
-          {/* Sub-step 2: Practice Areas */}
-          {subStep === 2 && (
-            <PracticeAreaPicker
-              practiceAreas={practiceAreas}
-              selectedIds={form.practiceAreaIds}
-              primaryId={form.primaryAreaId}
-              secondaryId={form.secondaryAreaId}
-              onToggle={toggleArea}
-              onSetPrimary={(id) => set("primaryAreaId", id)}
-              onSetSecondary={(id) => set("secondaryAreaId", id)}
-            />
-          )}
+            <div>
+              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+                Call to Bar Year <span className="text-red-400">*</span>
+              </label>
+              <input
+                value={callToBarYear}
+                onChange={(e) => setCallToBarYear(e.target.value)}
+                placeholder="2021"
+                type="number"
+                min="1900"
+                max={new Date().getFullYear()}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-[13px] outline-none focus:border-[#1A56DB] transition-colors"
+              />
+            </div>
 
-          {/* Sub-step 3: Specialization & Pricing */}
-          {subStep === 3 && (
-            <SpecializationPricing
-              selectedAreaIds={form.practiceAreaIds}
-              practiceAreas={practiceAreas}
-              value={form.areaServices}
-              onChange={(val) => set("areaServices", val)}
-            />
-          )}
-
-          <div className="mt-6">
-            <button
-              onClick={handleNext}
-              className="w-full py-2.5 bg-[#1A56DB] text-white text-[13px] font-medium rounded-lg hover:bg-[#1648b8] transition-colors"
-            >
-              Save and Continue
-            </button>
+            <div>
+              <label className="block text-[12px] font-medium text-gray-600 mb-1.5">
+                Location <span className="text-red-400">*</span>
+              </label>
+              <select
+                value={locationCity}
+                onChange={(e) => setLocationCity(e.target.value)}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-[13px] outline-none focus:border-[#1A56DB] transition-colors bg-white"
+              >
+                <option value="">Select location</option>
+                {NIGERIAN_CITIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+
+          <button
+            onClick={handleNext}
+            className="w-full py-3 bg-[#1A56DB] text-white text-[13px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors mt-6"
+          >
+            Save and Continue
+          </button>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // ─── Sub-step 2: Practice Areas (max 2 for lawyers) ───────────────────────
+  if (subStep === 2) {
+    return (
+      <div className="w-full max-w-sm mx-auto">
+        <div className="border border-gray-100 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-[15px] font-semibold text-gray-900">
+              Practice Areas
+            </h2>
+            <span className="text-[12px] text-gray-400">2/3</span>
+          </div>
+
+          {/* ✅ Lawyer rule explained */}
+          <p className="text-[11px] text-gray-400 mb-4">
+            Select your primary area and optionally a secondary area. Lawyers
+            are limited to 2 practice areas.
+          </p>
+
+          {/* Primary / Secondary slots */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label className="block text-[11px] text-gray-500 mb-1.5">
+                Primary Area <span className="text-red-400">*</span>
+              </label>
+              <div className="min-h-[38px] px-2.5 py-1.5 border border-gray-100 rounded-lg bg-gray-50 flex items-center">
+                {primaryId ? (
+                  <button
+                    onClick={() => handleAreaClick(primaryId)}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 border border-blue-200 text-[#1A56DB] rounded-full text-[11px] font-medium hover:bg-blue-100 transition-colors"
+                  >
+                    {getAreaName(primaryId)}
+                    <span className="text-[10px] ml-0.5">✕</span>
+                  </button>
+                ) : (
+                  <span className="text-[11px] text-gray-300">
+                    Not selected
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] text-gray-500 mb-1.5">
+                Secondary Area{" "}
+                <span className="text-gray-300 text-[10px]">(optional)</span>
+              </label>
+              <div className="min-h-[38px] px-2.5 py-1.5 border border-gray-100 rounded-lg bg-gray-50 flex items-center">
+                {secondaryId ? (
+                  <button
+                    onClick={() => handleAreaClick(secondaryId)}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 border border-blue-200 text-[#1A56DB] rounded-full text-[11px] font-medium hover:bg-blue-100 transition-colors"
+                  >
+                    {getAreaName(secondaryId)}
+                    <span className="text-[10px] ml-0.5">✕</span>
+                  </button>
+                ) : (
+                  <span className="text-[11px] text-gray-300">
+                    Not selected
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search practice areas"
+              className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-[13px] outline-none focus:border-[#1A56DB] transition-colors"
+            />
+          </div>
+
+          {/* Area pills */}
+          <div className="flex flex-wrap gap-2 mb-4 max-h-48 overflow-y-auto">
+            {filteredAreas.map((area) => {
+              const isPrimary = primaryId === area.id;
+              const isSecondary = secondaryId === area.id;
+              const isSelected = isPrimary || isSecondary;
+              // ✅ Disable unselected areas when both slots are filled
+              const bothFilled = !!primaryId && !!secondaryId;
+              const isDisabled = bothFilled && !isSelected;
+
+              return (
+                <button
+                  key={area.id}
+                  onClick={() => handleAreaClick(area.id)}
+                  disabled={isDisabled}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] border transition-colors ${
+                    isPrimary
+                      ? "bg-[#1A56DB] border-[#1A56DB] text-white"
+                      : isSecondary
+                        ? "bg-blue-50 border-blue-200 text-[#1A56DB]"
+                        : isDisabled
+                          ? "border-gray-100 text-gray-300 cursor-not-allowed"
+                          : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  {area.name}
+                  {isPrimary && <Check className="w-3 h-3" />}
+                  {isSecondary && <Check className="w-3 h-3" />}
+                  {!isSelected && !isDisabled && <Plus className="w-3 h-3" />}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-[#1A56DB]" />
+              <span className="text-[11px] text-gray-400">Primary</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-blue-100 border border-blue-200" />
+              <span className="text-[11px] text-gray-400">Secondary</span>
+            </div>
+          </div>
+
+          {error && <p className="text-[12px] text-red-500 mb-3">{error}</p>}
+
+          <button
+            onClick={handleNext}
+            className="w-full py-3 bg-[#1A56DB] text-white text-[13px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors"
+          >
+            Save and Continue
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Sub-step 3: Specialization & Pricing ─────────────────────────────────
+  if (subStep === 3) {
+    const addRow = (areaId: string) => {
+      setAreaServices((prev) => ({
+        ...prev,
+        [areaId]: [...(prev[areaId] ?? []), { service: "", pricing: "" }],
+      }));
+    };
+
+    const updateRow = (
+      areaId: string,
+      i: number,
+      field: "service" | "pricing",
+      val: string,
+    ) => {
+      setAreaServices((prev) => {
+        const rows = [...(prev[areaId] ?? [])];
+        rows[i] = { ...rows[i], [field]: val };
+        return { ...prev, [areaId]: rows };
+      });
+    };
+
+    return (
+      <div className="w-full max-w-sm mx-auto">
+        <div className="border border-gray-100 rounded-2xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-[15px] font-semibold text-gray-900">
+              Specialization & Pricing
+            </h2>
+            <span className="text-[12px] text-gray-400">3/3</span>
+          </div>
+
+          <div className="flex flex-col gap-6">
+            {selectedIds.map((areaId) => {
+              const rows = areaServices[areaId] ?? [
+                { service: "", pricing: "" },
+              ];
+              const areaName = getAreaName(areaId);
+              const isPrimary = primaryId === areaId;
+
+              return (
+                <div key={areaId}>
+                  <div
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium mb-3 ${
+                      isPrimary
+                        ? "bg-[#1A56DB] text-white"
+                        : "bg-blue-50 border border-blue-200 text-[#1A56DB]"
+                    }`}
+                  >
+                    {areaName} <Check className="w-3 h-3" />
+                    {isPrimary && (
+                      <span className="text-[10px] opacity-70 ml-1">
+                        Primary
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <span className="text-[12px] text-gray-500">Service</span>
+                      <span className="text-[12px] text-gray-500">Pricing</span>
+                    </div>
+                    {rows.map((row, i) => (
+                      <div key={i} className="grid grid-cols-2 gap-2">
+                        <input
+                          value={row.service}
+                          onChange={(e) =>
+                            updateRow(areaId, i, "service", e.target.value)
+                          }
+                          placeholder="e.g., Contract Drafting..."
+                          className="px-3 py-2.5 border border-gray-200 rounded-xl text-[12px] outline-none focus:border-[#1A56DB] transition-colors"
+                        />
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-gray-400">
+                            ₦
+                          </span>
+                          <input
+                            value={row.pricing}
+                            onChange={(e) =>
+                              updateRow(areaId, i, "pricing", e.target.value)
+                            }
+                            type="number"
+                            placeholder="e.g., 50000"
+                            className="w-full pl-6 pr-3 py-2.5 border border-gray-200 rounded-xl text-[12px] outline-none focus:border-[#1A56DB] transition-colors"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => addRow(areaId)}
+                      className="w-full py-2 border border-gray-100 rounded-xl text-[12px] text-gray-400 hover:bg-gray-50 flex items-center justify-center gap-1 transition-colors"
+                    >
+                      Add New <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="text-[11px] text-gray-400 italic mt-4 mb-4">
+            Pricing is used for matching and will not be displayed publicly.
+          </p>
+
+          <button
+            onClick={handleNext}
+            className="w-full py-3 bg-[#1A56DB] text-white text-[13px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors"
+          >
+            Save and Continue
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }

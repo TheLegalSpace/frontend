@@ -7,6 +7,7 @@ export interface LoginPayload {
   password?: string;
   idToken?: string;
   fullName?: string;
+  role?: "USER" | "LAWYER" | "FIRM" | "ADMIN" | "PENDING_PROFESSIONAL";
 }
 
 export interface AuthResponse {
@@ -19,7 +20,7 @@ export interface AuthResponse {
       email: string;
       fullName: string;
       phone: string | null;
-      role: "USER" | "LAWYER" | "FIRM" | "ADMIN";
+      role: "USER" | "LAWYER" | "FIRM" | "ADMIN" | "PENDING_PROFESSIONAL";
       avatarUrl: string | null;
       coverUrl: string | null;
       bio: string | null;
@@ -54,6 +55,9 @@ export const authService = {
 
   registerUser: (payload: LoginPayload & { fullName: string }) =>
     api.post<AuthResponse>("/auth/register/user", payload),
+
+  registerGoogleUser: (payload: LoginPayload & { fullName: string }) =>
+    api.post<AuthResponse>("/auth/register/google", payload),
 
   registerLawyer: (payload: Record<string, unknown>) =>
     api.post<AuthResponse>("/auth/register/lawyer", payload),
