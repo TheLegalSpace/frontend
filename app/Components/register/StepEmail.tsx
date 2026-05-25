@@ -58,7 +58,7 @@ export default function StepEmail({
     <div
       className="min-h-screen w-full flex flex-col"
       style={{
-        backgroundImage: "url('/signinbg.jpg')",
+        backgroundImage: "url('/sign-in-bg.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundColor: "#000000d3",

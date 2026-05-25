@@ -214,7 +214,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await attemptLogin();
-      await handlePostLogin(response.data.data, avatarUrl);
+      // check if the user role is "PENDING_PROFESSIONAL"
+      if (response.data.data.account.role === "PENDING_PROFESSIONAL") {
+        router.replace("/register/lawyer-setup");
+        return;
+      } else {
+        await handlePostLogin(response.data.data, avatarUrl);
+      }
     } catch (err: unknown) {
       const authError = classifyError(err);
       if (authError.code === "ACCOUNT_NOT_FOUND") {
@@ -226,6 +232,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: "USER",
           });
           const response = await attemptLogin();
+          // check if the user role is "PENDING_PROFESSIONAL"
+          if (response.data.data.account.role === "PENDING_PROFESSIONAL") {
+            router.replace("/register/lawyer-setup");
+            return;
+          }
           await handlePostLogin(response.data.data, avatarUrl);
         } catch (registerErr: unknown) {
           const registerError = classifyError(registerErr);

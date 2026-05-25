@@ -32,8 +32,8 @@ export default function SignInClient() {
     try {
       const payload: LoginPayload = { authProvider: "email", email, password };
       await login(payload);
-      const redirect = searchParams.get("redirect") ?? "/dashboard/feeds";
-      router.push(redirect);
+      // const redirect = searchParams.get("redirect") ?? "/dashboard/feeds";
+      // router.push(redirect);
     } catch (err: unknown) {
       const authErr = err as AuthError;
       setError(authErr?.message ?? "Login failed. Please try again.");
@@ -62,7 +62,7 @@ export default function SignInClient() {
               `${payload.given_name ?? ""} ${payload.family_name ?? ""}`.trim();
             const avatarUrl = payload.picture ?? undefined;
             await loginWithGoogle(resp.credential, fullName, avatarUrl);
-            router.push(searchParams.get("redirect") ?? "/dashboard/feeds");
+            // router.push(searchParams.get("redirect") ?? "/dashboard/feeds");
           } catch (err: unknown) {
             const authErr = err as AuthError;
             setError(

@@ -43,7 +43,7 @@ export default function SignInClient() {
             const avatarUrl: string | undefined = payload.picture ?? undefined;
 
             await loginWithGoogle(resp.credential, fullName, avatarUrl);
-            router.push(searchParams.get("redirect") ?? "/dashboard/feeds");
+            // router.push(searchParams.get("redirect") ?? "/dashboard/feeds");
           } catch (err: unknown) {
             const authErr = err as AuthError;
             setError(
