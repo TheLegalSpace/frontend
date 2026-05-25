@@ -41,7 +41,7 @@ function setHasReviewed(conversationId: string) {
 
 /**
  * Merge incoming messages with existing ones.
- * - Removes any temp optimistic message that matches a real one by body
+ * - Removes temp optimistic messages that match a real one by body
  * - Deduplicates by id
  * - Keeps chronological order
  */
@@ -83,6 +83,11 @@ interface Props {
   currentAccountId: string;
   conversationStatus: "open" | "closed";
   onConversationClosed: () => void;
+  /**
+   * For CLIENT: whether the client is chatting anonymously.
+   * For LAWYER: whether the OTHER PARTY (client) is anonymous —
+   *   i.e. has the client revealed their identity yet?
+   */
   isAnonymous: boolean;
   onAnonymousToggle: (val: boolean) => void;
   onClose: () => void;
@@ -116,8 +121,6 @@ export default function ChatWindow({
   const [input, setInput] = useState("");
   const [showReview, setShowReview] = useState(false);
 
-  // Persisted across refreshes: once a review is submitted for this conversation,
-  // the button stays disabled and shows "Reviewed".
   const [hasReviewed, setHasReviewedState] = useState(() =>
     getHasReviewed(conversationId)
   );
@@ -125,13 +128,11 @@ export default function ChatWindow({
   const bottomRef = useRef<HTMLDivElement>(null);
   const conversationIdRef = useRef(conversationId);
 
-  // When the conversation changes, swap to cached messages immediately
   useEffect(() => {
     conversationIdRef.current = conversationId;
     const cached = getCachedMessages(conversationId);
     setMessages(cached);
     setLoading(cached.length === 0);
-    // Re-read reviewed state for the new conversation
     setHasReviewedState(getHasReviewed(conversationId));
   }, [conversationId]);
 
@@ -214,7 +215,7 @@ export default function ChatWindow({
     };
   }, [conversationId]);
 
-  // Polling fallback every 10s — skip if conversation is closed
+  // Polling fallback every 10s
   useEffect(() => {
     if (isClosed) return;
     const interval = setInterval(loadMessages, 10000);
@@ -314,6 +315,22 @@ export default function ChatWindow({
     ? "Close the conversation first to leave a review"
     : "Leave a review";
 
+  // ── Banner visibility logic ────────────────────────────────────────────────
+  //
+  // "Engage outside TLS" should appear as soon as the conversation is open
+  // (not closed). On the LAWYER side it shows regardless of anonymous state —
+  // the lawyer always sees the option to engage. On the CLIENT side it shows
+  // once the client has revealed their identity (isAnonymous === false).
+  //
+  // Previously this was `!isAnonymous && !isClosed` which meant lawyers saw
+  // it only after the client revealed — that was wrong.
+  //
+  // FIX: Lawyers see the engage banner whenever the convo is open.
+  //      Clients see it only after they've revealed (isAnonymous === false).
+  const showEngageBanner = isLawyer
+    ? !isClosed
+    : !isAnonymous && !isClosed;
+
   return (
     <>
       <div className="flex-1 flex flex-col min-w-0 h-full">
@@ -358,30 +375,43 @@ export default function ChatWindow({
           </button>
         </div>
 
-        {/* Anonymous banner — client-side only */}
+        {/* Anonymous banner — CLIENT ONLY.
+            Lawyers are always identifiable; this banner is never relevant to them.
+            isAnonymous here means "the client is still hidden". */}
         {!isLawyer && (
           <AnonymousBanner isAnonymous={isAnonymous} onToggle={onAnonymousToggle} />
         )}
 
-        {/* Identity revealed notice */}
+        {/* Identity revealed notice — client side only */}
         {!isLawyer && !isAnonymous && (
           <div className="px-5 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2 text-blue-700 text-[12px]">
             <span>🔓</span>
             <span>
               You are no longer chatting anonymously. This lawyer can see your
-              name or contact details.
+              name and contact details.
             </span>
           </div>
         )}
 
-        {/* "Engage outside TLS" banner */}
-        {!isAnonymous && !isClosed && (
+        {/* "Engage outside TLS" banner.
+            LAWYER: always shown while conversation is open (they drive this action).
+            CLIENT: shown only after revealing identity.
+            Previously used `!isAnonymous && !isClosed` for both roles, which
+            meant lawyers had to wait for the client to reveal before seeing it. */}
+        {showEngageBanner && (
           <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-4">
             <p className="text-[12px] text-gray-600">
               {isLawyer ? (
-                <>You can now proceed with <span className="font-semibold">{participantName}</span>'s matter outside TLS.</>
+                <>
+                  You can now proceed with{" "}
+                  <span className="font-semibold">{participantName}</span>'s
+                  matter outside TLS.
+                </>
               ) : (
-                <><span className="font-semibold">{participantName}</span> would like to proceed with your matter outside TLS.</>
+                <>
+                  <span className="font-semibold">{participantName}</span> would
+                  like to proceed with your matter outside TLS.
+                </>
               )}
             </p>
             {isLawyer && (
