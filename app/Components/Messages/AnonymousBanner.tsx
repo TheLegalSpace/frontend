@@ -5,15 +5,22 @@ import { Lock, Loader2 } from "lucide-react";
 import { messagesService } from "@/services/messages.services";
 
 interface Props {
-  isAnonymous: boolean;
+  /**
+   * true  = user is anonymous → show the banner with "Reveal" option
+   * false = user is not anonymous → render nothing
+   * null  = not yet loaded → render nothing (avoid flash)
+   */
+  isAnonymous: boolean | null;
   onToggle: (val: boolean) => void;
 }
 
 export default function AnonymousBanner({ isAnonymous, onToggle }: Props) {
   const [loading, setLoading] = useState(false);
 
-  // Only shown when still anonymous
-  if (!isAnonymous) return null;
+  // Only render when we know for certain the user is anonymous.
+  // false → they're not anonymous, no banner needed.
+  // null  → still loading, suppress to avoid a flash of the wrong state.
+  if (isAnonymous !== true) return null;
 
   async function handleReveal() {
     setLoading(true);
@@ -32,7 +39,8 @@ export default function AnonymousBanner({ isAnonymous, onToggle }: Props) {
       <div className="flex items-center gap-2 text-amber-800 text-[12px]">
         <Lock size={14} className="shrink-0 text-amber-600" />
         <span>
-          You are chatting anonymously. This lawyer cannot see your name or contact details.
+          You are chatting anonymously. This lawyer cannot see your name or
+          contact details.
         </span>
       </div>
       <button

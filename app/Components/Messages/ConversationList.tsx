@@ -139,7 +139,9 @@ export default function ConversationList({
                     </span>
                   </div>
                   <p className="text-[12px] text-gray-500 truncate mt-0.5">
-                    {convo.lastMessagePreview ?? "No messages yet"}
+                    {convo.status === "closed" && convo.matterName
+                      ? convo.matterName
+                      : convo.lastMessagePreview ?? "No messages yet"}
                   </p>
                 </div>
               </button>

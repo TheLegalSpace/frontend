@@ -1,15 +1,18 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Send, Loader2, Lock, ArrowLeft } from "lucide-react";
 import { Message } from "@/app/types/message";
 import { messagesService } from "@/services/messages.services";
 import { connectSocket, disconnectSocket } from "@/services/socket.services";
 import AnonymousBanner from "./AnonymousBanner";
 import ReviewModal from "./ReviewModal";
+import EngagementModal from "./EngagementModal";
 import { useAuth } from "@/app/context/AuthContext";
+import { messageKeys, useMessageCache, useMessages } from "@/hooks/useMessages";
 
-// ── Cache ─────────────────────────────────────────────────────────────────────
+// ── localStorage (persistence across refresh) ───────────────────────────────
 function getCachedMessages(conversationId: string): Message[] {
   try {
     const raw = localStorage.getItem(`messages:${conversationId}`);
@@ -39,24 +42,6 @@ function setHasReviewed(conversationId: string) {
   } catch {}
 }
 
-/**
- * Merge incoming messages with existing ones.
- * - Removes temp optimistic messages that match a real one by body
- * - Deduplicates by id
- * - Keeps chronological order
- */
-function mergeMessages(existing: Message[], incoming: Message[]): Message[] {
-  const temps = existing.filter(
-    (m) => m.id.startsWith("temp-") && !incoming.some((r) => r.body === m.body)
-  );
-  const merged = [...incoming, ...temps];
-  merged.sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-  );
-  return merged;
-}
-// ─────────────────────────────────────────────────────────────────────────────
-
 function formatTime(dateStr: string) {
   return new Date(dateStr).toLocaleTimeString("en-US", {
     hour: "2-digit",
@@ -80,15 +65,15 @@ function formatDateLabel(dateStr: string) {
 interface Props {
   conversationId: string;
   participantName: string;
+  /** Phone number of the OTHER party — used by client to call/WhatsApp the lawyer */
+  participantPhone?: string | null;
+  /** Email of the OTHER party — used by client to email the lawyer */
+  participantEmail?: string | null;
   currentAccountId: string;
   conversationStatus: "open" | "closed";
   onConversationClosed: () => void;
-  /**
-   * For CLIENT: whether the client is chatting anonymously.
-   * For LAWYER: whether the OTHER PARTY (client) is anonymous —
-   *   i.e. has the client revealed their identity yet?
-   */
-  isAnonymous: boolean;
+  /** null = not yet known (still loading); true = anonymous; false = revealed */
+  isAnonymous: boolean | null;
   onAnonymousToggle: (val: boolean) => void;
   onClose: () => void;
   showBackButton?: boolean;
@@ -97,6 +82,8 @@ interface Props {
 export default function ChatWindow({
   conversationId,
   participantName,
+  participantPhone,
+  participantEmail,
   currentAccountId,
   conversationStatus,
   onConversationClosed,
@@ -110,54 +97,94 @@ export default function ChatWindow({
   const reviewerRole: "client" | "lawyer" = isLawyer ? "lawyer" : "client";
   const isClosed = conversationStatus === "closed";
 
-  const [messages, setMessages] = useState<Message[]>(() =>
-    getCachedMessages(conversationId)
-  );
-  const [loading, setLoading] = useState(
-    () => getCachedMessages(conversationId).length === 0
-  );
+  const queryClient = useQueryClient();
+  const { appendMessage, markMessageRead, setMessages } = useMessageCache(conversationId);
+
+  // Seed TanStack cache from localStorage on first load per conversation
+  useEffect(() => {
+    const key = messageKeys.list(conversationId);
+    const existing = queryClient.getQueryData<Message[]>(key);
+    if (existing && existing.length > 0) return;
+
+    const cached = getCachedMessages(conversationId);
+    if (cached.length > 0) {
+      queryClient.setQueryData(key, cached);
+    }
+  }, [conversationId, queryClient]);
+
+  const {
+    data: messages = [],
+    isLoading,
+  } = useMessages(conversationId, {
+    refetchInterval: isClosed ? false : 10000,
+  });
+
+  // Persist updated list for refresh (best-effort)
+  useEffect(() => {
+    setCachedMessages(conversationId, messages);
+  }, [conversationId, messages]);
+
   const [sending, setSending] = useState(false);
   const [closing, setClosing] = useState(false);
   const [input, setInput] = useState("");
   const [showReview, setShowReview] = useState(false);
 
+  // CLIENT ONLY: tracks whether the engagement modal is open
+  const [showEngagementModal, setShowEngagementModal] = useState(false);
+
+  // CLIENT ONLY: whether to show the "lawyer wants to engage" bottom banner.
+  // This becomes true when the conversation is closed (lawyer clicked Engage),
+  // and the client hasn't yet responded. Persisted so it survives refresh.
+  const engageBannerKey = `engage-banner:${conversationId}`;
+  const [showEngageBanner, setShowEngageBanner] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem(engageBannerKey) === "true";
+    } catch {
+      return false;
+    }
+  });
+
   const [hasReviewed, setHasReviewedState] = useState(() =>
-    getHasReviewed(conversationId)
+    getHasReviewed(conversationId),
   );
 
   const bottomRef = useRef<HTMLDivElement>(null);
-  const conversationIdRef = useRef(conversationId);
 
+  // When conversation is closed on the CLIENT side and the banner hasn't been
+  // dismissed yet, show it and persist so it survives refresh.
   useEffect(() => {
-    conversationIdRef.current = conversationId;
-    const cached = getCachedMessages(conversationId);
-    setMessages(cached);
-    setLoading(cached.length === 0);
-    setHasReviewedState(getHasReviewed(conversationId));
-  }, [conversationId]);
-
-  const loadMessages = useCallback(async () => {
-    const id = conversationIdRef.current;
-    try {
-      const data = await messagesService.getMessages(id);
-      const fresh: Message[] = (data?.data?.items ?? data?.data ?? []).reverse();
-
-      setMessages((prev) => {
-        if (conversationIdRef.current !== id) return prev;
-        const merged = mergeMessages(prev, fresh);
-        setCachedMessages(id, merged);
-        return merged;
-      });
-    } catch (err) {
-      console.error("Failed to load messages:", err);
-    } finally {
-      setLoading(false);
+    if (!isLawyer && isClosed) {
+      const alreadyDismissed =
+        localStorage.getItem(`engage-dismissed:${conversationId}`) === "true";
+      if (!alreadyDismissed) {
+        setShowEngageBanner(true);
+        try {
+          localStorage.setItem(engageBannerKey, "true");
+        } catch {}
+      }
     }
-  }, []);
+  }, [isClosed, isLawyer, conversationId, engageBannerKey]);
+
+  function dismissEngageBanner() {
+    setShowEngageBanner(false);
+    try {
+      localStorage.removeItem(engageBannerKey);
+      localStorage.setItem(`engage-dismissed:${conversationId}`, "true");
+    } catch {}
+  }
 
   useEffect(() => {
-    loadMessages();
-  }, [conversationId, loadMessages]);
+    setHasReviewedState(getHasReviewed(conversationId));
+
+    // Re-evaluate banner for this conversation
+    if (!isLawyer) {
+      const alreadyDismissed =
+        localStorage.getItem(`engage-dismissed:${conversationId}`) === "true";
+      const stored = localStorage.getItem(engageBannerKey) === "true";
+      setShowEngageBanner(!alreadyDismissed && stored);
+    }
+  }, [conversationId, isLawyer, engageBannerKey]);
 
   // Socket setup
   useEffect(() => {
@@ -167,15 +194,7 @@ export default function ChatWindow({
 
     socket.on("message", (msg: Message) => {
       if (msg.conversationId === conversationId) {
-        setMessages((prev) => {
-          const withoutTemp = prev.filter(
-            (m) => !(m.id.startsWith("temp-") && m.body === msg.body)
-          );
-          if (withoutTemp.find((m) => m.id === msg.id)) return withoutTemp;
-          const updated = [...withoutTemp, msg];
-          setCachedMessages(conversationId, updated);
-          return updated;
-        });
+        appendMessage(msg);
       }
     });
 
@@ -189,14 +208,8 @@ export default function ChatWindow({
         readAt: string;
         readByAccountId: string;
       }) => {
-        setMessages((prev) => {
-          const updated = prev.map((m) =>
-            m.id === messageId ? { ...m, readAt: new Date().toISOString() } : m
-          );
-          setCachedMessages(conversationId, updated);
-          return updated;
-        });
-      }
+        markMessageRead(messageId);
+      },
     );
 
     socket.on("connect_error", (err: { message: string }) => {
@@ -213,16 +226,8 @@ export default function ChatWindow({
       socket.off("message:read");
       socket.off("connect_error");
     };
-  }, [conversationId]);
+  }, [appendMessage, conversationId, markMessageRead]);
 
-  // Polling fallback every 10s
-  useEffect(() => {
-    if (isClosed) return;
-    const interval = setInterval(loadMessages, 10000);
-    return () => clearInterval(interval);
-  }, [loadMessages, isClosed]);
-
-  // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -253,29 +258,20 @@ export default function ChatWindow({
       createdAt: new Date().toISOString(),
     };
 
-    setMessages((prev) => {
-      const updated = [...prev, optimistic];
-      setCachedMessages(conversationId, updated);
-      return updated;
-    });
+    setMessages((prev) => [...prev, optimistic]);
     setInput("");
     setSending(true);
 
     try {
       const res = await messagesService.sendMessage(conversationId, text);
       const sentMessage: Message = res?.data ?? res;
-      setMessages((prev) => {
-        const updated = prev.map((m) => (m.id === tempId ? sentMessage : m));
-        setCachedMessages(conversationId, updated);
-        return updated;
-      });
+
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? sentMessage : m)),
+      );
     } catch (err) {
       console.error("Failed to send message:", err);
-      setMessages((prev) => {
-        const updated = prev.filter((m) => m.id !== tempId);
-        setCachedMessages(conversationId, updated);
-        return updated;
-      });
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setInput(text);
     } finally {
       setSending(false);
@@ -295,41 +291,29 @@ export default function ChatWindow({
   }
 
   // Group messages by date label
-  const grouped: { date: string; messages: Message[] }[] = [];
-  for (const msg of messages) {
-    const label = formatDateLabel(msg.createdAt);
-    const last = grouped[grouped.length - 1];
-    if (last && last.date === label) {
-      last.messages.push(msg);
-    } else {
-      grouped.push({ date: label, messages: [msg] });
+  const grouped = useMemo(() => {
+    const out: { date: string; messages: Message[] }[] = [];
+    for (const msg of messages) {
+      const label = formatDateLabel(msg.createdAt);
+      const last = out[out.length - 1];
+      if (last && last.date === label) {
+        last.messages.push(msg);
+      } else {
+        out.push({ date: label, messages: [msg] });
+      }
     }
-  }
+    return out;
+  }, [messages]);
 
-  // Review button state
   const reviewDisabled = !isClosed || hasReviewed;
   const reviewLabel = hasReviewed ? "Reviewed" : "Review";
   const reviewTitle = hasReviewed
     ? "You have already reviewed this conversation"
     : !isClosed
-    ? "Close the conversation first to leave a review"
-    : "Leave a review";
+      ? "Close the conversation first to leave a review"
+      : "Leave a review";
 
-  // ── Banner visibility logic ────────────────────────────────────────────────
-  //
-  // "Engage outside TLS" should appear as soon as the conversation is open
-  // (not closed). On the LAWYER side it shows regardless of anonymous state —
-  // the lawyer always sees the option to engage. On the CLIENT side it shows
-  // once the client has revealed their identity (isAnonymous === false).
-  //
-  // Previously this was `!isAnonymous && !isClosed` which meant lawyers saw
-  // it only after the client revealed — that was wrong.
-  //
-  // FIX: Lawyers see the engage banner whenever the convo is open.
-  //      Clients see it only after they've revealed (isAnonymous === false).
-  const showEngageBanner = isLawyer
-    ? !isClosed
-    : !isAnonymous && !isClosed;
+  const showLoading = isLoading && messages.length === 0;
 
   return (
     <>
@@ -367,23 +351,21 @@ export default function ChatWindow({
               hasReviewed
                 ? "bg-green-50 text-green-700 border border-green-200 cursor-default"
                 : isClosed
-                ? "bg-gray-900 text-white hover:bg-gray-700 cursor-pointer"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  ? "bg-gray-900 text-white hover:bg-gray-700 cursor-pointer"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
             }`}
           >
             {reviewLabel}
           </button>
         </div>
 
-        {/* Anonymous banner — CLIENT ONLY.
-            Lawyers are always identifiable; this banner is never relevant to them.
-            isAnonymous here means "the client is still hidden". */}
+        {/* Anonymous banner — CLIENT ONLY */}
         {!isLawyer && (
           <AnonymousBanner isAnonymous={isAnonymous} onToggle={onAnonymousToggle} />
         )}
 
-        {/* Identity revealed notice — client side only */}
-        {!isLawyer && !isAnonymous && (
+        {/* Identity revealed notice — only when we know for certain they revealed */}
+        {!isLawyer && isAnonymous === false && (
           <div className="px-5 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2 text-blue-700 text-[12px]">
             <span>🔓</span>
             <span>
@@ -393,44 +375,29 @@ export default function ChatWindow({
           </div>
         )}
 
-        {/* "Engage outside TLS" banner.
-            LAWYER: always shown while conversation is open (they drive this action).
-            CLIENT: shown only after revealing identity.
-            Previously used `!isAnonymous && !isClosed` for both roles, which
-            meant lawyers had to wait for the client to reveal before seeing it. */}
-        {showEngageBanner && (
+        {/* LAWYER: "Engage outside TLS" action banner — always shown while open */}
+        {isLawyer && !isClosed && (
           <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-4">
             <p className="text-[12px] text-gray-600">
-              {isLawyer ? (
-                <>
-                  You can now proceed with{" "}
-                  <span className="font-semibold">{participantName}</span>'s
-                  matter outside TLS.
-                </>
-              ) : (
-                <>
-                  <span className="font-semibold">{participantName}</span> would
-                  like to proceed with your matter outside TLS.
-                </>
-              )}
+              You can now proceed with{" "}
+              <span className="font-semibold">{participantName}</span>'s matter
+              outside TLS.
             </p>
-            {isLawyer && (
-              <button
-                onClick={handleCloseConversation}
-                disabled={closing}
-                className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-[12px] font-medium rounded-lg transition disabled:opacity-60"
-              >
-                {closing && <Loader2 size={12} className="animate-spin" />}
-                Engage outside TLS
-              </button>
-            )}
+            <button
+              onClick={handleCloseConversation}
+              disabled={closing}
+              className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-[12px] font-medium rounded-lg transition disabled:opacity-60"
+            >
+              {closing && <Loader2 size={12} className="animate-spin" />}
+              Engage outside TLS
+            </button>
           </div>
         )}
 
         {/* Closed notice */}
         {isClosed && (
           <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-center text-[12px] text-gray-500">
-            This conversation has been closed. You can no longer send messages.{" "}
+            This conversation has been closed.{" "}
             {!hasReviewed && (
               <button
                 onClick={() => setShowReview(true)}
@@ -447,7 +414,7 @@ export default function ChatWindow({
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 font-['Geist'] justify-end">
-          {loading ? (
+          {showLoading ? (
             <div className="flex items-center justify-center h-full text-sm text-gray-400">
               <Loader2 size={18} className="animate-spin mr-2" />
               Loading...
@@ -458,7 +425,6 @@ export default function ChatWindow({
             </div>
           ) : (
             <>
-              {/* Encryption notice */}
               <div className="flex justify-center my-3">
                 <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-4 py-2.5 max-w-sm text-center">
                   <Lock size={13} className="text-amber-600 shrink-0" />
@@ -470,7 +436,6 @@ export default function ChatWindow({
                 </div>
               </div>
 
-              {/* Message groups */}
               {grouped.map((group) => (
                 <div key={group.date}>
                   <div className="text-center text-[11px] text-gray-400 my-2">
@@ -512,6 +477,27 @@ export default function ChatWindow({
           <div ref={bottomRef} />
         </div>
 
+        {/* CLIENT: "Lawyer wants to engage outside TLS" sticky bottom banner.
+            Shows when the lawyer has clicked "Engage outside TLS" (which closes
+            the conversation). The client taps "Yes" to open the options modal. */}
+        {!isLawyer && showEngageBanner && (
+          <div className="border-t border-amber-100 bg-amber-50 px-4 py-3 flex items-center justify-between gap-3">
+            <p className="text-[13px] text-gray-800 leading-snug">
+              <span className="font-semibold">{participantName}</span> wants to
+              connect with you outside TLS.
+            </p>
+            <button
+              onClick={() => {
+                dismissEngageBanner();
+                setShowEngagementModal(true);
+              }}
+              className="shrink-0 px-5 py-2 bg-gray-900 hover:bg-gray-700 text-white text-[13px] font-medium rounded-lg transition"
+            >
+              Yes
+            </button>
+          </div>
+        )}
+
         {/* Input */}
         <div className="px-4 py-3 border-t border-gray-200 bg-white flex items-center gap-3">
           {/* Mobile review trigger */}
@@ -523,8 +509,8 @@ export default function ChatWindow({
               hasReviewed
                 ? "border-green-200 text-green-600 cursor-default"
                 : isClosed
-                ? "border-gray-300 text-amber-500 hover:bg-gray-50 cursor-pointer"
-                : "border-gray-200 text-gray-300 cursor-not-allowed"
+                  ? "border-gray-300 text-amber-500 hover:bg-gray-50 cursor-pointer"
+                  : "border-gray-200 text-gray-300 cursor-not-allowed"
             }`}
             aria-label={reviewLabel}
           >
@@ -563,6 +549,20 @@ export default function ChatWindow({
           reviewerRole={reviewerRole}
           onClose={() => setShowReview(false)}
           onSubmitted={handleReviewSubmitted}
+        />
+      )}
+
+      {/* Engagement modal — CLIENT ONLY */}
+      {!isLawyer && showEngagementModal && (
+        <EngagementModal
+          lawyerName={participantName}
+          lawyerPhone={participantPhone}
+          lawyerEmail={participantEmail}
+          onClose={() => setShowEngagementModal(false)}
+          onContinueOnTLS={() => {
+            // Client chooses to stay on TLS — just close the modal
+            setShowEngagementModal(false);
+          }}
         />
       )}
     </>

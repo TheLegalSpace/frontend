@@ -5,11 +5,17 @@ export interface Conversation {
     fullName: string;
     avatarUrl?: string;
     isAnonymous?: boolean;
+    /** Lawyer's phone — passed to engagement modal for WhatsApp link */
+    phone?: string | null;
+    /** Lawyer's email — passed to engagement modal for mailto link */
+    email?: string | null;
   };
   lastMessagePreview?: string;
   lastMessageAt?: string;
-  status: "open" | "closed"; // normalized from API's "active" | "closed"
+  status: "open" | "closed";
   unread?: number;
+  matterName?: string;
+  intakeSummary?: string;
 }
 
 export interface Message {
