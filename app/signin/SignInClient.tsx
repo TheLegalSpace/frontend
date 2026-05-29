@@ -108,15 +108,15 @@ export default function SignInClient() {
       }}
     >
       {/* ✅ Top logo — matches Figma top-left */}
-      <div className="px-6 py-5">
+      <div className="px-6 pt-5">
         <div className="flex items-center gap-2">
-          <img src="/tls-logo-white.png" alt="TLS" className="h-5" />
+          <img src="/tls-logo-white.png" alt="TLS" className="h-9" />
         </div>
       </div>
 
       {/* ✅ Centered card */}
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-[400px] bg-[#111111]/50 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-8">
+        <div className="w-full max-w-[400px] bg-[#111111]/50 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-14">
           {/* Title */}
           <div className="text-center mb-6">
             <h1 className="font-[Instrument_Serif] text-[28px] text-white font-normal mb-1.5">

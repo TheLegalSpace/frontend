@@ -82,6 +82,16 @@ function formatBudgetLabel(budget: string | null): string {
   return map[budget] ?? budget.replace(/_/g, " ");
 }
 
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (typeof err !== "object" || err === null) return fallback;
+
+  const maybe = err as {
+    response?: { data?: { message?: string } };
+  };
+
+  return maybe.response?.data?.message ?? fallback;
+}
+
 function QuestionBlock({
   question,
   answer,
@@ -136,8 +146,8 @@ function LawyerCard({
 
       await sendRequest.mutateAsync(payload);
       setSent(true);
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? "Failed to send request");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to send request"));
     }
   };
 
@@ -269,6 +279,9 @@ export default function FindALawyer() {
   const [searchState, setSearchState] = useState<SearchState | null>(null);
   const [validationError, setValidationError] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+  const [activeTab, setActiveTab] = useState<"all" | "firms" | "lawyers">(
+    "firms",
+  );
 
   const searchByText = useSearchByText();
   const searchLawyers = useSearchLawyers();
@@ -301,8 +314,8 @@ export default function FindALawyer() {
         extracted: result.extracted,
         total: result.pagination.total,
       });
-    } catch (err: any) {
-      setValidationError(err?.response?.data?.message ?? "Search failed");
+    } catch (err: unknown) {
+      setValidationError(getErrorMessage(err, "Search failed"));
     }
   };
 
@@ -319,6 +332,7 @@ export default function FindALawyer() {
     setSearchState(null);
     setValidationError("");
     setHasSearched(false);
+    setActiveTab("all");
 
     setTimeout(() => {
       inputRef.current?.focus();
@@ -328,6 +342,47 @@ export default function FindALawyer() {
   const extracted = searchState?.extracted;
 
   const isSearching = searchByText.isPending || searchLawyers.isPending;
+
+  const classifyAccountType = (account: MatchResult["account"]) => {
+    const role = (account.role ?? "").toUpperCase();
+
+    if (role === "FIRM" || account.firmProfile) return "firm";
+    if (role === "LAWYER" || account.lawyerProfile) return "lawyer";
+
+    return "lawyer";
+  };
+
+  const firmResults =
+    searchState?.results.filter((r) => classifyAccountType(r.account) === "firm") ??
+    [];
+  const lawyerResults =
+    searchState?.results.filter((r) => classifyAccountType(r.account) === "lawyer") ??
+    [];
+
+  // "All" should show firms first per product request.
+  const orderedResults =
+    activeTab === "firms"
+      ? firmResults
+      : activeTab === "lawyers"
+        ? lawyerResults
+        : [...firmResults, ...lawyerResults];
+
+  const resultsSummaryText = (() => {
+    if (!searchState) return "";
+    if (activeTab === "all") {
+      return `${searchState.total} account${
+        searchState.total === 1 ? "" : "s"
+      } matched your request`;
+    }
+
+    const noun = activeTab === "firms" ? "firms" : "lawyers";
+    return `Showing ${orderedResults.length} ${noun} in your results`;
+  })();
+
+  const emptyStateTitle =
+    activeTab === "all"
+      ? "No matching accounts found"
+      : `No matching ${activeTab === "firms" ? "firms" : "lawyers"} found`;
 
   return (
     <div className="grid grid-cols-[55%_45%] h-[calc(100vh-64px)] bg-[#FAFAFA] overflow-hidden">
@@ -375,8 +430,8 @@ export default function FindALawyer() {
                 </p>
 
                 <p className="text-[15px] leading-8 text-[#444]">
-                  "My landlord is trying to evict me illegally in Lagos and I can
-                  pay around ₦150k for legal representation."
+                  &quot;My landlord is trying to evict me illegally in Lagos and I can
+                  pay around ₦150k for legal representation.&quot;
                 </p>
               </div>
             </div>
@@ -480,7 +535,7 @@ export default function FindALawyer() {
       {/* RIGHT PANEL */}
       <div className="bg-[#FCFCFC] overflow-y-auto">
         <div className="px-8 py-8 max-w-3xl">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-[42px] font-serif text-[#202020] leading-none">
                 Search Result
@@ -488,12 +543,49 @@ export default function FindALawyer() {
 
               {searchState && (
                 <p className="text-[14px] text-[#777] mt-3">
-                  {searchState.total} lawyer
-                  {searchState.total !== 1 ? "s" : ""} matched your request
+                  {resultsSummaryText}
                 </p>
               )}
             </div>
           </div>
+
+          {searchState && (
+            <div className="flex gap-2 mb-8">
+              <button
+                type="button"
+                onClick={() => setActiveTab("firms")}
+                className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                  activeTab === "firms"
+                    ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
+                    : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
+                }`}
+              >
+                Firms
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("lawyers")}
+                className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                  activeTab === "lawyers"
+                    ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
+                    : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
+                }`}
+              >
+                Lawyers
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("all")}
+                className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                  activeTab === "all"
+                    ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
+                    : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
+                }`}
+              >
+                All
+              </button>
+            </div>
+          )}
 
           {!hasSearched && (
             <div className="h-[70vh] flex items-center justify-center">
@@ -503,12 +595,13 @@ export default function FindALawyer() {
                 </div>
 
                 <h3 className="text-[20px] font-semibold text-[#202020]">
-                  Lawyer matches will appear here
+                  Firm and lawyer matches will appear here
                 </h3>
 
                 <p className="text-[15px] leading-7 text-[#777] mt-4">
                   Once you describe your legal situation, we will find the best
-                  lawyers based on expertise, budget, and location.
+                  legal matches (law firms and independent lawyers) based on
+                  expertise, budget, and location.
                 </p>
               </div>
             </div>
@@ -516,8 +609,8 @@ export default function FindALawyer() {
 
           {!isSearching && searchState && (
             <div className="space-y-5">
-              {searchState.results.length > 0 ? (
-                searchState.results.map((match) => (
+              {orderedResults.length > 0 ? (
+                orderedResults.map((match) => (
                   <LawyerCard
                     key={match.account.id}
                     match={match}
@@ -526,9 +619,7 @@ export default function FindALawyer() {
                 ))
               ) : (
                 <div className="rounded-3xl border border-[#ECECEC] bg-white p-10 text-center">
-                  <h3 className="text-[18px] font-semibold text-[#202020]">
-                    No matching lawyers found
-                  </h3>
+                  <h3 className="text-[18px] font-semibold text-[#202020]">{emptyStateTitle}</h3>
 
                   <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
                     Try adjusting your legal description, budget, or preferred
