@@ -70,8 +70,21 @@ export const authService = {
   forgotPassword: (email: string) =>
     api.post("/auth/forgot-password", { email }),
 
-  resetPassword: (token: string, newPassword: string) =>
-    api.post("/auth/reset-password", { token, newPassword }),
+  verifyResetCode: (email: string, code: string) =>
+    api.post<{
+      error: boolean;
+      message: string;
+      data: {
+        session: {
+          accessToken: string;
+          refreshToken: string;
+          expiresAt: number;
+        };
+      };
+    }>("/auth/verify-reset-code", { email, code }),
+
+  resetPassword: (accessToken: string, newPassword: string) =>
+    api.post("/auth/reset-password", { accessToken, newPassword }),
 
   deleteAccount: () => api.delete("/auth/account"),
 };
