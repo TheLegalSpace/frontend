@@ -204,12 +204,12 @@ export default function SignInClient() {
 
             {/* Forgot password */}
             <div className="flex justify-end -mt-1">
-              <button
-                type="button"
+              <Link
+                href="/forgot-password"
                 className="text-[13px] text-[#1A56DB] hover:underline"
               >
                 Forgot password?
-              </button>
+              </Link>
             </div>
 
             {/* Submit */}
