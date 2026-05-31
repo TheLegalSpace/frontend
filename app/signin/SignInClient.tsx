@@ -8,11 +8,29 @@ import { AuthError, useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
-declare const google: any;
+declare const google: {
+  accounts: {
+    id: {
+      initialize: (config: {
+        client_id: string;
+        callback: (response: { credential: string }) => void;
+      }) => void;
+      renderButton: (
+        parent: HTMLElement,
+        options: {
+          theme?: string;
+          size?: string;
+          width?: string;
+          text?: string;
+        },
+      ) => void;
+    };
+  };
+};
 
 export default function SignInClient() {
   const { login, loginWithGoogle } = useAuth();
-  const router = useRouter();
+  // const router = useRouter();
   const searchParams = useSearchParams();
   const googleButtonRef = useRef<HTMLDivElement>(null);
 

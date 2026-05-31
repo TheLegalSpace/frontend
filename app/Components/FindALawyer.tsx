@@ -23,6 +23,7 @@ import { SendRequestPayload } from "@/services/requests.services";
 import { usePracticeAreas } from "@/hooks/usePracticeAreas";
 import { useSearchLawyers, useSearchByText } from "@/hooks/useIntake";
 import { useSendRequest } from "@/hooks/useRequests";
+import Image from "next/image";
 
 interface SearchState {
   results: MatchResult[];
@@ -162,7 +163,7 @@ function LawyerCard({
             )}`}
           >
             {account.avatarUrl ? (
-              <img
+              <Image
                 src={account.avatarUrl}
                 alt={account.fullName}
                 className="w-full h-full object-cover"
