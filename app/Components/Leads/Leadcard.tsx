@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Clock, Loader2 } from "lucide-react";
 import { Lead } from "@/app/types/leads";
 import { leadsService } from "@/services/leads.services";
+import Image from "next/image";
 
 function getInitials(name: string) {
   if (!name) return "??";
@@ -106,15 +107,17 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <div
-            className={`w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0 overflow-hidden ${avatarColor(
+            className={`relative w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0 overflow-hidden ${avatarColor(
               userAccount?.fullName ?? ""
             )}`}
           >
             {userAccount?.avatarUrl ? (
-              <img
+              <Image
                 src={userAccount.avatarUrl}
                 alt={displayName}
-                className="w-full h-full object-cover"
+                fill
+                sizes="36px"
+                className="object-cover"
               />
             ) : (
               getInitials(userAccount?.fullName ?? "")

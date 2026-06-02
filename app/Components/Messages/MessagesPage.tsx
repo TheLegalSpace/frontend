@@ -1,95 +1,108 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MessageSquare } from "lucide-react";
 import { Conversation } from "@/app/types/message";
 import { messagesService } from "@/services/messages.services";
-import { connectSocket, disconnectSocket } from "@/services/socket.services";
+import { connectSocket, refreshSocketAuth } from "@/services/socket.services";
 import ConversationList from "./ConversationList";
 import ChatWindow from "./ChatWindow";
 import { useAuth } from "@/app/context/AuthContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function MessagesPage() {
   const { user } = useAuth();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isAnonymous, setIsAnonymous] = useState(true);
+  const queryClient = useQueryClient();
 
   // On mobile, track whether we're showing the chat or the list
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
 
-  const loadConversations = useCallback(async () => {
-    try {
+  const conversationsQuery = useQuery({
+    queryKey: ["conversations"],
+    queryFn: async () => {
       const data = await messagesService.getConversations();
-      const items: Conversation[] = data?.data?.items ?? data?.data ?? [];
-      setConversations(items);
-      // Only auto-select on desktop (don't push mobile to chat view on load)
-      if (items.length > 0 && !activeId) {
-        setActiveId(items[0].id);
-      }
-    } catch (err) {
-      console.error("Failed to load conversations:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeId]);
+      return (data?.data?.items ?? data?.data ?? []) as Conversation[];
+    },
+    staleTime: 1000 * 30,
+  });
+
+  const conversations = useMemo(
+    () => conversationsQuery.data ?? [],
+    [conversationsQuery.data]
+  );
 
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+    if (conversations.length > 0 && !activeId) {
+      setActiveId(conversations[0].id);
+    }
+  }, [activeId, conversations]);
 
   // Page-level socket events
   useEffect(() => {
     const token = localStorage.getItem("accessToken") ?? "";
     const socket = connectSocket(token);
 
-    socket.on(
-      "request:status_changed",
-      ({
-        status,
-        conversationId,
-      }: {
-        requestId: string;
-        status: string;
-        conversationId?: string;
-      }) => {
-        if (status === "accepted" && conversationId) {
-          socket.emit("conversation:join", { conversationId });
-          loadConversations();
-          setActiveId(conversationId);
-          setMobileView("chat");
-        }
+    const handleRequestStatusChanged = ({
+      status,
+      conversationId,
+    }: {
+      requestId: string;
+      status: string;
+      conversationId?: string;
+    }) => {
+      if (status === "accepted" && conversationId) {
+        socket.emit("conversation:join", { conversationId });
+        queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        setActiveId(conversationId);
+        setMobileView("chat");
       }
-    );
+    };
 
-    socket.on("conversation:updated", (conv: { id: string; status: string }) => {
-      if (conv.status === "closed") {
-        setConversations((prev) =>
-          prev.map((c) => (c.id === conv.id ? { ...c, status: "closed" } : c))
-        );
-      }
-    });
+    const handleConversationUpdated = (conv: {
+      id: string;
+      status: string;
+      lastMessage?: string;
+      lastMessageAt?: string;
+    }) => {
+      queryClient.setQueryData<Conversation[]>(["conversations"], (prev = []) =>
+        prev.map((item) =>
+          item.id === conv.id
+            ? {
+                ...item,
+                status: conv.status === "closed" ? "closed" : item.status,
+                lastMessage: conv.lastMessage ?? item.lastMessage,
+                lastMessageAt: conv.lastMessageAt ?? item.lastMessageAt,
+              }
+            : item
+        )
+      );
+    };
 
-    socket.on("connect_error", (err: { message: string }) => {
+    const handleConnectError = (err: { message: string }) => {
       if (err.message === "invalid token") {
         const newToken = localStorage.getItem("accessToken") ?? "";
-        disconnectSocket();
-        connectSocket(newToken);
+        refreshSocketAuth(newToken);
       }
-    });
+    };
 
-    socket.on("connect", () => {
-      loadConversations();
-    });
+    const handleConnect = () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    };
+
+    socket.on("request:status_changed", handleRequestStatusChanged);
+    socket.on("conversation:updated", handleConversationUpdated);
+    socket.on("connect_error", handleConnectError);
+    socket.on("connect", handleConnect);
 
     return () => {
-      socket.off("request:status_changed");
-      socket.off("conversation:updated");
-      socket.off("connect_error");
-      socket.off("connect");
+      socket.off("request:status_changed", handleRequestStatusChanged);
+      socket.off("conversation:updated", handleConversationUpdated);
+      socket.off("connect_error", handleConnectError);
+      socket.off("connect", handleConnect);
     };
-  }, [loadConversations]);
+  }, [queryClient]);
 
   const activeConvo = conversations.find((c) => c.id === activeId) ?? null;
 
@@ -118,7 +131,7 @@ export default function MessagesPage() {
               conversations={conversations}
               activeId={activeId}
               onSelect={handleSelectConvo}
-              loading={loading}
+              loading={conversationsQuery.isLoading}
             />
           </div>
 

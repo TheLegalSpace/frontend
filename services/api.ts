@@ -1,6 +1,61 @@
 // services/api.ts
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
+type SessionTokens = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+let refreshPromise: Promise<SessionTokens> | null = null;
+
+function getStoredToken(key: "accessToken" | "refreshToken") {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(key);
+}
+
+function saveSessionTokens(tokens: SessionTokens) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("accessToken", tokens.accessToken);
+  localStorage.setItem("refreshToken", tokens.refreshToken);
+}
+
+function clearStoredSession() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
+}
+
+async function refreshSession(): Promise<SessionTokens> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refreshToken = getStoredToken("refreshToken");
+    if (!refreshToken) throw new Error("No refresh token");
+
+    const { data } = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`,
+      { refreshToken }
+    );
+
+    if (data?.error === true) throw new Error(data.message);
+
+    const tokens = {
+      accessToken: data.data.session.accessToken,
+      refreshToken: data.data.session.refreshToken,
+    };
+
+    saveSessionTokens(tokens);
+    return tokens;
+  })();
+
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
+  }
+}
+
 export const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL + process.env.NEXT_PUBLIC_API_PATH!,
   headers: { "Content-Type": "application/json" },
@@ -9,7 +64,7 @@ export const api: AxiosInstance = axios.create({
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (typeof window === "undefined") return config;
-  const token = localStorage.getItem("accessToken");
+  const token = getStoredToken("accessToken");
   if (token) config.headers["Authorization"] = `Bearer ${token}`;
   return config;
 });
@@ -34,25 +89,12 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) throw new Error("No refresh token");
-
-        const { data } = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`,
-          { refreshToken }
-        );
-
-        if (data?.error === true) throw new Error(data.message);
-
-        localStorage.setItem("accessToken", data.data.session.accessToken);
-        localStorage.setItem("refreshToken", data.data.session.refreshToken);
-        original.headers["Authorization"] = `Bearer ${data.data.session.accessToken}`;
+        const session = await refreshSession();
+        original.headers["Authorization"] = `Bearer ${session.accessToken}`;
 
         return api(original); // ✅ Retry original request, not reject
       } catch {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
+        clearStoredSession();
         window.dispatchEvent(new Event("auth:logout"));
         return Promise.reject(error); // ✅ Reject after failed refresh
       }

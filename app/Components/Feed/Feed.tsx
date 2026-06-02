@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import PostCard, { Post } from "./PostCard";
 import { api } from "@/services/api";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type Tab = "All" | "Top Firms" | "Top Lawyers" | "Articles";
 
@@ -106,25 +107,17 @@ async function fetchFeed(tab: Tab) {
 
 export default function Feed() {
   const [activeTab, setActiveTab] = useState<Tab>("All");
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadFeed = useCallback(async (tab: Tab) => {
-    setLoading(true);
-    try {
-      const items = await fetchFeed(tab);
+  const queryClient = useQueryClient();
+  const feedQuery = useQuery({
+    queryKey: ["feed", activeTab],
+    queryFn: async () => {
+      const items = await fetchFeed(activeTab);
       const cachedReactions = getCachedReactions();
-      setPosts(items.map((raw) => normalizePost(raw, cachedReactions)));
-    } catch (err) {
-      console.error("Feed fetch failed:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadFeed(activeTab);
-  }, [activeTab, loadFeed]);
+      return items.map((raw) => normalizePost(raw, cachedReactions));
+    },
+    staleTime: 1000 * 30,
+  });
+  const posts = useMemo(() => feedQuery.data ?? [], [feedQuery.data]);
 
   async function handleReact(id: string, reaction: "like" | "dislike") {
     const post = posts.find((p) => p.id === id);
@@ -137,7 +130,7 @@ export default function Feed() {
     setCachedReaction(id, newReaction);
 
     // Optimistic UI update
-    setPosts((prev) =>
+    queryClient.setQueryData<Post[]>(["feed", activeTab], (prev = []) =>
       prev.map((p) => {
         if (p.id !== id) return p;
         if (isSameReaction) {
@@ -177,7 +170,7 @@ export default function Feed() {
       console.error("React failed:", err);
       // Revert cache and reload on failure
       setCachedReaction(id, post.userReaction);
-      loadFeed(activeTab);
+      await queryClient.invalidateQueries({ queryKey: ["feed", activeTab] });
     }
   }
 
@@ -206,7 +199,7 @@ export default function Feed() {
       <div className="border-t border-[#E6EAED]" />
 
       {/* Feed */}
-      {loading ? (
+      {feedQuery.isLoading ? (
         <div className="text-center py-10 text-gray-400">Loading feed...</div>
       ) : posts.length === 0 ? (
         <div className="text-center py-10 text-gray-400">Nothing here yet.</div>

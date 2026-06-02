@@ -20,7 +20,6 @@ import {
 } from "@/services/intake.services";
 
 import { SendRequestPayload } from "@/services/requests.services";
-import { usePracticeAreas } from "@/hooks/usePracticeAreas";
 import { useSearchLawyers, useSearchByText } from "@/hooks/useIntake";
 import { useSendRequest } from "@/hooks/useRequests";
 import Image from "next/image";
@@ -158,7 +157,7 @@ function LawyerCard({
         <div className="flex gap-4 min-w-0">
           {/* Avatar: show image if available, otherwise initials */}
           <div
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center font-semibold text-sm shrink-0 overflow-hidden ${getAvatarColor(
+            className={`relative w-14 h-14 rounded-2xl flex items-center justify-center font-semibold text-sm shrink-0 overflow-hidden ${getAvatarColor(
               account.fullName
             )}`}
           >
@@ -166,7 +165,9 @@ function LawyerCard({
               <Image
                 src={account.avatarUrl}
                 alt={account.fullName}
-                className="w-full h-full object-cover"
+                fill
+                sizes="56px"
+                className="object-cover"
               />
             ) : (
               getInitials(account.fullName)
@@ -275,7 +276,6 @@ function LawyerCard({
 }
 
 export default function FindALawyer() {
-  const practiceAreas = usePracticeAreas();
   const [inputValue, setInputValue] = useState("");
   const [searchState, setSearchState] = useState<SearchState | null>(null);
   const [validationError, setValidationError] = useState("");
@@ -292,7 +292,6 @@ export default function FindALawyer() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    practiceAreas.refetch();
   }, [searchState]);
 
   const handleSearch = async (text: string) => {

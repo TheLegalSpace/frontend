@@ -1,17 +1,36 @@
 "use client"
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Send, Loader2, Lock, ArrowLeft } from "lucide-react";
 import { Message } from "@/app/types/message";
 import { messagesService } from "@/services/messages.services";
-import { connectSocket, disconnectSocket } from "@/services/socket.services";
+import { connectSocket, refreshSocketAuth } from "@/services/socket.services";
 import AnonymousBanner from "./AnonymousBanner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ── Cache helpers ─────────────────────────────────────────────────────────────
+const MESSAGE_CACHE_LIMIT = 100;
+const MESSAGE_CACHE_TTL_MS = 1000 * 60 * 30;
+
 function getCachedMessages(conversationId: string): Message[] {
   try {
     const raw = localStorage.getItem(`messages:${conversationId}`);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw) as
+      | Message[]
+      | { updatedAt?: number; items?: Message[] };
+
+    if (Array.isArray(parsed)) return parsed;
+    if (
+      parsed.updatedAt &&
+      Date.now() - parsed.updatedAt > MESSAGE_CACHE_TTL_MS
+    ) {
+      localStorage.removeItem(`messages:${conversationId}`);
+      return [];
+    }
+
+    return parsed.items ?? [];
   } catch {
     return [];
   }
@@ -19,8 +38,27 @@ function getCachedMessages(conversationId: string): Message[] {
 
 function setCachedMessages(conversationId: string, messages: Message[]) {
   try {
-    localStorage.setItem(`messages:${conversationId}`, JSON.stringify(messages));
+    localStorage.setItem(
+      `messages:${conversationId}`,
+      JSON.stringify({
+        updatedAt: Date.now(),
+        items: messages.slice(-MESSAGE_CACHE_LIMIT),
+      })
+    );
   } catch {}
+}
+
+function mergeMessages(current: Message[], incoming: Message[]) {
+  const byId = new Map<string, Message>();
+
+  [...current, ...incoming].forEach((message) => {
+    byId.set(message.id, message);
+  });
+
+  return Array.from(byId.values()).sort(
+    (a, b) =>
+      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -63,38 +101,28 @@ export default function ChatWindow({
   onClose,
   showBackButton = false,
 }: Props) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  const loadMessages = useCallback(async () => {
-    try {
+  const queryClient = useQueryClient();
+  const cachedMessages = getCachedMessages(conversationId);
+  const messagesQuery = useQuery({
+    queryKey: ["messages", conversationId],
+    queryFn: async () => {
       const data = await messagesService.getMessages(conversationId);
-      const items: Message[] = (data?.data?.items ?? data?.data ?? []).reverse();
-      setCachedMessages(conversationId, items);
-      setMessages(items);
-    } catch (err) {
-      console.error("Failed to load messages:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [conversationId]);
+      const items = (data?.data?.items ?? data?.data ?? []) as Message[];
+      return mergeMessages([], [...items].reverse());
+    },
+    initialData: cachedMessages.length > 0 ? cachedMessages : undefined,
+    staleTime: 1000 * 20,
+  });
+  const messages = messagesQuery.data ?? [];
 
-  // Initial load — show cache instantly, fetch in background
   useEffect(() => {
-    const cached = getCachedMessages(conversationId);
-    if (cached.length > 0) {
-      setMessages(cached);
-      setLoading(false);
-      loadMessages();
-    } else {
-      setLoading(true);
-      setMessages([]);
-      loadMessages();
+    if (messages.length > 0) {
+      setCachedMessages(conversationId, messages);
     }
-  }, [loadMessages, conversationId]);
+  }, [conversationId, messages]);
 
   // Socket setup
   useEffect(() => {
@@ -103,58 +131,69 @@ export default function ChatWindow({
 
     socket.emit("conversation:join", { conversationId });
 
-    socket.on("message", (msg: Message) => {
+    const handleMessage = (msg: Message) => {
       if (msg.conversationId === conversationId) {
-        setMessages((prev) => {
-          if (prev.find((m) => m.id === msg.id)) return prev;
-          const updated = [...prev, msg];
-          setCachedMessages(conversationId, updated);
-          return updated;
-        });
+        queryClient.setQueryData<Message[]>(
+          ["messages", conversationId],
+          (prev = []) => mergeMessages(prev, [msg])
+        );
+        queryClient.setQueryData(["conversations"], (prev: any) =>
+          Array.isArray(prev)
+            ? prev.map((conversation) =>
+                conversation.id === conversationId
+                  ? {
+                      ...conversation,
+                      lastMessage: msg.body,
+                      lastMessageAt: msg.createdAt,
+                    }
+                  : conversation
+              )
+            : prev
+        );
       }
-    });
+    };
 
-    socket.on(
-      "message:read",
-      ({
-        messageId,
-      }: {
-        conversationId: string;
-        messageId: string;
-        readAt: string;
-        readByAccountId: string;
-      }) => {
-        setMessages((prev) => {
-          const updated = prev.map((m) =>
-            m.id === messageId ? { ...m, readAt: new Date().toISOString() } : m
-          );
-          setCachedMessages(conversationId, updated);
-          return updated;
-        });
-      }
-    );
+    const handleMessageRead = ({
+      messageId,
+      readAt,
+    }: {
+      conversationId: string;
+      messageId: string;
+      readAt: string;
+      readByAccountId: string;
+    }) => {
+      queryClient.setQueryData<Message[]>(["messages", conversationId], (prev = []) =>
+        prev.map((message) =>
+          message.id === messageId ? { ...message, readAt } : message
+        )
+      );
+    };
 
-    socket.on("connect_error", (err: { message: string }) => {
+    const handleConnectError = (err: { message: string }) => {
       if (err.message === "invalid token") {
         const newToken = localStorage.getItem("accessToken") ?? "";
-        disconnectSocket();
-        connectSocket(newToken);
+        refreshSocketAuth(newToken);
       }
-    });
+    };
+
+    const handleConnect = () => {
+      socket.emit("conversation:join", { conversationId });
+      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
+    };
+
+    socket.on("message", handleMessage);
+    socket.on("message:read", handleMessageRead);
+    socket.on("connect_error", handleConnectError);
+    socket.on("connect", handleConnect);
 
     return () => {
       socket.emit("conversation:leave", { conversationId });
-      socket.off("message");
-      socket.off("message:read");
-      socket.off("connect_error");
+      socket.off("message", handleMessage);
+      socket.off("message:read", handleMessageRead);
+      socket.off("connect_error", handleConnectError);
+      socket.off("connect", handleConnect);
     };
-  }, [conversationId]);
-
-  // Polling fallback every 10s
-  useEffect(() => {
-    const interval = setInterval(loadMessages, 10000);
-    return () => clearInterval(interval);
-  }, [loadMessages]);
+  }, [conversationId, queryClient]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -173,24 +212,21 @@ export default function ChatWindow({
       createdAt: new Date().toISOString(),
     };
 
-    setMessages((prev) => {
-      const updated = [...prev, optimistic];
-      setCachedMessages(conversationId, updated);
-      return updated;
-    });
+    queryClient.setQueryData<Message[]>(["messages", conversationId], (prev = []) =>
+      mergeMessages(prev, [optimistic])
+    );
     setInput("");
     setSending(true);
 
     try {
       await messagesService.sendMessage(conversationId, text);
-      await loadMessages();
+      await queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
+      await queryClient.invalidateQueries({ queryKey: ["conversations"] });
     } catch (err) {
       console.error("Failed to send message:", err);
-      setMessages((prev) => {
-        const updated = prev.filter((m) => m.id !== optimistic.id);
-        setCachedMessages(conversationId, updated);
-        return updated;
-      });
+      queryClient.setQueryData<Message[]>(["messages", conversationId], (prev = []) =>
+        prev.filter((message) => message.id !== optimistic.id)
+      );
       setInput(text);
     } finally {
       setSending(false);
@@ -250,7 +286,7 @@ export default function ChatWindow({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 font-['Geist'] justify-end">
-        {loading ? (
+        {messagesQuery.isLoading ? (
           <div className="flex items-center justify-center h-full text-sm text-gray-400">
             <Loader2 size={18} className="animate-spin mr-2" /> Loading...
           </div>

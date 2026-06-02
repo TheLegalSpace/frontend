@@ -2,6 +2,7 @@
 
 import { Search } from "lucide-react"
 import { Conversation } from "@/app/types/message"
+import Image from "next/image";
 
 function getInitials(name: string) {
   if (!name) return "??";
@@ -96,15 +97,17 @@ export default function ConversationList({
             >
               {/* Avatar */}
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${avatarColor(
+                className={`relative w-10 h-10 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden ${avatarColor(
                   convo.otherParty?.fullName ?? ""
                 )}`}
               >
                 {convo.otherParty?.avatarUrl ? (
-                  <img
+                  <Image
                     src={convo.otherParty.avatarUrl}
                     alt={convo.otherParty?.fullName ?? ""}
-                    className="w-full h-full rounded-full object-cover"
+                    fill
+                    sizes="40px"
+                    className="rounded-full object-cover"
                   />
                 ) : (
                   getInitials(convo.otherParty?.fullName ?? "")
