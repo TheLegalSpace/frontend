@@ -8,12 +8,17 @@ import {
   ResearchThreadDetail,
 } from "@/app/types/Research";
 import { researchService } from "@/services/Research.services";
-import ResearchSidebar from "@/app/Components/TLSResearch/Researchsidebar";
-import MessageList from "@/app/Components/TLSResearch/Messagelist";
-import ResearchComposer from "@/app/Components/TLSResearch/Researchcomposer";
-import ResearchLanding from "@/app/Components/TLSResearch/Researchlanding";
+import ResearchSidebar from "./Researchsidebar";
+import MessageList from "./Messagelist";
+import ResearchComposer from "./Researchcomposer";
+import ResearchLanding from "./Researchlanding";
 
 type ErrorState = { message: string; onRetry: () => void } | null;
+
+/** Tell the dashboard Sidebar whether the research thread view is active */
+function signalResearchThread(active: boolean) {
+  window.dispatchEvent(new CustomEvent("research:thread", { detail: { active } }));
+}
 
 export default function TLSResearchPage() {
   const [threads, setThreads] = useState<ResearchThread[]>([]);
@@ -26,7 +31,6 @@ export default function TLSResearchPage() {
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [mobileView, setMobileView] = useState<"sidebar" | "chat">("sidebar");
-
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // ── Load sidebar ──────────────────────────────────────────────────────────
@@ -150,6 +154,13 @@ export default function TLSResearchPage() {
     doSend(activeId, text, pdf);
   }
 
+  const isThreadActive = !!activeId && !!activeThread;
+  // ── Signal sidebar hide/show based on thread active state ───────────────
+  useEffect(() => {
+    signalResearchThread(isThreadActive);
+    return () => signalResearchThread(false); // cleanup on unmount
+  }, [isThreadActive]);
+
   // ── Scroll to bottom ──────────────────────────────────────────────────────
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -191,9 +202,8 @@ export default function TLSResearchPage() {
     handleNew(text);
   }
 
-  const isThreadActive = !!activeId && !!activeThread;
 
-  // ── Landing: full width, no sidebar ──────────────────────────────────────
+  // ── Landing: always shown when no thread is active ───────────────────────
   if (!isThreadActive) {
     return (
       <div className="flex h-screen bg-white overflow-hidden font-['Geist']">
