@@ -52,7 +52,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Posts", href: "/dashboard/posts", icon: FileText },
     {
       label: "TLS Research",
-      href: "/dashboard/tls-research",
+      href: "/dashboard/TLS-Research",
       icon: FolderSearch,
     },
     { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
@@ -77,7 +77,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Posts", href: "/dashboard/posts", icon: FileText },
     {
       label: "TLS Research",
-      href: "/dashboard/tls-research",
+      href: "/dashboard/TLS-Research",
       icon: FolderSearch,
     },
     { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
