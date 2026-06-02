@@ -38,6 +38,18 @@ function avatarColor(name: string) {
   return AVATAR_COLORS[code] ?? AVATAR_COLORS[0];
 }
 
+/**
+ * FIX: Previously used `convo.otherParty?.isAnonymous` (truthy check).
+ * If `isAnonymous` was `undefined` (not yet loaded) that evaluated to falsy,
+ * causing the real name branch to run and show "Loading..." or "Unknown".
+ * Now we check explicitly: treat anything that isn't `=== false` as anonymous.
+ */
+function getDisplayName(convo: Conversation): string {
+  if (!convo.otherParty) return "Anonymous User";
+  if (convo.otherParty.isAnonymous !== false) return "Anonymous User";
+  return convo.otherParty.fullName || "Unknown";
+}
+
 interface Props {
   conversations: Conversation[];
   activeId: string | null;
@@ -55,7 +67,9 @@ export default function ConversationList({
     <div className="w-full md:w-64 md:min-w-64 md:border-r border-gray-200 flex flex-col bg-white h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">Messages</span>
+        <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
+          Messages
+        </span>
         <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
           <Search size={16} className="text-gray-400" />
         </button>
@@ -113,23 +127,53 @@ export default function ConversationList({
                   getInitials(convo.otherParty?.fullName ?? "")
                 )}
               </div>
-
-              {/* Name + time + preview */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[13px] font-medium text-gray-900 truncate">
-                    {convo.otherParty?.fullName ?? "Unknown"}
-                  </span>
-                  <span className="text-[11px] text-gray-400 shrink-0">
-                    {convo.lastMessageAt ? timeAgo(convo.lastMessageAt) : ""}
-                  </span>
+          conversations.map((convo) => {
+            const displayName = getDisplayName(convo);
+            return (
+              <button
+                key={convo.id}
+                onClick={() => onSelect(convo.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition text-left ${
+                  activeId === convo.id ? "bg-gray-100" : ""
+                }`}
+              >
+                {/* Avatar */}
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${avatarColor(
+                    displayName
+                  )}`}
+                >
+                  {convo.otherParty?.avatarUrl &&
+                  convo.otherParty.isAnonymous === false ? (
+                    <img
+                      src={convo.otherParty.avatarUrl}
+                      alt={displayName}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    getInitials(displayName)
+                  )}
                 </div>
-                <p className="text-[12px] text-gray-500 truncate mt-0.5">
-                  {convo.lastMessage ?? "No messages yet"}
-                </p>
-              </div>
-            </button>
-          ))
+
+                {/* Name + time + preview */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[13px] font-medium text-gray-900 truncate">
+                      {displayName}
+                    </span>
+                    <span className="text-[11px] text-gray-400 shrink-0">
+                      {convo.lastMessageAt ? timeAgo(convo.lastMessageAt) : ""}
+                    </span>
+                  </div>
+                  <p className="text-[12px] text-gray-500 truncate mt-0.5">
+                    {convo.status === "closed" && convo.matterName
+                      ? convo.matterName
+                      : convo.lastMessagePreview ?? "No messages yet"}
+                  </p>
+                </div>
+              </button>
+            );
+          })
         )}
       </div>
     </div>

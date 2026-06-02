@@ -1,6 +1,8 @@
-"use client"
+﻿"use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Send, Loader2, Lock, ArrowLeft } from "lucide-react";
 import { Message } from "@/app/types/message";
 import { messagesService } from "@/services/messages.services";
@@ -12,6 +14,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 const MESSAGE_CACHE_LIMIT = 100;
 const MESSAGE_CACHE_TTL_MS = 1000 * 60 * 30;
 
+import ReviewModal from "./ReviewModal";
+import EngagementModal from "./EngagementModal";
+import { useAuth } from "@/app/context/AuthContext";
+import { messageKeys, useMessageCache, useMessages } from "@/hooks/useMessages";
+
+// ── localStorage (persistence across refresh) ───────────────────────────────
 function getCachedMessages(conversationId: string): Message[] {
   try {
     const raw = localStorage.getItem(`messages:${conversationId}`);
@@ -61,6 +69,19 @@ function mergeMessages(current: Message[], incoming: Message[]) {
   );
 }
 // ─────────────────────────────────────────────────────────────────────────────
+function getHasReviewed(conversationId: string): boolean {
+  try {
+    return localStorage.getItem(`reviewed:${conversationId}`) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function setHasReviewed(conversationId: string) {
+  try {
+    localStorage.setItem(`reviewed:${conversationId}`, "true");
+  } catch {}
+}
 
 function formatTime(dateStr: string) {
   return new Date(dateStr).toLocaleTimeString("en-US", {
@@ -85,23 +106,67 @@ function formatDateLabel(dateStr: string) {
 interface Props {
   conversationId: string;
   participantName: string;
+  /** Phone number of the OTHER party — used by client to call/WhatsApp the lawyer */
+  participantPhone?: string | null;
+  /** Email of the OTHER party — used by client to email the lawyer */
+  participantEmail?: string | null;
   currentAccountId: string;
-  isAnonymous: boolean;
+  conversationStatus: "open" | "closed";
+  onConversationClosed: () => void;
+  /** null = not yet known (still loading); true = anonymous; false = revealed */
+  isAnonymous: boolean | null;
   onAnonymousToggle: (val: boolean) => void;
   onClose: () => void;
-  showBackButton?: boolean; // ← shown on mobile to go back to list
+  showBackButton?: boolean;
 }
 
 export default function ChatWindow({
   conversationId,
   participantName,
+  participantPhone,
+  participantEmail,
   currentAccountId,
+  conversationStatus,
+  onConversationClosed,
   isAnonymous,
   onAnonymousToggle,
   onClose,
   showBackButton = false,
 }: Props) {
+  const { user } = useAuth();
+  const isLawyer = user?.role === "LAWYER";
+  const reviewerRole: "client" | "lawyer" = isLawyer ? "lawyer" : "client";
+  const isClosed = conversationStatus === "closed";
+
+  const queryClient = useQueryClient();
+  const { appendMessage, markMessageRead, setMessages } = useMessageCache(conversationId);
+
+  // Seed TanStack cache from localStorage on first load per conversation
+  useEffect(() => {
+    const key = messageKeys.list(conversationId);
+    const existing = queryClient.getQueryData<Message[]>(key);
+    if (existing && existing.length > 0) return;
+
+    const cached = getCachedMessages(conversationId);
+    if (cached.length > 0) {
+      queryClient.setQueryData(key, cached);
+    }
+  }, [conversationId, queryClient]);
+
+  const {
+    data: messages = [],
+    isLoading,
+  } = useMessages(conversationId, {
+    refetchInterval: isClosed ? false : 10000,
+  });
+
+  // Persist updated list for refresh (best-effort)
+  useEffect(() => {
+    setCachedMessages(conversationId, messages);
+  }, [conversationId, messages]);
+
   const [sending, setSending] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -123,12 +188,69 @@ export default function ChatWindow({
       setCachedMessages(conversationId, messages);
     }
   }, [conversationId, messages]);
+  const [showReview, setShowReview] = useState(false);
+
+  // CLIENT ONLY: tracks whether the engagement modal is open
+  const [showEngagementModal, setShowEngagementModal] = useState(false);
+
+  // CLIENT ONLY: whether to show the "lawyer wants to engage" bottom banner.
+  // This becomes true when the conversation is closed (lawyer clicked Engage),
+  // and the client hasn't yet responded. Persisted so it survives refresh.
+  const engageBannerKey = `engage-banner:${conversationId}`;
+  const [showEngageBanner, setShowEngageBanner] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem(engageBannerKey) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const [hasReviewed, setHasReviewedState] = useState(() =>
+    getHasReviewed(conversationId),
+  );
+
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // When conversation is closed on the CLIENT side and the banner hasn't been
+  // dismissed yet, show it and persist so it survives refresh.
+  useEffect(() => {
+    if (!isLawyer && isClosed) {
+      const alreadyDismissed =
+        localStorage.getItem(`engage-dismissed:${conversationId}`) === "true";
+      if (!alreadyDismissed) {
+        setShowEngageBanner(true);
+        try {
+          localStorage.setItem(engageBannerKey, "true");
+        } catch {}
+      }
+    }
+  }, [isClosed, isLawyer, conversationId, engageBannerKey]);
+
+  function dismissEngageBanner() {
+    setShowEngageBanner(false);
+    try {
+      localStorage.removeItem(engageBannerKey);
+      localStorage.setItem(`engage-dismissed:${conversationId}`, "true");
+    } catch {}
+  }
+
+  useEffect(() => {
+    setHasReviewedState(getHasReviewed(conversationId));
+
+    // Re-evaluate banner for this conversation
+    if (!isLawyer) {
+      const alreadyDismissed =
+        localStorage.getItem(`engage-dismissed:${conversationId}`) === "true";
+      const stored = localStorage.getItem(engageBannerKey) === "true";
+      setShowEngageBanner(!alreadyDismissed && stored);
+    }
+  }, [conversationId, isLawyer, engageBannerKey]);
 
   // Socket setup
   useEffect(() => {
     const token = localStorage.getItem("accessToken") ?? "";
     const socket = connectSocket(token);
-
     socket.emit("conversation:join", { conversationId });
 
     const handleMessage = (msg: Message) => {
@@ -168,6 +290,23 @@ export default function ChatWindow({
         )
       );
     };
+        appendMessage(msg);
+      }
+    });
+
+    socket.on(
+      "message:read",
+      ({
+        messageId,
+      }: {
+        conversationId: string;
+        messageId: string;
+        readAt: string;
+        readByAccountId: string;
+      }) => {
+        markMessageRead(messageId);
+      },
+    );
 
     const handleConnectError = (err: { message: string }) => {
       if (err.message === "invalid token") {
@@ -196,16 +335,32 @@ export default function ChatWindow({
   }, [conversationId, queryClient]);
 
   // Scroll to bottom on new messages
+  }, [appendMessage, conversationId, markMessageRead]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  async function handleCloseConversation() {
+    if (closing || isClosed) return;
+    setClosing(true);
+    try {
+      await messagesService.closeConversation(conversationId);
+      onConversationClosed();
+    } catch (err) {
+      console.error("[ChatWindow] Failed to close conversation:", err);
+    } finally {
+      setClosing(false);
+    }
+  }
+
   async function handleSend() {
     const text = input.trim();
-    if (!text || sending) return;
+    if (!text || sending || isClosed) return;
 
+    const tempId = `temp-${Date.now()}`;
     const optimistic: Message = {
-      id: `temp-${Date.now()}`,
+      id: tempId,
       conversationId,
       senderAccountId: currentAccountId,
       body: text,
@@ -215,6 +370,7 @@ export default function ChatWindow({
     queryClient.setQueryData<Message[]>(["messages", conversationId], (prev = []) =>
       mergeMessages(prev, [optimistic])
     );
+    setMessages((prev) => [...prev, optimistic]);
     setInput("");
     setSending(true);
 
@@ -227,6 +383,15 @@ export default function ChatWindow({
       queryClient.setQueryData<Message[]>(["messages", conversationId], (prev = []) =>
         prev.filter((message) => message.id !== optimistic.id)
       );
+      const res = await messagesService.sendMessage(conversationId, text);
+      const sentMessage: Message = res?.data ?? res;
+
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? sentMessage : m)),
+      );
+    } catch (err) {
+      console.error("Failed to send message:", err);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setInput(text);
     } finally {
       setSending(false);
@@ -240,136 +405,291 @@ export default function ChatWindow({
     }
   }
 
-  // Group messages by date label
-  const grouped: { date: string; messages: Message[] }[] = [];
-  for (const msg of messages) {
-    const label = formatDateLabel(msg.createdAt);
-    const last = grouped[grouped.length - 1];
-    if (last && last.date === label) {
-      last.messages.push(msg);
-    } else {
-      grouped.push({ date: label, messages: [msg] });
-    }
+  function handleReviewSubmitted() {
+    setHasReviewed(conversationId);
+    setHasReviewedState(true);
   }
 
+  // Group messages by date label
+  const grouped = useMemo(() => {
+    const out: { date: string; messages: Message[] }[] = [];
+    for (const msg of messages) {
+      const label = formatDateLabel(msg.createdAt);
+      const last = out[out.length - 1];
+      if (last && last.date === label) {
+        last.messages.push(msg);
+      } else {
+        out.push({ date: label, messages: [msg] });
+      }
+    }
+    return out;
+  }, [messages]);
+
+  const reviewDisabled = !isClosed || hasReviewed;
+  const reviewLabel = hasReviewed ? "Reviewed" : "Review";
+  const reviewTitle = hasReviewed
+    ? "You have already reviewed this conversation"
+    : !isClosed
+      ? "Close the conversation first to leave a review"
+      : "Leave a review";
+
+  const showLoading = isLoading && messages.length === 0;
+
   return (
-    <div className="flex-1 flex flex-col min-w-0 h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-200 bg-white">
-        <div className="flex items-center gap-2">
-          {/* Back button — mobile only */}
-          {showBackButton && (
-            <button
-              onClick={onClose}
-              className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
-              aria-label="Back to conversations"
-            >
-              <ArrowLeft size={18} className="text-gray-600" />
-            </button>
-          )}
-          <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
-            {participantName}
-          </span>
+    <>
+      <div className="flex-1 flex flex-col min-w-0 h-full">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-200 bg-white">
+          <div className="flex items-center gap-2">
+            {showBackButton && (
+              <button
+                onClick={onClose}
+                className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+                aria-label="Back to conversations"
+              >
+                <ArrowLeft size={18} className="text-gray-600" />
+              </button>
+            )}
+            <div className="flex items-center gap-2">
+              <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
+                {participantName}
+              </span>
+              {isClosed && (
+                <span className="text-[11px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">
+                  Closed
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Review button — desktop */}
+          <button
+            onClick={() => !reviewDisabled && setShowReview(true)}
+            disabled={reviewDisabled}
+            title={reviewTitle}
+            className={`hidden md:block px-4 py-1.5 rounded-full text-[13px] font-medium transition ${
+              hasReviewed
+                ? "bg-green-50 text-green-700 border border-green-200 cursor-default"
+                : isClosed
+                  ? "bg-gray-900 text-white hover:bg-gray-700 cursor-pointer"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            {reviewLabel}
+          </button>
         </div>
 
-        {/* Review button — hidden on mobile to save space */}
-        <button
-          onClick={onClose}
-          className="hidden md:block px-4 py-1.5 rounded-full bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-700 transition"
-        >
-          Review
-        </button>
-      </div>
+        {/* Anonymous banner — CLIENT ONLY */}
+        {!isLawyer && (
+          <AnonymousBanner isAnonymous={isAnonymous} onToggle={onAnonymousToggle} />
+        )}
 
-      {/* Anonymous banner */}
-      <AnonymousBanner isAnonymous={isAnonymous} onToggle={onAnonymousToggle} />
+        {/* Identity revealed notice — only when we know for certain they revealed */}
+        {!isLawyer && isAnonymous === false && (
+          <div className="px-5 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2 text-blue-700 text-[12px]">
+            <span>🔓</span>
+            <span>
+              You are no longer chatting anonymously. This lawyer can see your
+              name and contact details.
+            </span>
+          </div>
+        )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 font-['Geist'] justify-end">
         {messagesQuery.isLoading ? (
           <div className="flex items-center justify-center h-full text-sm text-gray-400">
             <Loader2 size={18} className="animate-spin mr-2" /> Loading...
+        {/* LAWYER: "Engage outside TLS" action banner — always shown while open */}
+        {isLawyer && !isClosed && (
+          <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-4">
+            <p className="text-[12px] text-gray-600">
+              You can now proceed with{" "}
+              <span className="font-semibold">{participantName}</span>'s matter
+              outside TLS.
+            </p>
+            <button
+              onClick={handleCloseConversation}
+              disabled={closing}
+              className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-[12px] font-medium rounded-lg transition disabled:opacity-60"
+            >
+              {closing && <Loader2 size={12} className="animate-spin" />}
+              Engage outside TLS
+            </button>
           </div>
-        ) : messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-sm text-gray-400">
-            No messages yet. Say hello!
-          </div>
-        ) : (
-          <>
-            {/* Encryption notice */}
-            <div className="flex justify-center my-3">
-              <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-4 py-2.5 max-w-sm text-center">
-                <Lock size={13} className="text-amber-600 shrink-0" />
-                <p className="text-[11px] text-amber-700 leading-relaxed">
-                  Messages use end-to-end encryption, allowing only chat
-                  participants to read them. Messages will be deleted after 14
-                  days.
-                </p>
-              </div>
-            </div>
+        )}
 
-            {/* Message groups */}
-            {grouped.map((group) => (
-              <div key={group.date}>
-                <div className="text-center text-[11px] text-gray-400 my-2">
-                  {group.date} · Conversation started
+        {/* Closed notice */}
+        {isClosed && (
+          <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-center text-[12px] text-gray-500">
+            This conversation has been closed.{" "}
+            {!hasReviewed && (
+              <button
+                onClick={() => setShowReview(true)}
+                className="text-blue-600 hover:underline font-medium"
+              >
+                Leave a review
+              </button>
+            )}
+            {hasReviewed && (
+              <span className="text-green-600 font-medium">Review submitted ✓</span>
+            )}
+          </div>
+        )}
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 font-['Geist'] justify-end">
+          {showLoading ? (
+            <div className="flex items-center justify-center h-full text-sm text-gray-400">
+              <Loader2 size={18} className="animate-spin mr-2" />
+              Loading...
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-sm text-gray-400">
+              No messages yet. Say hello!
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-center my-3">
+                <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-4 py-2.5 max-w-sm text-center">
+                  <Lock size={13} className="text-amber-600 shrink-0" />
+                  <p className="text-[11px] text-amber-700 leading-relaxed">
+                    Messages use end-to-end encryption, allowing only chat
+                    participants to read them. Messages will be deleted after 14
+                    days.
+                  </p>
                 </div>
-                {group.messages.map((msg) => {
-                  const isSent = msg.senderAccountId === currentAccountId;
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`flex mb-2 ${isSent ? "justify-end" : "justify-start"}`}
-                    >
+              </div>
+
+              {grouped.map((group) => (
+                <div key={group.date}>
+                  <div className="text-center text-[11px] text-gray-400 my-2">
+                    {group.date} · Conversation started
+                  </div>
+                  {group.messages.map((msg) => {
+                    const isSent = msg.senderAccountId === currentAccountId;
+                    const isTemp = msg.id.startsWith("temp-");
+                    return (
                       <div
-                        className={`max-w-[75%] md:max-w-[65%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                          isSent
-                            ? "bg-blue-700 text-white rounded-br-sm"
-                            : "bg-gray-100 text-gray-800 border border-gray-200 rounded-bl-sm"
-                        }`}
+                        key={msg.id}
+                        className={`flex mb-2 ${isSent ? "justify-end" : "justify-start"}`}
                       >
-                        <p>{msg.body}</p>
-                        <p
-                          className={`text-[11px] mt-1 ${
-                            isSent ? "text-blue-200" : "text-gray-400"
+                        <div
+                          className={`max-w-[75%] md:max-w-[65%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed transition-opacity ${
+                            isTemp ? "opacity-60" : "opacity-100"
+                          } ${
+                            isSent
+                              ? "bg-blue-700 text-white rounded-br-sm"
+                              : "bg-gray-100 text-gray-800 border border-gray-200 rounded-bl-sm"
                           }`}
                         >
-                          {formatTime(msg.createdAt)}
-                        </p>
+                          <p>{msg.body}</p>
+                          <p
+                            className={`text-[11px] mt-1 ${
+                              isSent ? "text-blue-200" : "text-gray-400"
+                            }`}
+                          >
+                            {isTemp ? "Sending..." : formatTime(msg.createdAt)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </>
+                    );
+                  })}
+                </div>
+              ))}
+            </>
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        {/* CLIENT: "Lawyer wants to engage outside TLS" sticky bottom banner.
+            Shows when the lawyer has clicked "Engage outside TLS" (which closes
+            the conversation). The client taps "Yes" to open the options modal. */}
+        {!isLawyer && showEngageBanner && (
+          <div className="border-t border-amber-100 bg-amber-50 px-4 py-3 flex items-center justify-between gap-3">
+            <p className="text-[13px] text-gray-800 leading-snug">
+              <span className="font-semibold">{participantName}</span> wants to
+              connect with you outside TLS.
+            </p>
+            <button
+              onClick={() => {
+                dismissEngageBanner();
+                setShowEngagementModal(true);
+              }}
+              className="shrink-0 px-5 py-2 bg-gray-900 hover:bg-gray-700 text-white text-[13px] font-medium rounded-lg transition"
+            >
+              Yes
+            </button>
+          </div>
         )}
-        <div ref={bottomRef} />
+
+        {/* Input */}
+        <div className="px-4 py-3 border-t border-gray-200 bg-white flex items-center gap-3">
+          {/* Mobile review trigger */}
+          <button
+            onClick={() => !reviewDisabled && setShowReview(true)}
+            disabled={reviewDisabled}
+            title={reviewTitle}
+            className={`md:hidden w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${
+              hasReviewed
+                ? "border-green-200 text-green-600 cursor-default"
+                : isClosed
+                  ? "border-gray-300 text-amber-500 hover:bg-gray-50 cursor-pointer"
+                  : "border-gray-200 text-gray-300 cursor-not-allowed"
+            }`}
+            aria-label={reviewLabel}
+          >
+            ★
+          </button>
+
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isClosed}
+            placeholder={isClosed ? "Conversation closed" : "Type a message..."}
+            className="flex-1 px-4 py-2 text-sm bg-gray-100 border border-gray-200 rounded-full outline-none focus:border-gray-300 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          />
+          <button
+            onClick={handleSend}
+            disabled={!input.trim() || sending || isClosed}
+            className="w-9 h-9 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition disabled:opacity-50 shrink-0"
+            aria-label="Send message"
+          >
+            {sending ? (
+              <Loader2 size={15} className="text-white animate-spin" />
+            ) : (
+              <Send size={15} className="text-white" />
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Input */}
-      <div className="px-4 py-3 border-t border-gray-200 bg-white flex items-center gap-3">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-          className="flex-1 px-4 py-2 text-sm bg-gray-100 border border-gray-200 rounded-full outline-none focus:border-gray-300 placeholder:text-gray-400"
+      {/* Review modal */}
+      {showReview && (
+        <ReviewModal
+          conversationId={conversationId}
+          participantName={participantName}
+          reviewerRole={reviewerRole}
+          onClose={() => setShowReview(false)}
+          onSubmitted={handleReviewSubmitted}
         />
-        <button
-          onClick={handleSend}
-          disabled={!input.trim() || sending}
-          className="w-9 h-9 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition disabled:opacity-50 shrink-0"
-          aria-label="Send message"
-        >
-          {sending ? (
-            <Loader2 size={15} className="text-white animate-spin" />
-          ) : (
-            <Send size={15} className="text-white" />
-          )}
-        </button>
-      </div>
-    </div>
+      )}
+
+      {/* Engagement modal — CLIENT ONLY */}
+      {!isLawyer && showEngagementModal && (
+        <EngagementModal
+          lawyerName={participantName}
+          lawyerPhone={participantPhone}
+          lawyerEmail={participantEmail}
+          onClose={() => setShowEngagementModal(false)}
+          onContinueOnTLS={() => {
+            // Client chooses to stay on TLS — just close the modal
+            setShowEngagementModal(false);
+          }}
+        />
+      )}
+    </>
   );
 }

@@ -1,109 +1,15 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import PostCard, { Post } from "./PostCard";
 import { api } from "@/services/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import PostCard from "./PostCard";
+import { api } from "@/services/api";
+import { useFeed, useFeedCache, type FeedTab, setCachedReaction } from "@/hooks/useFeed";
 
-type Tab = "All" | "Top Firms" | "Top Lawyers" | "Articles";
-
-interface RawPost {
-  id: string;
-  authorAccountId: string;
-  body: string;
-  likeCount: number;
-  dislikeCount: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-  author: {
-    id: string;
-    fullName: string;
-    avatarUrl?: string;
-    isAnonymous?: boolean;
-    avgRating?: string;
-    role?: string;
-  };
-  // ✅ flat PDF fields, no attachedArticle
-  pdfUrl?: string | null;
-  pdfName?: string | null;
-  pdfSizeBytes?: number | null;
-}
-
-const TABS: Tab[] = ["All", "Top Firms", "Top Lawyers", "Articles"];
-
-// ── Reaction cache helpers ────────────────────────────────────────────────────
-function getCachedReactions(): Record<string, "like" | "dislike"> {
-  try {
-    const raw = localStorage.getItem("post_reactions");
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function setCachedReaction(id: string, reaction: "like" | "dislike" | null) {
-  try {
-    const current = getCachedReactions();
-    if (reaction === null) {
-      delete current[id];
-    } else {
-      current[id] = reaction;
-    }
-    localStorage.setItem("post_reactions", JSON.stringify(current));
-  } catch {}
-}
-// ─────────────────────────────────────────────────────────────────────────────
-
-function getInitials(name: string) {
-  if (!name) return "??";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days} day${days !== 1 ? "s" : ""} ago`;
-}
-
-function normalizePost(raw: RawPost, cachedReactions: Record<string, "like" | "dislike">): Post {
-  return {
-    id: raw.id,
-    author: raw.author?.fullName ?? "Unknown",
-    authorInitials: getInitials(raw.author?.fullName ?? ""),
-    avatarUrl: raw.author?.avatarUrl,
-    isVerified: false,
-    timeAgo: timeAgo(raw.createdAt),
-    body: raw.body,
-    // ✅ use flat PDF fields
-    pdfUrl: raw.pdfUrl ?? null,
-    pdfName: raw.pdfName ?? null,
-    pdfSizeBytes: raw.pdfSizeBytes ?? null,
-    likes: raw.likeCount,
-    dislikes: raw.dislikeCount,
-    userReaction: cachedReactions[raw.id] ?? null,
-  };
-}
-
-async function fetchFeed(tab: Tab) {
-  const { data } = await api.get("/feed/", {
-    params: {
-      page: 1,
-      limit: 20,
-      filter: tab === "All" ? "all" : tab.toLowerCase().replace(" ", "_"),
-    },
-  });
-  return (data?.data?.items ?? []) as RawPost[];
-}
+const TABS: FeedTab[] = ["All", "Top Firms", "Top Lawyers", "Articles"];
 
 export default function Feed() {
   const [activeTab, setActiveTab] = useState<Tab>("All");
@@ -118,6 +24,9 @@ export default function Feed() {
     staleTime: 1000 * 30,
   });
   const posts = useMemo(() => feedQuery.data ?? [], [feedQuery.data]);
+  const [activeTab, setActiveTab] = useState<FeedTab>("All");
+  const { data: posts = [], isLoading } = useFeed(activeTab);
+  const { updatePostReaction, invalidateFeed } = useFeedCache();
 
   async function handleReact(id: string, reaction: "like" | "dislike") {
     const post = posts.find((p) => p.id === id);
@@ -141,24 +50,34 @@ export default function Feed() {
             dislikes: reaction === "dislike" ? p.dislikes - 1 : p.dislikes,
           };
         }
+    // Optimistic cache update
+    updatePostReaction(activeTab, id, (p) => {
+      if (isSameReaction) {
         return {
           ...p,
-          userReaction: reaction,
-          likes:
-            reaction === "like"
-              ? p.likes + 1
-              : p.userReaction === "like"
+          userReaction: null,
+          likes: reaction === "like" ? p.likes - 1 : p.likes,
+          dislikes: reaction === "dislike" ? p.dislikes - 1 : p.dislikes,
+        };
+      }
+
+      return {
+        ...p,
+        userReaction: reaction,
+        likes:
+          reaction === "like"
+            ? p.likes + 1
+            : p.userReaction === "like"
               ? p.likes - 1
               : p.likes,
-          dislikes:
-            reaction === "dislike"
-              ? p.dislikes + 1
-              : p.userReaction === "dislike"
+        dislikes:
+          reaction === "dislike"
+            ? p.dislikes + 1
+            : p.userReaction === "dislike"
               ? p.dislikes - 1
               : p.dislikes,
-        };
-      })
-    );
+      };
+    });
 
     try {
       if (isSameReaction) {
@@ -168,14 +87,13 @@ export default function Feed() {
       }
     } catch (err) {
       console.error("React failed:", err);
-      // Revert cache and reload on failure
+      // Revert local reaction cache and refetch on failure
       setCachedReaction(id, post.userReaction);
       await queryClient.invalidateQueries({ queryKey: ["feed", activeTab] });
+      invalidateFeed(activeTab);
     }
   }
 
-  
- // Feed.tsx — updated return
   return (
     <div className="w-full bg-white">
       {/* Tabs */}
@@ -200,6 +118,7 @@ export default function Feed() {
 
       {/* Feed */}
       {feedQuery.isLoading ? (
+      {isLoading ? (
         <div className="text-center py-10 text-gray-400">Loading feed...</div>
       ) : posts.length === 0 ? (
         <div className="text-center py-10 text-gray-400">Nothing here yet.</div>

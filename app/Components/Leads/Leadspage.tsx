@@ -1,16 +1,16 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+
+import { useEffect, useRef,useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Lead, LeadStatus } from "@/app/types/leads";
-import { leadsService } from "@/services/leads.services";
 import { connectSocket } from "@/services/socket.services";
 import LeadsStatsRow from "./Leadsstatsrow";
 import LeadCard from "./Leadcard";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useLeads, useLeadStats, useLeadsCache } from "@/hooks/useLeads";
 
-const STATUS_TABS: { label: string; value: LeadStatus | "all" }[] = [
-  { label: "All", value: "all" },
+const STATUS_TABS: { label: string; value: LeadStatus }[] = [
   { label: "Pending", value: "pending" },
   { label: "Accepted", value: "accepted" },
   { label: "Declined", value: "declined" },
@@ -41,8 +41,28 @@ export default function LeadsPage() {
   );
   const total = leadsQuery.data?.pages[0]?.data?.pagination?.total ?? 0;
   const hasMore = leads.length < total;
+  const [activeTab, setActiveTab] = useState<LeadStatus>("pending");
 
-  // Socket — new lead arrives in real time
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useLeads(activeTab, 20);
+
+  const { data: stats } = useLeadStats();
+  const { patchLeadStatus, prependPendingLead } = useLeadsCache();
+
+  const leads = (data?.pages ?? []).flatMap((p) => p?.data?.items ?? []) as Lead[];
+  const total = (data?.pages?.[0]?.data?.pagination?.total ?? 0) as number;
+
+  // ── Socket: new leads ─────────────────────────────────────────────────────
+  const notificationHandlerRef = useRef<(notif: {
+    type: string;
+    payload: { lead?: Lead };
+  }) => void>(undefined);
+
   useEffect(() => {
     const token = localStorage.getItem("accessToken") ?? "";
     const socket = connectSocket(token);
@@ -106,52 +126,88 @@ export default function LeadsPage() {
 
   async function handleShowMore() {
     await leadsQuery.fetchNextPage();
+    if (notificationHandlerRef.current) {
+      socket.off("notification", notificationHandlerRef.current);
+    }
+
+    const handler = (notif: { type: string; payload: { lead?: Lead } }) => {
+      if (notif.type === "new_lead" && notif.payload?.lead) {
+        // Only affect pending cache + stats; avoids refetching everything
+        prependPendingLead(notif.payload.lead);
+      }
+    };
+
+    notificationHandlerRef.current = handler;
+    socket.on("notification", handler);
+
+    return () => {
+      socket.off("notification", handler);
+    };
+  }, [prependPendingLead]);
+
+  function handleUpdate(id: string, status: "accepted" | "declined") {
+    patchLeadStatus(id, status);
   }
+
+  async function handleShowMore() {
+    await fetchNextPage();
+  }
+
+  const activeLabel = STATUS_TABS.find((t) => t.value === activeTab)?.label ?? "";
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-6">
         <h1 className="text-[22px] font-semibold text-gray-900 mb-6">Leads</h1>
 
-        {/* Stats */}
-        <LeadsStatsRow leads={leads} total={total} />
+        {/* Stats — cached */}
+        <LeadsStatsRow stats={stats ?? null} />
+
+        {/* Tabs */}
+        <div className="sticky top-0 z-20 bg-gray-50 -mx-4 px-4 mb-5">
+          <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
+            <div className="flex items-center">
+              {STATUS_TABS.map((tab) => {
+                const isActive = activeTab === tab.value;
+                return (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    className={`relative flex-1 py-3 text-[13px] font-medium whitespace-nowrap transition-colors ${
+                      isActive
+                        ? "text-gray-900"
+                        : "text-gray-400 hover:text-gray-600"
+                    }`}
+                  >
+                    {tab.label}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-gray-900 rounded-t-full" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
         {/* Section header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[15px] font-semibold text-gray-900">
-            {activeTab === "all"
-              ? "All Leads"
-              : `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Leads`}
+            {activeLabel} Leads
           </h2>
           <span className="text-[12px] text-gray-400">{total} total</span>
         </div>
 
-        {/* Status tabs */}
-        <div className="flex gap-1 mb-5 bg-white border border-gray-100 rounded-xl p-1 w-fit overflow-x-auto">
-          {STATUS_TABS.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setActiveTab(tab.value)}
-              className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition whitespace-nowrap ${
-                activeTab === tab.value
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
         {/* Leads list */}
         {leadsQuery.isLoading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-16 text-sm text-gray-400 gap-2">
             <Loader2 size={16} className="animate-spin" />
             Loading leads...
           </div>
         ) : leads.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-gray-400">
-            <p className="text-sm">No leads yet.</p>
+            <p className="text-sm">No {activeTab} leads yet.</p>
           </div>
         ) : (
           <>
@@ -159,7 +215,7 @@ export default function LeadsPage() {
               <LeadCard key={lead.id} lead={lead} onUpdate={handleUpdate} />
             ))}
 
-            {hasMore && (
+            {hasNextPage && (
               <div className="flex justify-center mt-4">
                 <button
                   onClick={handleShowMore}
@@ -167,6 +223,10 @@ export default function LeadsPage() {
                   className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-800 transition disabled:opacity-50"
                 >
                   {leadsQuery.isFetchingNextPage ? (
+                  disabled={isFetchingNextPage}
+                  className="flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-800 transition disabled:opacity-50"
+                >
+                  {isFetchingNextPage ? (
                     <Loader2 size={14} className="animate-spin" />
                   ) : (
                     "Show More"
