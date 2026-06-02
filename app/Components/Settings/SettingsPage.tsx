@@ -80,6 +80,7 @@ export default function SettingsPage() {
             currentIds={practiceAreaIds}
             primaryId={practiceAreaIds[0] ?? ""}
             secondaryId={practiceAreaIds[1] ?? ""}
+            role={account.role ?? "LAWYER"}
           />
         )}
 

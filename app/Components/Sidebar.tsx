@@ -182,9 +182,7 @@ function LogoutOverlay() {
   return (
     <div className="fixed inset-0 z-200 flex flex-col items-center justify-center bg-white">
       {/* Logo */}
-      <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white text-xl mb-6">
-        ⚖
-      </div>
+      <img src="/tls-logo.png" alt="The Legal Space" className="h-12 mb-6 w-auto" />
 
       {/* Spinner */}
       <Loader2 className="w-6 h-6 text-gray-400 animate-spin mb-3" />
@@ -206,13 +204,8 @@ function LogoutOverlay() {
 function SidebarSkeleton() {
   return (
     <aside className="w-55 h-screen fixed top-0 left-0 border-r border-gray-100 flex flex-col bg-white">
-      <div className="px-5 py-5 border-b border-gray-100 flex items-center gap-2">
-        <div className="w-7 h-7 bg-black rounded-md flex items-center justify-center text-white text-xs">
-          ⚖
-        </div>
-        <span className="text-sm font-medium text-gray-900">
-          The Legal Space
-        </span>
+      <div className="px-5 py-5 border-b border-gray-100 flex items-center">
+        <img src="/tls-logo.png" alt="The Legal Space" className="h-8 w-auto" />
       </div>
       <div className="px-5 py-4 border-b border-gray-100 animate-pulse">
         <div className="w-10 h-10 rounded-full bg-gray-100 mb-2.5" />
@@ -302,14 +295,7 @@ export default function Sidebar() {
     <aside className="w-55 h-screen fixed top-0 left-0 border-r border-gray-100 flex flex-col bg-white">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-black rounded-md flex items-center justify-center text-white text-xs">
-            ⚖
-          </div>
-          <span className="text-sm font-medium text-gray-900">
-            The Legal Space
-          </span>
-        </div>
+        <img src="/tls-logo.png" alt="The Legal Space" className="h-8 w-auto" />
         <button
           onClick={() => setMobileOpen(false)}
           className="md:hidden p-1 text-gray-400 hover:text-gray-600"

@@ -65,6 +65,8 @@ export interface ProfileArticle {
   publishedAt: string;
   pdfUrl?: string | null;
   createdAt?: string;
+  likeCount: number;
+  dislikeCount: number;
 }
 
 export interface ProfileArticlesResponse {
