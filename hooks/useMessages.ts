@@ -1,4 +1,4 @@
-﻿import { useCallback } from "react";
+import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Conversation, Message } from "@/app/types/message";
 import { messagesService } from "@/services/messages.services";
@@ -20,7 +20,10 @@ export const messageKeys = {
 
 function parseConversations(data: unknown): Conversation[] {
   const payload = data as { data?: { items?: Conversation[] } | Conversation[] };
-  return payload?.data?.items ?? payload?.data ?? [];
+  if (!payload?.data) return [];
+  return Array.isArray(payload.data)
+    ? payload.data
+    : (payload.data.items ?? []);
 }
 
 function parseConversation(data: unknown): Conversation {
@@ -30,7 +33,10 @@ function parseConversation(data: unknown): Conversation {
 
 function parseMessages(data: unknown): Message[] {
   const payload = data as { data?: { items?: Message[] } | Message[] };
-  const items = payload?.data?.items ?? payload?.data ?? [];
+  if (!payload?.data) return [];
+  const items = Array.isArray(payload.data)
+    ? payload.data
+    : (payload.data.items ?? []);
   return [...items].reverse();
 }
 
