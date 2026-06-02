@@ -18,13 +18,13 @@ export default function NotificationsSection() {
         <button
           onClick={() => setWhatsappAlert(!whatsappAlert)}
           className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
-            whatsappAlert ? "bg-[#2563EB]" : "bg-gray-200"
+            whatsappAlert ? "bg-[#2563EB] " : "bg-gray-200 "
           }`}
           aria-label="Toggle WhatsApp alerts"
         >
           <span
             className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
-              whatsappAlert ? "translate-x-5" : "translate-x-0.5"
+              whatsappAlert ? "right-0" : "left-1"
             }`}
           />
         </button>

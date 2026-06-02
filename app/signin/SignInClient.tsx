@@ -8,11 +8,29 @@ import { AuthError, useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
-declare const google: any;
+declare const google: {
+  accounts: {
+    id: {
+      initialize: (config: {
+        client_id: string;
+        callback: (response: { credential: string }) => void;
+      }) => void;
+      renderButton: (
+        parent: HTMLElement,
+        options: {
+          theme?: string;
+          size?: string;
+          width?: string;
+          text?: string;
+        },
+      ) => void;
+    };
+  };
+};
 
 export default function SignInClient() {
   const { login, loginWithGoogle } = useAuth();
-  const router = useRouter();
+  // const router = useRouter();
   const searchParams = useSearchParams();
   const googleButtonRef = useRef<HTMLDivElement>(null);
 
@@ -108,15 +126,15 @@ export default function SignInClient() {
       }}
     >
       {/* ✅ Top logo — matches Figma top-left */}
-      <div className="px-6 py-5">
+      <div className="px-6 pt-5">
         <div className="flex items-center gap-2">
-          <img src="/tls-logo-white.png" alt="TLS" className="h-5" />
+          <img src="/tls-logo-white.png" alt="TLS" className="h-9" />
         </div>
       </div>
 
       {/* ✅ Centered card */}
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-[400px] bg-[#111111]/50 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-8">
+        <div className="w-full max-w-[400px] bg-[#111111]/50 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-14">
           {/* Title */}
           <div className="text-center mb-6">
             <h1 className="font-[Instrument_Serif] text-[28px] text-white font-normal mb-1.5">
@@ -186,12 +204,12 @@ export default function SignInClient() {
 
             {/* Forgot password */}
             <div className="flex justify-end -mt-1">
-              <button
-                type="button"
+              <Link
+                href="/forgot-password"
                 className="text-[13px] text-[#1A56DB] hover:underline"
               >
                 Forgot password?
-              </button>
+              </Link>
             </div>
 
             {/* Submit */}
