@@ -8,7 +8,7 @@ import {
   MapPin,
   ThumbsUp,
   ThumbsDown,
-  Trash2,
+//  Trash2,
   Clock,
   BookOpen,
   Pencil,
@@ -195,12 +195,12 @@ function ProfileArticleCard({
           </div>
         </div>
         <div className="flex items-center justify-between px-3 py-2 border-t border-[#F3F4F6]">
-          <div className="flex items-center gap-1">
+          {/* <div className="flex items-center gap-1">
             <BookOpen className="w-3.5 h-3.5 text-[#9CA3AF]" />
             <span className="text-[11px] text-[#9CA3AF]">
               {article.readCount ?? 0} Reads
             </span>
-          </div>
+          </div> */}
           <Link
             href={article.pdfUrl ?? "#"}
             target="_blank"
@@ -217,24 +217,24 @@ function ProfileArticleCard({
       <div className="flex items-center gap-3">
         <button
           type="button"
-          className="p-1.5 text-[#9CA3AF] hover:text-[#1F2937] transition-colors"
+          className="p-1.5 text-[#9CA3AF]  transition-colors flex items-center gap-1.5"
         >
-          <ThumbsUp className="w-4 h-4" />
+          <ThumbsUp className="w-4 h-4" />{article.likeCount}
         </button>
         <button
           type="button"
-          className="p-1.5 text-[#9CA3AF] hover:text-[#1F2937] transition-colors"
+          className="p-1.5 text-[#9CA3AF]  transition-colors flex items-center gap-1.5"
         >
-          <ThumbsDown className="w-4 h-4" />
+          <ThumbsDown className="w-4 h-4" />{article.dislikeCount}
         </button>
-        {isOwnProfile && (
+        {/* {isOwnProfile && (
           <button
             type="button"
             className="p-1.5 text-[#9CA3AF] hover:text-red-500 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
           </button>
-        )}
+        )} */}
       </div>
     </div>
   );
@@ -367,7 +367,9 @@ export default function ProfileCard({
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="h-full w-full bg-linear-to-br from-gray-100 to-gray-200" />
+            <div className="h-full w-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center" >
+              <span>No Cover Photo</span>
+            </div>
           )}
         </div>
 
@@ -388,7 +390,7 @@ export default function ProfileCard({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-[#D1D5DB] text-sm font-medium text-[#374151]">
+                  <div className="flex h-full w-full items-center justify-center bg-[#D1D5DB] text-4xl font-bold tracking-wider text-[#374151]">
                     {isAnonymous ? "??" : getInitials(profile.fullName)}
                   </div>
                 )}
@@ -522,10 +524,10 @@ export default function ProfileCard({
                 Practice Areas
               </span>
               {isOwnProfile && (
-                <button className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">
+                <Link  href="/dashboard/settings" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">
                   <Pencil className="w-3 h-3" />
                   Edit
-                </button>
+                </Link>
               )}
             </div>
             <div className="flex flex-wrap gap-2">
@@ -602,9 +604,9 @@ export default function ProfileCard({
             <span className="text-[13px] font-medium text-[#1F2937]">
               Ratings & Reviews
             </span>
-            <button className="text-[12px] font-medium text-[#2563EB] hover:underline">
+            {/* <button className="text-[12px] font-medium text-[#2563EB] hover:underline">
               View all
-            </button>
+            </button> */}
           </div>
 
           {/* Summary */}

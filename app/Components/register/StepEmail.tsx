@@ -67,9 +67,7 @@ export default function StepEmail({
     >
       {/* Logo */}
       <div className="px-8 py-6">
-        <div className="flex items-center gap-2">
-          <img src="/tls-logo.png" alt="TLS" className="h-6" />
-        </div>
+        <img src="/tls-logo-white.png" alt="The Legal Space" className="h-9 w-auto" />
       </div>
 
       <div className="flex-1 flex items-center justify-center px-4 py-8">

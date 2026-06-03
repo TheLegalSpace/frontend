@@ -16,6 +16,7 @@ import {
 import { profileService } from "@/services/profile.services";
 import { parseApiError } from "@/lib/error";
 import { useRouter } from "next/navigation";
+import { disconnectSocket, refreshSocketAuth } from "@/services/socket.services";
 
 export type AuthErrorCode =
   | "INVALID_CREDENTIALS"
@@ -92,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const fresh = r.data.data;
           localStorage.setItem("user", JSON.stringify(fresh));
           setUser(fresh);
+          refreshSocketAuth(token);
         })
         .catch(() => {})
         .finally(() => setIsLoading(false));
@@ -118,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("accessToken", session.accessToken);
     localStorage.setItem("refreshToken", session.refreshToken);
     localStorage.setItem("user", JSON.stringify(account));
+    refreshSocketAuth(session.accessToken);
     setUser(account);
   };
 
@@ -125,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
+    disconnectSocket();
     setUser(null);
   };
 

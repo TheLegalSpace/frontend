@@ -35,13 +35,15 @@ export default function SettingsPage() {
   const account = profile.data;
 
   const practiceAreas = account.practiceAreas ?? [];
-  const practiceAreaNames: string[] = practiceAreas.map((a) =>
-    typeof a === "string" ? a : a.name,
+  const practiceAreaNames: string[] = practiceAreas.map(
+    (a: string | { name: string; id: string }) =>
+      typeof a === "string" ? a : a.name,
   );
-  const practiceAreaIds: string[] = practiceAreas.map((a) =>
-    typeof a === "string"
-      ? (allPracticeAreas.find((p) => p.name === a)?.id ?? "")
-      : a.id,
+  const practiceAreaIds: string[] = practiceAreas.map(
+    (a: string | { name: string; id: string }) =>
+      typeof a === "string"
+        ? (allPracticeAreas.find((p) => p.name === a)?.id ?? "")
+        : a.id,
   );
 
   // ✅ Build services per practice area for lawyers/firms
@@ -80,6 +82,7 @@ export default function SettingsPage() {
             currentIds={practiceAreaIds}
             primaryId={practiceAreaIds[0] ?? ""}
             secondaryId={practiceAreaIds[1] ?? ""}
+            role={account.role ?? "LAWYER"}
           />
         )}
 

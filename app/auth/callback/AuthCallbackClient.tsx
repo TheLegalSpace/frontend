@@ -27,15 +27,10 @@ export default function AuthCallbackClient() {
           return;
         }
 
-        console.log("Sending to backend — authProvider: google");
-        console.log("Token starts with:", idToken.slice(0, 20) + "...");
-
         const response = await authService.login({
           authProvider: "google",
           idToken,
         });
-
-        console.log("Backend response:", response?.data);
 
         if (!response?.data?.data) {
           console.error("Unexpected shape:", response?.data);
@@ -69,8 +64,7 @@ export default function AuthCallbackClient() {
       const hash = window.location.hash;
 
       if (hash && hash.includes("access_token")) {
-        const { data, error } = await supabase.auth.getSession();
-        console.log("Session:", data?.session ? "found" : "null", "Error:", error?.message);
+        const { data } = await supabase.auth.getSession();
 
         if (data.session) {
           await processSession(data.session);

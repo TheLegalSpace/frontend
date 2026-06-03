@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Loader2, PenSquare } from "lucide-react";
 import { MyPost } from "@/app/types/posts";
 import { api } from "@/services/api";
 import { useAuth } from "@/app/context/AuthContext";
 import MyPostCard from "./MyPostCard";
 import CreatePostModal from "./CreatePostCardModal";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ── Reaction cache ────────────────────────────────────────────────────────────
 function getCachedReactions(): Record<string, "like" | "dislike"> {
@@ -33,37 +34,31 @@ type Tab = "posts" | "articles";
 export default function PostsPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("posts");
-  const [posts, setPosts] = useState<MyPost[]>([]);
-  const [loading, setLoading] = useState(true);
   const [reactions, setReactions] = useState<Record<string, "like" | "dislike">>({});
   const [showCreate, setShowCreate] = useState(false);
+  const queryClient = useQueryClient();
 
-  const loadPosts = useCallback(async () => {
-    if (!user?.id) return;
-    setLoading(true);
-    try {
-      const { data } = await api.get(`/profile/${user.id}/posts`, {
-        params: { page: 1, limit: 50 },
+  const postsQuery = useQuery({
+    queryKey: ["profile-posts", user?.id],
+    queryFn: async () => {
+      const { data } = await api.get(`/profile/${user?.id}/posts`, {
+        params: { page: 1, limit: 20 },
       });
-      const items: MyPost[] = data?.data?.items ?? data?.data ?? [];
-        console.log("raw API response:", data);       // full response shape
-        console.log("posts loaded:", items);           // all posts with all fields
-        setPosts(items);
-      setPosts(items);
-      setReactions(getCachedReactions());
-    } catch (err) {
-      console.error("Failed to load posts:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id]);
+      return (data?.data?.items ?? data?.data ?? []) as MyPost[];
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 60,
+  });
+  const posts = useMemo(() => postsQuery.data ?? [], [postsQuery.data]);
 
   useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
+    setReactions(getCachedReactions());
+  }, []);
 
   function handleDelete(id: string) {
-    setPosts((prev) => prev.filter((p) => p.id !== id));
+    queryClient.setQueryData<MyPost[]>(["profile-posts", user?.id], (prev = []) =>
+      prev.filter((post) => post.id !== id)
+    );
   }
 
   function handleReactionChange(id: string, reaction: "like" | "dislike" | null) {
@@ -115,7 +110,7 @@ export default function PostsPage() {
 
       {/* Posts list */}
       <div className="max-w-3xl mx-auto">
-        {loading ? (
+        {postsQuery.isLoading ? (
           <div className="flex items-center justify-center py-20 text-gray-400 gap-2">
             <Loader2 size={16} className="animate-spin" />
             Loading posts...
@@ -142,7 +137,7 @@ export default function PostsPage() {
       {showCreate && (
         <CreatePostModal
           onClose={() => setShowCreate(false)}
-          onCreated={loadPosts}
+          onCreated={() => postsQuery.refetch()}
         />
       )}
     </div>

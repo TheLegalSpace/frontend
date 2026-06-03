@@ -16,11 +16,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "*.supabase.co", // ← Supabase storage
-      },
-      {
-        protocol: "https",
-        hostname: "**", // ← allows any https image in dev
+        hostname: "**.supabase.co", // ← Supabase storage
       },
     ],
   },
