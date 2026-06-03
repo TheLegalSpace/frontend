@@ -49,7 +49,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
     { label: "Posts", href: "/dashboard/posts", icon: FileText },
     { label: "TLS Research", href: "/dashboard/TLS-Research", icon: FolderSearch },
-    { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
+    { label: "Legal News", href: "/dashboard/Legal-News", icon: BookOpenText },
     { label: "Legal Library", href: "/dashboard/legal-library", icon: BookText },
     { label: "TLS Services", href: "/dashboard/tls-services", icon: PackageSearch },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
