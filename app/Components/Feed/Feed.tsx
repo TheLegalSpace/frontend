@@ -1,9 +1,6 @@
-﻿"use client";
+﻿// app/Components/Feed/Feed.tsx
+"use client";
 
-import { useMemo, useState } from "react";
-import PostCard, { Post } from "./PostCard";
-import { api } from "@/services/api";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import PostCard from "./PostCard";
 import { api } from "@/services/api";
@@ -12,18 +9,6 @@ import { useFeed, useFeedCache, type FeedTab, setCachedReaction } from "@/hooks/
 const TABS: FeedTab[] = ["All", "Top Firms", "Top Lawyers", "Articles"];
 
 export default function Feed() {
-  const [activeTab, setActiveTab] = useState<Tab>("All");
-  const queryClient = useQueryClient();
-  const feedQuery = useQuery({
-    queryKey: ["feed", activeTab],
-    queryFn: async () => {
-      const items = await fetchFeed(activeTab);
-      const cachedReactions = getCachedReactions();
-      return items.map((raw) => normalizePost(raw, cachedReactions));
-    },
-    staleTime: 1000 * 30,
-  });
-  const posts = useMemo(() => feedQuery.data ?? [], [feedQuery.data]);
   const [activeTab, setActiveTab] = useState<FeedTab>("All");
   const { data: posts = [], isLoading } = useFeed(activeTab);
   const { updatePostReaction, invalidateFeed } = useFeedCache();
@@ -35,22 +20,10 @@ export default function Feed() {
     const isSameReaction = post.userReaction === reaction;
     const newReaction = isSameReaction ? null : reaction;
 
-    // Save to localStorage immediately so it survives refresh
+    // ✅ Persist to localStorage immediately so it survives refresh
     setCachedReaction(id, newReaction);
 
-    // Optimistic UI update
-    queryClient.setQueryData<Post[]>(["feed", activeTab], (prev = []) =>
-      prev.map((p) => {
-        if (p.id !== id) return p;
-        if (isSameReaction) {
-          return {
-            ...p,
-            userReaction: null,
-            likes: reaction === "like" ? p.likes - 1 : p.likes,
-            dislikes: reaction === "dislike" ? p.dislikes - 1 : p.dislikes,
-          };
-        }
-    // Optimistic cache update
+    // ✅ Optimistic cache update
     updatePostReaction(activeTab, id, (p) => {
       if (isSameReaction) {
         return {
@@ -60,7 +33,6 @@ export default function Feed() {
           dislikes: reaction === "dislike" ? p.dislikes - 1 : p.dislikes,
         };
       }
-
       return {
         ...p,
         userReaction: reaction,
@@ -87,9 +59,8 @@ export default function Feed() {
       }
     } catch (err) {
       console.error("React failed:", err);
-      // Revert local reaction cache and refetch on failure
+      // ✅ Revert localStorage and refetch on failure
       setCachedReaction(id, post.userReaction);
-      await queryClient.invalidateQueries({ queryKey: ["feed", activeTab] });
       invalidateFeed(activeTab);
     }
   }
@@ -113,11 +84,8 @@ export default function Feed() {
         ))}
       </div>
 
-      {/* Divider between tabs and feed */}
       <div className="border-t border-[#E6EAED]" />
 
-      {/* Feed */}
-      {feedQuery.isLoading ? (
       {isLoading ? (
         <div className="text-center py-10 text-gray-400">Loading feed...</div>
       ) : posts.length === 0 ? (
