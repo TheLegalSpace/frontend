@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ThumbsUp, ThumbsDown, Trash2, Clock, Loader2, FileText, X } from "lucide-react";
 import { MyPost } from "@/app/types/posts";
 import { postsService } from "@/services/posts.services";
+import Image from "next/image";
 
 function getInitials(name: string) {
   if (!name) return "??";
@@ -58,11 +59,6 @@ export default function MyPostCard({
   const isOwn = post.authorAccountId === currentAccountId;
   const displayName = post.author?.fullName ?? "Unknown";
 
-  // ── log so you can confirm the field name ──────────────────────────────────
-  if (post.pdfUrl) {
-    console.log("PDF URL:", post.pdfUrl);
-  }
-
   async function handleReact(type: "like" | "dislike") {
     const isSame = reaction === type;
     const newReaction = isSame ? null : type;
@@ -107,8 +103,6 @@ export default function MyPostCard({
     }
   }
 
-  const pdfUrl = post.pdfUrl ?? null;
-
   return (
     <>
       <div className="border-b border-gray-100 px-5 py-5">
@@ -116,12 +110,18 @@ export default function MyPostCard({
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2.5">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0 overflow-hidden ${avatarColor(
+              className={`relative w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0 overflow-hidden ${avatarColor(
                 post.author?.fullName ?? ""
               )}`}
             >
               {post.author?.avatarUrl ? (
-                <img src={post.author.avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                <Image
+                  src={post.author.avatarUrl}
+                  alt={displayName}
+                  fill
+                  sizes="32px"
+                  className="object-cover"
+                />
               ) : (
                 getInitials(post.author?.fullName ?? "")
               )}

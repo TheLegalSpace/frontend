@@ -2,10 +2,28 @@
 import { profileService } from "@/services/profile.services";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
+function getCachedMe() {
+  if (typeof window === "undefined") return undefined;
+
+  try {
+    const raw = localStorage.getItem("user");
+    if (!raw) return undefined;
+
+    return {
+      error: false,
+      message: "Cached profile",
+      data: JSON.parse(raw),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 export const useMe = () =>
   useQuery({
     queryKey: ["profile", "me"],
     queryFn: () => profileService.getMe().then((r) => r.data),
+    initialData: getCachedMe,
     staleTime: 1000 * 60 * 5, // cache for 5 min
   });
 

@@ -1,4 +1,3 @@
-// services/messages.services.ts
 import { api } from "./api";
 
 function log(method: string, label: string, ...args: unknown[]) {

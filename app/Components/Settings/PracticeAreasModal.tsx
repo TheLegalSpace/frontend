@@ -13,6 +13,8 @@ interface Props {
   primaryId: string;
   secondaryId: string;
   onClose: () => void;
+  /** 2 for LAWYER, 7 for FIRM */
+  maxSelect: number;
 }
 
 export default function PracticeAreasModal({
@@ -21,6 +23,7 @@ export default function PracticeAreasModal({
   primaryId: initialPrimary,
   secondaryId: initialSecondary,
   onClose,
+  maxSelect,
 }: Props) {
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>(currentIds);
@@ -40,11 +43,14 @@ export default function PracticeAreasModal({
 
   const toggleArea = (id: string) => {
     if (selectedIds.includes(id)) {
+      // Deselect
       const next = selectedIds.filter((i) => i !== id);
       setSelectedIds(next);
       if (primaryId === id) setPrimaryId("");
       if (secondaryId === id) setSecondaryId("");
     } else {
+      // Enforce cap
+      if (selectedIds.length >= maxSelect) return;
       const next = [...selectedIds, id];
       setSelectedIds(next);
       if (!primaryId) {
@@ -86,7 +92,7 @@ export default function PracticeAreasModal({
       }}
     >
       <div className="w-full max-w-md bg-white rounded-2xl p-6 shadow-xl">
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-2">
           <h3 className="text-[15px] font-semibold text-gray-900">
             Practice Areas
           </h3>
@@ -97,6 +103,12 @@ export default function PracticeAreasModal({
             <X className="w-3.5 h-3.5 text-gray-600" />
           </button>
         </div>
+        <p className="text-[12px] text-gray-400 mb-5">
+          {selectedIds.length}/{maxSelect} selected —{" "}
+          {maxSelect === 2
+            ? "Lawyers may choose a primary and optional secondary area."
+            : "Firms may select up to 7 practice areas."}
+        </p>
 
         {/* Primary / Secondary slots */}
         <div className="grid grid-cols-2 gap-3 mb-4">
@@ -146,14 +158,19 @@ export default function PracticeAreasModal({
         <div className="flex flex-wrap gap-2 mb-5 max-h-52 overflow-y-auto">
           {filtered.map((area) => {
             const isSelected = selectedIds.includes(area.id);
+            const atLimit = selectedIds.length >= maxSelect;
+            const isDisabled = !isSelected && atLimit;
             return (
               <button
                 key={area.id}
                 onClick={() => toggleArea(area.id)}
+                disabled={isDisabled}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] border transition-colors ${
                   isSelected
                     ? "bg-blue-50 border-blue-200 text-[#2563EB]"
-                    : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                    : isDisabled
+                      ? "border-gray-100 text-gray-300 cursor-not-allowed"
+                      : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
                 }`}
               >
                 {area.name}

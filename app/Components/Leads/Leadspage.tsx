@@ -1,4 +1,5 @@
-﻿"use client";
+// app/Components/Leads/LeadsPage.tsx
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -32,23 +33,20 @@ export default function LeadsPage() {
   const leads = (data?.pages ?? []).flatMap((p) => p?.data?.items ?? []) as Lead[];
   const total = (data?.pages?.[0]?.data?.pagination?.total ?? 0) as number;
 
-  // ── Socket: new leads ─────────────────────────────────────────────────────
-  const notificationHandlerRef = useRef<(notif: {
-    type: string;
-    payload: { lead?: Lead };
-  }) => void>(undefined);
+  // Use a ref so the socket handler always has the latest prependPendingLead
+  // without needing to re-register the listener on every render.
+  const notificationHandlerRef = useRef<
+    ((notif: { type: string; payload: { lead?: Lead } }) => void) | undefined
+  >(undefined);
+
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken") ?? "";
     const socket = connectSocket(token);
 
-    if (notificationHandlerRef.current) {
-      socket.off("notification", notificationHandlerRef.current);
-    }
-
     const handler = (notif: { type: string; payload: { lead?: Lead } }) => {
       if (notif.type === "new_lead" && notif.payload?.lead) {
-        // Only affect pending cache + stats; avoids refetching everything
+        // Only prepend to pending — avoids polluting other tab caches
         prependPendingLead(notif.payload.lead);
       }
     };
@@ -76,7 +74,7 @@ export default function LeadsPage() {
       <div className="max-w-4xl mx-auto px-4 py-6">
         <h1 className="text-[22px] font-semibold text-gray-900 mb-6">Leads</h1>
 
-        {/* Stats — cached */}
+        {/* Stats */}
         <LeadsStatsRow stats={stats ?? null} />
 
         {/* Tabs */}
@@ -114,7 +112,7 @@ export default function LeadsPage() {
           <span className="text-[12px] text-gray-400">{total} total</span>
         </div>
 
-        {/* Leads list */}
+        {/* List */}
         {isLoading ? (
           <div className="flex items-center justify-center py-16 text-sm text-gray-400 gap-2">
             <Loader2 size={16} className="animate-spin" />

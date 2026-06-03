@@ -3,6 +3,7 @@
 import { Search } from "lucide-react"
 import { Conversation } from "@/app/types/message"
 
+
 function getInitials(name: string) {
   if (!name) return "??";
   return name

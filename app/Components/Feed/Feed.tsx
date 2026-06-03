@@ -1,4 +1,5 @@
-﻿"use client";
+﻿// app/Components/Feed/Feed.tsx
+"use client";
 
 import { useState } from "react";
 import PostCard from "./PostCard";
@@ -19,10 +20,10 @@ export default function Feed() {
     const isSameReaction = post.userReaction === reaction;
     const newReaction = isSameReaction ? null : reaction;
 
-    // Save to localStorage immediately so it survives refresh
+    // ✅ Persist to localStorage immediately so it survives refresh
     setCachedReaction(id, newReaction);
 
-    // Optimistic cache update
+    // ✅ Optimistic cache update
     updatePostReaction(activeTab, id, (p) => {
       if (isSameReaction) {
         return {
@@ -32,7 +33,6 @@ export default function Feed() {
           dislikes: reaction === "dislike" ? p.dislikes - 1 : p.dislikes,
         };
       }
-
       return {
         ...p,
         userReaction: reaction,
@@ -59,7 +59,7 @@ export default function Feed() {
       }
     } catch (err) {
       console.error("React failed:", err);
-      // Revert local reaction cache and refetch on failure
+      // ✅ Revert localStorage and refetch on failure
       setCachedReaction(id, post.userReaction);
       invalidateFeed(activeTab);
     }
@@ -84,10 +84,8 @@ export default function Feed() {
         ))}
       </div>
 
-      {/* Divider between tabs and feed */}
       <div className="border-t border-[#E6EAED]" />
 
-      {/* Feed */}
       {isLoading ? (
         <div className="text-center py-10 text-gray-400">Loading feed...</div>
       ) : posts.length === 0 ? (

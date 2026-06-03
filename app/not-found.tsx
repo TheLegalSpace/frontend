@@ -16,14 +16,7 @@ export default function NotFound() {
     >
       {/* Logo */}
       <div className="px-8 py-6">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-white/10 backdrop-blur-sm border border-white/20 rounded-md flex items-center justify-center text-white text-xs">
-            ⚖
-          </div>
-          <span className="text-sm font-medium text-white/90">
-            The Legal Space
-          </span>
-        </div>
+        <img src="/tls-logo-white.png" alt="The Legal Space" className="h-9 w-auto" />
       </div>
 
       {/* Center content */}

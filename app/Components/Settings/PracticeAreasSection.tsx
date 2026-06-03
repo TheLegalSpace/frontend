@@ -11,6 +11,7 @@ interface Props {
   currentIds: string[];
   primaryId: string;
   secondaryId: string;
+  role: string;
 }
 
 export default function PracticeAreasSection({
@@ -19,8 +20,12 @@ export default function PracticeAreasSection({
   currentIds,
   primaryId,
   secondaryId,
+  role,
 }: Props) {
   const [showModal, setShowModal] = useState(false);
+
+  // Lawyers: max 2 (primary + secondary). Firms: max 7.
+  const maxSelect = role === "LAWYER" ? 2 : 7;
 
   return (
     <>
@@ -56,6 +61,7 @@ export default function PracticeAreasSection({
           currentIds={currentIds}
           primaryId={primaryId}
           secondaryId={secondaryId}
+          maxSelect={maxSelect}
           onClose={() => setShowModal(false)}
         />
       )}
