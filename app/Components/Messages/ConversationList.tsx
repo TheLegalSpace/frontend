@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react"
 import { Conversation } from "@/app/types/message"
-import Image from "next/image";
+
 
 function getInitials(name: string) {
   if (!name) return "??";
@@ -101,32 +101,6 @@ export default function ConversationList({
             No conversations yet.
           </div>
         ) : (
-          conversations.map((convo) => (
-            <button
-              key={convo.id}
-              onClick={() => onSelect(convo.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition text-left ${
-                activeId === convo.id ? "bg-gray-100" : ""
-              }`}
-            >
-              {/* Avatar */}
-              <div
-                className={`relative w-10 h-10 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden ${avatarColor(
-                  convo.otherParty?.fullName ?? ""
-                )}`}
-              >
-                {convo.otherParty?.avatarUrl ? (
-                  <Image
-                    src={convo.otherParty.avatarUrl}
-                    alt={convo.otherParty?.fullName ?? ""}
-                    fill
-                    sizes="40px"
-                    className="rounded-full object-cover"
-                  />
-                ) : (
-                  getInitials(convo.otherParty?.fullName ?? "")
-                )}
-              </div>
           conversations.map((convo) => {
             const displayName = getDisplayName(convo);
             return (
