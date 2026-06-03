@@ -5,10 +5,27 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
-  LayoutGrid, MessageCircle, Briefcase, Bell, Settings,
-  Scale, LogOut, ArrowRight, Star, Menu, X, Users,
-  FileText, Building2, BookOpenText, FolderSearch,
-  BookText, PackageSearch, Loader2, AlertTriangle,
+  LayoutGrid,
+  MessageCircle,
+  Briefcase,
+  Bell,
+  Settings,
+  Scale,
+  LogOut,
+  ArrowRight,
+  Star,
+  Menu,
+  X,
+  Users,
+  FileText,
+  Building2,
+  BookOpenText,
+  FolderSearch,
+  BookText,
+  PackageSearch,
+  Loader2,
+  AlertTriangle,
+  User,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -29,26 +46,52 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Settings", href: "/dashboard/settings", icon: Settings },
   ],
   LAWYER: [
+    { label: "Profile", href: "/dashboard/profile", icon: User },
     { label: "Feeds", href: "/dashboard/feeds", icon: LayoutGrid },
     { label: "Leads", href: "/dashboard/leads", icon: Users },
     { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
     { label: "Posts", href: "/dashboard/posts", icon: FileText },
-    { label: "TLS Research", href: "/dashboard/TLS-Research", icon: FolderSearch },
+    {
+      label: "TLS Research",
+      href: "/dashboard/TLS-Research",
+      icon: FolderSearch,
+    },
     { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
-    { label: "Legal Library", href: "/dashboard/legal-library", icon: BookText },
-    { label: "TLS Services", href: "/dashboard/tls-services", icon: PackageSearch },
+    {
+      label: "Legal Library",
+      href: "/dashboard/legal-library",
+      icon: BookText,
+    },
+    {
+      label: "TLS Services",
+      href: "/dashboard/tls-services",
+      icon: PackageSearch,
+    },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { label: "Settings", href: "/dashboard/settings", icon: Settings },
   ],
   FIRM: [
+    { label: "Profile", href: "/dashboard/profile", icon: User },
     { label: "Feeds", href: "/dashboard/feeds", icon: LayoutGrid },
     { label: "Leads", href: "/dashboard/leads", icon: Users },
     { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
     { label: "Posts", href: "/dashboard/posts", icon: FileText },
-    { label: "TLS Research", href: "/dashboard/TLS-Research", icon: FolderSearch },
+    {
+      label: "TLS Research",
+      href: "/dashboard/TLS-Research",
+      icon: FolderSearch,
+    },
     { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
-    { label: "Legal Library", href: "/dashboard/legal-library", icon: BookText },
-    { label: "TLS Services", href: "/dashboard/tls-services", icon: PackageSearch },
+    {
+      label: "Legal Library",
+      href: "/dashboard/legal-library",
+      icon: BookText,
+    },
+    {
+      label: "TLS Services",
+      href: "/dashboard/tls-services",
+      icon: PackageSearch,
+    },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { label: "Settings", href: "/dashboard/settings", icon: Settings },
   ],
@@ -60,7 +103,10 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   ],
 };
 
-const FOOTER_CTA: Record<UserRole, { label: string; href: string; icon: React.ElementType } | null> = {
+const FOOTER_CTA: Record<
+  UserRole,
+  { label: string; href: string; icon: React.ElementType } | null
+> = {
   USER: { label: "Get a lawyer", href: "/dashboard/find-lawyer", icon: Scale },
   LAWYER: null,
   FIRM: null,
@@ -69,7 +115,9 @@ const FOOTER_CTA: Record<UserRole, { label: string; href: string; icon: React.El
 
 // ─── Logout Modal ─────────────────────────────────────────────────────────────
 function LogoutModal({
-  onConfirm, onCancel, isLoggingOut,
+  onConfirm,
+  onCancel,
+  isLoggingOut,
 }: {
   onConfirm: () => void;
   onCancel: () => void;
@@ -98,9 +146,13 @@ function LogoutModal({
             className="w-full py-2.5 bg-red-500 hover:bg-red-600 text-white text-[13px] font-medium rounded-xl transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
           >
             {isLoggingOut ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Signing out...</>
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Signing out...
+              </>
             ) : (
-              <><LogOut className="w-4 h-4" /> Yes, sign out</>
+              <>
+                <LogOut className="w-4 h-4" /> Yes, sign out
+              </>
             )}
           </button>
           <button
@@ -124,7 +176,9 @@ function LogoutOverlay() {
         ⚖
       </div>
       <Loader2 className="w-6 h-6 text-gray-400 animate-spin mb-3" />
-      <p className="text-[14px] font-medium text-gray-700">Signing you out...</p>
+      <p className="text-[14px] font-medium text-gray-700">
+        Signing you out...
+      </p>
       <p className="text-[12px] text-gray-400 mt-1">Please wait a moment</p>
       <div className="w-48 h-1 bg-gray-100 rounded-full mt-6 overflow-hidden">
         <div className="h-full bg-gray-900 rounded-full animate-logout-progress" />
@@ -138,8 +192,12 @@ function SidebarSkeleton() {
   return (
     <aside className="w-55 h-screen fixed top-0 left-0 border-r border-gray-100 flex flex-col bg-white">
       <div className="px-5 py-5 border-b border-gray-100 flex items-center gap-2">
-        <div className="w-7 h-7 bg-black rounded-md flex items-center justify-center text-white text-xs">⚖</div>
-        <span className="text-sm font-medium text-gray-900">The Legal Space</span>
+        <div className="w-7 h-7 bg-black rounded-md flex items-center justify-center text-white text-xs">
+          ⚖
+        </div>
+        <span className="text-sm font-medium text-gray-900">
+          The Legal Space
+        </span>
       </div>
       <div className="px-5 py-4 border-b border-gray-100 animate-pulse">
         <div className="w-10 h-10 rounded-full bg-gray-100 mb-2.5" />
@@ -179,15 +237,27 @@ export default function Sidebar() {
   const footerCta = FOOTER_CTA[role];
 
   const initials =
-    user?.fullName?.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) ?? "?";
+    user?.fullName
+      ?.split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) ?? "?";
 
   // ── Research thread state ─────────────────────────────────────────────────
   useEffect(() => {
     function handleResearchState(e: CustomEvent) {
       setResearchThreadActive(e.detail.active);
     }
-    window.addEventListener("research:thread", handleResearchState as EventListener);
-    return () => window.removeEventListener("research:thread", handleResearchState as EventListener);
+    window.addEventListener(
+      "research:thread",
+      handleResearchState as EventListener,
+    );
+    return () =>
+      window.removeEventListener(
+        "research:thread",
+        handleResearchState as EventListener,
+      );
   }, []);
 
   useEffect(() => {
@@ -196,11 +266,16 @@ export default function Sidebar() {
     }
   }, [pathname]);
 
-  useEffect(() => { setMobileOpen(false); }, [pathname]);
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
-    document.body.style.overflow = mobileOpen || showLogoutModal ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    document.body.style.overflow =
+      mobileOpen || showLogoutModal ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [mobileOpen, showLogoutModal]);
 
   const handleLogoutConfirm = async () => {
@@ -233,8 +308,12 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-black rounded-md flex items-center justify-center text-white text-xs">⚖</div>
-          <span className="text-sm font-medium text-gray-900">The Legal Space</span>
+          <div className="w-7 h-7 bg-black rounded-md flex items-center justify-center text-white text-xs">
+            ⚖
+          </div>
+          <span className="text-sm font-medium text-gray-900">
+            The Legal Space
+          </span>
         </div>
         <button
           onClick={() => setMobileOpen(false)}
@@ -249,10 +328,18 @@ export default function Sidebar() {
         <div className="px-5 py-4 border-b border-gray-100">
           <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-600 mb-2.5 overflow-hidden">
             {user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt={user.fullName} className="w-full h-full object-cover" />
-            ) : initials}
+              <img
+                src={user.avatarUrl}
+                alt={user.fullName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              initials
+            )}
           </div>
-          <p className="text-[13px] font-medium text-gray-900">{user?.fullName}</p>
+          <p className="text-[13px] font-medium text-gray-900">
+            {user?.fullName}
+          </p>
           <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
             <p className="text-[11px] text-gray-400 truncate">{user?.email}</p>
           </div>
@@ -263,17 +350,33 @@ export default function Sidebar() {
             <div className="flex justify-between text-xs">
               <span className="text-gray-500">Reviews</span>
               <span className="font-medium text-gray-900 flex items-center gap-0.5">
-                {Array.from({ length: Math.round(parseFloat(user?.avgRating ?? "0")) }, (_, i) => (
-                  <Star key={`filled-${i}`} className="w-3 h-3 text-amber-400 fill-amber-400" />
-                ))}
-                {Array.from({ length: 5 - Math.round(parseFloat(user?.avgRating ?? "0")) }, (_, i) => (
-                  <Star key={`empty-${i}`} className="w-3 h-3 text-gray-200" />
-                ))}
+                {Array.from(
+                  { length: Math.round(parseFloat(user?.avgRating ?? "0")) },
+                  (_, i) => (
+                    <Star
+                      key={`filled-${i}`}
+                      className="w-3 h-3 text-amber-400 fill-amber-400"
+                    />
+                  ),
+                )}
+                {Array.from(
+                  {
+                    length: 5 - Math.round(parseFloat(user?.avgRating ?? "0")),
+                  },
+                  (_, i) => (
+                    <Star
+                      key={`empty-${i}`}
+                      className="w-3 h-3 text-gray-200"
+                    />
+                  ),
+                )}
               </span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-gray-500">Connections</span>
-              <span className="font-medium text-gray-900">{user?.connectionCount ?? 0}</span>
+              <span className="font-medium text-gray-900">
+                {user?.connectionCount ?? 0}
+              </span>
             </div>
           </div>
           <Link
@@ -299,7 +402,9 @@ export default function Sidebar() {
                   : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-blue-600" : "text-gray-400"}`} />
+              <Icon
+                className={`w-4 h-4 shrink-0 ${isActive ? "text-blue-600" : "text-gray-400"}`}
+              />
               {label}
             </Link>
           );
@@ -352,8 +457,13 @@ export default function Sidebar() {
 
       {mobileOpen && (
         <>
-          <div className="md:hidden fixed inset-0 bg-black/40 z-40" onClick={() => setMobileOpen(false)} />
-          <div className="md:hidden fixed top-0 left-0 h-full z-50 shadow-xl">{sidebarContent}</div>
+          <div
+            className="md:hidden fixed inset-0 bg-black/40 z-40"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="md:hidden fixed top-0 left-0 h-full z-50 shadow-xl">
+            {sidebarContent}
+          </div>
         </>
       )}
     </>
