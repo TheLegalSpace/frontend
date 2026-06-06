@@ -169,7 +169,7 @@ export default function PracticeAreasModal({
                   isSelected
                     ? "bg-blue-50 border-blue-200 text-[#2563EB]"
                     : isDisabled
-                      ? "border-gray-100 text-gray-300 cursor-not-allowed"
+                      ? "border-[#E5E7EB] text-gray-300 cursor-not-allowed"
                       : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
                 }`}
               >

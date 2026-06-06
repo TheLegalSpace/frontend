@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
- import PracticeAreasModal from "./PracticeAreasModal";
+import PracticeAreasModal from "./PracticeAreasModal";
 import { PracticeArea } from "@/services/practice-areas.services";
 
 interface Props {
@@ -29,9 +29,11 @@ export default function PracticeAreasSection({
 
   return (
     <>
-      <div className="py-6 border-b border-gray-100">
+      <div className="py-6 border-b border-[#E5E7EB]">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[15px] font-semibold text-gray-900">Practice Areas</h2>
+          <h2 className="text-[15px] font-semibold text-gray-900">
+            Practice Areas
+          </h2>
           <button
             onClick={() => setShowModal(true)}
             className="text-[13px] font-medium text-[#2563EB] hover:underline"
@@ -41,7 +43,9 @@ export default function PracticeAreasSection({
         </div>
         <div className="flex flex-wrap gap-2">
           {currentAreaNames.length === 0 ? (
-            <p className="text-[13px] text-gray-400">No practice areas added yet</p>
+            <p className="text-[13px] text-gray-400">
+              No practice areas added yet
+            </p>
           ) : (
             currentAreaNames.map((name, i) => (
               <span

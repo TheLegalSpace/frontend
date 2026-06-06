@@ -11,7 +11,11 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
-import { ResearchMessage, ResearchSource, classifyAssistant } from "@/app/types/Research";
+import {
+  ResearchMessage,
+  ResearchSource,
+  classifyAssistant,
+} from "@/app/types/Research";
 
 // ── Markdown renderer ─────────────────────────────────────────────────────────
 function MarkdownContent({ content }: { content: string }) {
@@ -20,16 +24,24 @@ function MarkdownContent({ content }: { content: string }) {
       remarkPlugins={[remarkGfm]}
       components={{
         h1: ({ children }) => (
-          <h1 className="text-[16px] font-bold mb-2 mt-4 first:mt-0 text-gray-900">{children}</h1>
+          <h1 className="text-[16px] font-bold mb-2 mt-4 first:mt-0 text-gray-900">
+            {children}
+          </h1>
         ),
         h2: ({ children }) => (
-          <h2 className="text-[15px] font-semibold mb-2 mt-3 first:mt-0 text-gray-900">{children}</h2>
+          <h2 className="text-[15px] font-semibold mb-2 mt-3 first:mt-0 text-gray-900">
+            {children}
+          </h2>
         ),
         h3: ({ children }) => (
-          <h3 className="text-[14px] font-semibold mb-1 mt-2 first:mt-0 text-gray-800">{children}</h3>
+          <h3 className="text-[14px] font-semibold mb-1 mt-2 first:mt-0 text-gray-800">
+            {children}
+          </h3>
         ),
         p: ({ children }) => (
-          <p className="mb-2.5 last:mb-0 leading-relaxed text-gray-800 text-[14px]">{children}</p>
+          <p className="mb-2.5 last:mb-0 leading-relaxed text-gray-800 text-[14px]">
+            {children}
+          </p>
         ),
         ul: ({ children }) => (
           <ul className="list-disc pl-5 mb-2.5 space-y-1">{children}</ul>
@@ -38,7 +50,9 @@ function MarkdownContent({ content }: { content: string }) {
           <ol className="list-decimal pl-5 mb-2.5 space-y-1">{children}</ol>
         ),
         li: ({ children }) => (
-          <li className="text-gray-800 text-[14px] leading-relaxed">{children}</li>
+          <li className="text-gray-800 text-[14px] leading-relaxed">
+            {children}
+          </li>
         ),
         strong: ({ children }) => (
           <strong className="font-semibold text-gray-900">{children}</strong>
@@ -62,13 +76,17 @@ function MarkdownContent({ content }: { content: string }) {
             </code>
           ) : (
             <pre className="bg-gray-100 border border-gray-200 rounded-xl p-3 overflow-x-auto my-2.5">
-              <code className="text-[12px] font-mono text-gray-800">{children}</code>
+              <code className="text-[12px] font-mono text-gray-800">
+                {children}
+              </code>
             </pre>
           );
         },
         table: ({ children }) => (
           <div className="overflow-x-auto my-2.5 rounded-lg border border-gray-200">
-            <table className="w-full text-[13px] border-collapse">{children}</table>
+            <table className="w-full text-[13px] border-collapse">
+              {children}
+            </table>
           </div>
         ),
         th: ({ children }) => (
@@ -77,10 +95,12 @@ function MarkdownContent({ content }: { content: string }) {
           </th>
         ),
         td: ({ children }) => (
-          <td className="px-3 py-2 border-b border-gray-100 text-gray-700">{children}</td>
+          <td className="px-3 py-2 border-b border-[#E5E7EB] text-gray-700">
+            {children}
+          </td>
         ),
         a: ({ href, children }) => (
-          <a    
+          <a
             href={href}
             target="_blank"
             rel="noopener noreferrer"
@@ -107,8 +127,7 @@ function SourceChips({ sources }: { sources: ResearchSource[] }) {
     <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-gray-200">
       <span className="text-[11px] text-gray-400 mr-0.5">Sources:</span>
       {visible.map((s, i) => (
-        
-          <a
+        <a
           key={i}
           href={s.url}
           target="_blank"
@@ -143,7 +162,9 @@ export function ThinkingBubble({ hasPdf }: { hasPdf?: boolean }) {
             <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:300ms]" />
           </div>
           <span className="text-[12px] text-gray-400">
-            {hasPdf ? "Scanning document & searching sources…" : "Searching legal sources…"}
+            {hasPdf
+              ? "Scanning document & searching sources…"
+              : "Searching legal sources…"}
           </span>
         </div>
       </div>
@@ -261,7 +282,9 @@ function MessageBubble({ msg }: { msg: ResearchMessage }) {
           <button
             onClick={() => setLiked(liked === "up" ? null : "up")}
             className={`flex items-center gap-1 text-[11px] transition ${
-              liked === "up" ? "text-green-600" : "text-gray-400 hover:text-gray-600"
+              liked === "up"
+                ? "text-green-600"
+                : "text-gray-400 hover:text-gray-600"
             }`}
           >
             <ThumbsUp size={12} />
@@ -269,7 +292,9 @@ function MessageBubble({ msg }: { msg: ResearchMessage }) {
           <button
             onClick={() => setLiked(liked === "down" ? null : "down")}
             className={`flex items-center gap-1 text-[11px] transition ${
-              liked === "down" ? "text-red-500" : "text-gray-400 hover:text-gray-600"
+              liked === "down"
+                ? "text-red-500"
+                : "text-gray-400 hover:text-gray-600"
             }`}
           >
             <ThumbsDown size={12} />
@@ -288,7 +313,12 @@ interface Props {
   error?: { message: string; onRetry: () => void } | null;
 }
 
-export default function MessageList({ messages, thinking, hasPdf, error }: Props) {
+export default function MessageList({
+  messages,
+  thinking,
+  hasPdf,
+  error,
+}: Props) {
   return (
     <div className="flex flex-col">
       {messages.map((msg) => (

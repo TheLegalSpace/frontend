@@ -34,7 +34,9 @@ type Tab = "posts" | "articles";
 export default function PostsPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("posts");
-  const [reactions, setReactions] = useState<Record<string, "like" | "dislike">>({});
+  const [reactions, setReactions] = useState<
+    Record<string, "like" | "dislike">
+  >({});
   const [showCreate, setShowCreate] = useState(false);
   const queryClient = useQueryClient();
 
@@ -56,26 +58,28 @@ export default function PostsPage() {
   }, []);
 
   function handleDelete(id: string) {
-    queryClient.setQueryData<MyPost[]>(["profile-posts", user?.id], (prev = []) =>
-      prev.filter((post) => post.id !== id)
+    queryClient.setQueryData<MyPost[]>(
+      ["profile-posts", user?.id],
+      (prev = []) => prev.filter((post) => post.id !== id),
     );
   }
 
-  function handleReactionChange(id: string, reaction: "like" | "dislike" | null) {
+  function handleReactionChange(
+    id: string,
+    reaction: "like" | "dislike" | null,
+  ) {
     setCachedReaction(id, reaction);
     setReactions(getCachedReactions());
   }
 
   const filteredPosts = posts.filter((p) =>
-    activeTab === "articles"
-        ? !!p.pdfUrl
-        : !p.pdfUrl
+    activeTab === "articles" ? !!p.pdfUrl : !p.pdfUrl,
   );
 
   return (
     <div className="min-h-screen bg-white">
       {/* Top tab bar */}
-      <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3 sticky top-0 bg-white z-10">
+      <div className="flex items-center justify-between border-b border-[#E5E7EB] px-5 py-3 sticky top-0 bg-white z-10">
         <div className="flex gap-1">
           <button
             onClick={() => setActiveTab("posts")}

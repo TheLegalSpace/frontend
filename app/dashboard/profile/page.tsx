@@ -28,14 +28,14 @@ export default function ProfilePage() {
     <div className=" w-full bg-white min-h-screen  ">
       <div className="max-w-362.5 ">
         {/* Page title */}
-        <div className=" h-[75px] flex items-center border-b border-[#E6EAED] px-2">
+        <div className=" h-[75px] flex items-center border-b border-[#E5E7EB] px-4">
           <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937]">
             Profile
           </h1>
         </div>
 
         {/* Layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1.7fr_0.72fr] gap-5 items-start mt-2 px-2">
+        <div className="grid grid-cols-1 xl:grid-cols-[1.7fr_0.72fr] gap-5 items-start mt-2 px-4">
           {/* Left */}
           <div className="min-w-0">
             <ProfileCard

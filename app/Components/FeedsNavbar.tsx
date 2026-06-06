@@ -4,11 +4,11 @@ import Link from "next/link";
 
 async function getFeedNavbarData() {
   const res = await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL}/api/v1/feed/sidebar`,
-  {
-    next: { revalidate: 900 },
-  }
-);
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/feed/sidebar`,
+    {
+      next: { revalidate: 900 },
+    },
+  );
   if (!res.ok) throw new Error("Failed to fetch feed navbar");
   return res.json();
 }
@@ -30,7 +30,7 @@ export default async function FeedNavbar() {
     <aside className="hidden lg:block w-80 shrink-0">
       <div className="sticky top-20 space-y-6">
         {/* Trending Section */}
-        <div className="bg-white border border-gray-100 rounded-xl p-5">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-5">
           <h3 className="text-sm font-semibold text-gray-900 mb-4">
             Trending Now
           </h3>

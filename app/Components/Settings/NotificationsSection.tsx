@@ -7,7 +7,7 @@ export default function NotificationsSection() {
   const [whatsappAlert, setWhatsappAlert] = useState(false);
 
   return (
-    <div className="py-6 border-b border-gray-100">
+    <div className="py-6 border-b border-[#E5E7EB]">
       <h2 className="text-[15px] font-semibold text-gray-900 mb-4">
         Notifications
       </h2>

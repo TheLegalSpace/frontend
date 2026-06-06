@@ -22,7 +22,9 @@ export default function NotificationsPage() {
     getNextPageParam: (lastPage) => {
       const pagination = lastPage?.data?.pagination;
       if (!pagination) return undefined;
-      return pagination.page < pagination.totalPages ? pagination.page + 1 : undefined;
+      return pagination.page < pagination.totalPages
+        ? pagination.page + 1
+        : undefined;
     },
     staleTime: 1000 * 30,
   });
@@ -30,9 +32,9 @@ export default function NotificationsPage() {
   const notifications = useMemo(
     () =>
       notificationsQuery.data?.pages.flatMap(
-        (page) => (page?.data?.items ?? []) as Notification[]
+        (page) => (page?.data?.items ?? []) as Notification[],
       ) ?? [],
-    [notificationsQuery.data]
+    [notificationsQuery.data],
   );
   const total = notificationsQuery.data?.pages[0]?.data?.pagination?.total ?? 0;
   const hasMore = notifications.length < total;
@@ -46,7 +48,8 @@ export default function NotificationsPage() {
     const handleNotification = (notif: Notification) => {
       queryClient.setQueryData(["notifications"], (prev: any) => {
         if (!prev?.pages?.length) return prev;
-        const firstPageItems = (prev.pages[0]?.data?.items ?? []) as Notification[];
+        const firstPageItems = (prev.pages[0]?.data?.items ??
+          []) as Notification[];
         if (firstPageItems.some((item) => item.id === notif.id)) return prev;
 
         const updatedFirstPage = {
@@ -86,10 +89,11 @@ export default function NotificationsPage() {
             ...page,
             data: {
               ...page.data,
-              items: (page.data?.items ?? []).map((notification: Notification) =>
-                notification.id === id
-                  ? { ...notification, readAt: new Date().toISOString() }
-                  : notification
+              items: (page.data?.items ?? []).map(
+                (notification: Notification) =>
+                  notification.id === id
+                    ? { ...notification, readAt: new Date().toISOString() }
+                    : notification,
               ),
             },
           })),
@@ -112,10 +116,12 @@ export default function NotificationsPage() {
             ...page,
             data: {
               ...page.data,
-              items: (page.data?.items ?? []).map((notification: Notification) => ({
-                ...notification,
-                readAt: notification.readAt ?? new Date().toISOString(),
-              })),
+              items: (page.data?.items ?? []).map(
+                (notification: Notification) => ({
+                  ...notification,
+                  readAt: notification.readAt ?? new Date().toISOString(),
+                }),
+              ),
             },
           })),
         };
@@ -135,9 +141,8 @@ export default function NotificationsPage() {
     // Full screen on mobile, centred card on desktop
     <div className="min-h-screen bg-white md:bg-gray-50 md:py-8 md:px-4">
       <div className="w-full md:max-w-2xl md:mx-auto md:bg-white md:border md:border-gray-200 md:rounded-2xl md:overflow-hidden md:shadow-sm">
-
         {/* Header */}
-        <div className="flex items-center justify-between px-4 md:px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 md:px-5 py-4 border-b border-[#E5E7EB]">
           <div className="flex items-center gap-2">
             <h1 className="text-[15px] font-semibold text-gray-900">
               Notifications
@@ -188,7 +193,7 @@ export default function NotificationsPage() {
 
             {/* Show More */}
             {hasMore && (
-              <div className="flex justify-center py-4 border-t border-gray-100">
+              <div className="flex justify-center py-4 border-t border-[#E5E7EB]">
                 <button
                   onClick={handleShowMore}
                   disabled={notificationsQuery.isFetchingNextPage}

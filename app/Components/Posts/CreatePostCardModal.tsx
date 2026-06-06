@@ -23,7 +23,12 @@ type ModalState = "compose" | "preview" | "success";
 
 function getInitials(name: string) {
   if (!name) return "??";
-  return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 interface Props {
@@ -88,7 +93,10 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
     setError("");
 
     if (tab === "caption") {
-      if (!body.trim()) { setError("Please write something before posting."); return; }
+      if (!body.trim()) {
+        setError("Please write something before posting.");
+        return;
+      }
       setSubmitting(true);
       try {
         await postsService.createPost(body.trim());
@@ -103,8 +111,14 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
     }
 
     // Article post
-    if (!body.trim()) { setError("Add a caption for your article."); return; }
-    if (!pdfFile) { setError("Please attach a PDF."); return; }
+    if (!body.trim()) {
+      setError("Add a caption for your article.");
+      return;
+    }
+    if (!pdfFile) {
+      setError("Please attach a PDF.");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -112,7 +126,9 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
       onCreated();
       setModalState("success");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to publish article post.");
+      setError(
+        err instanceof Error ? err.message : "Failed to publish article post.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -144,13 +160,19 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
             </p>
             <div className="flex gap-3 w-full">
               <button
-                onClick={() => { setModalState("compose"); resetCompose(); }}
+                onClick={() => {
+                  setModalState("compose");
+                  resetCompose();
+                }}
                 className="flex-1 py-2.5 rounded-xl border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition"
               >
                 Post again
               </button>
               <button
-                onClick={() => { onClose(); router.push("/dashboard/feeds"); }}
+                onClick={() => {
+                  onClose();
+                  router.push("/dashboard/feeds");
+                }}
                 className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-medium hover:bg-blue-700 transition"
               >
                 Go to feed
@@ -201,16 +223,20 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
-
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0">
           <div className="flex gap-1">
             {(["caption", "article"] as Tab[]).map((t) => (
               <button
                 key={t}
-                onClick={() => { setTab(t); setError(""); }}
+                onClick={() => {
+                  setTab(t);
+                  setError("");
+                }}
                 className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition ${
-                  tab === t ? "bg-gray-900 text-white" : "text-gray-500 hover:text-gray-700"
+                  tab === t
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-500 hover:text-gray-700"
                 }`}
               >
                 {t === "caption" ? "Caption Post" : "Article Post"}
@@ -227,14 +253,19 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
 
         {/* Scrollable body */}
         <div className="px-4 pb-4 overflow-y-auto flex-1">
-
           {/* User row + audience */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[11px] font-semibold overflow-hidden shrink-0">
-                {user?.avatarUrl
-                  ? <img src={user.avatarUrl as string} alt={user.fullName as string} className="w-full h-full object-cover" />
-                  : getInitials((user?.fullName as string) ?? "")}
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl as string}
+                    alt={user.fullName as string}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  getInitials((user?.fullName as string) ?? "")
+                )}
               </div>
               <span className="text-[13px] font-medium text-gray-900">
                 {(user?.fullName as string) ?? "You"}
@@ -246,21 +277,34 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
                 onClick={() => setAudienceOpen((v) => !v)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 text-[12px] text-gray-600 hover:bg-gray-50 transition"
               >
-                {audience === "everyone" ? <Globe size={12} /> : <Users size={12} />}
+                {audience === "everyone" ? (
+                  <Globe size={12} />
+                ) : (
+                  <Users size={12} />
+                )}
                 {audience === "everyone" ? "Everyone" : "Followers"}
                 <ChevronDown size={12} />
               </button>
               {audienceOpen && (
-                <div className="absolute right-0 top-9 w-36 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden z-10">
+                <div className="absolute right-0 top-9 w-36 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-10">
                   {(["everyone", "followers"] as Audience[]).map((opt) => (
                     <button
                       key={opt}
-                      onClick={() => { setAudience(opt); setAudienceOpen(false); }}
+                      onClick={() => {
+                        setAudience(opt);
+                        setAudienceOpen(false);
+                      }}
                       className={`w-full flex items-center gap-2 px-3 py-2 text-[12px] hover:bg-gray-50 transition ${
-                        audience === opt ? "text-blue-600 font-medium" : "text-gray-700"
+                        audience === opt
+                          ? "text-blue-600 font-medium"
+                          : "text-gray-700"
                       }`}
                     >
-                      {opt === "everyone" ? <Globe size={12} /> : <Users size={12} />}
+                      {opt === "everyone" ? (
+                        <Globe size={12} />
+                      ) : (
+                        <Users size={12} />
+                      )}
                       {opt.charAt(0).toUpperCase() + opt.slice(1)}
                     </button>
                   ))}
@@ -290,12 +334,15 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
           {/* Article tab — PDF only */}
           {tab === "article" && (
             <>
-              <div className="border-t border-gray-100 pt-3 mb-3" />
+              <div className="border-t border-[#E5E7EB] pt-3 mb-3" />
 
               {!pdfFile ? (
                 // Drop zone
                 <div
-                  onDragOver={(e) => { e.preventDefault(); setPdfDragOver(true); }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setPdfDragOver(true);
+                  }}
                   onDragLeave={() => setPdfDragOver(false)}
                   onDrop={(e) => {
                     e.preventDefault();
@@ -316,12 +363,13 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
                     Upload your article PDF
                   </p>
                   <p className="text-[12px] text-gray-400">
-                    <span className="text-blue-600">Click to browse</span> or drag and drop · max 20 MB
+                    <span className="text-blue-600">Click to browse</span> or
+                    drag and drop · max 20 MB
                   </p>
                 </div>
               ) : (
                 // File pill with preview button
-                <div className="flex items-center justify-between gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5">
+                <div className="flex items-center justify-between gap-2 bg-gray-50 border border-[#E5E7EB] rounded-xl px-3 py-2.5">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
                       <FileText size={16} className="text-red-500" />

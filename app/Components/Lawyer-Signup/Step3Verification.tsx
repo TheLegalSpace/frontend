@@ -11,13 +11,20 @@ interface Props {
   isLoading: boolean;
 }
 
-export default function Step3Verification({ accountType, onFinish, isLoading }: Props) {
+export default function Step3Verification({
+  accountType,
+  onFinish,
+  isLoading,
+}: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const docLabel = accountType === "lawyer" ? "Upload NBA Certificate" : "Upload CAC Registration Document";
+  const docLabel =
+    accountType === "lawyer"
+      ? "Upload NBA Certificate"
+      : "Upload CAC Registration Document";
 
   const handleFile = (f: File) => {
     if (f.size > 25 * 1024 * 1024) {
@@ -36,14 +43,19 @@ export default function Step3Verification({ accountType, onFinish, isLoading }: 
   };
 
   const handleFinish = async () => {
-    if (!file) { setError("Please upload the required document."); return; }
+    if (!file) {
+      setError("Please upload the required document.");
+      return;
+    }
     await onFinish(file);
   };
 
   return (
     <div className="max-w-sm mx-auto md:mx-0">
-      <div className="border border-gray-100 rounded-2xl p-6 shadow-sm">
-        <h2 className="text-[15px] font-semibold text-gray-900 mb-5">Verification</h2>
+      <div className="border border-[#E5E7EB] rounded-2xl p-6 shadow-sm">
+        <h2 className="text-[15px] font-semibold text-gray-900 mb-5">
+          Verification
+        </h2>
 
         <div className="mb-4">
           <label className="block text-[12px] font-medium text-gray-600 mb-2">
@@ -53,15 +65,18 @@ export default function Step3Verification({ accountType, onFinish, isLoading }: 
           {/* Drop zone */}
           <div
             onClick={() => inputRef.current?.click()}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
               dragOver
                 ? "border-[#1A56DB] bg-blue-50"
                 : file
-                ? "border-green-300 bg-green-50"
-                : "border-gray-200 hover:border-gray-300 bg-white"
+                  ? "border-green-300 bg-green-50"
+                  : "border-gray-200 hover:border-gray-300 bg-white"
             }`}
           >
             <input
@@ -69,18 +84,28 @@ export default function Step3Verification({ accountType, onFinish, isLoading }: 
               type="file"
               accept=".pdf,.jpg,.jpeg,.png,.webp"
               className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleFile(f);
+              }}
             />
 
             {file ? (
               <div className="flex items-center justify-center gap-3">
                 <FileText className="w-8 h-8 text-green-500" />
                 <div className="text-left">
-                  <p className="text-[13px] font-medium text-gray-700 truncate max-w-[160px]">{file.name}</p>
-                  <p className="text-[11px] text-gray-400">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                  <p className="text-[13px] font-medium text-gray-700 truncate max-w-[160px]">
+                    {file.name}
+                  </p>
+                  <p className="text-[11px] text-gray-400">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
                 </div>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFile(null);
+                  }}
                   className="ml-auto p-1 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                 >
                   <X className="w-3.5 h-3.5 text-gray-500" />
@@ -90,9 +115,14 @@ export default function Step3Verification({ accountType, onFinish, isLoading }: 
               <>
                 <Upload className="w-8 h-8 text-gray-300 mx-auto mb-3" />
                 <p className="text-[13px] text-gray-500">
-                  <span className="text-[#1A56DB] font-medium">Click to upload</span> or drag and drop
+                  <span className="text-[#1A56DB] font-medium">
+                    Click to upload
+                  </span>{" "}
+                  or drag and drop
                 </p>
-                <p className="text-[12px] text-gray-400 mt-1">PDF (max. 20mb)</p>
+                <p className="text-[12px] text-gray-400 mt-1">
+                  PDF (max. 20mb)
+                </p>
                 {/* PDF icon decoration */}
                 <div className="absolute bottom-3 right-4 opacity-30">
                   <FileText className="w-8 h-8 text-red-400" />

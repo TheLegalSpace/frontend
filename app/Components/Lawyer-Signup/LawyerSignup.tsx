@@ -157,7 +157,7 @@ export default function LawyerSignup() {
         return (
           <div
             key={s.id}
-            className="flex gap-3 py-3 border-b border-gray-100 last:border-0"
+            className="flex gap-3 py-3 border-b border-[#E5E7EB] last:border-0"
           >
             <div
               className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
@@ -202,12 +202,12 @@ export default function LawyerSignup() {
   if (mainStep === 4) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="border-b border-gray-100 px-6 py-4">
+        <div className="border-b border-[#E5E7EB] px-6 py-4">
           <img src="/tls-logo-dark.png" alt="TLS" className="h-6" />
         </div>
 
         {/* All steps complete */}
-        <div className="flex items-center justify-center py-6 border-b border-gray-100 px-4">
+        <div className="flex items-center justify-center py-6 border-b border-[#E5E7EB] px-4">
           {MAIN_STEPS.map((s, i) => (
             <div key={s.id} className="flex items-center">
               <div className="flex flex-col items-center px-4 md:px-8">
@@ -229,7 +229,7 @@ export default function LawyerSignup() {
         </div>
 
         <div className="flex items-center justify-center px-4 py-20">
-          <div className="w-full max-w-sm border border-gray-100 rounded-2xl p-8 text-center shadow-sm">
+          <div className="w-full max-w-sm border border-[#E5E7EB] rounded-2xl p-8 text-center shadow-sm">
             <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-7 h-7 text-green-500" />
             </div>
@@ -256,7 +256,7 @@ export default function LawyerSignup() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+      <div className="border-b border-[#E5E7EB] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* ✅ Back arrow */}
           {canGoBack && (
@@ -307,7 +307,7 @@ export default function LawyerSignup() {
       )}
 
       {/* ✅ Horizontal stepper — top, both mobile and desktop */}
-      <div className="flex items-center justify-center py-5 border-b border-gray-100 px-4">
+      <div className="flex items-center justify-center py-5 border-b border-[#E5E7EB] px-4">
         {MAIN_STEPS.map((s, i) => {
           const status = getStepStatus(s.id);
           return (

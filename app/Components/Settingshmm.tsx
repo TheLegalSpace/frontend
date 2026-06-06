@@ -129,9 +129,9 @@ export default function SettingsPage() {
     <div className="max-w-3xl mx-auto px-4 py-6">
       <h1 className="text-[15px] font-medium text-gray-900 mb-6">Settings</h1>
 
-      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden">
         {/* Personal Information */}
-        <div className="px-6 py-6 border-b border-gray-100">
+        <div className="px-6 py-6 border-b border-[#E5E7EB]">
           <h2 className="text-[13px] font-semibold text-gray-900 mb-4">
             Personal Information
           </h2>
@@ -238,7 +238,7 @@ export default function SettingsPage() {
 
         {/* Anonymous */}
         {isUser && (
-          <div className="px-6 py-6 border-b border-gray-100">
+          <div className="px-6 py-6 border-b border-[#E5E7EB]">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-[13px] font-semibold text-gray-900 mb-1">

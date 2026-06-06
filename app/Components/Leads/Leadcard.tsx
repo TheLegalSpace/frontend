@@ -69,7 +69,8 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
 
   const router = useRouter();
 
-  const { userAccount, intakePayload, createdAt, status, relevanceScore } = lead;
+  const { userAccount, intakePayload, createdAt, status, relevanceScore } =
+    lead;
   const isPending = status === "pending";
 
   const displayName = userAccount?.isAnonymous
@@ -111,13 +112,13 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
   }
 
   return (
-    <div className="bg-white border-b border-gray-100 px-5 py-5">
+    <div className="bg-white border-b border-[#E5E7EB] px-5 py-5">
       {/* Header — avatar + name + rating */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <div
             className={`relative w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0 overflow-hidden ${avatarColor(
-              userAccount?.fullName ?? ""
+              userAccount?.fullName ?? "",
             )}`}
           >
             {userAccount?.avatarUrl ? (
@@ -136,9 +137,7 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
             {displayName}
           </span>
         </div>
-        <span className="text-[13px] text-gray-500">
-          {rating}/5★
-        </span>
+        <span className="text-[13px] text-gray-500">{rating}/5★</span>
       </div>
 
       {/* Free text body */}
@@ -191,9 +190,7 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
             disabled={declining || accepting}
             className="flex items-center gap-1 text-[12px] font-medium text-red-500 hover:text-red-600 transition disabled:opacity-50"
           >
-            {declining && (
-              <Loader2 size={12} className="animate-spin" />
-            )}
+            {declining && <Loader2 size={12} className="animate-spin" />}
             Don't follow up with client
           </button>
 
@@ -202,9 +199,7 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
             disabled={accepting || declining}
             className="flex items-center gap-1 text-[12px] font-medium text-green-600 hover:text-green-700 transition disabled:opacity-50"
           >
-            {accepting && (
-              <Loader2 size={12} className="animate-spin" />
-            )}
+            {accepting && <Loader2 size={12} className="animate-spin" />}
             Respond to client
           </button>
         </div>
@@ -215,8 +210,8 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
               status === "accepted"
                 ? "bg-green-50 text-green-700"
                 : status === "declined"
-                ? "bg-red-50 text-red-600"
-                : "bg-gray-100 text-gray-500"
+                  ? "bg-red-50 text-red-600"
+                  : "bg-gray-100 text-gray-500"
             }`}
           >
             {status.charAt(0).toUpperCase() + status.slice(1)}

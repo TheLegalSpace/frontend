@@ -44,7 +44,7 @@ export default function Navbar() {
   // }, []);
 
   return (
-    <nav className="border-b border-gray-100">
+    <nav className="border-b border-[#E5E7EB]">
       <div className="px-4 sm:px-6 lg:px-42 py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
@@ -89,7 +89,7 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="md:hidden pt-4 pb-2 space-y-3 border-t border-gray-100 mt-4">
+          <div className="md:hidden pt-4 pb-2 space-y-3 border-t border-[#E5E7EB] mt-4">
             <button className="block w-full text-left text-sm text-gray-700 py-2">
               Lawyer Login
             </button>
