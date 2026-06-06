@@ -357,7 +357,7 @@ export default function ProfileCard({
 
   return (
     <div className="w-full">
-      <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-hidden rounded-2xl  bg-white">
         {/* Cover */}
         <div className="relative h-44 w-full overflow-hidden bg-[#E5E7EB]">
           {profile.coverUrl ? (
