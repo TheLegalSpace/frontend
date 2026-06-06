@@ -51,10 +51,22 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Leads", href: "/dashboard/leads", icon: Users },
     { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
     { label: "Posts", href: "/dashboard/posts", icon: FileText },
-    { label: "TLS Research", href: "/dashboard/TLS-Research", icon: FolderSearch },
-    { label: "Legal News", href: "/dashboard/Legal-News", icon: BookOpenText },
-    { label: "Legal Library", href: "/dashboard/legal-library", icon: BookText },
-    { label: "TLS Services", href: "/dashboard/tls-services", icon: PackageSearch },
+    { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
+    {
+      label: "TLS Research",
+      href: "/dashboard/TLS-Research",
+      icon: FolderSearch,
+    },
+    {
+      label: "TLS Library",
+      href: "/dashboard/legal-library",
+      icon: BookText,
+    },
+    {
+      label: "TLS Services",
+      href: "/dashboard/tls-services",
+      icon: PackageSearch,
+    },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { label: "Settings", href: "/dashboard/settings", icon: Settings },
   ],
@@ -296,12 +308,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-black rounded-md flex items-center justify-center text-white text-xs">
-            ⚖
-          </div>
-          <span className="text-sm font-medium text-gray-900">
-            The Legal Space
-          </span>
+          <img src="/logo.png" alt="logo" className="w-full h-10" />
         </div>
         <button
           onClick={() => setMobileOpen(false)}
@@ -384,7 +391,7 @@ export default function Sidebar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] mb-0.5 transition-colors ${
+              className={`flex items-center gap-2.5 px-2.5 py-[12px]  text-[14px] mb-[14px]  transition-colors ${
                 isActive
                   ? "bg-blue-50 text-blue-700 font-medium"
                   : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
@@ -412,7 +419,7 @@ export default function Sidebar() {
         )}
         <button
           onClick={() => setShowLogoutModal(true)}
-          className="w-full py-2 bg-red-50 border border-red-100 rounded-lg text-[13px] font-medium text-red-500 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+          className="w-full py-2 bg-red-50 border border-red-100 rounded-2xl text-[14px] font-medium text-red-500 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
         >
           <LogOut className="w-4 h-4" />
           Logout

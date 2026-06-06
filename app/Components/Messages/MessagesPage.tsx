@@ -230,7 +230,7 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 md:flex md:items-start md:justify-center md:py-8 md:px-4">
+    <div className="min-h-70 bg-gray-50 md:flex md:items-start md:justify-center md:py-8 md:px-4">
       <div className="w-full md:max-w-4xl bg-white md:border md:border-gray-200 md:rounded-2xl overflow-hidden md:flex md:h-150 md:shadow-sm h-screen flex flex-col">
         <div className="flex flex-1 overflow-hidden">
           {/* Conversation list */}
