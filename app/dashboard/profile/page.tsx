@@ -25,11 +25,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className=" w-full bg-[#F5F5F5] min-h-screen px-4 lg:px-6 py-6">
+    <div className=" w-full bg-white min-h-screen px-4 lg:px-6 ">
       <div className="max-w-362.5 mx-auto">
         {/* Page title */}
-        <div className="mb-5">
-          <h1 className="font-[Instrument_Serif] text-[38px] leading-none font-light text-[#1F2937]">
+        <div className=" h-[80px] flex items-center ">
+          <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937]">
             Profile
           </h1>
         </div>
