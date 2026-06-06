@@ -109,7 +109,7 @@ export default function EventsPanel() {
             </div>
 
             {/* CTA */}
-            <button className="font-['Geist'] w-full mt-2.5 h-9 rounded-lg bg-[#ECECEC] hover:bg-[#1D4ED8] hover:text-white transition-all duration-300 text-[12px] font-medium text-[#2A2B2D] flex items-center justify-center gap-1.5">
+            <button className="font-['Geist'] w-full  h-9 rounded-lg bg-[#ECECEC] hover:bg-[#1D4ED8] hover:text-white transition-all duration-300 text-[12px] font-medium text-[#2A2B2D] flex items-center justify-center gap-1.5">
               Register for Event
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
