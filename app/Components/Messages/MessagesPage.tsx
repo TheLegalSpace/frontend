@@ -232,7 +232,7 @@ export default function MessagesPage() {
   return (
     <div className=" ">
       <div className="w-full  bg-white md:border md:border-gray-200 overflow-hidden md:flex md:h-150 md:shadow-sm h-screen flex flex-col">
-        <h1 className="text-[22px] font-semibold text-gray-900 ps-4 pt-6 pb-[1px] font-[Instrument_Serif]">
+        <h1 className="text-[22px] font-regular text-gray-900 ps-4 pt-6 pb-[1px] font-[Instrument_Serif]">
           Messages
         </h1>
         <div className="w-full h-px bg-[#E6EAED] my-4"></div>

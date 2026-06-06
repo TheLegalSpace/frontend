@@ -83,7 +83,7 @@ export default function PostsPage() {
         <div className="flex gap-1">
           <button
             onClick={() => setActiveTab("posts")}
-            className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition ${
+            className={`px-4 py-1.5 rounded-full text-[13px] font-normal transition ${
               activeTab === "posts"
                 ? "bg-gray-900 text-white"
                 : "text-gray-500 hover:text-gray-700"
@@ -93,7 +93,7 @@ export default function PostsPage() {
           </button>
           <button
             onClick={() => setActiveTab("articles")}
-            className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition ${
+            className={`px-4 py-1.5 rounded-full text-[13px] font-normal transition ${
               activeTab === "articles"
                 ? "bg-gray-900 text-white"
                 : "text-gray-500 hover:text-gray-700"
