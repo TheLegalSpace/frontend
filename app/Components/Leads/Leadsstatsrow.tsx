@@ -60,14 +60,14 @@ export default function LeadsStatsRow({ stats, profileViews = 0 }: Props) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 px-4">
       {items.map((stat) => (
         <div
           key={stat.label}
           className="bg-white border border-[#E5E7EB] rounded-xl px-5 py-4"
         >
           <p className="text-[12px] text-gray-400 mb-1">{stat.label}</p>
-          <p className="text-[32px] font-semibold text-gray-900 leading-none">
+          <p className="text-[32px]  text-gray-900 leading-none font-[Instrument_Serif]">
             {stat.value}
           </p>
           <p

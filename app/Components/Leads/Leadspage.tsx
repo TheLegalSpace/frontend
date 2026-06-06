@@ -19,18 +19,15 @@ const STATUS_TABS: { label: string; value: LeadStatus }[] = [
 export default function LeadsPage() {
   const [activeTab, setActiveTab] = useState<LeadStatus>("pending");
 
-  const {
-    data,
-    isLoading,
-    isFetchingNextPage,
-    fetchNextPage,
-    hasNextPage,
-  } = useLeads(activeTab, 20);
+  const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
+    useLeads(activeTab, 20);
 
   const { data: stats } = useLeadStats();
   const { patchLeadStatus, prependPendingLead } = useLeadsCache();
 
-  const leads = (data?.pages ?? []).flatMap((p) => p?.data?.items ?? []) as Lead[];
+  const leads = (data?.pages ?? []).flatMap(
+    (p) => p?.data?.items ?? [],
+  ) as Lead[];
   const total = (data?.pages?.[0]?.data?.pagination?.total ?? 0) as number;
 
   // Use a ref so the socket handler always has the latest prependPendingLead
@@ -38,7 +35,6 @@ export default function LeadsPage() {
   const notificationHandlerRef = useRef<
     ((notif: { type: string; payload: { lead?: Lead } }) => void) | undefined
   >(undefined);
-
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken") ?? "";
@@ -67,18 +63,21 @@ export default function LeadsPage() {
     await fetchNextPage();
   }
 
-  const activeLabel = STATUS_TABS.find((t) => t.value === activeTab)?.label ?? "";
+  const activeLabel =
+    STATUS_TABS.find((t) => t.value === activeTab)?.label ?? "";
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <h1 className="text-[22px] font-semibold text-gray-900 mb-6">Leads</h1>
-
+    <div className="min-h-screen bg-white">
+      <div className=" ">
+        <h1 className="text-[22px] font-semibold text-gray-900 ps-4 pt-6 pb-[1px] font-[Instrument_Serif]">
+          Leads
+        </h1>
+        <div className="w-full h-px bg-[#E6EAED] my-4"></div>
         {/* Stats */}
         <LeadsStatsRow stats={stats ?? null} />
 
         {/* Tabs */}
-        <div className="sticky top-0 z-20 bg-gray-50 -mx-4 px-4 mb-5">
+        <div className="sticky top-0 z-20 bg-gray-50 px-4  mb-5">
           <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
             <div className="flex items-center">
               {STATUS_TABS.map((tab) => {
@@ -105,7 +104,7 @@ export default function LeadsPage() {
         </div>
 
         {/* Section header */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 px-4">
           <h2 className="text-[15px] font-semibold text-gray-900">
             {activeLabel} Leads
           </h2>
@@ -119,7 +118,7 @@ export default function LeadsPage() {
             Loading leads...
           </div>
         ) : leads.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-2 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-16 px-4 gap-2 text-gray-400">
             <p className="text-sm">No {activeTab} leads yet.</p>
           </div>
         ) : (
