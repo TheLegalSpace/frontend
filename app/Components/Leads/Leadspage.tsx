@@ -77,7 +77,7 @@ export default function LeadsPage() {
         <LeadsStatsRow stats={stats ?? null} />
 
         {/* Tabs */}
-        <div className="sticky top-0 z-20 bg-gray-50 px-4  mb-5">
+        <div className="sticky top-0 z-20  px-4  mb-5">
           <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
             <div className="flex items-center">
               {STATUS_TABS.map((tab) => {
