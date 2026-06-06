@@ -43,7 +43,7 @@ export default function EventsPanel() {
   const activeEvent = events[current];
 
   return (
-    <div className="flex flex-col gap-3 lg:sticky lg:top-4 font-[Instrument_Serif] p-2">
+    <div className="flex flex-col gap-3 lg:fixed mt-[68px] lg:top-4 font-[Instrument_Serif] p-2 min-h-screen border-l border-[#ECECEC]">
       {/* Banner */}
       <div className="relative overflow-hidden rounded-xl bg-[#1D4ED8] px-4 py-5">
         <div className="absolute inset-0 opacity-10">
@@ -70,7 +70,7 @@ export default function EventsPanel() {
       </div>
 
       {/* Event Card */}
-      <div className="bg-[#F4F4F4] rounded-xl p-2.5 font-[Instrument_Serif]">
+      <div className=" rounded-xl  font-[Instrument_Serif]">
         {isLoading && (
           <div className="font-[Instrument_Serif] h-48 rounded-xl bg-white flex items-center justify-center text-xs text-gray-400">
             Loading events...
@@ -85,17 +85,17 @@ export default function EventsPanel() {
                 <img
                   src={activeEvent.coverUrl}
                   alt={activeEvent.title}
-                  className="w-full h-55 object-cover"
+                  className="w-full h-[400px] object-cover"
                 />
               )}
               <div className="absolute left-1/2 -translate-x-1/2 bottom-3">
-                <div className="w-9 h-9 rounded-full border-2 border-white overflow-hidden">
+                {/* <div className="w-9 h-9 rounded-full border-2 border-white overflow-hidden">
                   <img
                     src="https://randomuser.me/api/portraits/men/32.jpg"
                     alt="host"
                     className="w-full h-full object-cover"
                   />
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -106,10 +106,10 @@ export default function EventsPanel() {
             </button>
 
             {/* Info */}
-            <div className="mt-3 px-1 font-['Geist']">
-              <span className="inline-flex px-2 py-0.5 rounded-full bg-[#E1F5EE] text-[#0F6E56] border border-[#5DCAA5] text-[10px] mb-2">
+            {/* <div className="mt-3 px-1 font-['Geist']">
+              span className="inline-flex px-2 py-0.5 rounded-full bg-[#E1F5EE] text-[#0F6E56] border border-[#5DCAA5] text-[10px] mb-2">
                 {activeEvent.status}
-              </span>
+              </span> 
               <h3 className="text-[13px] font-medium leading-snug text-[#111827] mb-1.5">
                 {activeEvent.title}
               </h3>
@@ -118,7 +118,7 @@ export default function EventsPanel() {
                 <p>{formatDateRange(activeEvent.startAt, activeEvent.endAt)}</p>
                 <p>{formatTime(activeEvent.startAt)}</p>
               </div>
-            </div>
+            </div> */}
 
             {/* Pagination */}
             {events.length > 1 && (

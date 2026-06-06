@@ -8,7 +8,7 @@ import {
   MapPin,
   ThumbsUp,
   ThumbsDown,
-//  Trash2,
+  //  Trash2,
   Clock,
   BookOpen,
   Pencil,
@@ -219,13 +219,15 @@ function ProfileArticleCard({
           type="button"
           className="p-1.5 text-[#9CA3AF]  transition-colors flex items-center gap-1.5"
         >
-          <ThumbsUp className="w-4 h-4" />{article.likeCount}
+          <ThumbsUp className="w-4 h-4" />
+          {article.likeCount}
         </button>
         <button
           type="button"
           className="p-1.5 text-[#9CA3AF]  transition-colors flex items-center gap-1.5"
         >
-          <ThumbsDown className="w-4 h-4" />{article.dislikeCount}
+          <ThumbsDown className="w-4 h-4" />
+          {article.dislikeCount}
         </button>
         {/* {isOwnProfile && (
           <button
@@ -367,7 +369,7 @@ export default function ProfileCard({
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="h-full w-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center" >
+            <div className="h-full w-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center">
               <span>No Cover Photo</span>
             </div>
           )}
@@ -463,7 +465,7 @@ export default function ProfileCard({
                         href="/dashboard/find-lawyer"
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E5F5EA] text-[#16A34A] text-[12px] font-medium rounded-full hover:opacity-90 transition-opacity"
                       >
-                        Get a lawyer ⚖️
+                        Get a lawyer
                       </Link>
                     )
                   )}
@@ -482,7 +484,7 @@ export default function ProfileCard({
                         : ""}
                     </span>
                     {(isLawyer || isFirm) && (
-                      <span className="text-[12px] text-[#16A34A]">⚖️</span>
+                      <span className="text-[12px] text-[#16A34A]"></span>
                     )}
                   </div>
                 )}
@@ -524,7 +526,10 @@ export default function ProfileCard({
                 Practice Areas
               </span>
               {isOwnProfile && (
-                <Link  href="/dashboard/settings" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">
+                <Link
+                  href="/dashboard/settings"
+                  className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1"
+                >
                   <Pencil className="w-3 h-3" />
                   Edit
                 </Link>

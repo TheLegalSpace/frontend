@@ -1,4 +1,4 @@
-# ⚖️ The Legal Space — Frontend
+# The Legal Space — Frontend
 
 > Connecting Nigerians to verified lawyers and legal firms. Fast. Secure. Accessible.
 
@@ -77,22 +77,23 @@ frontend/
 
 ## 🧰 Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript |
-| HTTP Client | Axios |
-| Server State | TanStack React Query |
-| Auth State | React Context |
-| Styling | Tailwind CSS |
-| Icons | Lucide React |
-| Images | Next.js Image |
+| Layer        | Technology              |
+| ------------ | ----------------------- |
+| Framework    | Next.js 14 (App Router) |
+| Language     | TypeScript              |
+| HTTP Client  | Axios                   |
+| Server State | TanStack React Query    |
+| Auth State   | React Context           |
+| Styling      | Tailwind CSS            |
+| Icons        | Lucide React            |
+| Images       | Next.js Image           |
 
 ---
 
 ## 🔑 Key Concepts for Collaborators
 
 ### Auth
+
 Auth is managed globally via `useAuth()` — never handle tokens manually in components.
 
 ```tsx
@@ -100,6 +101,7 @@ const { user, login, logout, isLoading } = useAuth();
 ```
 
 ### Data Fetching
+
 All data fetching goes through React Query hooks — they cache results and deduplicate requests.
 
 ```tsx
@@ -108,6 +110,7 @@ const { data: areas } = usePracticeAreas();
 ```
 
 ### API Calls
+
 Never call `api` directly in components. Use the service files or hooks.
 
 ```tsx
@@ -130,6 +133,7 @@ Full guide for all API utilities, hooks, services, and context:
 👉 **[docs/API_UTILITIES_DOCS.md](./docs/API_UTILITIES_DOCS.md)**
 
 Covers:
+
 - Every service method with usage examples
 - Auth flow with token refresh diagram
 - React Query hooks and caching behaviour
@@ -144,12 +148,12 @@ Covers:
 
 Key endpoint groups:
 
-| Group | Base Path |
-|---|---|
-| Auth | `/api/v1/auth` |
-| Profile | `/api/v1/profile` |
+| Group          | Base Path                |
+| -------------- | ------------------------ |
+| Auth           | `/api/v1/auth`           |
+| Profile        | `/api/v1/profile`        |
 | Practice Areas | `/api/v1/practice-areas` |
-| Follows | `/api/v1/follows` |
+| Follows        | `/api/v1/follows`        |
 
 ---
 
@@ -172,4 +176,4 @@ Remember to add `NEXT_PUBLIC_API_URL` to your Vercel environment variables.
 
 ---
 
-<p align="center">Built with ⚖️ for access to justice in Nigeria</p>
+<p align="center">Built with  for access to justice in Nigeria</p>
