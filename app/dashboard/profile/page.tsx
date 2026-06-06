@@ -28,16 +28,16 @@ export default function ProfilePage() {
     <div className=" w-full bg-white min-h-screen  ">
       <div className=" ">
         {/* Page title */}
-        <div className=" h-[75px] flex items-center border-b border-[#E5E7EB] px-4">
+        <div className=" h-[75px] flex items-center border-b border-[#E5E7EB] px-4 fixed w-full bg-white">
           <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937]">
             Profile
           </h1>
         </div>
 
         {/* Layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-5 items-start mt-4 px-4">
+        <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-5 items-start  px-4 ">
           {/* Left */}
-          <div className="min-w-0">
+          <div className="min-w-0 mt-[95px]">
             <ProfileCard
               profile={{
                 ...(profile?.data as ProfileData),
