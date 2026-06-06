@@ -26,7 +26,7 @@ export default function ProfilePage() {
 
   return (
     <div className=" w-full bg-white min-h-screen  ">
-      <div className="max-w-362.5 ">
+      <div className=" ">
         {/* Page title */}
         <div className=" h-[75px] flex items-center border-b border-[#E5E7EB] px-4">
           <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937]">

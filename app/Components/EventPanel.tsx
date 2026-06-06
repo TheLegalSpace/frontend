@@ -70,7 +70,7 @@ export default function EventsPanel() {
       </div>
 
       {/* Event Card */}
-      <div className=" rounded-xl  font-[Instrument_Serif]">
+      <div className=" rounded-xl  font-[Instrument_Serif] flex flex-col gap-2 items-center ">
         {isLoading && (
           <div className="font-[Instrument_Serif] h-48 rounded-xl bg-white flex items-center justify-center text-xs text-gray-400">
             Loading events...
