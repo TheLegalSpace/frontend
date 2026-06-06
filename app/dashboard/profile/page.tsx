@@ -28,7 +28,7 @@ export default function ProfilePage() {
     <div className=" w-full bg-white min-h-screen  ">
       <div className=" ">
         {/* Page title */}
-        <div className=" h-[75px] flex items-center border-b border-[#E5E7EB] px-4 fixed w-full bg-white">
+        <div className=" h-[75px] flex items-center border-b border-[#E5E7EB] px-4 fixed w-full bg-white z-99999">
           <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937]">
             Profile
           </h1>
