@@ -65,14 +65,14 @@ export default function ConversationList({
   return (
     <div className="w-full md:w-64 md:min-w-64 md:border-r border-gray-200 flex flex-col bg-white h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+      {/* <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
           Messages
         </span>
         <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
           <Search size={16} className="text-gray-400" />
         </button>
-      </div>
+      </div> */}
 
       {/* Search input */}
       <div className="px-3 pb-3">

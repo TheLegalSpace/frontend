@@ -79,7 +79,7 @@ export default function PostsPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Top tab bar */}
-      <div className="flex items-center justify-between border-b border-[#E5E7EB] px-5 py-3 sticky top-0 bg-white z-10">
+      <div className="flex items-center justify-between border-b border-[#E5E7EB] px-[16px] py-[19px] sticky top-0 bg-white z-10">
         <div className="flex gap-1">
           <button
             onClick={() => setActiveTab("posts")}
@@ -113,7 +113,7 @@ export default function PostsPage() {
       </div>
 
       {/* Posts list */}
-      <div className="max-w-3xl mx-auto">
+      <div className="">
         {postsQuery.isLoading ? (
           <div className="flex items-center justify-center py-20 text-gray-400 gap-2">
             <Loader2 size={16} className="animate-spin" />

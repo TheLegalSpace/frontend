@@ -153,7 +153,7 @@ export default function MyPostCard({
                 getInitials(post.author?.fullName ?? "")
               )}
             </div>
-            <span className="text-[14px] font-semibold text-gray-900">
+            <span className="text-[24px] font-semibold text-gray-900 font-[Instrument_Serif]">
               {displayName}
             </span>
           </div>
@@ -165,7 +165,7 @@ export default function MyPostCard({
         </div>
 
         {/* Body */}
-        <p className="text-[13px] text-gray-700 leading-relaxed mb-3">
+        <p className="text-[14px] text-gray-700 leading-relaxed mb-3 font-[Geist]">
           {post.body}
         </p>
 

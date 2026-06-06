@@ -20,6 +20,7 @@ import {
   FileText,
   Building2,
   BookOpenText,
+  MonitorUp,
   FolderSearch,
   BookText,
   PackageSearch,
@@ -50,7 +51,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Feeds", href: "/dashboard/feeds", icon: LayoutGrid },
     { label: "Leads", href: "/dashboard/leads", icon: Users },
     { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
-    { label: "Posts", href: "/dashboard/posts", icon: FileText },
+    { label: "Posts", href: "/dashboard/posts", icon: MonitorUp },
     { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
     {
       label: "TLS Research",
@@ -75,7 +76,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Feeds", href: "/dashboard/feeds", icon: LayoutGrid },
     { label: "Leads", href: "/dashboard/leads", icon: Users },
     { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
-    { label: "Posts", href: "/dashboard/posts", icon: FileText },
+    { label: "Posts", href: "/dashboard/posts", icon: MonitorUp },
     {
       label: "TLS Research",
       href: "/dashboard/TLS-Research",
@@ -100,7 +101,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Feeds", href: "/dashboard/feeds", icon: LayoutGrid },
     { label: "Leads", href: "/dashboard/leads", icon: Users },
     { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
-    { label: "Posts", href: "/dashboard/posts", icon: FileText },
+    { label: "Posts", href: "/dashboard/posts", icon: MonitorUp },
     {
       label: "TLS Research",
       href: "/dashboard/TLS-Research",
@@ -148,6 +149,7 @@ function LogoutModal({
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={!isLoggingOut ? onCancel : undefined}
       />
+
       <div className="relative w-full max-w-xs bg-white rounded-2xl shadow-xl p-6 z-10">
         <div className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
           <AlertTriangle className="w-5 h-5 text-red-500" />
