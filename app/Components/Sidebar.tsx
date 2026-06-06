@@ -308,7 +308,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="logo" className="w-full h-10" />
+          <img src="/logo.png" alt="logo" className="w-full h-[34px]" />
         </div>
         <button
           onClick={() => setMobileOpen(false)}
