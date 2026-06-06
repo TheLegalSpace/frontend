@@ -46,7 +46,7 @@ export default function EventsPanel() {
   return (
     <div className="flex flex-col gap-3 xl:fixed mt-[68px] lg:top-4 font-[Instrument_Serif] p-4 min-h-screen border-l border-[#ECECEC]">
       {/* Banner */}
-      <div className="relative overflow-hidden rounded-xl bg-[#1D4ED8] px-4 py-7">
+      <div className="relative overflow-hidden rounded-xl bg-[#1D4ED8] px-4 py-4">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute right-6 top-2 text-5xl text-white">✦</div>
           <div className="absolute right-16 bottom-1 text-4xl text-white">
