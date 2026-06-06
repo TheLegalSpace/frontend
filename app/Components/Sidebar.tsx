@@ -124,7 +124,7 @@ function LogoutModal({
   isLoggingOut: boolean;
 }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center px-4">
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={!isLoggingOut ? onCancel : undefined}
@@ -171,7 +171,7 @@ function LogoutModal({
 // ─── Logout Overlay ───────────────────────────────────────────────────────────
 function LogoutOverlay() {
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white">
+    <div className="fixed inset-0 z-200 flex flex-col items-center justify-center bg-white">
       <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white text-xl mb-6">
         ⚖
       </div>
