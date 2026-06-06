@@ -43,9 +43,9 @@ export default function EventsPanel() {
   const activeEvent = events[current];
 
   return (
-    <div className="flex flex-col gap-3 lg:fixed mt-[68px] lg:top-4 font-[Instrument_Serif] p-2 min-h-screen border-l border-[#ECECEC]">
+    <div className="flex flex-col gap-3 lg:fixed mt-[68px] lg:top-4 font-[Instrument_Serif] p-4 min-h-screen border-l border-[#ECECEC]">
       {/* Banner */}
-      <div className="relative overflow-hidden rounded-xl bg-[#1D4ED8] px-4 py-5">
+      <div className="relative overflow-hidden rounded-xl bg-[#1D4ED8] px-4 py-7">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute right-6 top-2 text-5xl text-white">✦</div>
           <div className="absolute right-16 bottom-1 text-4xl text-white">
@@ -68,6 +68,7 @@ export default function EventsPanel() {
           </a> */}
         </div>
       </div>
+      <div className="bg-[#E6EAED] h-px w-full"></div>
 
       {/* Event Card */}
       <div className=" rounded-xl  font-[Instrument_Serif] flex flex-col gap-2 items-center ">
@@ -85,7 +86,7 @@ export default function EventsPanel() {
                 <img
                   src={activeEvent.coverUrl}
                   alt={activeEvent.title}
-                  className="w-full h-[400px] object-cover"
+                  className="w-full h-[550px] object-cover"
                 />
               )}
               <div className="absolute left-1/2 -translate-x-1/2 bottom-3">
