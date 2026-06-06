@@ -76,7 +76,7 @@ export default function EventsPanel() {
           </a> */}
         </div>
       </div>
-      <div className="bg-[#E6EAED] h-px w-full"></div>
+      {/* <div className="bg-[#E6EAED] h-px w-full"></div> */}
 
       {/* Event Card */}
       <div className=" rounded-xl  font-[Instrument_Serif] flex flex-col gap-2 items-center ">
@@ -94,7 +94,7 @@ export default function EventsPanel() {
                 <img
                   src={activeEvent.coverUrl}
                   alt={activeEvent.title}
-                  className="w-full h-[50vh] object-cover"
+                  className="w-full h-[68vh] object-cover"
                 />
               )}
               <div className="absolute left-1/2 -translate-x-1/2 bottom-3">
@@ -109,7 +109,7 @@ export default function EventsPanel() {
             </div>
 
             {/* CTA */}
-            <button className="font-['Geist'] w-[60%] mt-2.5 h-9 rounded-lg bg-[#ECECEC] hover:bg-[#1D4ED8] hover:text-white transition-all duration-300 text-[12px] font-medium text-[#2A2B2D] flex items-center justify-center gap-1.5">
+            <button className="font-['Geist'] w-full mt-2.5 h-9 rounded-lg bg-[#ECECEC] hover:bg-[#1D4ED8] hover:text-white transition-all duration-300 text-[12px] font-medium text-[#2A2B2D] flex items-center justify-center gap-1.5">
               Register for Event
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
