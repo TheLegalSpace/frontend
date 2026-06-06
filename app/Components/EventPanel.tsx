@@ -131,7 +131,7 @@ export default function EventsPanel() {
 
             {/* Pagination */}
             {events.length > 1 && (
-              <div className="flex items-center justify-center gap-5 mt-4">
+              <div className="flex items-center justify-center gap-5 ">
                 <button
                   onClick={prevSlide}
                   className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200 transition"
