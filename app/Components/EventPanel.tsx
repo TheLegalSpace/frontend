@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEvents } from "@/hooks/useEvents";
+import Link from "next/link";
 
 function formatDateRange(startAt: string, endAt: string) {
   const start = new Date(startAt);
@@ -58,7 +59,14 @@ export default function EventsPanel() {
           </h2>
           <p className="text-[12px] text-blue-100 font-[Geist]">
             Want to feature your event with The Legal Space? Request coverage,
-            promotion, or partnership through TLS Services.{" "}
+            promotion, or partnership through{" "}
+            <Link
+              href="dashboard/tls-services"
+              className="text-white underline"
+            >
+              TLS Services
+            </Link>
+            .{" "}
           </p>
           {/* <a
             href="mailto:events@thelegalspace.com"
@@ -86,7 +94,7 @@ export default function EventsPanel() {
                 <img
                   src={activeEvent.coverUrl}
                   alt={activeEvent.title}
-                  className="w-full h-[550px] object-cover"
+                  className="w-full h-[50%] object-cover"
                 />
               )}
               <div className="absolute left-1/2 -translate-x-1/2 bottom-3">
