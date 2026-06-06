@@ -17,13 +17,17 @@ type ErrorState = { message: string; onRetry: () => void } | null;
 
 /** Tell the dashboard Sidebar whether the research thread view is active */
 function signalResearchThread(active: boolean) {
-  window.dispatchEvent(new CustomEvent("research:thread", { detail: { active } }));
+  window.dispatchEvent(
+    new CustomEvent("research:thread", { detail: { active } }),
+  );
 }
 
 export default function TLSResearchPage() {
   const [threads, setThreads] = useState<ResearchThread[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [activeThread, setActiveThread] = useState<ResearchThreadDetail | null>(null);
+  const [activeThread, setActiveThread] = useState<ResearchThreadDetail | null>(
+    null,
+  );
   const [messages, setMessages] = useState<ResearchMessage[]>([]);
   const [thinking, setThinking] = useState(false);
   const [pendingPdf, setPendingPdf] = useState<File | null>(null);
@@ -45,7 +49,9 @@ export default function TLSResearchPage() {
     }
   }, []);
 
-  useEffect(() => { loadThreads(); }, [loadThreads]);
+  useEffect(() => {
+    loadThreads();
+  }, [loadThreads]);
 
   // ── Open a thread ─────────────────────────────────────────────────────────
   const openThread = useCallback(async (id: string) => {
@@ -126,7 +132,8 @@ export default function TLSResearchPage() {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticUser.id));
       if (err?.status === 503) {
         setError({
-          message: err.message || "Legal-source search is temporarily unavailable.",
+          message:
+            err.message || "Legal-source search is temporarily unavailable.",
           onRetry: () => doSend(threadId, text, pdf),
         });
       } else if (err?.status === 429) {
@@ -192,8 +199,10 @@ export default function TLSResearchPage() {
       [...prev.map((t) => (t.id === id ? updated : t))].sort((a, b) => {
         if (a.pinned && !b.pinned) return -1;
         if (!a.pinned && b.pinned) return 1;
-        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-      })
+        return (
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+      }),
     );
   }
 
@@ -201,7 +210,6 @@ export default function TLSResearchPage() {
   function handleSuggestion(text: string) {
     handleNew(text);
   }
-
 
   // ── Landing: always shown when no thread is active ───────────────────────
   if (!isThreadActive) {
@@ -245,14 +253,24 @@ export default function TLSResearchPage() {
         } md:flex flex-1 flex-col min-w-0`}
       >
         {/* Thread header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-white shrink-0">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-[#E5E7EB] bg-white shrink-0">
           <div className="flex items-center gap-2">
             {/* Mobile back to sidebar */}
             <button
               onClick={() => setMobileView("sidebar")}
               className="md:hidden w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition mr-1"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-gray-600"
+              >
                 <polyline points="15 18 9 12 15 6" />
               </svg>
             </button>
@@ -262,7 +280,9 @@ export default function TLSResearchPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => activeId && handlePin(activeId, !activeThread?.pinned)}
+              onClick={() =>
+                activeId && handlePin(activeId, !activeThread?.pinned)
+              }
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] border transition ${
                 activeThread?.pinned
                   ? "bg-blue-50 text-blue-700 border-blue-100"
@@ -286,9 +306,24 @@ export default function TLSResearchPage() {
         <div className="flex-1 overflow-y-auto px-5 py-5">
           {loadingMessages ? (
             <div className="flex items-center justify-center h-full text-sm text-gray-400">
-              <svg className="animate-spin mr-2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+              <svg
+                className="animate-spin mr-2 w-4 h-4 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8z"
+                />
               </svg>
               Loading…
             </div>

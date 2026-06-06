@@ -190,8 +190,8 @@ function LogoutOverlay() {
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 function SidebarSkeleton() {
   return (
-    <aside className="w-55 h-screen fixed top-0 left-0 border-r border-gray-100 flex flex-col bg-white">
-      <div className="px-5 py-5 border-b border-gray-100 flex items-center gap-2">
+    <aside className="w-55 h-screen fixed top-0 left-0 border-r border-[#E5E7EB] flex flex-col bg-white">
+      <div className="px-5 py-5 border-b border-[#E5E7EB] flex items-center gap-2">
         <div className="w-7 h-7 bg-black rounded-md flex items-center justify-center text-white text-xs">
           ⚖
         </div>
@@ -199,7 +199,7 @@ function SidebarSkeleton() {
           The Legal Space
         </span>
       </div>
-      <div className="px-5 py-4 border-b border-gray-100 animate-pulse">
+      <div className="px-5 py-4 border-b border-[#E5E7EB] animate-pulse">
         <div className="w-10 h-10 rounded-full bg-gray-100 mb-2.5" />
         <div className="h-3 bg-gray-100 rounded w-3/4 mb-2" />
         <div className="h-2.5 bg-gray-100 rounded w-1/2 mb-3" />
@@ -215,7 +215,7 @@ function SidebarSkeleton() {
           <div key={i} className="h-8 bg-gray-50 rounded-lg animate-pulse" />
         ))}
       </nav>
-      <div className="p-3 border-t border-gray-100">
+      <div className="p-3 border-t border-[#E5E7EB]">
         <div className="h-8 bg-gray-50 rounded-lg animate-pulse" />
       </div>
     </aside>
@@ -304,9 +304,9 @@ export default function Sidebar() {
   if (researchThreadActive) return null;
 
   const sidebarContent = (
-    <aside className="w-55 h-screen fixed top-0 left-0 border-r border-gray-100 flex flex-col bg-white">
+    <aside className="w-55 h-screen fixed top-0 left-0 border-r border-[#E5E7EB] flex flex-col bg-white">
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
+      <div className="px-5 py-5 border-b border-[#E5E7EB] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="logo" className="w-full h-[34px]" />
         </div>
@@ -320,7 +320,7 @@ export default function Sidebar() {
 
       {/* Profile card — USER only */}
       {role === "USER" && (
-        <div className="px-5 py-4 border-b border-gray-100">
+        <div className="px-5 py-4 border-b border-[#E5E7EB]">
           <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-600 mb-2.5 overflow-hidden">
             {user?.avatarUrl ? (
               <img
@@ -407,7 +407,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-gray-100 flex flex-col gap-2">
+      <div className="p-3 border-t border-[#E5E7EB] flex flex-col gap-2">
         {footerCta && (
           <Link
             href={footerCta.href}

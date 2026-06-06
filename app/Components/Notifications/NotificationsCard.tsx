@@ -45,9 +45,15 @@ function getNotificationMeta(type: NotificationType): {
     case "new_message":
       return { icon: <MessageSquare size={15} />, label: "New Message" };
     case "chat_expiry_warning":
-      return { icon: <AlertTriangle size={15} />, label: "Chat Expiry Warning" };
+      return {
+        icon: <AlertTriangle size={15} />,
+        label: "Chat Expiry Warning",
+      };
     case "daily_chat_limit":
-      return { icon: <ShieldAlert size={15} />, label: "Daily Chat Limit Reached" };
+      return {
+        icon: <ShieldAlert size={15} />,
+        label: "Daily Chat Limit Reached",
+      };
     case "new_follower":
       return { icon: <UserPlus size={15} />, label: "New Follower" };
     case "new_review":
@@ -200,7 +206,7 @@ export default function NotificationCard({ notification, onMarkRead }: Props) {
   return (
     <div
       onClick={handleClick}
-      className={`px-4 md:px-5 py-4 border-b border-gray-100 cursor-pointer transition hover:bg-gray-50/60 ${
+      className={`px-4 md:px-5 py-4 border-b border-[#E5E7EB] cursor-pointer transition hover:bg-gray-50/60 ${
         isUnread ? "bg-white" : "bg-gray-50/30"
       }`}
     >

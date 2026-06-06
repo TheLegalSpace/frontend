@@ -1,8 +1,7 @@
-"use client"
+"use client";
 
-import { Search } from "lucide-react"
-import { Conversation } from "@/app/types/message"
-
+import { Search } from "lucide-react";
+import { Conversation } from "@/app/types/message";
 
 function getInitials(name: string) {
   if (!name) return "??";
@@ -107,14 +106,14 @@ export default function ConversationList({
               <button
                 key={convo.id}
                 onClick={() => onSelect(convo.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition text-left ${
+                className={`w-full flex items-center gap-3 px-4 py-3 border-b border-[#E5E7EB] hover:bg-gray-50 transition text-left ${
                   activeId === convo.id ? "bg-gray-100" : ""
                 }`}
               >
                 {/* Avatar */}
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${avatarColor(
-                    displayName
+                    displayName,
                   )}`}
                 >
                   {convo.otherParty?.avatarUrl &&
@@ -142,7 +141,7 @@ export default function ConversationList({
                   <p className="text-[12px] text-gray-500 truncate mt-0.5">
                     {convo.status === "closed" && convo.matterName
                       ? convo.matterName
-                      : convo.lastMessagePreview ?? "No messages yet"}
+                      : (convo.lastMessagePreview ?? "No messages yet")}
                   </p>
                 </div>
               </button>

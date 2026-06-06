@@ -11,16 +11,38 @@ interface Props {
 }
 
 const TLS_ICON = (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="20" height="20" rx="5" fill="#1a1a2e"/>
-    <path d="M10 3L4 6v4c0 3.31 2.56 6.41 6 7 3.44-.59 6-3.69 6-7V6l-6-3z" fill="#3b5bdb" opacity="0.9"/>
-    <path d="M8.5 10.5l1.5 1.5 2.5-2.5" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <rect width="20" height="20" rx="5" fill="#1a1a2e" />
+    <path
+      d="M10 3L4 6v4c0 3.31 2.56 6.41 6 7 3.44-.59 6-3.69 6-7V6l-6-3z"
+      fill="#3b5bdb"
+      opacity="0.9"
+    />
+    <path
+      d="M8.5 10.5l1.5 1.5 2.5-2.5"
+      stroke="white"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
 const WHATSAPP_ICON = (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="20" height="20" rx="5" fill="#25D366"/>
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <rect width="20" height="20" rx="5" fill="#25D366" />
     <path
       fillRule="evenodd"
       clipRule="evenodd"
@@ -31,11 +53,26 @@ const WHATSAPP_ICON = (
 );
 
 const GMAIL_ICON = (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="20" height="20" rx="5" fill="white" stroke="#e5e7eb"/>
-    <path d="M4 6.5L10 11l6-4.5" stroke="#EA4335" strokeWidth="1.2"/>
-    <rect x="4" y="6" width="12" height="9" rx="1" stroke="#4285F4" strokeWidth="1.2" fill="none"/>
-    <path d="M4 6l6 5 6-5" fill="#EA4335"/>
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <rect width="20" height="20" rx="5" fill="white" stroke="#e5e7eb" />
+    <path d="M4 6.5L10 11l6-4.5" stroke="#EA4335" strokeWidth="1.2" />
+    <rect
+      x="4"
+      y="6"
+      width="12"
+      height="9"
+      rx="1"
+      stroke="#4285F4"
+      strokeWidth="1.2"
+      fill="none"
+    />
+    <path d="M4 6l6 5 6-5" fill="#EA4335" />
   </svg>
 );
 
@@ -48,15 +85,15 @@ export default function EngagementModal({
 }: Props) {
   const whatsappHref = lawyerPhone
     ? `https://wa.me/${lawyerPhone.replace(/\D/g, "")}?text=${encodeURIComponent(
-        `Hi ${lawyerName}, I'd like to proceed with my legal matter.`
+        `Hi ${lawyerName}, I'd like to proceed with my legal matter.`,
       )}`
     : null;
 
   const emailHref = lawyerEmail
     ? `mailto:${lawyerEmail}?subject=${encodeURIComponent(
-        "Legal Matter — Proceeding Outside TLS"
+        "Legal Matter — Proceeding Outside TLS",
       )}&body=${encodeURIComponent(
-        `Hi ${lawyerName},\n\nI'd like to proceed with my legal matter outside The Legal Space.\n\nKind regards`
+        `Hi ${lawyerName},\n\nI'd like to proceed with my legal matter outside The Legal Space.\n\nKind regards`,
       )}`
     : null;
 
@@ -136,7 +173,7 @@ export default function EngagementModal({
                 className={`flex items-center gap-4 w-full px-4 py-3.5 rounded-xl border transition text-left
                   ${
                     opt.disabled
-                      ? "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
+                      ? "border-[#E5E7EB] bg-gray-50 opacity-50 cursor-not-allowed"
                       : "border-gray-200 bg-white hover:bg-gray-50 cursor-pointer active:scale-[0.99]"
                   }`}
               >

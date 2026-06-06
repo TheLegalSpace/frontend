@@ -33,7 +33,12 @@ export default function SpecializationPricing({
   const getRows = (id: string): ServiceRow[] =>
     value[id] ?? [{ service: "", pricing: "" }];
 
-  const updateRow = (areaId: string, rowIndex: number, field: keyof ServiceRow, val: string) => {
+  const updateRow = (
+    areaId: string,
+    rowIndex: number,
+    field: keyof ServiceRow,
+    val: string,
+  ) => {
     const rows = [...getRows(areaId)];
     rows[rowIndex] = { ...rows[rowIndex], [field]: val };
     onChange({ ...value, [areaId]: rows });
@@ -58,23 +63,33 @@ export default function SpecializationPricing({
           {getRows(areaId).map((row, i) => (
             <div key={i} className="grid grid-cols-2 gap-2 mb-2">
               <div>
-                <label className="block text-[11px] text-gray-500 mb-1">Service</label>
+                <label className="block text-[11px] text-gray-500 mb-1">
+                  Service
+                </label>
                 <input
                   type="text"
                   value={row.service}
-                  onChange={(e) => updateRow(areaId, i, "service", e.target.value)}
+                  onChange={(e) =>
+                    updateRow(areaId, i, "service", e.target.value)
+                  }
                   placeholder="e.g., Contract Drafting..."
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] outline-none focus:border-[#1A56DB] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-[11px] text-gray-500 mb-1">Pricing</label>
+                <label className="block text-[11px] text-gray-500 mb-1">
+                  Pricing
+                </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-gray-400">₦</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-gray-400">
+                    ₦
+                  </span>
                   <input
                     type="text"
                     value={row.pricing}
-                    onChange={(e) => updateRow(areaId, i, "pricing", e.target.value)}
+                    onChange={(e) =>
+                      updateRow(areaId, i, "pricing", e.target.value)
+                    }
                     placeholder="e.g., ₦50,000"
                     className="w-full pl-6 pr-3 py-2 border border-gray-200 rounded-lg text-[12px] outline-none focus:border-[#1A56DB] transition-colors"
                   />
@@ -86,7 +101,7 @@ export default function SpecializationPricing({
           {/* Add new */}
           <button
             onClick={() => addRow(areaId)}
-            className="w-full py-2 border border-gray-100 rounded-lg text-[12px] text-gray-500 hover:bg-gray-50 flex items-center justify-center gap-1 transition-colors"
+            className="w-full py-2 border border-[#E5E7EB] rounded-lg text-[12px] text-gray-500 hover:bg-gray-50 flex items-center justify-center gap-1 transition-colors"
           >
             Add New <Plus className="w-3.5 h-3.5" />
           </button>

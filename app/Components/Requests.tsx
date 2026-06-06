@@ -37,7 +37,12 @@ function formatExpiry(dateStr: string): string {
 }
 
 function getInitials(name: string): string {
-  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 // ✅ Resolves matter — handles both UUID and name string
@@ -65,7 +70,9 @@ function CancelConfirmModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="w-full max-w-sm bg-white rounded-2xl p-6 relative">
         <button
@@ -125,7 +132,8 @@ function RequestCard({
   practiceAreaMap: Record<string, string>;
 }) {
   const [showConfirm, setShowConfirm] = useState(false);
-  const { intakePayload, lawyerAccount, createdAt, expiresAt, status } = request;
+  const { intakePayload, lawyerAccount, createdAt, expiresAt, status } =
+    request;
 
   // ✅ Resolves UUID → name, or returns name string as-is
   const matterName = resolveMatter(intakePayload.matter, practiceAreaMap);
@@ -139,7 +147,7 @@ function RequestCard({
             : `Looking for legal help with ${matterName}`}
         </p>
 
-        <div className="bg-white border border-gray-100 rounded-xl px-4 py-3.5">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl px-4 py-3.5">
           <div className="flex items-center justify-between gap-3">
             {/* Lawyer info */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -231,7 +239,7 @@ function RequestCard({
 // ─── Section Header ───────────────────────────────────────────────────────────
 function SectionHeader({ title }: { title: string }) {
   return (
-    <h2 className="text-[18px] font-medium text-gray-900 mb-5 pb-3 border-b border-gray-100">
+    <h2 className="text-[18px] font-medium text-gray-900 mb-5 pb-3 border-b border-[#E5E7EB]">
       {title}
     </h2>
   );
@@ -240,7 +248,7 @@ function SectionHeader({ title }: { title: string }) {
 // ─── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="py-8 text-center text-[13px] text-gray-400 border border-gray-100 rounded-xl mb-6">
+    <div className="py-8 text-center text-[13px] text-gray-400 border border-[#E5E7EB] rounded-xl mb-6">
       {message}
     </div>
   );
@@ -306,27 +314,29 @@ export default function RequestsPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
-      <h1 className="text-[22px] font-medium text-gray-900 mb-5 pb-4 border-b border-gray-100">
+      <h1 className="text-[22px] font-medium text-gray-900 mb-5 pb-4 border-b border-[#E5E7EB]">
         Requests
       </h1>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-7">
-        <div className="bg-white border border-gray-100 rounded-xl p-4">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4">
           <p className="text-[12px] text-gray-400 mb-2">Total Requests</p>
           <p className="text-[32px] font-light text-gray-900 leading-none mb-1.5">
             {data?.pagination.total ?? stats.total}
           </p>
           <p className="text-[12px] text-green-600">All time</p>
         </div>
-        <div className="bg-white border border-gray-100 rounded-xl p-4">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4">
           <p className="text-[12px] text-gray-400 mb-2">Active Requests</p>
           <p className="text-[32px] font-light text-gray-900 leading-none mb-1.5">
             {stats.active}
           </p>
-          <p className="text-[12px] text-green-600">↑ {stats.pending} pending</p>
+          <p className="text-[12px] text-green-600">
+            ↑ {stats.pending} pending
+          </p>
         </div>
-        <div className="bg-white border border-gray-100 rounded-xl p-4">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4">
           <p className="text-[12px] text-gray-400 mb-2">Declined Requests</p>
           <p className="text-[32px] font-light text-gray-900 leading-none mb-1.5">
             {stats.declined}
@@ -339,9 +349,11 @@ export default function RequestsPage() {
 
       {/* Pending */}
       <SectionHeader title="Pending Requests" />
-      {pending.length === 0
-        ? <EmptyState message="No pending requests" />
-        : pending.map((r) => renderCard(r))}
+      {pending.length === 0 ? (
+        <EmptyState message="No pending requests" />
+      ) : (
+        pending.map((r) => renderCard(r))
+      )}
 
       {/* Active */}
       {active.length > 0 && (

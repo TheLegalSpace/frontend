@@ -64,7 +64,7 @@ export default function LeadsStatsRow({ stats, profileViews = 0 }: Props) {
       {items.map((stat) => (
         <div
           key={stat.label}
-          className="bg-white border border-gray-100 rounded-xl px-5 py-4"
+          className="bg-white border border-[#E5E7EB] rounded-xl px-5 py-4"
         >
           <p className="text-[12px] text-gray-400 mb-1">{stat.label}</p>
           <p className="text-[32px] font-semibold text-gray-900 leading-none">

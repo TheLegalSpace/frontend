@@ -18,9 +18,9 @@ export default function Hero() {
           </h1>
 
           <p className="text-[#6B7280] text-base leading-relaxed max-w-lg font-['Geist']">
-            Describe your situation. Get matched with verified lawyers and law firms 
-            based on your practice area, location, and budget. Stay anonymous until 
-            you are ready to connect.
+            Describe your situation. Get matched with verified lawyers and law
+            firms based on your practice area, location, and budget. Stay
+            anonymous until you are ready to connect.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 font-[Geist]">
@@ -33,7 +33,7 @@ export default function Hero() {
           </div>
 
           {/* STATS */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-gray-100 font-['Geist']">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-[#E5E7EB] font-['Geist']">
             {[
               { value: "240+", label: "Verified Lawyers" },
               { value: "80+", label: "Law Firms" },
@@ -41,7 +41,9 @@ export default function Hero() {
               { value: "4hrs", label: "Response" },
             ].map((stat) => (
               <div key={stat.label}>
-                <p className="text-2xl lg:text-[26px] font-serif">{stat.value}</p>
+                <p className="text-2xl lg:text-[26px] font-serif">
+                  {stat.value}
+                </p>
                 <p className="text-[#9CA3AF] text-xs mt-1">{stat.label}</p>
               </div>
             ))}

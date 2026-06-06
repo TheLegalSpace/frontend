@@ -3,10 +3,10 @@
 
 import { useState } from "react";
 import { Pencil, Plus } from "lucide-react";
- import ServicesModal from "./ServicesModal";
+import ServicesModal from "./ServicesModal";
 import { useServices } from "@/hooks/useSettings";
 import { ServiceOffering } from "@/services/settings.services";
- 
+
 interface PracticeArea {
   id: string;
   name: string;
@@ -27,7 +27,9 @@ function formatNaira(kobo: number): string {
 export default function ServicesPricingSection({ practiceAreas }: Props) {
   const [editingAreaId, setEditingAreaId] = useState<string | null>(null);
 
-  const { data: services = [], isLoading } = useServices(practiceAreas.length > 0);
+  const { data: services = [], isLoading } = useServices(
+    practiceAreas.length > 0,
+  );
 
   // ✅ Group fetched services by practiceAreaId
   const servicesByArea = services.reduce<Record<string, ServiceOffering[]>>(
@@ -36,14 +38,14 @@ export default function ServicesPricingSection({ practiceAreas }: Props) {
       acc[s.practiceAreaId].push(s);
       return acc;
     },
-    {}
+    {},
   );
 
   if (practiceAreas.length === 0) return null;
 
   return (
     <>
-      <div className="py-6 border-b border-gray-100">
+      <div className="py-6 border-b border-[#E5E7EB]">
         <h2 className="text-[15px] font-semibold text-gray-900 mb-1">
           Services & Pricing
         </h2>
@@ -54,7 +56,10 @@ export default function ServicesPricingSection({ practiceAreas }: Props) {
         {isLoading ? (
           <div className="flex flex-col gap-3">
             {practiceAreas.map((_, i) => (
-              <div key={i} className="h-16 bg-gray-50 rounded-xl animate-pulse" />
+              <div
+                key={i}
+                className="h-16 bg-gray-50 rounded-xl animate-pulse"
+              />
             ))}
           </div>
         ) : (
@@ -90,15 +95,19 @@ export default function ServicesPricingSection({ practiceAreas }: Props) {
                   ) : (
                     <div className="flex flex-col gap-2">
                       <div className="grid grid-cols-2 gap-3">
-                        <span className="text-[12px] text-gray-500">Service</span>
-                        <span className="text-[12px] text-gray-500">Pricing</span>
+                        <span className="text-[12px] text-gray-500">
+                          Service
+                        </span>
+                        <span className="text-[12px] text-gray-500">
+                          Pricing
+                        </span>
                       </div>
                       {areaServices.map((s, i) => (
                         <div key={i} className="grid grid-cols-2 gap-3">
-                          <div className="px-3 py-2.5 border border-gray-100 rounded-lg bg-gray-50 text-[13px] text-gray-700 truncate">
+                          <div className="px-3 py-2.5 border border-[#E5E7EB] rounded-lg bg-gray-50 text-[13px] text-gray-700 truncate">
                             {s.name}
                           </div>
-                          <div className="px-3 py-2.5 border border-gray-100 rounded-lg bg-gray-50 text-[13px] text-gray-700">
+                          <div className="px-3 py-2.5 border border-[#E5E7EB] rounded-lg bg-gray-50 text-[13px] text-gray-700">
                             {formatNaira(s.price)}
                           </div>
                         </div>
@@ -116,7 +125,9 @@ export default function ServicesPricingSection({ practiceAreas }: Props) {
       {editingAreaId && (
         <ServicesModal
           areaId={editingAreaId}
-          areaName={practiceAreas.find((a) => a.id === editingAreaId)?.name ?? ""}
+          areaName={
+            practiceAreas.find((a) => a.id === editingAreaId)?.name ?? ""
+          }
           allServices={services}
           practiceAreas={practiceAreas}
           onClose={() => setEditingAreaId(null)}

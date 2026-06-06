@@ -11,7 +11,11 @@ interface Props {
 
 const MAX_PDF_BYTES = 25 * 1024 * 1024; // 25 MB
 
-export default function ResearchComposer({ onSend, disabled, placeholder }: Props) {
+export default function ResearchComposer({
+  onSend,
+  disabled,
+  placeholder,
+}: Props) {
   const [text, setText] = useState("");
   const [pdf, setPdf] = useState<File | null>(null);
   const [pdfError, setPdfError] = useState("");
@@ -51,15 +55,20 @@ export default function ResearchComposer({ onSend, disabled, placeholder }: Prop
   const overLimit = charCount > 5000;
 
   return (
-    <div className="px-4 py-3 bg-white border-t border-gray-100">
+    <div className="px-4 py-3 bg-white border-t border-[#E5E7EB]">
       {/* PDF chip */}
       {pdf && (
         <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-xl w-fit text-[12px] text-blue-700">
           <span>📄</span>
           <span className="max-w-[220px] truncate">{pdf.name}</span>
-          <span className="text-blue-400">{(pdf.size / 1024).toFixed(0)} KB</span>
+          <span className="text-blue-400">
+            {(pdf.size / 1024).toFixed(0)} KB
+          </span>
           <button
-            onClick={() => { setPdf(null); setPdfError(""); }}
+            onClick={() => {
+              setPdf(null);
+              setPdfError("");
+            }}
             className="text-blue-400 hover:text-blue-600 transition"
           >
             <X size={13} />
@@ -135,8 +144,10 @@ export default function ResearchComposer({ onSend, disabled, placeholder }: Prop
 
       {/* Disclaimer */}
       <p className="text-center text-[10px] text-gray-400 mt-2 leading-relaxed">
-        All responses are cross-checked with available legal sources and public records to minimise inaccuracies.{" "}
-        <span className="font-medium">However</span>, users should independently verify critical legal information.
+        All responses are cross-checked with available legal sources and public
+        records to minimise inaccuracies.{" "}
+        <span className="font-medium">However</span>, users should independently
+        verify critical legal information.
       </p>
     </div>
   );
