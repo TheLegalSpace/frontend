@@ -43,6 +43,11 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Feeds", href: "/dashboard/feeds", icon: LayoutGrid },
     { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
     { label: "Requests", href: "/dashboard/requests", icon: Briefcase },
+    {
+      label: "TLS Services",
+      href: "/dashboard/tls-services",
+      icon: PackageSearch,
+    },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { label: "Settings", href: "/dashboard/settings", icon: Settings },
   ],

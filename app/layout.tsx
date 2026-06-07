@@ -35,7 +35,9 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         className={`${geist.variable} ${instrumentSerif.variable} bg-page-bg`}
         suppressHydrationWarning
       >
-        <Providers>{children}</Providers>
+        {/* <Providers> */}
+        {children}
+        {/* </Providers> */}
 
         {/* ✅ Inside body, afterInteractive loads after page is ready */}
         <Script
