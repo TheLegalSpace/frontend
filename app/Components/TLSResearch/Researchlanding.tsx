@@ -240,19 +240,18 @@ export default function ResearchLanding({
   onUploadAndNew,
 }: Props) {
   return (
-    <div className="flex-1 overflow-y-auto bg-white font-['Geist']">
-      {/* Hero */}
-      <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937] ps-4 pt-[26px] pb-[12px] ">
-        TLS Research
-      </h1>
-      <div className="w-full h-px bg-[#E6EAED] my-4"></div>
-      <div className="max-w-2xl mx-auto px-6 pt-12 pb-8 text-center">
-        {/* <h1 className="text-[18px] font-medium text-gray-900 font-['Instrument_Serif'] mb-8">
+    <div className="flex-1 overflow-y-auto bg-white font-['Geist'] flex flex-col">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-10 bg-white">
+        <h1 className="font-[Instrument_Serif] px-4 text-[20px] leading-none font-light text-[#1F2937] pt-[27px] pb-[27px]">
           TLS Research
-        </h1> */}
+        </h1>
+        <div className="w-full h-px bg-[#E6EAED]" />
+      </div>
 
-        {/* Fake composer */}
-        <div className="flex items-center gap-2 border border-gray-200 rounded-2xl px-4 py-3 bg-white shadow-sm mb-4 cursor-text hover:border-gray-300 transition">
+      {/* Composer section */}
+      <div className="w-full px-6 pt-8 pb-4 flex flex-col items-center bg-white sticky top-[70px]">
+        <div className="flex w-full max-w-2xl items-center gap-2 border border-gray-200 rounded-2xl px-4 py-3 bg-white shadow-sm mb-4 cursor-text hover:border-gray-300 transition">
           <FileText size={16} className="text-gray-400 shrink-0" />
           <span
             className="flex-1 text-left text-gray-400 text-[14px]"
@@ -280,8 +279,7 @@ export default function ResearchLanding({
           </button>
         </div>
 
-        {/* Suggestion chips */}
-        <div className="flex flex-wrap items-center justify-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2 w-[40%]">
           {SUGGESTIONS.map((s) => (
             <button
               key={s}
@@ -292,13 +290,12 @@ export default function ResearchLanding({
             </button>
           ))}
         </div>
+        <div className="w-full h-px! bg-[#E6EAED] mt-[44px]" />
       </div>
 
-      <div className="w-full h-px bg-[#E6EAED] my-4"></div>
-
-      {/* Capabilities */}
-      <div className=" px-4 pb-8">
-        <div className="mb-5">
+      <div className="w-full px-4 py-8 pt-0">
+        {/* Capabilities */}
+        <div className="mb-5 mt-2">
           <div className="flex items-center gap-2 mb-2">
             <span className="block w-5 h-px bg-gray-300" />
             <p className="text-[10px] uppercase tracking-widest text-gray-400">
@@ -335,10 +332,11 @@ export default function ResearchLanding({
           ))}
         </div>
       </div>
-      <div className="w-full h-px bg-[#E6EAED] my-4"></div>
+
+      <div className="w-full h-px bg-[#E6EAED]" />
 
       {/* Scope */}
-      <div className=" px-4 pb-8">
+      <div className="w-full px-4 py-8">
         <div className="mb-5">
           <div className="flex items-center gap-2 mb-2">
             <span className="block w-5 h-px bg-gray-300" />
@@ -376,11 +374,12 @@ export default function ResearchLanding({
           ))}
         </div>
       </div>
-      <div className="w-full h-px bg-[#E6EAED] my-4"></div>
+
+      <div className="w-full h-px bg-[#E6EAED]" />
 
       {/* CTA */}
-      <div className="px-4 pb-12">
-        <div className="rounded-2xl research-bg  px-8 py-8 flex items-center justify-between gap-6">
+      <div className="w-full px-4 py-12">
+        <div className="rounded-2xl research-bg px-8 py-8 flex items-center justify-between gap-6">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">
               Ready
