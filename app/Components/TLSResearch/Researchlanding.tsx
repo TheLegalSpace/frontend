@@ -240,7 +240,7 @@ export default function ResearchLanding({
   onUploadAndNew,
 }: Props) {
   return (
-    <div className="flex flex-col h-full bg-white font-['Geist']">
+    <div className="flex flex-col h-full flex-1 bg-white font-['Geist']">
       {/* Sticky header */}
       <div className="shrink-0">
         <h1 className="text-[22px] font-normal text-gray-900 ps-4 pt-6 pb-px font-[Instrument_Serif]">
@@ -248,8 +248,8 @@ export default function ResearchLanding({
         </h1>
         <div className="w-full h-px bg-[#E6EAED] my-4"></div>
         
-        {/* Sticky search area */}
-        <div className="max-w-2xl mx-auto px-6 pt-4 pb-4 text-center sticky top-0 bg-white z-10 border-b border-gray-100">
+        {/* Search area */}
+        <div className="max-w-2xl mx-auto px-6 pt-4 pb-4 text-center border-b border-gray-100">
         {/* <h1 className="text-[18px] font-medium text-gray-900 font-['Instrument_Serif'] mb-8">
           TLS Research
         </h1> */}
