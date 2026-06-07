@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿// app/Components/Messages/ChatWindow.tsx
+=======
+// app/Components/Messages/ChatWindow.tsx
+>>>>>>> origin/Fixed-At-Last
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -74,6 +78,7 @@ function formatTime(dateStr: string) {
   });
 }
 
+<<<<<<< HEAD
 function formatDateLabel(dateStr: string) {
   const d = new Date(dateStr);
   const today = new Date();
@@ -85,11 +90,47 @@ function formatDateLabel(dateStr: string) {
         day: "numeric",
         year: "numeric",
       });
+=======
+// Module-level cache: date string → "Today" | "June 1, 2025" etc.
+// Avoids creating new Date objects on every message on every render.
+// Cache is keyed by the raw ISO string so identical timestamps always hit.
+const dateLabelCache = new Map<string, string>();
+
+function formatDateLabel(dateStr: string) {
+  if (dateLabelCache.has(dateStr)) return dateLabelCache.get(dateStr)!;
+
+  const d = new Date(dateStr);
+  const today = new Date();
+  const label =
+    d.toDateString() === today.toDateString()
+      ? "Today"
+      : d.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+
+  dateLabelCache.set(dateStr, label);
+
+  // Keep the cache from growing unboundedly across very long sessions
+  if (dateLabelCache.size > 500) {
+    const firstKey = dateLabelCache.keys().next().value;
+    if (firstKey !== undefined) dateLabelCache.delete(firstKey);
+  }
+
+  return label;
+>>>>>>> origin/Fixed-At-Last
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Props {
+<<<<<<< HEAD
+=======
+  onReviewClick: () => void;
+  onHasReviewedChange: (val: boolean) => void;
+
+>>>>>>> origin/Fixed-At-Last
   conversationId: string;
   participantName: string;
   participantPhone?: string | null;
@@ -105,6 +146,11 @@ interface Props {
 }
 
 export default function ChatWindow({
+<<<<<<< HEAD
+=======
+  onReviewClick,
+  onHasReviewedChange,
+>>>>>>> origin/Fixed-At-Last
   conversationId,
   participantName,
   participantPhone,
@@ -122,6 +168,17 @@ export default function ChatWindow({
   const reviewerRole: "client" | "lawyer" = isLawyer ? "lawyer" : "client";
   const isClosed = conversationStatus === "closed";
 
+<<<<<<< HEAD
+=======
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+>>>>>>> origin/Fixed-At-Last
   const queryClient = useQueryClient();
   const { appendMessage, markMessageRead, setMessages } =
     useMessageCache(conversationId);
@@ -210,6 +267,7 @@ export default function ChatWindow({
     const socket = connectSocket(token);
     socket.emit("conversation:join", { conversationId });
 
+<<<<<<< HEAD
     socket.on("message", (msg: Message) => {
       if (msg.conversationId === conversationId) {
         appendMessage(msg);
@@ -231,17 +289,44 @@ export default function ChatWindow({
     );
 
     socket.on("connect_error", (err: { message: string }) => {
+=======
+    const handleMessage = (msg: Message) => {
+      if (msg.conversationId === conversationId) {
+        appendMessage(msg);
+      }
+    };
+
+    const handleMessageRead = ({
+      messageId,
+    }: {
+      conversationId: string;
+      messageId: string;
+      readAt: string;
+      readByAccountId: string;
+    }) => {
+      markMessageRead(messageId);
+    };
+
+    const handleConnectError = (err: { message: string }) => {
+>>>>>>> origin/Fixed-At-Last
       if (err.message === "invalid token") {
         const newToken = localStorage.getItem("accessToken") ?? "";
         refreshSocketAuth(newToken);
       }
+<<<<<<< HEAD
     });
 
     socket.on("connect", () => {
+=======
+    };
+
+    const handleConnect = () => {
+>>>>>>> origin/Fixed-At-Last
       socket.emit("conversation:join", { conversationId });
       queryClient.invalidateQueries({
         queryKey: messageKeys.list(conversationId),
       });
+<<<<<<< HEAD
     });
 
     return () => {
@@ -250,6 +335,21 @@ export default function ChatWindow({
       socket.off("message:read");
       socket.off("connect_error");
       socket.off("connect");
+=======
+    };
+
+    socket.on("message", handleMessage);
+    socket.on("message:read", handleMessageRead);
+    socket.on("connect_error", handleConnectError);
+    socket.on("connect", handleConnect);
+
+    return () => {
+      socket.emit("conversation:leave", { conversationId });
+      socket.off("message", handleMessage);
+      socket.off("message:read", handleMessageRead);
+      socket.off("connect_error", handleConnectError);
+      socket.off("connect", handleConnect);
+>>>>>>> origin/Fixed-At-Last
     };
   }, [appendMessage, conversationId, markMessageRead, queryClient]);
 
@@ -264,11 +364,23 @@ export default function ChatWindow({
     setClosing(true);
     try {
       await messagesService.closeConversation(conversationId);
+<<<<<<< HEAD
       onConversationClosed();
     } catch (err) {
       console.error("[ChatWindow] Failed to close conversation:", err);
     } finally {
       setClosing(false);
+=======
+      if (isMountedRef.current) {
+        onConversationClosed();
+      }
+    } catch (err) {
+      console.error("[ChatWindow] Failed to close conversation:", err);
+    } finally {
+      if (isMountedRef.current) {
+        setClosing(false);
+      }
+>>>>>>> origin/Fixed-At-Last
     }
   }
 
@@ -302,9 +414,19 @@ export default function ChatWindow({
       console.error("Failed to send message:", err);
       // ✅ Revert on failure
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
+<<<<<<< HEAD
       setInput(text);
     } finally {
       setSending(false);
+=======
+      if (isMountedRef.current) {
+        setInput(text);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setSending(false);
+      }
+>>>>>>> origin/Fixed-At-Last
     }
   }
 
@@ -316,8 +438,13 @@ export default function ChatWindow({
   }
 
   function handleReviewSubmitted() {
+<<<<<<< HEAD
     setHasReviewed(conversationId);
     setHasReviewedState(true);
+=======
+    setHasReviewed(conversationId); // still persists to localStorage
+    onHasReviewedChange(true); // tells MessagesPage
+>>>>>>> origin/Fixed-At-Last
   }
 
   // ── Group messages by date ────────────────────────────────────────────────
@@ -348,11 +475,18 @@ export default function ChatWindow({
   return (
     <>
       <div className="flex-1 flex flex-col min-w-0 h-full">
+<<<<<<< HEAD
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-200 bg-white">
           <div className="flex items-center gap-2">
             {showBackButton && (
+=======
+        {/* Header */}
+        {showBackButton && (
+          <div className="md:hidden flex items-center justify-between px-4 py-3.5 border-b border-gray-200 bg-white">
+            <div className="flex items-center gap-2">
+>>>>>>> origin/Fixed-At-Last
               <button
                 onClick={onClose}
                 className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
@@ -360,6 +494,7 @@ export default function ChatWindow({
               >
                 <ArrowLeft size={18} className="text-gray-600" />
               </button>
+<<<<<<< HEAD
             )}
             <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
               {participantName}
@@ -387,6 +522,49 @@ export default function ChatWindow({
             {reviewLabel}
           </button>
         </div>
+=======
+              {/* Header */}
+              {/* Header — back button mobile only, no review button (moved to MessagesPage) */}
+              <div className="flex items-center px-4 py-3.5 border-b border-gray-200 bg-white">
+                {showBackButton && (
+                  <button
+                    onClick={onClose}
+                    className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+                    aria-label="Back to conversations"
+                  >
+                    <ArrowLeft size={18} className="text-gray-600" />
+                  </button>
+                )}
+                {/* Name + closed badge — mobile only */}
+                <span className="md:hidden text-[18px] font-medium font-['Instrument_Serif'] text-gray-900 ml-1">
+                  {participantName}
+                </span>
+                {isClosed && (
+                  <span className="md:hidden ml-2 text-[11px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">
+                    Closed
+                  </span>
+                )}
+              </div>
+              {/* </div> */}
+
+              {/* Review button — desktop */}
+              {/* Mobile review trigger — calls up to MessagesPage */}
+              <button
+                onClick={onReviewClick}
+                disabled={!isClosed}
+                className={`md:hidden w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${
+                  isClosed
+                    ? "border-gray-300 text-amber-500 hover:bg-gray-50 cursor-pointer"
+                    : "border-gray-200 text-gray-300 cursor-not-allowed"
+                }`}
+                aria-label="Review"
+              >
+                ★
+              </button>
+            </div>
+          </div>
+        )}
+>>>>>>> origin/Fixed-At-Last
 
         {/* Anonymous banner — client only */}
         {!isLawyer && (
@@ -596,4 +774,8 @@ export default function ChatWindow({
       )}
     </>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/Fixed-At-Last

@@ -25,6 +25,19 @@ function signalResearchThread(active: boolean) {
 export default function TLSResearchPage() {
   const [threads, setThreads] = useState<ResearchThread[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+<<<<<<< HEAD
+=======
+  const activeIdRef = useRef<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+>>>>>>> origin/Fixed-At-Last
   const [activeThread, setActiveThread] = useState<ResearchThreadDetail | null>(
     null,
   );
@@ -41,11 +54,23 @@ export default function TLSResearchPage() {
   const loadThreads = useCallback(async () => {
     try {
       const data = await researchService.listThreads();
+<<<<<<< HEAD
       setThreads(data);
     } catch (err) {
       console.error("Failed to load threads:", err);
     } finally {
       setLoadingThreads(false);
+=======
+      if (isMountedRef.current) {
+        setThreads(data);
+      }
+    } catch (err) {
+      console.error("Failed to load threads:", err);
+    } finally {
+      if (isMountedRef.current) {
+        setLoadingThreads(false);
+      }
+>>>>>>> origin/Fixed-At-Last
     }
   }, []);
 
@@ -56,18 +81,35 @@ export default function TLSResearchPage() {
   // ── Open a thread ─────────────────────────────────────────────────────────
   const openThread = useCallback(async (id: string) => {
     setActiveId(id);
+<<<<<<< HEAD
+=======
+    activeIdRef.current = id;
+>>>>>>> origin/Fixed-At-Last
     setError(null);
     setLoadingMessages(true);
     setMessages([]);
     setMobileView("chat");
     try {
       const detail = await researchService.getThread(id);
+<<<<<<< HEAD
       setActiveThread(detail);
       setMessages(detail.messages);
     } catch (err) {
       console.error("Failed to open thread:", err);
     } finally {
       setLoadingMessages(false);
+=======
+      if (activeIdRef.current === id && isMountedRef.current) {
+        setActiveThread(detail);
+        setMessages(detail.messages);
+      }
+    } catch (err) {
+      console.error("Failed to open thread:", err);
+    } finally {
+      if (activeIdRef.current === id && isMountedRef.current) {
+        setLoadingMessages(false);
+      }
+>>>>>>> origin/Fixed-At-Last
     }
   }, []);
 
@@ -75,8 +117,15 @@ export default function TLSResearchPage() {
   async function handleNew(prefillText?: string, prefillPdf?: File) {
     try {
       const thread = await researchService.createThread();
+<<<<<<< HEAD
       setThreads((prev) => [thread, ...prev]);
       setActiveId(thread.id);
+=======
+      if (!isMountedRef.current) return;
+      setThreads((prev) => [thread, ...prev]);
+      setActiveId(thread.id);
+      activeIdRef.current = thread.id;
+>>>>>>> origin/Fixed-At-Last
       setActiveThread({ ...thread, messages: [] });
       setMessages([]);
       setError(null);
@@ -113,6 +162,7 @@ export default function TLSResearchPage() {
 
     try {
       const assistant = await researchService.ask(threadId, text, pdf);
+<<<<<<< HEAD
       // Replace optimistic + append assistant
       setMessages((prev) => {
         const withoutTemp = prev.filter((m) => m.id !== optimisticUser.id);
@@ -150,6 +200,61 @@ export default function TLSResearchPage() {
     } finally {
       setThinking(false);
       setPendingPdf(null);
+=======
+      
+      if (activeIdRef.current !== threadId) {
+        // Active thread changed, do not leak this query response to the new thread's UI messages state.
+        // But refresh sidebar if needed (e.g. name of new thread created)
+        const currentThread = threads.find((t) => t.id === threadId);
+        if (!currentThread || currentThread.title === "New research") {
+          await loadThreads();
+        }
+        return;
+      }
+
+      if (isMountedRef.current) {
+        setMessages((prev) => {
+          const withoutTemp = prev.filter((m) => m.id !== optimisticUser.id);
+          return [
+            ...withoutTemp,
+            { ...optimisticUser, id: `user-${Date.now()}` },
+            assistant,
+          ];
+        });
+
+        // Refresh sidebar title if this was the first message
+        const currentThread = threads.find((t) => t.id === threadId);
+        if (!currentThread || currentThread.title === "New research") {
+          await loadThreads();
+        }
+      }
+    } catch (err: any) {
+      if (activeIdRef.current === threadId && isMountedRef.current) {
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticUser.id));
+        if (err?.status === 503) {
+          setError({
+            message:
+              err.message || "Legal-source search is temporarily unavailable.",
+            onRetry: () => doSend(threadId, text, pdf),
+          });
+        } else if (err?.status === 429) {
+          setError({
+            message: "You're sending questions too fast — wait a moment.",
+            onRetry: () => doSend(threadId, text, pdf),
+          });
+        } else {
+          setError({
+            message: err?.message || "Something went wrong.",
+            onRetry: () => doSend(threadId, text, pdf),
+          });
+        }
+      }
+    } finally {
+      if (activeIdRef.current === threadId && isMountedRef.current) {
+        setThinking(false);
+        setPendingPdf(null);
+      }
+>>>>>>> origin/Fixed-At-Last
     }
   }
 
@@ -176,9 +281,17 @@ export default function TLSResearchPage() {
   // ── Sidebar actions ───────────────────────────────────────────────────────
   async function handleDelete(id: string) {
     await researchService.deleteThread(id);
+<<<<<<< HEAD
     setThreads((prev) => prev.filter((t) => t.id !== id));
     if (activeId === id) {
       setActiveId(null);
+=======
+    if (!isMountedRef.current) return;
+    setThreads((prev) => prev.filter((t) => t.id !== id));
+    if (activeIdRef.current === id) {
+      setActiveId(null);
+      activeIdRef.current = null;
+>>>>>>> origin/Fixed-At-Last
       setMessages([]);
       setActiveThread(null);
       setMobileView("sidebar");
@@ -187,14 +300,24 @@ export default function TLSResearchPage() {
 
   async function handleRename(id: string, title: string) {
     const updated = await researchService.patchThread(id, { title });
+<<<<<<< HEAD
     setThreads((prev) => prev.map((t) => (t.id === id ? updated : t)));
     if (activeId === id && activeThread) {
+=======
+    if (!isMountedRef.current) return;
+    setThreads((prev) => prev.map((t) => (t.id === id ? updated : t)));
+    if (activeIdRef.current === id && activeThread) {
+>>>>>>> origin/Fixed-At-Last
       setActiveThread({ ...activeThread, title });
     }
   }
 
   async function handlePin(id: string, pinned: boolean) {
     const updated = await researchService.patchThread(id, { pinned });
+<<<<<<< HEAD
+=======
+    if (!isMountedRef.current) return;
+>>>>>>> origin/Fixed-At-Last
     setThreads((prev) =>
       [...prev.map((t) => (t.id === id ? updated : t))].sort((a, b) => {
         if (a.pinned && !b.pinned) return -1;

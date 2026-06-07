@@ -28,7 +28,11 @@ export default function ProfilePage() {
     <div className=" w-full bg-white min-h-screen  ">
       <div className=" ">
         {/* Page title */}
+<<<<<<< HEAD
         <div className=" h-18.75 flex items-center border-b border-[#E5E7EB] px-4 fixed w-full bg-white z-99999">
+=======
+        <div className=" h-[75px] flex items-center border-b border-[#E5E7EB] px-4 fixed w-full bg-white z-99999">
+>>>>>>> origin/Fixed-At-Last
           <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937]">
             Profile
           </h1>
@@ -37,7 +41,11 @@ export default function ProfilePage() {
         {/* Layout */}
         <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-5 items-start  px-4 ">
           {/* Left */}
+<<<<<<< HEAD
           <div className="min-w-0 mt-23.75">
+=======
+          <div className="min-w-0 mt-[95px]">
+>>>>>>> origin/Fixed-At-Last
             <ProfileCard
               profile={{
                 ...(profile?.data as ProfileData),

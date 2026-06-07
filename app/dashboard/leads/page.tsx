@@ -9,6 +9,7 @@ export default function Page() {
   if (isLoading) return null;
   if (!user) return null;
 
+<<<<<<< HEAD
   return (
     <div className="w-full bg-white min-h-screen py-0">
       {/* Fixed Heading - stays at top like Profile */}
@@ -24,4 +25,7 @@ export default function Page() {
       </div>
     </div>
   );
+=======
+  return <LeadsPage />;
+>>>>>>> origin/Fixed-At-Last
 }

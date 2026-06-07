@@ -1,5 +1,9 @@
 "use client";
 
+<<<<<<< HEAD
+=======
+import { memo } from "react";
+>>>>>>> origin/Fixed-At-Last
 import { Search } from "lucide-react";
 import { Conversation } from "@/app/types/message";
 
@@ -56,14 +60,26 @@ interface Props {
   loading: boolean;
 }
 
+<<<<<<< HEAD
 export default function ConversationList({
+=======
+// React.memo: ConversationList only re-renders when conversations, activeId,
+// onSelect, or loading actually change. Socket events that update other state
+// in MessagesPage (mobileView, isAnonymous, etc.) no longer trigger a re-render
+// of this list. onSelect must be stable (useCallback) in the parent — it is.
+const ConversationList = memo(function ConversationList({
+>>>>>>> origin/Fixed-At-Last
   conversations,
   activeId,
   onSelect,
   loading,
 }: Props) {
   return (
+<<<<<<< HEAD
     <div className="w-full md:w-64 md:min-w-64 md:border-r border-gray-200 flex flex-col bg-white h-full">
+=======
+    <div className="w-full md:w-64 md:min-w-64 md:border-r md:border-l-0 border-gray-200 flex flex-col bg-white h-full">
+>>>>>>> origin/Fixed-At-Last
       {/* Header */}
       {/* <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
@@ -75,7 +91,11 @@ export default function ConversationList({
       </div> */}
 
       {/* Search input */}
+<<<<<<< HEAD
       <div className="px-3 pb-3">
+=======
+      <div className="px-3 pb-3 mt-4">
+>>>>>>> origin/Fixed-At-Last
         <div className="relative">
           <Search
             size={14}
@@ -84,7 +104,11 @@ export default function ConversationList({
           <input
             type="text"
             placeholder="Search"
+<<<<<<< HEAD
             className="w-full pl-8 pr-3 py-1.5 text-sm bg-gray-100 border border-gray-200 rounded-lg outline-none focus:border-gray-300 placeholder:text-gray-400 font-['Geist']"
+=======
+            className="w-full pl-8 pr-3 py-3 text-sm bg-gray-100 border border-gray-200 rounded-lg outline-none focus:border-gray-300 placeholder:text-gray-400 font-['Geist']"
+>>>>>>> origin/Fixed-At-Last
           />
         </div>
       </div>
@@ -151,4 +175,10 @@ export default function ConversationList({
       </div>
     </div>
   );
+<<<<<<< HEAD
 }
+=======
+});
+
+export default ConversationList;
+>>>>>>> origin/Fixed-At-Last

@@ -1,7 +1,11 @@
 // components/settings/SettingsPage.tsx
 "use client";
 
+<<<<<<< HEAD
 import { useState, useEffect } from "react";
+=======
+import { useState, useEffect, useRef } from "react";
+>>>>>>> origin/Fixed-At-Last
 import {
   Mail,
   Lock,
@@ -30,6 +34,22 @@ export default function SettingsPage() {
   const toggleAnonymous = useToggleAnonymous();
   const deleteAccount = useDeleteAccount();
 
+<<<<<<< HEAD
+=======
+  const isMountedRef = useRef(true);
+  const saveSuccessTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (saveSuccessTimeoutRef.current) {
+        clearTimeout(saveSuccessTimeoutRef.current);
+      }
+    };
+  }, []);
+
+>>>>>>> origin/Fixed-At-Last
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -70,6 +90,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setSaveError("");
     setSaveSuccess(false);
+<<<<<<< HEAD
     try {
       const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
       await updateProfile.mutateAsync({ fullName });
@@ -79,15 +100,48 @@ export default function SettingsPage() {
       setSaveError(
         err?.response?.data?.message ?? "Failed to save. Please try again.",
       );
+=======
+    if (saveSuccessTimeoutRef.current) {
+      clearTimeout(saveSuccessTimeoutRef.current);
+      saveSuccessTimeoutRef.current = null;
+    }
+    try {
+      const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+      await updateProfile.mutateAsync({ fullName });
+      if (isMountedRef.current) {
+        setSaveSuccess(true);
+        saveSuccessTimeoutRef.current = setTimeout(() => {
+          if (isMountedRef.current) {
+            setSaveSuccess(false);
+          }
+        }, 3000);
+      }
+    } catch (err: any) {
+      if (isMountedRef.current) {
+        setSaveError(
+          err?.response?.data?.message ?? "Failed to save. Please try again.",
+        );
+      }
+>>>>>>> origin/Fixed-At-Last
     }
   };
 
   const handleToggleAnonymous = async (value: boolean) => {
+<<<<<<< HEAD
+=======
+    const originalValue = isAnonymous;
+>>>>>>> origin/Fixed-At-Last
     setIsAnonymous(value);
     try {
       await toggleAnonymous.mutateAsync(value);
     } catch {
+<<<<<<< HEAD
       setIsAnonymous(!value);
+=======
+      if (isMountedRef.current) {
+        setIsAnonymous(originalValue);
+      }
+>>>>>>> origin/Fixed-At-Last
     }
   };
 
@@ -96,10 +150,21 @@ export default function SettingsPage() {
     try {
       await deleteAccount.mutateAsync();
       await logout();
+<<<<<<< HEAD
       router.push("/");
     } catch (err: any) {
       setSaveError(err?.response?.data?.message ?? "Failed to delete account.");
       setShowDeleteConfirm(false);
+=======
+      if (isMountedRef.current) {
+        router.push("/");
+      }
+    } catch (err: any) {
+      if (isMountedRef.current) {
+        setSaveError(err?.response?.data?.message ?? "Failed to delete account.");
+        setShowDeleteConfirm(false);
+      }
+>>>>>>> origin/Fixed-At-Last
     }
   };
 

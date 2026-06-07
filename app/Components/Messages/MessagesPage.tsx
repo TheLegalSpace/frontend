@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿// app/Components/Messages/MessagesPage.tsx
+=======
+// app/Components/Messages/MessagesPage.tsx
+>>>>>>> origin/Fixed-At-Last
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -10,9 +14,20 @@ import ConversationList from "./ConversationList";
 import ChatWindow from "./ChatWindow";
 import { useAuth } from "@/app/context/AuthContext";
 import { useConversationCache, useConversations } from "@/hooks/useMessages";
+<<<<<<< HEAD
 
 // ── Persist anonymous state per conversation in localStorage ─────────────────
 function getStoredAnonymous(conversationId: string, role: string): boolean | null {
+=======
+import ReviewButton from "./ReviewButton";
+import ReviewModal from "./ReviewModal";
+
+// ── Persist anonymous state per conversation in localStorage ─────────────────
+function getStoredAnonymous(
+  conversationId: string,
+  role: string,
+): boolean | null {
+>>>>>>> origin/Fixed-At-Last
   try {
     const raw = localStorage.getItem(`anon:${role}:${conversationId}`);
     if (raw === null) return null;
@@ -76,6 +91,7 @@ export default function MessagesPage() {
 
   // ── Page-level socket events ──────────────────────────────────────────────
   useEffect(() => {
+<<<<<<< HEAD
     const token = localStorage.getItem("accessToken") ?? "";
     const socket = connectSocket(token);
 
@@ -122,12 +138,62 @@ export default function MessagesPage() {
     );
 
     socket.on("connect_error", (err: { message: string }) => {
+=======
+    let isMounted = true;
+    const token = localStorage.getItem("accessToken") ?? "";
+    const socket = connectSocket(token);
+
+    const handleStatusChanged = ({
+      status,
+      conversationId,
+    }: {
+      requestId: string;
+      status: string;
+      conversationId?: string;
+    }) => {
+      if (status === "accepted" && conversationId) {
+        socket.emit("conversation:join", { conversationId });
+
+        fetchAndUpsertConversation(conversationId).catch(() => {
+          invalidateConversations();
+        });
+
+        if (isMounted) {
+          setActiveId(conversationId);
+          setMobileView("chat");
+        }
+      }
+    };
+
+    const handleConversationUpdated = (conv: {
+      id: string;
+      status?: string;
+      isAnonymous?: boolean;
+    }) => {
+      if (conv.status === "closed") {
+        patchConversation(conv.id, { status: "closed" });
+      }
+      if (conv.isAnonymous === false) {
+        refreshConversation(conv.id);
+      }
+    };
+
+    const handleParticipantUpdated = (payload: {
+      conversationId: string;
+      isAnonymous: boolean;
+    }) => {
+      refreshConversation(payload.conversationId);
+    };
+
+    const handleConnectError = (err: { message: string }) => {
+>>>>>>> origin/Fixed-At-Last
       if (err.message === "invalid token") {
         const newToken = localStorage.getItem("accessToken") ?? "";
         // refreshSocketAuth if available
         socket.auth = { token: newToken };
         socket.connect();
       }
+<<<<<<< HEAD
     });
 
     socket.on("connect", () => {
@@ -142,6 +208,34 @@ export default function MessagesPage() {
       socket.off("connect");
     };
   }, [fetchAndUpsertConversation, invalidateConversations, patchConversation, refreshConversation]);
+=======
+    };
+
+    const handleConnect = () => {
+      invalidateConversations();
+    };
+
+    socket.on("request:status_changed", handleStatusChanged);
+    socket.on("conversation:updated", handleConversationUpdated);
+    socket.on("participant:updated", handleParticipantUpdated);
+    socket.on("connect_error", handleConnectError);
+    socket.on("connect", handleConnect);
+
+    return () => {
+      isMounted = false;
+      socket.off("request:status_changed", handleStatusChanged);
+      socket.off("conversation:updated", handleConversationUpdated);
+      socket.off("participant:updated", handleParticipantUpdated);
+      socket.off("connect_error", handleConnectError);
+      socket.off("connect", handleConnect);
+    };
+  }, [
+    fetchAndUpsertConversation,
+    invalidateConversations,
+    patchConversation,
+    refreshConversation,
+  ]);
+>>>>>>> origin/Fixed-At-Last
 
   // ── Re-fetch if otherParty missing ────────────────────────────────────────
   const activeConvo = conversations.find((c) => c.id === activeId) ?? null;
@@ -175,6 +269,7 @@ export default function MessagesPage() {
   }, [activeId, isLawyer, user?.isAnonymous, user?.role]);
 
   // ── Conversation selection ─────────────────────────────────────────────────
+<<<<<<< HEAD
   function handleSelectConvo(id: string) {
     setActiveId(id);
     setMobileView("chat");
@@ -195,6 +290,34 @@ export default function MessagesPage() {
     if (!activeId) return;
     patchConversation(activeId, { status: "closed" });
   }
+=======
+  // useCallback keeps the reference stable so the memoized ConversationList
+  // does not re-render when unrelated state (mobileView, isAnonymous) changes.
+  const handleSelectConvo = useCallback(
+    (id: string) => {
+      setActiveId(id);
+      setMobileView("chat");
+
+      if (!isLawyer) {
+        const stored = getStoredAnonymous(id, user?.role ?? "client");
+        const profileValue =
+          user?.isAnonymous != null ? Boolean(user.isAnonymous) : null;
+        setIsAnonymous(stored ?? profileValue);
+      }
+    },
+    [isLawyer, user?.role, user?.isAnonymous],
+  );
+
+  const handleBackToList = useCallback(() => {
+    setMobileView("list");
+  }, []);
+
+  // change from plain function to useCallback
+  const handleConversationClosed = useCallback(() => {
+    if (!activeId) return;
+    patchConversation(activeId, { status: "closed" });
+  }, [activeId, patchConversation]);
+>>>>>>> origin/Fixed-At-Last
 
   const handleAnonymousToggle = useCallback(
     (val: boolean) => {
@@ -215,7 +338,17 @@ export default function MessagesPage() {
         refreshConversation(activeId);
       }
     },
+<<<<<<< HEAD
     [activeConvo, activeId, refreshConversation, upsertConversation, user?.role],
+=======
+    [
+      activeConvo,
+      activeId,
+      refreshConversation,
+      upsertConversation,
+      user?.role,
+    ],
+>>>>>>> origin/Fixed-At-Last
   );
 
   // ── Resolve isAnonymous for active chat ───────────────────────────────────
@@ -228,6 +361,7 @@ export default function MessagesPage() {
     if (convo.otherParty.isAnonymous !== false) return "Anonymous User";
     return convo.otherParty.fullName || "Anonymous User";
   }
+<<<<<<< HEAD
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
@@ -239,6 +373,69 @@ export default function MessagesPage() {
       <div className="flex flex-1 overflow-hidden pt-[77px]">
           {/* Conversation list */}
           <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex flex-col w-full md:w-auto`}>
+=======
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const [showReview, setShowReview] = useState(false);
+
+  // Reset hasReviewed when switching conversations
+  useEffect(() => {
+    if (!activeId) return;
+    try {
+      setHasReviewed(localStorage.getItem(`reviewed:${activeId}`) === "true");
+    } catch {
+      setHasReviewed(false);
+    }
+  }, [activeId]);
+  return (
+    <div className="flex-1 h-screen overflow-hidden ">
+      <div className="w-full  bg-white md:border md:border-l-0 md:border-b-0 md:border-gray-200 overflow-hidden md:flex  md:shadow-sm h-screen flex flex-col">
+        <div className="flex ">
+          <div className="w-full flex items-center md:w-64 md:min-w-64 md:border-r border-b border-gray-200 font-['Instrument_Serif'] text-gray-900 ">
+            <span className="pl-[3%] font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937]">Messages</span>
+          </div>
+
+          <div className="hidden md:flex  md:gap-2 pe-4 h-[74px] w-full md:items-center justify-between border-l-0 border-b border-[#E6EAED]">
+            <div className="flex items-center mx-[15px]  gap-2  h-full">
+              {activeConvo && (
+                <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
+                  {getParticipantName(activeConvo)}
+                </span>
+              )}
+              {activeConvo?.status === "closed" && (
+                <span className="text-[11px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">
+                  Closed
+                </span>
+              )}
+            </div>
+            {/* Review button — lives here on desktop, moved out of ChatWindow */}
+            {activeConvo && (
+              <ReviewButton
+                isClosed={activeConvo.status === "closed"}
+                hasReviewed={hasReviewed}
+                onClick={() => setShowReview(true)}
+              />
+            )}{" "}
+          </div>
+        </div>
+
+        {showReview && activeId && activeConvo && (
+          <ReviewModal
+            conversationId={activeId}
+            participantName={getParticipantName(activeConvo)}
+            reviewerRole={isLawyer ? "lawyer" : "client"}
+            onClose={() => setShowReview(false)}
+            onSubmitted={() => {
+              setHasReviewed(true);
+              setShowReview(false);
+            }}
+          />
+        )}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Conversation list */}
+          <div
+            className={`${mobileView === "list" ? "flex" : "hidden"} md:flex flex-col w-full md:w-auto`}
+          >
+>>>>>>> origin/Fixed-At-Last
             <ConversationList
               conversations={conversations}
               activeId={activeId}
@@ -248,9 +445,19 @@ export default function MessagesPage() {
           </div>
 
           {/* Chat window */}
+<<<<<<< HEAD
           <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-w-0`}>
             {activeId && activeConvo ? (
               <ChatWindow
+=======
+          <div
+            className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col min-w-0`}
+          >
+            {activeId && activeConvo ? (
+              <ChatWindow
+                onReviewClick={() => setShowReview(true)} // new prop
+                onHasReviewedChange={setHasReviewed}
+>>>>>>> origin/Fixed-At-Last
                 conversationId={activeId}
                 participantName={getParticipantName(activeConvo)}
                 participantPhone={activeConvo.otherParty?.phone ?? null}
@@ -266,6 +473,7 @@ export default function MessagesPage() {
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3">
                 <MessageSquare size={32} strokeWidth={1.5} />
+<<<<<<< HEAD
                 <p className="text-sm">Select a conversation to start chatting</p>
               </div>
             )}
@@ -274,3 +482,16 @@ export default function MessagesPage() {
     </div>
   );
 }
+=======
+                <p className="text-sm">
+                  Select a conversation to start chatting
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+>>>>>>> origin/Fixed-At-Last

@@ -52,7 +52,11 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Leads", href: "/dashboard/leads", icon: Users },
     { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
     { label: "Posts", href: "/dashboard/posts", icon: MonitorUp },
+<<<<<<< HEAD
     { label: "Legal News", href: "/dashboard/Legal-News", icon: BookOpenText },
+=======
+    { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
+>>>>>>> origin/Fixed-At-Last
     {
       label: "TLS Research",
       href: "/dashboard/TLS-Research",
@@ -82,7 +86,11 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
       href: "/dashboard/TLS-Research",
       icon: FolderSearch,
     },
+<<<<<<< HEAD
     { label: "Legal News", href: "/dashboard/Legal-News", icon: BookOpenText },
+=======
+    { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
+>>>>>>> origin/Fixed-At-Last
     {
       label: "Legal Library",
       href: "/dashboard/legal-library",
@@ -462,7 +470,11 @@ export default function Sidebar() {
 
       <button
         onClick={() => setMobileOpen(true)}
+<<<<<<< HEAD
         className="md:hidden fixed top-4 left-4 z-40 p-2 bg-white border border-gray-200 rounded-lg shadow-sm"
+=======
+        className="md:hidden fixed top-4 right-4 z-40 p-2 bg-white border border-gray-200 rounded-lg shadow-sm"
+>>>>>>> origin/Fixed-At-Last
       >
         <Menu className="w-5 h-5 text-gray-700" />
       </button>

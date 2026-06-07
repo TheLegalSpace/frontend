@@ -112,7 +112,11 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
   }
 
   return (
+<<<<<<< HEAD
     <div className="bg-white border-b border-[#E5E7EB] px-5 py-5 mt-23.75">
+=======
+    <div className="bg-white border-b border-[#E5E7EB] px-5 py-5">
+>>>>>>> origin/Fixed-At-Last
       {/* Header — avatar + name + rating */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">

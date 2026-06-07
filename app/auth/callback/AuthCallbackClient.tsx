@@ -13,10 +13,24 @@ export default function AuthCallbackClient() {
   const hasProcessed = useRef(false); // ✅ prevent double execution
 
   useEffect(() => {
+<<<<<<< HEAD
+=======
+    let timeoutId: NodeJS.Timeout | null = null;
+    let authListenerSubscription: any = null;
+
+>>>>>>> origin/Fixed-At-Last
     const processSession = async (session: Session) => {
       if (hasProcessed.current) return; // ✅ guard against double run
       hasProcessed.current = true;
 
+<<<<<<< HEAD
+=======
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+
+>>>>>>> origin/Fixed-At-Last
       try {
         const idToken: string | undefined =
           session.provider_token ?? session.access_token ?? undefined;
@@ -78,17 +92,43 @@ export default function AuthCallbackClient() {
           if (event === "SIGNED_IN" && session) {
             await processSession(session);
             authListener.subscription.unsubscribe();
+<<<<<<< HEAD
           }
         }
       );
 
       setTimeout(() => {
         authListener.subscription.unsubscribe();
+=======
+            authListenerSubscription = null;
+          }
+        }
+      );
+      authListenerSubscription = authListener.subscription;
+
+      timeoutId = setTimeout(() => {
+        if (authListenerSubscription) {
+          authListenerSubscription.unsubscribe();
+          authListenerSubscription = null;
+        }
+>>>>>>> origin/Fixed-At-Last
         router.replace("/signin?error=timeout");
       }, 10000);
     };
 
     handleCallback();
+<<<<<<< HEAD
+=======
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (authListenerSubscription) {
+        authListenerSubscription.unsubscribe();
+      }
+    };
+>>>>>>> origin/Fixed-At-Last
   }, []);
 
   return (

@@ -67,6 +67,7 @@ export default function LeadsPage() {
     STATUS_TABS.find((t) => t.value === activeTab)?.label ?? "";
 
   return (
+<<<<<<< HEAD
     <div className="flex flex-col h-full w-full bg-white pt-18.75">
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
@@ -108,6 +109,51 @@ export default function LeadsPage() {
             </h2>
             <span className="text-[12px] text-gray-400">{total} total</span>
           </div>
+=======
+    <div className="min-h-screen bg-white">
+      <div className=" ">
+        <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937] ps-4 pt-6 pb-px">
+          Leads
+        </h1>
+        <div className="w-full h-px bg-[#E6EAED] my-4"></div>
+        {/* Stats */}
+        <LeadsStatsRow stats={stats ?? null} />
+
+        {/* Tabs */}
+        <div className="sticky top-0 z-20  px-4  mb-5">
+          <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
+            <div className="flex items-center">
+              {STATUS_TABS.map((tab) => {
+                const isActive = activeTab === tab.value;
+                return (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    className={`relative flex-1 py-3 text-[13px] font-medium whitespace-nowrap transition-colors ${
+                      isActive
+                        ? "text-gray-900"
+                        : "text-gray-400 hover:text-gray-600"
+                    }`}
+                  >
+                    {tab.label}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-gray-900 rounded-t-full" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Section header */}
+        <div className="flex items-center justify-between mb-4 px-4">
+          <h2 className="text-[15px] font-semibold text-gray-900">
+            {activeLabel} Leads
+          </h2>
+          <span className="text-[12px] text-gray-400">{total} total</span>
+        </div>
+>>>>>>> origin/Fixed-At-Last
 
         {/* List */}
         {isLoading ? (
@@ -116,7 +162,11 @@ export default function LeadsPage() {
             Loading leads...
           </div>
         ) : leads.length === 0 ? (
+<<<<<<< HEAD
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-gray-400">
+=======
+          <div className="flex flex-col items-center justify-center py-16 px-4 gap-2 text-gray-400">
+>>>>>>> origin/Fixed-At-Last
             <p className="text-sm">No {activeTab} leads yet.</p>
           </div>
         ) : (
@@ -142,7 +192,10 @@ export default function LeadsPage() {
             )}
           </>
         )}
+<<<<<<< HEAD
         </div>
+=======
+>>>>>>> origin/Fixed-At-Last
       </div>
     </div>
   );

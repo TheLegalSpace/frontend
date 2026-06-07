@@ -1,11 +1,20 @@
 // services/api.ts
+<<<<<<< HEAD
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+=======
+import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
+>>>>>>> origin/Fixed-At-Last
 
 type SessionTokens = {
   accessToken: string;
   refreshToken: string;
 };
 
+<<<<<<< HEAD
+=======
+// Singleton refresh promise — all concurrent 401s wait on this,
+// preventing multiple parallel refresh calls.
+>>>>>>> origin/Fixed-At-Last
 let refreshPromise: Promise<SessionTokens> | null = null;
 
 function getStoredToken(key: "accessToken" | "refreshToken") {
@@ -26,7 +35,25 @@ function clearStoredSession() {
   localStorage.removeItem("user");
 }
 
+<<<<<<< HEAD
 async function refreshSession(): Promise<SessionTokens> {
+=======
+// Returns true when the backend says the token is invalid/expired,
+// regardless of whether it used HTTP 200 or HTTP 401.
+function isTokenError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("invalid or expired token") ||
+    lower.includes("invalid token") ||
+    lower.includes("token expired") ||
+    lower.includes("jwt expired") ||
+    lower.includes("unauthorized")
+  );
+}
+
+async function refreshSession(): Promise<SessionTokens> {
+  // If a refresh is already in-flight, reuse it.
+>>>>>>> origin/Fixed-At-Last
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = (async () => {
@@ -52,6 +79,10 @@ async function refreshSession(): Promise<SessionTokens> {
   try {
     return await refreshPromise;
   } finally {
+<<<<<<< HEAD
+=======
+    // Always clear so the next genuine expiry triggers a fresh refresh.
+>>>>>>> origin/Fixed-At-Last
     refreshPromise = null;
   }
 }
@@ -62,6 +93,10 @@ export const api: AxiosInstance = axios.create({
   timeout: 15000,
 });
 
+<<<<<<< HEAD
+=======
+// ── Request interceptor: attach access token ──────────────────────────────────
+>>>>>>> origin/Fixed-At-Last
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (typeof window === "undefined") return config;
   const token = getStoredToken("accessToken");
@@ -69,6 +104,7 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+<<<<<<< HEAD
 api.interceptors.response.use(
   (response) => {
     if (response.data?.error === true) {
@@ -104,3 +140,105 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+=======
+// ── Response interceptor ──────────────────────────────────────────────────────
+//
+// ROOT CAUSE FIX:
+// The backend returns HTTP 200 with { error: true, message: "invalid or expired token" }
+// instead of a proper HTTP 401. The old code treated this as a logout event immediately,
+// completely skipping the refresh-and-retry logic.
+//
+// Fix: when we detect a token error inside a 200 body, we synthetically convert it into
+// the same retry flow used for real 401s — refresh the token and replay the request.
+// Only if the refresh itself fails do we log the user out.
+//
+api.interceptors.response.use(
+  async (response: AxiosResponse) => {
+    // Backend returned HTTP 200 but signalled a token error in the body.
+    if (response.data?.error === true) {
+      const message: string = response.data?.message ?? "";
+
+      if (isTokenError(message)) {
+        const original = response.config as InternalAxiosRequestConfig & {
+          _retry?: boolean;
+        };
+
+        // Only attempt refresh once per request to avoid infinite loops.
+        if (original._retry) {
+          // Refresh already tried for this request and still getting token errors.
+          clearStoredSession();
+          window.dispatchEvent(new Event("auth:logout"));
+          return Promise.reject(new Error(message));
+        }
+
+        original._retry = true;
+
+        // Check if another concurrent request already refreshed the token.
+        const sentAuthHeader = original.headers?.["Authorization"];
+        const sentToken =
+          typeof sentAuthHeader === "string"
+            ? sentAuthHeader.split(" ")[1]
+            : undefined;
+        const currentToken = getStoredToken("accessToken");
+
+        if (currentToken && sentToken && currentToken !== sentToken) {
+          // Token was already refreshed by another request — just retry with new token.
+          original.headers["Authorization"] = `Bearer ${currentToken}`;
+          return api(original);
+        }
+
+        // Attempt a token refresh, then replay the original request.
+        try {
+          const session = await refreshSession();
+          original.headers["Authorization"] = `Bearer ${session.accessToken}`;
+          return api(original);
+        } catch {
+          clearStoredSession();
+          window.dispatchEvent(new Event("auth:logout"));
+          return Promise.reject(new Error(message));
+        }
+      }
+
+      // Non-token business error in a 200 body — let callers handle it normally.
+    }
+
+    return response;
+  },
+
+  // HTTP-level errors (4xx / 5xx)
+  async (error) => {
+    const original = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
+    if (error.response?.status === 401 && !original._retry) {
+      original._retry = true;
+
+      // If another concurrent request already refreshed the token, just retry.
+      const authHeader = original.headers?.["Authorization"];
+      const sentToken =
+        typeof authHeader === "string"
+          ? authHeader.split(" ")[1]
+          : undefined;
+      const currentToken = getStoredToken("accessToken");
+
+      if (currentToken && sentToken && currentToken !== sentToken) {
+        original.headers["Authorization"] = `Bearer ${currentToken}`;
+        return api(original);
+      }
+
+      try {
+        const session = await refreshSession();
+        original.headers["Authorization"] = `Bearer ${session.accessToken}`;
+        return api(original);
+      } catch {
+        clearStoredSession();
+        window.dispatchEvent(new Event("auth:logout"));
+        return Promise.reject(error);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+>>>>>>> origin/Fixed-At-Last

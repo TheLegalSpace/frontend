@@ -1,6 +1,10 @@
 "use client";
 
+<<<<<<< HEAD
 import { Search, FileText } from "lucide-react";
+=======
+import { FileText, Search } from "lucide-react";
+>>>>>>> origin/Fixed-At-Last
 
 const SUGGESTIONS = [
   "Find cases on wrongful termination",
@@ -240,6 +244,7 @@ export default function ResearchLanding({
   onUploadAndNew,
 }: Props) {
   return (
+<<<<<<< HEAD
     <div className="flex flex-col h-full flex-1 bg-white font-['Geist'] overflow-hidden">
       {/* Fixed header */}
       <div className="shrink-0 fixed top-0 z-10 bg-white w-full">
@@ -302,6 +307,64 @@ export default function ResearchLanding({
         {/* Capabilities */}
         <div className=" px-4 pb-8">
         <div className="mb-5">
+=======
+    <div className="flex-1 overflow-y-auto bg-white font-['Geist'] flex flex-col">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-10 bg-white">
+        <h1 className="font-[Instrument_Serif] px-4 text-[20px] leading-none font-light text-[#1F2937] pt-[27px] pb-[27px]">
+          TLS Research
+        </h1>
+        <div className="w-full h-px bg-[#E6EAED]" />
+      </div>
+
+      {/* Composer section */}
+      <div className="w-full px-6 pt-8 pb-4 flex flex-col items-center bg-white sticky top-[70px]">
+        <div className="flex w-full max-w-2xl items-center gap-2 border border-gray-200 rounded-2xl px-4 py-3 bg-white shadow-sm mb-4 cursor-text hover:border-gray-300 transition">
+          <FileText size={16} className="text-gray-400 shrink-0" />
+          <span
+            className="flex-1 text-left text-gray-400 text-[14px]"
+            onClick={onNewThread}
+          >
+            Describe your legal issue or case…
+          </span>
+          <button
+            onClick={onNewThread}
+            className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center hover:bg-blue-800 transition shrink-0"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-2 w-[40%]">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              onClick={() => onSuggestion(s)}
+              className="px-3 py-1.5 border border-gray-200 rounded-full text-[12px] text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+        <div className="w-full h-px! bg-[#E6EAED] mt-[44px]" />
+      </div>
+
+      <div className="w-full px-4 py-8 pt-0">
+        {/* Capabilities */}
+        <div className="mb-5 mt-2">
+>>>>>>> origin/Fixed-At-Last
           <div className="flex items-center gap-2 mb-2">
             <span className="block w-5 h-px bg-gray-300" />
             <p className="text-[10px] uppercase tracking-widest text-gray-400">
@@ -338,10 +401,18 @@ export default function ResearchLanding({
           ))}
         </div>
       </div>
+<<<<<<< HEAD
       <div className="w-full h-px bg-[#E6EAED] my-4"></div>
 
       {/* Scope */}
       <div className=" px-4 pb-8">
+=======
+
+      <div className="w-full h-px bg-[#E6EAED]" />
+
+      {/* Scope */}
+      <div className="w-full px-4 py-8">
+>>>>>>> origin/Fixed-At-Last
         <div className="mb-5">
           <div className="flex items-center gap-2 mb-2">
             <span className="block w-5 h-px bg-gray-300" />
@@ -379,11 +450,20 @@ export default function ResearchLanding({
           ))}
         </div>
       </div>
+<<<<<<< HEAD
       <div className="w-full h-px bg-[#E6EAED] my-4"></div>
 
       {/* CTA */}
       <div className="px-4 pb-12">
         <div className="rounded-2xl research-bg  px-8 py-8 flex items-center justify-between gap-6">
+=======
+
+      <div className="w-full h-px bg-[#E6EAED]" />
+
+      {/* CTA */}
+      <div className="w-full px-4 py-12">
+        <div className="rounded-2xl research-bg px-8 py-8 flex items-center justify-between gap-6">
+>>>>>>> origin/Fixed-At-Last
           <div>
             <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">
               Ready
@@ -413,8 +493,11 @@ export default function ResearchLanding({
             </button>
           </div>
         </div>
+<<<<<<< HEAD
         </div>
       </div>
+=======
+>>>>>>> origin/Fixed-At-Last
       </div>
     </div>
   );

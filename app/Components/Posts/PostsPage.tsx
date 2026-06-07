@@ -77,6 +77,7 @@ export default function PostsPage() {
   );
 
   return (
+<<<<<<< HEAD
     <div className="bg-white font-['Geist']">
       {/* Header - sticky at top */}
       <div className="sticky top-0 z-10 bg-white flex items-center justify-between border-b border-[#E5E7EB] px-4 py-[19.3px]">
@@ -85,6 +86,15 @@ export default function PostsPage() {
           <button
             onClick={() => setActiveTab("posts")}
             className={`px-4 py-1.5 rounded-full text-[13px] font-normal transition ${
+=======
+    <div className="min-h-screen bg-white">
+      {/* Top tab bar */}
+      <div className="flex items-center justify-between border-b border-[#E5E7EB] px-[16px] py-[19.3px] sticky top-0 bg-white z-10">
+        <div className="flex gap-1">
+          <button
+            onClick={() => setActiveTab("posts")}
+            className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition ${
+>>>>>>> origin/Fixed-At-Last
               activeTab === "posts"
                 ? "bg-gray-900 text-white"
                 : "text-gray-500 hover:text-gray-700"
@@ -94,7 +104,11 @@ export default function PostsPage() {
           </button>
           <button
             onClick={() => setActiveTab("articles")}
+<<<<<<< HEAD
             className={`px-4 py-1.5 rounded-full text-[13px] font-normal transition ${
+=======
+            className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition ${
+>>>>>>> origin/Fixed-At-Last
               activeTab === "articles"
                 ? "bg-gray-900 text-white"
                 : "text-gray-500 hover:text-gray-700"
@@ -114,7 +128,11 @@ export default function PostsPage() {
       </div>
 
       {/* Posts list */}
+<<<<<<< HEAD
       <div className="w-full">
+=======
+      <div className="">
+>>>>>>> origin/Fixed-At-Last
         {postsQuery.isLoading ? (
           <div className="flex items-center justify-center py-20 text-gray-400 gap-2">
             <Loader2 size={16} className="animate-spin" />

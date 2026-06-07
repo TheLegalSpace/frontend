@@ -61,7 +61,11 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pt-3">
+<<<<<<< HEAD
       <h1 className="text-[22px] font-semibold text-gray-900 mb-6">Settings</h1>
+=======
+      <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937] mb-6">Settings</h1>
+>>>>>>> origin/Fixed-At-Last
 
       <div className="bg-white rounded-2xl border border-[#E5E7EB] px-6 divide-y divide-gray-100 py-3">
         {/* Personal Information — all roles */}

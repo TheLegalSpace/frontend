@@ -16,7 +16,14 @@ import {
 import { profileService } from "@/services/profile.services";
 import { parseApiError } from "@/lib/error";
 import { useRouter } from "next/navigation";
+<<<<<<< HEAD
 import { disconnectSocket, refreshSocketAuth } from "@/services/socket.services";
+=======
+import {
+  disconnectSocket,
+  refreshSocketAuth,
+} from "@/services/socket.services";
+>>>>>>> origin/Fixed-At-Last
 
 export type AuthErrorCode =
   | "INVALID_CREDENTIALS"
@@ -70,7 +77,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+<<<<<<< HEAD
 
+=======
+  useEffect(() => {
+    let cancelled = false;
+    profileService
+      .getMe()
+      .then((r) => {
+        if (cancelled) return;
+        setUser(r.data.data);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+>>>>>>> origin/Fixed-At-Last
   useEffect(() => {
     if (typeof window === "undefined") return;
     const token = localStorage.getItem("accessToken");

@@ -1,7 +1,11 @@
 // components/settings/AnonymousSection.tsx
 "use client";
 
+<<<<<<< HEAD
 import { useState, useEffect } from "react";
+=======
+import { useState, useEffect, useRef } from "react";
+>>>>>>> origin/Fixed-At-Last
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToggleAnonymous } from "@/hooks/useSettings";
@@ -16,6 +20,17 @@ export default function AnonymousSection({ isAnonymous: initialValue }: Props) {
   const queryClient = useQueryClient();
   const { showSuccess, showError } = useToast();
 
+<<<<<<< HEAD
+=======
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+>>>>>>> origin/Fixed-At-Last
   // ✅ Hook called at top level — not inside handleToggle
   const toggleAnonymous = useToggleAnonymous();
 
@@ -27,18 +42,35 @@ export default function AnonymousSection({ isAnonymous: initialValue }: Props) {
   const handleToggle = async () => {
     if (toggleAnonymous.isPending) return;
 
+<<<<<<< HEAD
     const newValue = !isAnonymous;
+=======
+    const originalValue = isAnonymous;
+    const newValue = !originalValue;
+>>>>>>> origin/Fixed-At-Last
     setIsAnonymous(newValue); // optimistic update
 
     try {
       // ✅ Call mutateAsync on the mutation object — not the hook itself
       await toggleAnonymous.mutateAsync(newValue);
       await queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
+<<<<<<< HEAD
       showSuccess(newValue ? "You are now anonymous." : "You are now visible."); // ✅
     } catch (err) {
       console.error("Failed to toggle anonymous:", err);
       setIsAnonymous(!newValue); // revert on failure
       showError("Failed to update anonymous status."); // ✅
+=======
+      if (isMountedRef.current) {
+        showSuccess(newValue ? "You are now anonymous." : "You are now visible."); // ✅
+      }
+    } catch (err) {
+      console.error("Failed to toggle anonymous:", err);
+      if (isMountedRef.current) {
+        setIsAnonymous(originalValue); // revert on failure
+        showError("Failed to update anonymous status."); // ✅
+      }
+>>>>>>> origin/Fixed-At-Last
     }
   };
 

@@ -56,7 +56,11 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
+<<<<<<< HEAD
       <main className="flex-1 min-w-0 overflow-y-auto pt-16 md:pt-0">
+=======
+      <main className="flex-1 min-w-0 overflow-y-auto  md:pt-0">
+>>>>>>> origin/Fixed-At-Last
         {children}
       </main>
     </div>

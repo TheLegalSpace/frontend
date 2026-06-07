@@ -125,10 +125,27 @@ function LawyerCard({
 
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+<<<<<<< HEAD
+=======
+  const [isSending, setIsSending] = useState(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+>>>>>>> origin/Fixed-At-Last
 
   const { account, score, matchedFactors } = match;
 
   const handleSend = async () => {
+<<<<<<< HEAD
+=======
+    if (isSending || sent) return;
+    setIsSending(true);
+>>>>>>> origin/Fixed-At-Last
     setError("");
 
     try {
@@ -145,9 +162,23 @@ function LawyerCard({
       };
 
       await sendRequest.mutateAsync(payload);
+<<<<<<< HEAD
       setSent(true);
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Failed to send request"));
+=======
+      if (isMountedRef.current) {
+        setSent(true);
+      }
+    } catch (err: unknown) {
+      if (isMountedRef.current) {
+        setError(getErrorMessage(err, "Failed to send request"));
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsSending(false);
+      }
+>>>>>>> origin/Fixed-At-Last
     }
   };
 
@@ -252,14 +283,22 @@ function LawyerCard({
 
         <button
           onClick={handleSend}
+<<<<<<< HEAD
           disabled={sent || sendRequest.isPending}
+=======
+          disabled={sent || isSending || sendRequest.isPending}
+>>>>>>> origin/Fixed-At-Last
           className={`h-11 rounded-2xl text-[13px] font-medium transition-all flex items-center justify-center gap-2 ${
             sent
               ? "bg-green-500 text-white"
               : "bg-[#1D4ED8] text-white hover:bg-[#1B46C4]"
           }`}
         >
+<<<<<<< HEAD
           {sendRequest.isPending ? (
+=======
+          {isSending || sendRequest.isPending ? (
+>>>>>>> origin/Fixed-At-Last
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : sent ? (
             <>

@@ -36,7 +36,11 @@
     "@types/react-dom": "^19.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+<<<<<<< HEAD
     "tailwindcss": "^4",
+=======
+    "tailwindcss": "^4.3.0",
+>>>>>>> origin/Fixed-At-Last
     "typescript": "^5"
   }
 }
