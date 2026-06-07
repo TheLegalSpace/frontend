@@ -1,0 +1,107 @@
+// components/Navbar.tsx
+"use client";
+
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+// import { api } from "@/services/api";
+// import { AxiosResponse } from "axios";
+// import { loginUser } from "@/services/auth.services";
+
+export default function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const loginType = (type: "lawyer" | "user") => {
+    localStorage.setItem("loginType", type);
+    router.push("/signin");
+  };
+
+  // useEffect(() => {
+  //   // ✅ useEffect callback cannot be async — use an inner async function
+  //   const fetchData = async () => {
+  //     try {
+  //       var res = await loginUser({
+  //         authProvider: "email",
+  //         email: "adaeze@example.com",
+  //         password: "securePass123",
+  //       });
+  //       alert(JSON.stringify(res.data));
+  //     } catch (error: any) {
+  //       console.log("===== ERROR =====");
+  //       if (error.response) {
+  //         console.log("Status:", error.response.status);
+  //         console.log("Data:", error.response.data);
+  //       } else {
+  //         console.log(error.message);
+  //       }
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []);
+
+  return (
+    <nav className="border-b border-[#E5E7EB]">
+      <div className="px-4 sm:px-6 lg:px-42 py-4">
+        <div className="flex justify-between items-center">
+          {/* Logo */}
+          <Image
+            src="/logo.png"
+            alt="The Legal Space"
+            width={112}
+            height={32}
+            className="h-8 w-auto"
+          />
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-4">
+            <Link
+              href="/signin"
+              className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              <button
+                onClick={() => loginType("lawyer")}
+                className="px-4 py-2.5 rounded-lg"
+              >
+                Lawyer Login
+              </button>
+            </Link>
+            <Link
+              href="/signin"
+              className="text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-lg hover:bg-[#1648b8] transition-colors"
+            >
+              <button onClick={() => loginType("user")}>Find a Lawyer</button>
+            </Link>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden p-2 text-gray-700"
+            aria-label="Toggle menu"
+          >
+            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isOpen && (
+          <div className="md:hidden pt-4 pb-2 space-y-3 border-t border-[#E5E7EB] mt-4">
+            <button className="block w-full text-left text-sm text-gray-700 py-2">
+              Lawyer Login
+            </button>
+            <Link
+              href="/signin"
+              className="block w-full text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-lg text-center"
+            >
+              Find a Lawyer
+            </Link>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+}
