@@ -242,7 +242,7 @@ export default function ResearchLanding({
   return (
     <div className="flex-1 overflow-y-auto bg-white font-['Geist']">
       {/* Hero */}
-      <h1 className="text-[22px] font-semibold text-gray-900 ps-4 pt-6 pb-px font-[Instrument_Serif]">
+      <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937] ps-4 pt-[26px] pb-[12px] ">
         TLS Research
       </h1>
       <div className="w-full h-px bg-[#E6EAED] my-4"></div>

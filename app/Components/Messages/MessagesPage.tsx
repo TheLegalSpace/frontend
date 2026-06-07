@@ -275,7 +275,7 @@ export default function MessagesPage() {
       <div className="w-full  bg-white md:border md:border-l-0 md:border-b-0 md:border-gray-200 overflow-hidden md:flex  md:shadow-sm h-screen flex flex-col">
         <div className="flex ">
           <div className="w-full flex items-center md:w-64 md:min-w-64 md:border-r border-b border-gray-200 font-['Instrument_Serif'] text-gray-900 ">
-            <span className="pl-[3%] text-[20px] text-[#191B1C]">Messages</span>
+            <span className="pl-[3%] font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937]">Messages</span>
           </div>
 
           <div className="hidden md:flex  md:gap-2 pe-4 h-[74px] w-full md:items-center justify-between border-l-0 border-b border-[#E6EAED]">
