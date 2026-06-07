@@ -29,7 +29,7 @@ interface Props {
 
 export default function PostCard({ post, onReact }: Props) {
   return (
-    <div className="border-b border-[#E6EAED] p-4 last:border-b-0 hover:bg-gray-50/30 transition">
+    <div className="border-b border-[#E6EAED] py-5 last:border-b-0 hover:bg-gray-50/30 transition">
       {/* Header: Avatar + Name + Time — all in one row, vertically centered */}
       <div className="flex items-center gap-3 mb-3">
         <Avatar
