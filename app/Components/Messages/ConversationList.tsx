@@ -68,7 +68,7 @@ const ConversationList = memo(function ConversationList({
   loading,
 }: Props) {
   return (
-    <div className="w-full md:w-64 md:min-w-64 md:border-r border-gray-200 flex flex-col bg-white h-full">
+    <div className="w-full md:w-64 md:min-w-64 md:border-r md:border-l-0 border-gray-200 flex flex-col bg-white h-full">
       {/* Header */}
       {/* <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
@@ -89,7 +89,7 @@ const ConversationList = memo(function ConversationList({
           <input
             type="text"
             placeholder="Search"
-            className="w-full pl-8 pr-3 py-1.5 text-sm bg-gray-100 border border-gray-200 rounded-lg outline-none focus:border-gray-300 placeholder:text-gray-400 font-['Geist']"
+            className="w-full pl-8 pr-3 py-3 text-sm bg-gray-100 border border-gray-200 rounded-lg outline-none focus:border-gray-300 placeholder:text-gray-400 font-['Geist']"
           />
         </div>
       </div>

@@ -272,29 +272,36 @@ export default function MessagesPage() {
   }, [activeId]);
   return (
     <div className=" ">
-      <div className="w-full  bg-white md:border md:border-gray-200 overflow-hidden md:flex md:h-150 md:shadow-sm h-screen flex flex-col">
-        <div className="hidden md:flex  md:gap-2 pe-4 h-[75px] md:items-center justify-between border-l border-b border-[#E6EAED]">
-          <div className="flex items-center mx-[15px]  gap-2 w-full md:w-60 md:min-w-60 md:border-r border-gray-200 h-full">
-            {activeConvo && (
-              <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
-                {getParticipantName(activeConvo)}
-              </span>
-            )}
-            {activeConvo?.status === "closed" && (
-              <span className="text-[11px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">
-                Closed
-              </span>
-            )}
+      <div className="w-full  bg-white md:border md:border-l-0 md:border-b-0 md:border-gray-200 overflow-hidden md:flex  md:shadow-sm h-screen flex flex-col">
+        <div className="flex ">
+          <div className="w-full flex items-center md:w-64 md:min-w-64 md:border-r border-b border-gray-200 font-['Instrument_Serif'] text-gray-900 ">
+            <span className="pl-[3%] text-[20px] text-[#191B1C]">Messages</span>
           </div>
-          {/* Review button — lives here on desktop, moved out of ChatWindow */}
-          {activeConvo && (
-            <ReviewButton
-              isClosed={activeConvo.status === "closed"}
-              hasReviewed={hasReviewed}
-              onClick={() => setShowReview(true)}
-            />
-          )}{" "}
+
+          <div className="hidden md:flex  md:gap-2 pe-4 h-[75px] w-full md:items-center justify-between border-l-0 border-b border-[#E6EAED]">
+            <div className="flex items-center mx-[15px]  gap-2  h-full">
+              {activeConvo && (
+                <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
+                  {getParticipantName(activeConvo)}
+                </span>
+              )}
+              {activeConvo?.status === "closed" && (
+                <span className="text-[11px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">
+                  Closed
+                </span>
+              )}
+            </div>
+            {/* Review button — lives here on desktop, moved out of ChatWindow */}
+            {activeConvo && (
+              <ReviewButton
+                isClosed={activeConvo.status === "closed"}
+                hasReviewed={hasReviewed}
+                onClick={() => setShowReview(true)}
+              />
+            )}{" "}
+          </div>
         </div>
+
         {showReview && activeId && activeConvo && (
           <ReviewModal
             conversationId={activeId}
