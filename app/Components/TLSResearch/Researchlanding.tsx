@@ -240,13 +240,16 @@ export default function ResearchLanding({
   onUploadAndNew,
 }: Props) {
   return (
-    <div className="flex-1 overflow-y-auto bg-white font-['Geist']">
-      {/* Hero */}
-      <h1 className="text-[22px] font-normal text-gray-900 ps-4 pt-6 pb-px font-[Instrument_Serif] sticky top-0 bg-white z-10">
-        TLS Research
-      </h1>
-      <div className="w-full h-px bg-[#E6EAED] my-4"></div>
-      <div className="max-w-2xl mx-auto px-6 pt-12 pb-8 text-center">
+    <div className="flex flex-col h-full bg-white font-['Geist']">
+      {/* Sticky header */}
+      <div className="shrink-0">
+        <h1 className="text-[22px] font-normal text-gray-900 ps-4 pt-6 pb-px font-[Instrument_Serif]">
+          TLS Research
+        </h1>
+        <div className="w-full h-px bg-[#E6EAED] my-4"></div>
+        
+        {/* Sticky search area */}
+        <div className="max-w-2xl mx-auto px-6 pt-4 pb-4 text-center sticky top-0 bg-white z-10 border-b border-gray-100">
         {/* <h1 className="text-[18px] font-medium text-gray-900 font-['Instrument_Serif'] mb-8">
           TLS Research
         </h1> */}
@@ -293,11 +296,14 @@ export default function ResearchLanding({
           ))}
         </div>
       </div>
+      </div>
 
-      <div className="w-full h-px bg-[#E6EAED] my-4"></div>
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="w-full h-px bg-[#E6EAED] my-4"></div>
 
-      {/* Capabilities */}
-      <div className=" px-4 pb-8">
+        {/* Capabilities */}
+        <div className=" px-4 pb-8">
         <div className="mb-5">
           <div className="flex items-center gap-2 mb-2">
             <span className="block w-5 h-px bg-gray-300" />
@@ -410,6 +416,7 @@ export default function ResearchLanding({
             </button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
