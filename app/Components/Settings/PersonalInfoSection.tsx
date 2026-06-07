@@ -87,7 +87,7 @@ export default function PersonalInfoSection({
   };
 
   return (
-    <div className="pb-6 border-b border-[#E5E7EB]">
+    <div className="pb-6 border-b border-[#E5E7EB] border-t-0">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-[15px] font-semibold text-gray-900">
           Personal Information
