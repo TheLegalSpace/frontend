@@ -67,49 +67,47 @@ export default function LeadsPage() {
     STATUS_TABS.find((t) => t.value === activeTab)?.label ?? "";
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className=" ">
-        <h1 className="text-[22px] font-normal text-gray-900 ps-4 pt-6 pb-px font-[Instrument_Serif] sticky top-0 bg-white z-10">
-          Leads
-        </h1>
-        <div className="w-full h-px bg-[#E6EAED] my-4"></div>
-        {/* Stats */}
-        <LeadsStatsRow stats={stats ?? null} />
+    <div className="flex flex-col h-full w-full bg-white pt-18.75">
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="px-4 py-4">
+          {/* Stats */}
+          <LeadsStatsRow stats={stats ?? null} />
 
-        {/* Tabs */}
-        <div className="sticky top-0 z-20  px-4  mb-5">
-          <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
-            <div className="flex items-center">
-              {STATUS_TABS.map((tab) => {
-                const isActive = activeTab === tab.value;
-                return (
-                  <button
-                    key={tab.value}
-                    onClick={() => setActiveTab(tab.value)}
-                    className={`relative flex-1 py-3 text-[13px] font-medium whitespace-nowrap transition-colors ${
-                      isActive
-                        ? "text-gray-900"
-                        : "text-gray-400 hover:text-gray-600"
-                    }`}
-                  >
-                    {tab.label}
-                    {isActive && (
-                      <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-gray-900 rounded-t-full" />
-                    )}
-                  </button>
-                );
-              })}
+          {/* Tabs */}
+          <div className="mb-5">
+            <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
+              <div className="flex items-center">
+                {STATUS_TABS.map((tab) => {
+                  const isActive = activeTab === tab.value;
+                  return (
+                    <button
+                      key={tab.value}
+                      onClick={() => setActiveTab(tab.value)}
+                      className={`relative flex-1 py-3 text-[13px] font-medium whitespace-nowrap transition-colors ${
+                        isActive
+                          ? "text-gray-900"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
+                    >
+                      {tab.label}
+                      {isActive && (
+                        <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-gray-900 rounded-t-full" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Section header */}
-        <div className="flex items-center justify-between mb-4 px-4">
-          <h2 className="text-[15px] font-semibold text-gray-900">
-            {activeLabel} Leads
-          </h2>
-          <span className="text-[12px] text-gray-400">{total} total</span>
-        </div>
+          {/* Section header */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-[15px] font-semibold text-gray-900">
+              {activeLabel} Leads
+            </h2>
+            <span className="text-[12px] text-gray-400">{total} total</span>
+          </div>
 
         {/* List */}
         {isLoading ? (
@@ -118,7 +116,7 @@ export default function LeadsPage() {
             Loading leads...
           </div>
         ) : leads.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4 gap-2 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-16 gap-2 text-gray-400">
             <p className="text-sm">No {activeTab} leads yet.</p>
           </div>
         ) : (
@@ -144,6 +142,7 @@ export default function LeadsPage() {
             )}
           </>
         )}
+        </div>
       </div>
     </div>
   );

@@ -230,14 +230,13 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className=" ">
-      <div className="w-full  bg-white md:border md:border-gray-200 overflow-hidden md:flex md:h-150 md:shadow-sm h-screen flex flex-col">
-        <h1 className="text-[22px] font-regular text-gray-900 ps-4 pt-6 pb-[1px] font-[Instrument_Serif]">
-          Messages
-        </h1>
-        <div className="w-full h-px bg-[#E6EAED] my-4"></div>
+    <div className="h-screen bg-white flex flex-col overflow-hidden">
+      <h1 className="text-[22px] font-normal text-gray-900 ps-4 pt-6 pb-[1px] font-[Instrument_Serif] fixed top-0 z-10 bg-white w-full">
+        Messages
+      </h1>
+      <div className="w-full h-px bg-[#E6EAED] fixed top-[61px] z-10 my-4"></div>
 
-        <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden pt-[77px]">
           {/* Conversation list */}
           <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex flex-col w-full md:w-auto`}>
             <ConversationList
@@ -271,7 +270,6 @@ export default function MessagesPage() {
               </div>
             )}
           </div>
-        </div>
       </div>
     </div>
   );

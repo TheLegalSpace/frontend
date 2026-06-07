@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Search } from "lucide-react";
+import { Search, FileText } from "lucide-react";
 
 const SUGGESTIONS = [
   "Find cases on wrongful termination",
@@ -240,9 +240,9 @@ export default function ResearchLanding({
   onUploadAndNew,
 }: Props) {
   return (
-    <div className="flex flex-col h-full flex-1 bg-white font-['Geist']">
-      {/* Sticky header */}
-      <div className="shrink-0">
+    <div className="flex flex-col h-full flex-1 bg-white font-['Geist'] overflow-hidden">
+      {/* Fixed header */}
+      <div className="shrink-0 fixed top-0 z-10 bg-white w-full">
         <h1 className="text-[22px] font-normal text-gray-900 ps-4 pt-6 pb-px font-[Instrument_Serif]">
           TLS Research
         </h1>
@@ -250,56 +250,53 @@ export default function ResearchLanding({
         
         {/* Search area */}
         <div className="max-w-2xl mx-auto px-6 pt-4 pb-4 text-center border-b border-gray-100">
-        {/* <h1 className="text-[18px] font-medium text-gray-900 font-['Instrument_Serif'] mb-8">
-          TLS Research
-        </h1> */}
-
-        {/* Fake composer */}
-        <div className="flex items-center gap-2 border border-gray-200 rounded-2xl px-4 py-3 bg-white shadow-sm mb-4 cursor-text hover:border-gray-300 transition">
-          <FileText size={16} className="text-gray-400 shrink-0" />
-          <span
-            className="flex-1 text-left text-gray-400 text-[14px]"
-            onClick={onNewThread}
-          >
-            Describe your legal issue or case…
-          </span>
-          <button
-            onClick={onNewThread}
-            className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center hover:bg-blue-800 transition shrink-0"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          {/* Fake composer */}
+          <div className="flex items-center gap-2 border border-gray-200 rounded-2xl px-4 py-3 bg-white shadow-sm mb-4 cursor-text hover:border-gray-300 transition">
+            <FileText size={16} className="text-gray-400 shrink-0" />
+            <span
+              className="flex-1 text-left text-gray-400 text-[14px]"
+              onClick={onNewThread}
             >
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Suggestion chips */}
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {SUGGESTIONS.map((s) => (
+              Describe your legal issue or case…
+            </span>
             <button
-              key={s}
-              onClick={() => onSuggestion(s)}
-              className="px-3 py-1.5 border border-gray-200 rounded-full text-[12px] text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition"
+              onClick={onNewThread}
+              className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center hover:bg-blue-800 transition shrink-0"
             >
-              {s}
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
             </button>
-          ))}
+          </div>
+
+          {/* Suggestion chips */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {SUGGESTIONS.map((s) => (
+              <button
+                key={s}
+                onClick={() => onSuggestion(s)}
+                className="px-3 py-1.5 border border-gray-200 rounded-full text-[12px] text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-hidden pt-[220px]">
+        <div className="h-full overflow-y-auto">
         <div className="w-full h-px bg-[#E6EAED] my-4"></div>
 
         {/* Capabilities */}
@@ -415,6 +412,7 @@ export default function ResearchLanding({
               Upload Document
             </button>
           </div>
+        </div>
         </div>
       </div>
       </div>

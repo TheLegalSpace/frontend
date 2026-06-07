@@ -20,22 +20,6 @@ const PREVIEW_ARTICLES = [
     avatarColor: "bg-pink-500",
     readTime: "3 min read",
   },
-  {
-    tag: "Employment",
-    tagColor: "text-emerald-600 bg-emerald-50",
-    date: "Yesterday",
-    title:
-      "Supreme Court Rules on Constructive Dismissal: What Employers Must Know",
-    excerpt:
-      "In a landmark judgment, the Supreme Court expanded the definition of constructive dismissal to include sustained managerial misconduct, opening new grounds for employees to seek redress without formal termination notices.",
-    highlight: {
-      label: "WHAT THIS MEANS FOR YOU",
-      text: "HR policies and employment contracts should be reviewed immediately. Employers face heightened liability if internal grievance procedures are not properly documented and followed.",
-    },
-    avatar: "A",
-    avatarColor: "bg-violet-500",
-    readTime: "5 min read",
-  },
 ];
 
 const USE_OPTIONS = ["Not really", "Yes, I would use it"];
@@ -69,24 +53,29 @@ export default function LegalNewsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white font-['Geist']">
-      <div className="max-w-3xl mx-auto px-6 py-8">
-        {/* Page title */}
-        <h1 className="text-[22px] font-medium text-gray-900 font-['Instrument_Serif'] mb-6 border-b border-[#E5E7EB] pb-4">
+    <div className="h-screen bg-white font-['Geist'] flex flex-col overflow-hidden">
+      {/* Fixed header */}
+      <div className="shrink-0 fixed top-0 z-10 bg-white w-full">
+        <h1 className="text-[22px] font-normal text-gray-900 font-['Instrument_Serif'] ps-4 pt-6 pb-4">
           Legal News
         </h1>
 
         {/* Coming soon banner */}
-        <div className="flex items-center gap-2 mb-4">
-          <BookOpen size={14} className="text-amber-500" />
-          <span className="text-[11px] font-semibold tracking-widest text-amber-500 uppercase">
+        <div className="flex items-center gap-2 px-4 mb-2">
+          <BookOpen size={14} className="text-[#c9972a]" />
+          <span className="text-[11px] font-semibold tracking-widest text-[#c9972a] uppercase">
             Coming Soon
           </span>
+          <span className="flex-1 h-px bg-[#c9972a]/20 ml-2"></span>
         </div>
-        <div className="w-full h-px bg-amber-100 mb-5" />
+      </div>
 
-        {/* Blurred preview card */}
-        <div className="relative rounded-xl border border-gray-200 overflow-hidden mb-6">
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-hidden pt-[100px]">
+        <div className="h-full overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-6 py-4">
+            {/* Blurred preview card */}
+            <div className="relative border border-gray-200 overflow-hidden mb-6">
           {/* Blur overlay */}
           <div
             className={`absolute inset-0 z-10 flex flex-col items-center justify-center transition-all duration-300 ${showPreview ? "backdrop-blur-none bg-transparent pointer-events-none" : "backdrop-blur-xl bg-white/40"}`}
@@ -271,6 +260,8 @@ export default function LegalNewsPage() {
             </div>
           </>
         )}
+        </div>
+        </div>
       </div>
     </div>
   );
