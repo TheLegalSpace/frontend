@@ -107,7 +107,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
       href: "/dashboard/TLS-Research",
       icon: FolderSearch,
     },
-    { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
+    { label: "Legal News", href: "/dashboard/Legal-News", icon: BookOpenText },
     {
       label: "Legal Library",
       href: "/dashboard/legal-library",
