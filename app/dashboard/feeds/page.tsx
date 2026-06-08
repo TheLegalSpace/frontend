@@ -37,7 +37,7 @@ export default function FeedPage() {
         <div className="border-t border-[#E6EAED] " />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-5 items-start px-4">
+      <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr]  items-start ">
         <Feed activeTab={activeTab} />
         {/* Right */}
         <div className="min-w-0">

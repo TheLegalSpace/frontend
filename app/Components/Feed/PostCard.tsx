@@ -29,16 +29,16 @@ interface Props {
 
 export default function PostCard({ post, onReact }: Props) {
   return (
-    <div className="border-b border-[#E6EAED] py-5 last:border-b-0 hover:bg-gray-50/30 transition">
+    <div className="border-b border-[#E6EAED] py-5 last:border-b-0 hover:bg-gray-50/30 transition w-full">
       {/* Header: Avatar + Name + Time — all in one row, vertically centered */}
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-3 mb-3 px-4">
         <Avatar
           initials={post.authorInitials}
           avatarUrl={post.avatarUrl}
           size={40}
         />
 
-        <div className="flex-1 min-w-0 flex items-center gap-1.5">
+        <div className="flex-1 min-w-0 flex items-center gap-1.5 ">
           <span className="font-medium text-[24px] text-gray-900 font-['Instrument_Serif']">
             {post.author}
           </span>
@@ -51,7 +51,7 @@ export default function PostCard({ post, onReact }: Props) {
       </div>
 
       {/* Body: Starts from avatar left edge, ends at timestamp right edge */}
-      <p className="text-[15px] text-gray-800 leading-6 whitespace-pre-line mb-3 font-['Geist']">
+      <p className="px-4 text-[15px] text-gray-800 leading-6 whitespace-pre-line mb-3 font-['Geist']">
         {post.body}
       </p>
 
@@ -60,7 +60,7 @@ export default function PostCard({ post, onReact }: Props) {
           href={post.pdfUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full flex items-center gap-2.5 mt-2 mb-3 p-3 rounded-xl border border-[#E5E7EB] hover:bg-gray-50 transition group text-left"
+          className="mx-4  flex items-center gap-2.5 mt-2 mb-3 p-3 rounded-xl border border-[#E5E7EB] hover:bg-gray-50 transition group text-left"
         >
           <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
             <FileText size={15} className="text-red-500" />
@@ -78,7 +78,7 @@ export default function PostCard({ post, onReact }: Props) {
         </a>
       )}
       {/* Reactions: No top border, just icons */}
-      <div className="flex items-center gap-5">
+      <div className="px-4 flex items-center gap-5">
         <button
           onClick={() => onReact(post.id, "like")}
           className={`flex items-center gap-1.5 text-sm transition ${

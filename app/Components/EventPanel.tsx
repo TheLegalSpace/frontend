@@ -61,7 +61,7 @@ export default function EventsPanel() {
           </h2>
           <p className="text-[12px] text-blue-100 font-[Geist]">
             Want to feature your event with The Legal Space? Request coverage,
-            promotion, or partnership through
+            promotion, or partnership through {" "}
             <Link
               href="dashboard/tls-services"
               className="text-white underline"

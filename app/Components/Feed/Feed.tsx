@@ -73,7 +73,7 @@ export default function Feed({ activeTab }: FeedProps) {
       ) : posts.length === 0 ? (
         <div className="text-center py-10 text-gray-400">Nothing here yet.</div>
       ) : (
-        <div className="flex flex-col">
+        <div className="flex flex-col items-center w-full" >
           {posts.map((post) => (
             <PostCard key={post.id} post={post} onReact={handleReact} />
           ))}
