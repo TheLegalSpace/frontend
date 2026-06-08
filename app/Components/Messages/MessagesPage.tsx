@@ -1,4 +1,4 @@
-// app/Components/Messages/MessagesPage.tsx
+﻿// app/Components/Messages/MessagesPage.tsx
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -48,12 +48,17 @@ export default function MessagesPage() {
   } = useConversationCache();
 
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [isAnonymous, setIsAnonymous] = useState<boolean | null>(() =>
-    user?.isAnonymous != null ? Boolean(user.isAnonymous) : null,
+
+  // ── Anonymous state initialisation ────────────────────────────────────────
+  // Use an explicit === true check so that users whose profile doesn't include
+  // isAnonymous (undefined / null) are treated as NOT anonymous by default.
+  // This prevents non-anonymous users from ever seeing the anonymous banner.
+  const [isAnonymous, setIsAnonymous] = useState<boolean>(
+    () => user?.isAnonymous === true,
   );
+
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
 
-  // Ref so socket/effect closures always see the latest list
   const conversationsRef = useRef<Conversation[]>([]);
   conversationsRef.current = conversations;
 
@@ -130,7 +135,6 @@ export default function MessagesPage() {
     const handleConnectError = (err: { message: string }) => {
       if (err.message === "invalid token") {
         const newToken = localStorage.getItem("accessToken") ?? "";
-        // refreshSocketAuth if available
         socket.auth = { token: newToken };
         socket.connect();
       }
@@ -170,12 +174,16 @@ export default function MessagesPage() {
     }
   }, [activeId, activeConvo, refreshConversation]);
 
-  // ── Sync isAnonymous ──────────────────────────────────────────────────────
+  // ── Sync isAnonymous when conversation changes ────────────────────────────
+  // Priority order:
+  //   1. Per-conversation localStorage override (set after a "reveal" action)
+  //   2. User profile value — only true if explicitly === true
+  //   3. Fallback: false (not anonymous)
   useEffect(() => {
     if (isLawyer) return;
 
-    const profileValue =
-      user?.isAnonymous != null ? Boolean(user.isAnonymous) : null;
+    // Explicit check — undefined/null/false all resolve to false (not anonymous)
+    const profileValue = user?.isAnonymous === true;
 
     if (!activeId) {
       setIsAnonymous(profileValue);
@@ -184,17 +192,15 @@ export default function MessagesPage() {
 
     const role = user?.role ?? "client";
     const stored = getStoredAnonymous(activeId, role);
+
     if (stored !== null) {
       setIsAnonymous(stored);
-      return;
+    } else {
+      setIsAnonymous(profileValue);
     }
-
-    setIsAnonymous(profileValue);
   }, [activeId, isLawyer, user?.isAnonymous, user?.role]);
 
-  // ── Conversation selection ─────────────────────────────────────────────────
-  // useCallback keeps the reference stable so the memoized ConversationList
-  // does not re-render when unrelated state (mobileView, isAnonymous) changes.
+  // ── Conversation selection ────────────────────────────────────────────────
   const handleSelectConvo = useCallback(
     (id: string) => {
       setActiveId(id);
@@ -202,9 +208,8 @@ export default function MessagesPage() {
 
       if (!isLawyer) {
         const stored = getStoredAnonymous(id, user?.role ?? "client");
-        const profileValue =
-          user?.isAnonymous != null ? Boolean(user.isAnonymous) : null;
-        setIsAnonymous(stored ?? profileValue);
+        const profileValue = user?.isAnonymous === true;
+        setIsAnonymous(stored !== null ? stored : profileValue);
       }
     },
     [isLawyer, user?.role, user?.isAnonymous],
@@ -214,7 +219,6 @@ export default function MessagesPage() {
     setMobileView("list");
   }, []);
 
-  // change from plain function to useCallback
   const handleConversationClosed = useCallback(() => {
     if (!activeId) return;
     patchConversation(activeId, { status: "closed" });
@@ -249,6 +253,8 @@ export default function MessagesPage() {
   );
 
   // ── Resolve isAnonymous for active chat ───────────────────────────────────
+  // For lawyers: read from the conversation's otherParty (the client's status)
+  // For clients: use the local isAnonymous state (profile + per-convo override)
   const activeIsAnonymous: boolean | null = isLawyer
     ? (activeConvo?.otherParty?.isAnonymous ?? null)
     : isAnonymous;
@@ -258,10 +264,10 @@ export default function MessagesPage() {
     if (convo.otherParty.isAnonymous !== false) return "Anonymous User";
     return convo.otherParty.fullName || "Anonymous User";
   }
+
   const [hasReviewed, setHasReviewed] = useState(false);
   const [showReview, setShowReview] = useState(false);
 
-  // Reset hasReviewed when switching conversations
   useEffect(() => {
     if (!activeId) return;
     try {
@@ -270,16 +276,19 @@ export default function MessagesPage() {
       setHasReviewed(false);
     }
   }, [activeId]);
+
   return (
-    <div className="flex-1 h-screen overflow-hidden ">
-      <div className="w-full  bg-white md:border md:border-l-0 md:border-b-0 md:border-gray-200 overflow-hidden md:flex  md:shadow-sm h-screen flex flex-col">
-        <div className="flex ">
-          <div className="w-full flex items-center md:w-64 md:min-w-64 md:border-r border-b border-gray-200 font-['Instrument_Serif'] text-gray-900 ">
-            <span className="pl-[3%] font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937]">Messages</span>
+    <div className="flex-1 h-screen overflow-hidden">
+      <div className="w-full bg-white md:border md:border-l-0 md:border-b-0 md:border-gray-200 overflow-hidden md:flex md:shadow-sm h-screen flex flex-col">
+        <div className="flex">
+          <div className="w-full flex items-center md:w-64 md:min-w-64 md:border-r border-b border-gray-200 font-['Instrument_Serif'] text-gray-900">
+            <span className="pl-[3%] font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937]">
+              Messages
+            </span>
           </div>
 
-          <div className="hidden md:flex  md:gap-2 pe-4 h-[74px] w-full md:items-center justify-between border-l-0 border-b border-[#E6EAED]">
-            <div className="flex items-center mx-[15px]  gap-2  h-full">
+          <div className="hidden md:flex md:gap-2 pe-4 h-[74px] w-full md:items-center justify-between border-l-0 border-b border-[#E6EAED]">
+            <div className="flex items-center mx-[15px] gap-2 h-full">
               {activeConvo && (
                 <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
                   {getParticipantName(activeConvo)}
@@ -291,14 +300,13 @@ export default function MessagesPage() {
                 </span>
               )}
             </div>
-            {/* Review button — lives here on desktop, moved out of ChatWindow */}
             {activeConvo && (
               <ReviewButton
                 isClosed={activeConvo.status === "closed"}
                 hasReviewed={hasReviewed}
                 onClick={() => setShowReview(true)}
               />
-            )}{" "}
+            )}
           </div>
         </div>
 
@@ -314,6 +322,7 @@ export default function MessagesPage() {
             }}
           />
         )}
+
         <div className="flex flex-1 overflow-hidden">
           {/* Conversation list */}
           <div
@@ -333,7 +342,7 @@ export default function MessagesPage() {
           >
             {activeId && activeConvo ? (
               <ChatWindow
-                onReviewClick={() => setShowReview(true)} // new prop
+                onReviewClick={() => setShowReview(true)}
                 onHasReviewedChange={setHasReviewed}
                 conversationId={activeId}
                 participantName={getParticipantName(activeConvo)}

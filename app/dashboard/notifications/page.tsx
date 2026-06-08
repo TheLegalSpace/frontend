@@ -14,13 +14,13 @@ export default function Page() {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Fixed header */}
       <div className="fixed w-full top-0 z-10 bg-white border-b border-[#E6EAED]">
-        <h1 className="text-[22px] font-semibold text-gray-900 font-[Instrument_Serif] ps-4 pt-6 pb-4">
+        <h1 className="text-[22px] font-regular text-gray-900 font-[Instrument_Serif] ps-4 pt-6 pb-4">
           Notifications
         </h1>
       </div>
 
       {/* Content */}
-      <div className="mt-[73px] grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-5 items-start px-4 pt-4">
+      <div className="mt-[73px] grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-0 items-start px-0 pt-4">
         <div className="min-w-0">
           <NotificationsPage />
         </div>
