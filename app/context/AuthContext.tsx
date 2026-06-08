@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
       setUser(null);
-      router.replace("/signin");
+      router.replace("/");
     };
     window.addEventListener("auth:logout", handleAuthLogout);
     return () => window.removeEventListener("auth:logout", handleAuthLogout);
@@ -288,7 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
     } finally {
       clearSession();
-      router.replace("/signin");
+      router.replace("/");
     }
   };
 

@@ -5,13 +5,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../Components/Sidebar";
 import { useAuth } from "../context/AuthContext";
+import { Providers } from "../providers";
 
 export const dynamic = "force-dynamic";
 
 function hasSession() {
-  return (
-    typeof window !== "undefined" && !!localStorage.getItem("accessToken")
-  );
+  return typeof window !== "undefined" && !!localStorage.getItem("accessToken");
 }
 
 export default function DashboardLayout({
@@ -55,10 +54,12 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 min-w-0 overflow-y-auto  md:pt-0">
-        {children}
-      </main>
+      <Providers>
+        <Sidebar />
+        <main className="flex-1 min-w-0 overflow-y-auto  md:pt-0">
+          {children}
+        </main>
+      </Providers>
     </div>
   );
 }
