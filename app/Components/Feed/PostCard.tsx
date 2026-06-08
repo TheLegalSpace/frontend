@@ -1,9 +1,8 @@
 // PostCard.tsx
 "use client";
 
-import { ThumbsUp, ThumbsDown, BadgeCheck, FileText } from "lucide-react";
+import { ThumbsUp, ThumbsDown, BadgeCheck, FileText, Calendar, BookOpen } from "lucide-react";
 import Avatar from "./Avatar";
-import ArticleCard from "./ArticleCard";
 
 export interface Post {
   id: string;
@@ -13,7 +12,6 @@ export interface Post {
   isVerified: boolean;
   timeAgo: string;
   body: string;
-  // ✅ replace article object with flat fields
   pdfUrl?: string | null;
   pdfName?: string | null;
   pdfSizeBytes?: number | null;
@@ -30,7 +28,7 @@ interface Props {
 export default function PostCard({ post, onReact }: Props) {
   return (
     <div className="border-b border-[#E6EAED] py-5 last:border-b-0 hover:bg-gray-50/30 transition w-full">
-      {/* Header: Avatar + Name + Time — all in one row, vertically centered */}
+      {/* Header */}
       <div className="flex items-center gap-3 mb-3 px-4">
         <Avatar
           initials={post.authorInitials}
@@ -38,7 +36,7 @@ export default function PostCard({ post, onReact }: Props) {
           size={40}
         />
 
-        <div className="flex-1 min-w-0 flex items-center gap-1.5 ">
+        <div className="flex-1 min-w-0 flex items-center gap-1.5">
           <span className="font-medium text-[24px] text-gray-900 font-['Instrument_Serif']">
             {post.author}
           </span>
@@ -50,34 +48,48 @@ export default function PostCard({ post, onReact }: Props) {
         <span className="text-xs text-gray-400 shrink-0">{post.timeAgo}</span>
       </div>
 
-      {/* Body: Starts from avatar left edge, ends at timestamp right edge */}
+      {/* Body */}
       <p className="px-4 text-[15px] text-gray-800 leading-6 whitespace-pre-line mb-3 font-['Geist']">
         {post.body}
       </p>
 
+      {/* Article preview — matches screenshot style */}
       {post.pdfUrl && (
         <a
           href={post.pdfUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mx-4  flex items-center gap-2.5 mt-2 mb-3 p-3 rounded-xl border border-[#E5E7EB] hover:bg-gray-50 transition group text-left"
+          className="mx-4 flex items-center gap-3 mt-2 mb-3 p-3 rounded-xl border border-[#E5E7EB] hover:bg-gray-50 transition group"
         >
-          <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
-            <FileText size={15} className="text-red-500" />
+          {/* Dark "ARTICLE" thumbnail */}
+          <div className="w-12 h-12 rounded-lg bg-gray-900 flex flex-col items-center justify-center shrink-0">
+            <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400">
+              Article
+            </span>
           </div>
-          <div className="min-w-0">
-            <p className="text-[12px] font-semibold text-gray-800 truncate group-hover:text-blue-600 transition">
+
+          {/* Title + meta */}
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold text-gray-900 leading-snug truncate group-hover:text-blue-600 transition">
               {post.pdfName ?? "Attached Article"}
             </p>
-            <p className="text-[11px] text-gray-400">
-              {post.pdfSizeBytes
-                ? `${(post.pdfSizeBytes / (1024 * 1024)).toFixed(1)} MB · PDF`
-                : "PDF · tap to read"}
-            </p>
+            <div className="flex items-center gap-3 mt-1.5 text-[11px] text-gray-400 flex-wrap">
+              {post.pdfSizeBytes && (
+                <span className="flex items-center gap-1">
+                  <BookOpen size={10} />
+                  {(post.pdfSizeBytes / (1024 * 1024)).toFixed(1)} MB
+                </span>
+              )}
+              <span className="ml-auto text-blue-600 font-medium flex items-center gap-1">
+                <FileText size={10} />
+                Read Article
+              </span>
+            </div>
           </div>
         </a>
       )}
-      {/* Reactions: No top border, just icons */}
+
+      {/* Reactions */}
       <div className="px-4 flex items-center gap-5">
         <button
           onClick={() => onReact(post.id, "like")}
