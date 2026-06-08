@@ -138,64 +138,16 @@ export default function NotificationsPage() {
   }
 
   return (
-    // Full screen on mobile, centred card on desktop
-    <div className="min-h-screen bg-white  ">
-      {/* <div className="flex items-center justify-between px-4 md:px-5 py-4 border-b border-[#E5E7EB]">
-        {/* <div className="flex items-center gap-2">
-          <h1 className="text-[15px] font-semibold text-gray-900">
-            Notifications
-          </h1>
-          {unreadCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[11px] font-semibold">
-              {unreadCount}
-            </span>
-          )}
-        </div> */}
-
-        {/* {unreadCount > 0 && (
-          <button
-            onClick={handleMarkAllRead}
-            disabled={markingAll}
-            className="flex items-center gap-1.5 text-[12px] text-gray-500 hover:text-gray-800 transition disabled:opacity-50"
-          >
-            {markingAll ? (
-              <Loader2 size={13} className="animate-spin" />
-            ) : (
-              <CheckCheck size={13} />
-            )}
-            <span className="hidden sm:inline">Mark all as read</span>
-          </button>
-        )} 
-      </div>{" "} */}
+    <div className="min-h-screen bg-white">
       <div className="w-full">
-        {/* Header */}
-        {/* <div className="flex items-center justify-between px-4 md:px-5 py-4 border-b border-[#E5E7EB]">
-          <div className="flex items-center gap-2">
-            <h1 className="text-[15px] font-semibold text-gray-900">
-              Notifications
-            </h1>
-            {unreadCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[11px] font-semibold">
-                {unreadCount}
-              </span>
-            )}
-          </div> 
 
-          {unreadCount > 0 && (
-            <button
-              onClick={handleMarkAllRead}
-              disabled={markingAll}
-              className="flex items-center gap-1.5 text-[12px] text-gray-500 hover:text-gray-800 transition disabled:opacity-50"
-            >
-              {markingAll ? (
-                <Loader2 size={13} className="animate-spin" />
-              ) : (
-                <CheckCheck size={13} />
-              )}
-              <span className="hidden sm:inline">Mark all as read</span>
-            </button>
-          )}
-        </div>
+        {/* Heading
+        <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937] ps-4 pt-6 pb-px">
+          Notifications
+        </h1> */}
+
+        {/* Full-width divider */}
+        {/* <span className="block w-full h-px bg-[#E5E7EB] my-4" /> */}
 
         {/* Body */}
         {notificationsQuery.isLoading ? (

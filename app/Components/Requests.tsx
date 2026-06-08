@@ -216,30 +216,6 @@ function RequestCard({
   );
 }
 
-// ─── Tab Button ───────────────────────────────────────────────────────────────
-function TabButton({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-4 py-2 text-[13px] rounded-lg transition-colors ${
-        active
-          ? "text-gray-800 font-semibold"
-          : "text-gray-500 font-medium hover:text-gray-700"
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
-
 // ─── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ message }: { message: string }) {
   return (
@@ -315,66 +291,87 @@ export default function RequestsPage() {
   const currentItems = tabItems[activeTab];
 
   return (
-    <div className="w-full px-4 py-6">
-      {/* Page title */}
-      <h1 className="text-[22px] font-regulal text-gray-900 mb-[17px] font-[Instrument_Serif] ">Requests</h1>
-      <span className="block h-px bg-[#E5E7EB] mb-5 -mx-4" />
+    <div className="min-h-screen bg-white">
+      <div className="w-full px-4 py-6">
+        {/* Page title */}
+        <h1 className="font-[Instrument_Serif] text-[22px] font-regulal text-gray-900 mb-[17px] font-[Instrument_Serif] ">
+          Requests
+        </h1>
+        <span className="block h-px bg-[#E5E7EB] my-4 -mx-4" />
 
-      {/* Stats — only 2 cards */}
-      <div className="grid grid-cols-2 gap-3 mb-7 w-1/2">
-        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4">
-          <p className="text-[12px] text-gray-400 mb-2">Total Requests</p>
-          <p className="text-[32px] font-light text-gray-900 leading-none mb-1.5">
-            {data?.pagination.total ?? stats.total}
-          </p>
-          <p className="text-[12px] text-green-600">All time</p>
+        {/* Stats — only 2 cards */}
+        <div className="grid grid-cols-2 gap-3 mb-7 w-1/2">
+          <div className="bg-white border border-[#E5E7EB] rounded-xl p-4">
+            <p className="text-[12px] text-gray-400 mb-2">Total Requests</p>
+            <p className="text-[32px] font-light text-gray-900 leading-none mb-1.5">
+              {data?.pagination.total ?? stats.total}
+            </p>
+            <p className="text-[12px] text-green-600">All time</p>
+          </div>
+          <div className="bg-white border border-[#E5E7EB] rounded-xl p-4">
+            <p className="text-[12px] text-gray-400 mb-2">Active Requests</p>
+            <p className="text-[32px] font-light text-gray-900 leading-none mb-1.5">
+              {stats.active}
+            </p>
+            <p className="text-[12px] text-green-600">
+              ↑ {stats.active} this month
+            </p>
+          </div>
         </div>
-        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4">
-          <p className="text-[12px] text-gray-400 mb-2">Active Requests</p>
-          <p className="text-[32px] font-light text-gray-900 leading-none mb-1.5">
-            {stats.active}
-          </p>
-          <p className="text-[12px] text-green-600">
-            ↑ {stats.active} this month
-          </p>
+
+        {/* Tabs — matches Leads style: bordered container, underline indicator */}
+        <div className="mb-5">
+          <div className="bg-white border border-gray-200 rounded-xl overflow-x-auto">
+            <div className="flex items-center">
+              {tabs.map((t) => {
+                const isActive = activeTab === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setActiveTab(t.key)}
+                    className={`relative flex-1 py-3 text-[13px] font-medium whitespace-nowrap transition-colors ${
+                      isActive
+                        ? "text-gray-900"
+                        : "text-gray-400 hover:text-gray-600"
+                    }`}
+                  >
+                    {t.label}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-gray-900 rounded-t-full" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-[#E5E7EB] mb-6 pb-px">
-        {tabs.map((t) => (
-          <TabButton
-            key={t.key}
-            label={t.label}
-            active={activeTab === t.key}
-            onClick={() => setActiveTab(t.key)}
-          />
-        ))}
+        {/* Tab content */}
+        {currentItems.length === 0 ? (
+          <EmptyState message={emptyMessages[activeTab]} />
+        ) : (
+          currentItems.map((r) => (
+            <RequestCard
+              key={r.id}
+              request={r}
+              tab={activeTab}
+              onCancel={(id) => cancelRequest.mutate(id)}
+              isCancelling={cancelRequest.isPending}
+              practiceAreaMap={practiceAreaMap}
+              onViewMessage={(req) => {
+                if (req.conversationId) {
+                  router.push(
+                    `/dashboard/messages?conversationId=${req.conversationId}`,
+                  );
+                }
+              }}
+              onSearchAgain={(_req) => {
+                router.push(`/dashboard/find-lawyer`);
+              }}
+            />
+          ))
+        )}
       </div>
-
-      {/* Tab content */}
-      {currentItems.length === 0 ? (
-        <EmptyState message={emptyMessages[activeTab]} />
-      ) : (
-        currentItems.map((r) => (
-          <RequestCard
-            key={r.id}
-            request={r}
-            tab={activeTab}
-            onCancel={(id) => cancelRequest.mutate(id)}
-            isCancelling={cancelRequest.isPending}
-            practiceAreaMap={practiceAreaMap}
-            onViewMessage={(req) => {
-              if (req.conversationId) {
-                router.push(`/dashboard/messages?conversationId=${req.conversationId}`);
-              }
-            }}
-            onSearchAgain={(_req) => {
-              router.push(`/dashboard/find-lawyer`);
-            }}
-          />
-        ))
-      )}
     </div>
   );
 }

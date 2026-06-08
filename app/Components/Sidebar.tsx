@@ -434,15 +434,21 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="p-3 border-t border-[#E5E7EB] flex flex-col gap-2">
-        {footerCta && (
-          <Link
-            href={footerCta.href}
-            className="w-full py-2 border-[1.5px] border-gray-900 rounded-lg text-[13px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
-          >
-            <footerCta.icon className="w-4 h-4" />
-            {footerCta.label}
-          </Link>
-        )}
+      {footerCta && (
+        <Link
+          href={footerCta.href}
+          className="w-full py-2 rounded-2xl text-[13px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+          style={{
+            border: "2px solid transparent",
+            backgroundImage:
+              "linear-gradient(white, white), linear-gradient(90deg, #216399 0%, #FFE500 50%, #C34B00 100%)",
+            backgroundOrigin: "border-box",
+            backgroundClip: "padding-box, border-box",
+          }}
+        >
+          {footerCta.label}
+        </Link>
+      )}
         <button
           onClick={() => setShowLogoutModal(true)}
           className="w-full py-2 bg-red-50 border border-red-100 rounded-2xl text-[14px] font-medium text-red-500 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"

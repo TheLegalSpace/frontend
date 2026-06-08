@@ -206,7 +206,7 @@ export default function NotificationCard({ notification, onMarkRead }: Props) {
   return (
     <div
       onClick={handleClick}
-      className={`px-4 md:px-5 py-4 border-b border-[#E5E7EB] cursor-pointer transition hover:bg-gray-50/60 ${
+      className={`relative px-4 md:px-5 py-4 cursor-pointer transition hover:bg-gray-50/60 ${
         isUnread ? "bg-white" : "bg-gray-50/30"
       }`}
     >
@@ -236,6 +236,9 @@ export default function NotificationCard({ notification, onMarkRead }: Props) {
       {notification.payload.article && (
         <ArticlePreview article={notification.payload.article} />
       )}
+
+      {/* Full-width divider — breaks out of px padding */}
+      <span className="absolute bottom-0 left-0 right-0 h-px bg-[#E5E7EB]" />
     </div>
   );
 }
