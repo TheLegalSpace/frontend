@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Send, Loader2, Lock, ArrowLeft } from "lucide-react";
+import { Send, Loader2, Lock, ArrowLeft, Plus, X } from "lucide-react";
 import { Message } from "@/app/types/message";
 import { messagesService } from "@/services/messages.services";
 import { connectSocket, refreshSocketAuth } from "@/services/socket.services";
@@ -74,9 +74,6 @@ function formatTime(dateStr: string) {
   });
 }
 
-// Module-level cache: date string → "Today" | "June 1, 2025" etc.
-// Avoids creating new Date objects on every message on every render.
-// Cache is keyed by the raw ISO string so identical timestamps always hit.
 const dateLabelCache = new Map<string, string>();
 
 function formatDateLabel(dateStr: string) {
@@ -95,7 +92,6 @@ function formatDateLabel(dateStr: string) {
 
   dateLabelCache.set(dateStr, label);
 
-  // Keep the cache from growing unboundedly across very long sessions
   if (dateLabelCache.size > 500) {
     const firstKey = dateLabelCache.keys().next().value;
     if (firstKey !== undefined) dateLabelCache.delete(firstKey);
@@ -117,7 +113,6 @@ interface Props {
   currentAccountId: string;
   conversationStatus: "open" | "closed";
   onConversationClosed: () => void;
-  /** null = not yet known; true = anonymous; false = revealed */
   isAnonymous: boolean | null;
   onAnonymousToggle: (val: boolean) => void;
   onClose: () => void;
@@ -184,6 +179,8 @@ export default function ChatWindow({
   const [input, setInput] = useState("");
   const [showReview, setShowReview] = useState(false);
   const [showEngagementModal, setShowEngagementModal] = useState(false);
+  // Lawyer engage-outside-TLS popover (shown above input when + is clicked)
+  const [showEngagePopover, setShowEngagePopover] = useState(false);
   const [hasReviewed, setHasReviewedState] = useState(() =>
     getHasReviewed(conversationId),
   );
@@ -199,6 +196,36 @@ export default function ChatWindow({
   });
 
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // ── Scroll: show first message on initial load, scroll on new messages ────
+  // isInitialLoadRef is reset whenever conversationId changes so each new
+  // conversation starts with the first message visible (no auto-scroll down).
+  const isInitialLoadRef = useRef(true);
+  const prevMessageLengthRef = useRef(0);
+
+  // Reset scroll tracking whenever the active conversation changes
+  useEffect(() => {
+    isInitialLoadRef.current = true;
+    prevMessageLengthRef.current = 0;
+  }, [conversationId]);
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    if (isInitialLoadRef.current) {
+      // First batch — leave scroll at the top so the first message is visible
+      isInitialLoadRef.current = false;
+      prevMessageLengthRef.current = messages.length;
+      return;
+    }
+
+    if (messages.length > prevMessageLengthRef.current) {
+      // New message arrived or was sent — scroll to bottom
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    prevMessageLengthRef.current = messages.length;
+  }, [messages]);
 
   // ── Show engage banner when conversation is closed (client only) ──────────
   useEffect(() => {
@@ -217,6 +244,7 @@ export default function ChatWindow({
   // ── Sync per-conversation state when conversationId changes ──────────────
   useEffect(() => {
     setHasReviewedState(getHasReviewed(conversationId));
+    setShowEngagePopover(false); // always close popover on conversation switch
 
     if (!isLawyer) {
       const alreadyDismissed =
@@ -285,15 +313,11 @@ export default function ChatWindow({
     };
   }, [appendMessage, conversationId, markMessageRead, queryClient]);
 
-  // ── Scroll to bottom on new messages ─────────────────────────────────────
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   // ── Actions ───────────────────────────────────────────────────────────────
   async function handleCloseConversation() {
     if (closing || isClosed) return;
     setClosing(true);
+    setShowEngagePopover(false);
     try {
       await messagesService.closeConversation(conversationId);
       if (isMountedRef.current) {
@@ -321,7 +345,6 @@ export default function ChatWindow({
       createdAt: new Date().toISOString(),
     };
 
-    // ✅ Optimistic — add to cache immediately
     setMessages((prev) => [...prev, optimistic]);
     setInput("");
     setSending(true);
@@ -330,13 +353,11 @@ export default function ChatWindow({
       const res = await messagesService.sendMessage(conversationId, text);
       const sentMessage: Message = res?.data ?? res;
 
-      // ✅ Replace temp with real message
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? sentMessage : m)),
       );
     } catch (err) {
       console.error("Failed to send message:", err);
-      // ✅ Revert on failure
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       if (isMountedRef.current) {
         setInput(text);
@@ -356,8 +377,8 @@ export default function ChatWindow({
   }
 
   function handleReviewSubmitted() {
-    setHasReviewed(conversationId); // still persists to localStorage
-    onHasReviewedChange(true); // tells MessagesPage
+    setHasReviewed(conversationId);
+    onHasReviewedChange(true);
   }
 
   // ── Group messages by date ────────────────────────────────────────────────
@@ -388,60 +409,44 @@ export default function ChatWindow({
   return (
     <>
       <div className="flex-1 flex flex-col min-w-0 h-full">
-        {/* Header */}
+        {/* Mobile header with back button */}
         {showBackButton && (
           <div className="md:hidden flex items-center justify-between px-4 py-3.5 border-b border-gray-200 bg-white">
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
-                className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
                 aria-label="Back to conversations"
               >
                 <ArrowLeft size={18} className="text-gray-600" />
               </button>
-              {/* Header */}
-              {/* Header — back button mobile only, no review button (moved to MessagesPage) */}
-              <div className="flex items-center px-4 py-3.5 border-b border-gray-200 bg-white">
-                {showBackButton && (
-                  <button
-                    onClick={onClose}
-                    className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
-                    aria-label="Back to conversations"
-                  >
-                    <ArrowLeft size={18} className="text-gray-600" />
-                  </button>
-                )}
-                {/* Name + closed badge — mobile only */}
-                <span className="md:hidden text-[18px] font-medium font-['Instrument_Serif'] text-gray-900 ml-1">
-                  {participantName}
+              <span className="text-[18px] font-medium font-['Instrument_Serif'] text-gray-900 ml-1">
+                {participantName}
+              </span>
+              {isClosed && (
+                <span className="ml-2 text-[11px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">
+                  Closed
                 </span>
-                {isClosed && (
-                  <span className="md:hidden ml-2 text-[11px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full border border-gray-200">
-                    Closed
-                  </span>
-                )}
-              </div>
-              {/* </div> */}
-
-              {/* Review button — desktop */}
-              {/* Mobile review trigger — calls up to MessagesPage */}
-              <button
-                onClick={onReviewClick}
-                disabled={!isClosed}
-                className={`md:hidden w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${
-                  isClosed
-                    ? "border-gray-300 text-amber-500 hover:bg-gray-50 cursor-pointer"
-                    : "border-gray-200 text-gray-300 cursor-not-allowed"
-                }`}
-                aria-label="Review"
-              >
-                ★
-              </button>
+              )}
             </div>
+
+            {/* Mobile review trigger */}
+            <button
+              onClick={onReviewClick}
+              disabled={!isClosed}
+              className={`w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${
+                isClosed
+                  ? "border-gray-300 text-amber-500 hover:bg-gray-50 cursor-pointer"
+                  : "border-gray-200 text-gray-300 cursor-not-allowed"
+              }`}
+              aria-label="Review"
+            >
+              ★
+            </button>
           </div>
         )}
 
-        {/* Anonymous banner — client only */}
+        {/* Anonymous banner — client only, only renders when isAnonymous === true */}
         {!isLawyer && (
           <AnonymousBanner
             isAnonymous={isAnonymous}
@@ -457,25 +462,6 @@ export default function ChatWindow({
               You are no longer chatting anonymously. This lawyer can see your
               name and contact details.
             </span>
-          </div>
-        )}
-
-        {/* Lawyer: engage outside TLS banner */}
-        {isLawyer && !isClosed && (
-          <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-4">
-            <p className="text-[12px] text-gray-600">
-              You can now proceed with{" "}
-              <span className="font-semibold">{participantName}</span>'s matter
-              outside TLS.
-            </p>
-            <button
-              onClick={handleCloseConversation}
-              disabled={closing}
-              className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 bg-blue-700 hover:bg-blue-800 text-white text-[12px] font-medium rounded-lg transition disabled:opacity-60"
-            >
-              {closing && <Loader2 size={12} className="animate-spin" />}
-              Engage outside TLS
-            </button>
           </div>
         )}
 
@@ -499,7 +485,7 @@ export default function ChatWindow({
         )}
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 font-['Geist'] justify-end">
+        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 font-['Geist']">
           {showLoading ? (
             <div className="flex items-center justify-center h-full text-sm text-gray-400">
               <Loader2 size={18} className="animate-spin mr-2" />
@@ -583,46 +569,109 @@ export default function ChatWindow({
           </div>
         )}
 
-        {/* Input */}
-        <div className="px-4 py-3 border-t border-gray-200 bg-white flex items-center gap-3">
-          {/* Mobile review trigger */}
-          <button
-            onClick={() => !reviewDisabled && setShowReview(true)}
-            disabled={reviewDisabled}
-            title={reviewTitle}
-            className={`md:hidden w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${
-              hasReviewed
-                ? "border-green-200 text-green-600 cursor-default"
-                : isClosed
-                  ? "border-gray-300 text-amber-500 hover:bg-gray-50 cursor-pointer"
-                  : "border-gray-200 text-gray-300 cursor-not-allowed"
-            }`}
-            aria-label={reviewLabel}
-          >
-            ★
-          </button>
+        {/* Input area */}
+        <div className="relative px-4 py-3 border-t border-gray-200 bg-white">
+          {/* Lawyer engage-outside-TLS popover — appears above input on + click */}
+          {isLawyer && showEngagePopover && !isClosed && (
+            <div className="absolute bottom-full left-4 right-4 mb-2 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-10">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div>
+                  <p className="text-[13px] font-semibold text-gray-900">
+                    Propose outside engagement
+                  </p>
+                  <p className="text-[12px] text-gray-500 mt-0.5 leading-relaxed">
+                    This closes the TLS conversation and notifies{" "}
+                    <span className="font-medium">{participantName}</span> to
+                    connect with you directly via phone or email.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowEngagePopover(false)}
+                  className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 transition shrink-0 mt-0.5"
+                  aria-label="Dismiss"
+                >
+                  <X size={13} className="text-gray-400" />
+                </button>
+              </div>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => setShowEngagePopover(false)}
+                  className="flex-1 py-2 rounded-lg border border-gray-200 text-[12px] font-medium text-gray-600 hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCloseConversation}
+                  disabled={closing}
+                  className="flex-1 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-[12px] font-medium transition disabled:opacity-60 flex items-center justify-center gap-1.5"
+                >
+                  {closing && <Loader2 size={12} className="animate-spin" />}
+                  Confirm
+                </button>
+              </div>
+            </div>
+          )}
 
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isClosed}
-            placeholder={isClosed ? "Conversation closed" : "Type a message..."}
-            className="flex-1 px-4 py-2 text-sm bg-gray-100 border border-gray-200 rounded-full outline-none focus:border-gray-300 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || sending || isClosed}
-            className="w-9 h-9 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition disabled:opacity-50 shrink-0"
-            aria-label="Send message"
-          >
-            {sending ? (
-              <Loader2 size={15} className="text-white animate-spin" />
-            ) : (
-              <Send size={15} className="text-white" />
+          <div className="flex items-center gap-3">
+            {/* Lawyer: + button to propose engagement outside TLS */}
+            {isLawyer && !isClosed && (
+              <button
+                onClick={() => setShowEngagePopover((v) => !v)}
+                title="Propose engagement outside TLS"
+                className={`w-8 h-8 flex items-center justify-center rounded-full border transition shrink-0 ${
+                  showEngagePopover
+                    ? "border-blue-300 bg-blue-50 text-blue-600"
+                    : "border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300"
+                }`}
+                aria-label="Propose engagement outside TLS"
+              >
+                <Plus size={16} />
+              </button>
             )}
-          </button>
+
+            {/* Client: mobile review star button */}
+            {!isLawyer && (
+              <button
+                onClick={() => !reviewDisabled && setShowReview(true)}
+                disabled={reviewDisabled}
+                title={reviewTitle}
+                className={`md:hidden w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${
+                  hasReviewed
+                    ? "border-green-200 text-green-600 cursor-default"
+                    : isClosed
+                      ? "border-gray-300 text-amber-500 hover:bg-gray-50 cursor-pointer"
+                      : "border-gray-200 text-gray-300 cursor-not-allowed"
+                }`}
+                aria-label={reviewLabel}
+              >
+                ★
+              </button>
+            )}
+
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isClosed}
+              placeholder={
+                isClosed ? "Conversation closed" : "Type a message..."
+              }
+              className="flex-1 px-4 py-2 text-sm bg-gray-100 border border-gray-200 rounded-full outline-none focus:border-gray-300 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || sending || isClosed}
+              className="w-9 h-9 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition disabled:opacity-50 shrink-0"
+              aria-label="Send message"
+            >
+              {sending ? (
+                <Loader2 size={15} className="text-white animate-spin" />
+              ) : (
+                <Send size={15} className="text-white" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 

@@ -2,11 +2,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Clock,
   Loader2,
   AlertTriangle,
-  MapPin,
   X,
   XCircle,
 } from "lucide-react";
@@ -18,6 +18,8 @@ import {
 import { formatBudget, LegalRequest } from "@/services/requests.services";
 import { usePracticeAreaMap } from "@/hooks/usePracticeAreas";
 
+type TabKey = "active" | "accepted" | "declined" | "expired";
+
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -25,15 +27,6 @@ function timeAgo(dateStr: string): string {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
-}
-
-function formatExpiry(dateStr: string): string {
-  const days = Math.ceil(
-    (new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-  );
-  if (days < 0) return "Expired";
-  if (days === 0) return "Expires today";
-  return `Expires in ${days}d`;
 }
 
 function getInitials(name: string): string {
@@ -45,15 +38,12 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-// ✅ Resolves matter — handles both UUID and name string
 function resolveMatter(
   matter: string,
   practiceAreaMap: Record<string, string>,
 ): string {
   if (!matter) return "Unknown";
-  // If it's a UUID in the map → return the name
   if (practiceAreaMap[matter]) return practiceAreaMap[matter];
-  // If it's already a name string (e.g. "Aviation Law") → return as-is
   return matter;
 }
 
@@ -120,22 +110,24 @@ function CancelConfirmModal({
 // ─── Request Card ─────────────────────────────────────────────────────────────
 function RequestCard({
   request,
+  tab,
   onCancel,
   isCancelling,
-  showCancel = true,
-  practiceAreaMap, // ✅ passed as prop — no hook call inside non-hook
+  practiceAreaMap,
+  onViewMessage,
+  onSearchAgain,
 }: {
   request: LegalRequest;
+  tab: TabKey;
   onCancel: (id: string) => void;
   isCancelling: boolean;
-  showCancel?: boolean;
   practiceAreaMap: Record<string, string>;
+  onViewMessage?: (request: LegalRequest) => void;
+  onSearchAgain?: (request: LegalRequest) => void;
 }) {
   const [showConfirm, setShowConfirm] = useState(false);
-  const { intakePayload, lawyerAccount, createdAt, expiresAt, status } =
-    request;
+  const { intakePayload, lawyerAccount, createdAt } = request;
 
-  // ✅ Resolves UUID → name, or returns name string as-is
   const matterName = resolveMatter(intakePayload.matter, practiceAreaMap);
 
   return (
@@ -149,7 +141,7 @@ function RequestCard({
 
         <div className="bg-white border border-[#E5E7EB] rounded-xl px-4 py-3.5">
           <div className="flex items-center justify-between gap-3">
-            {/* Lawyer info */}
+            {/* Lawyer avatar + info */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
               {lawyerAccount.avatarUrl &&
               !lawyerAccount.avatarUrl.includes("google.com/imgres") ? (
@@ -165,61 +157,49 @@ function RequestCard({
               )}
               <div className="min-w-0">
                 <p className="text-[13px] font-medium text-gray-900 truncate">
-                  {lawyerAccount.fullName}
+                  {matterName}
                 </p>
                 <p className="text-[12px] text-gray-400">
-                  {matterName} · {formatBudget(intakePayload.budget)}
+                  Budget: {formatBudget(intakePayload.budget)}
                 </p>
-                {lawyerAccount.locationCity && (
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <MapPin className="w-3 h-3 text-gray-300 shrink-0" />
-                    <span className="text-[11px] text-gray-400">
-                      {lawyerAccount.locationCity},{" "}
-                      {lawyerAccount.locationCountry}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Right side */}
-            <div className="flex flex-col items-end gap-1 shrink-0">
-              <div className="flex items-center gap-1 text-[12px] text-gray-400">
-                <Clock className="w-3.5 h-3.5" />
-                {timeAgo(createdAt)}
-              </div>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full border ${
-                  status === "pending"
-                    ? "bg-amber-50 text-amber-700 border-amber-200"
-                    : status === "accepted"
-                      ? "bg-green-50 text-green-700 border-green-200"
-                      : status === "declined"
-                        ? "bg-red-50 text-red-500 border-red-100"
-                        : "bg-gray-50 text-gray-500 border-gray-200"
-                }`}
-              >
-                {status}
-              </span>
-              {status === "pending" && expiresAt && (
-                <span className="text-[10px] text-gray-400">
-                  {formatExpiry(expiresAt)}
-                </span>
-              )}
+            {/* Time */}
+            <div className="flex items-center gap-1 text-[12px] text-gray-400 shrink-0">
+              <Clock className="w-3.5 h-3.5" />
+              {timeAgo(createdAt)}
             </div>
           </div>
         </div>
 
-        {showCancel && (
-          <div className="flex justify-end mt-1.5">
+        {/* CTA row */}
+        <div className="flex justify-end mt-1.5">
+          {tab === "active" && (
             <button
               onClick={() => setShowConfirm(true)}
               className="text-[12px] text-red-500 hover:underline"
             >
               Cancel Request
             </button>
-          </div>
-        )}
+          )}
+          {tab === "accepted" && (
+            <button
+              onClick={() => onViewMessage?.(request)}
+              className="text-[12px] text-blue-600 hover:underline"
+            >
+              View Message
+            </button>
+          )}
+          {(tab === "declined" || tab === "expired") && (
+            <button
+              onClick={() => onSearchAgain?.(request)}
+              className="text-[12px] text-blue-600 hover:underline"
+            >
+              Search again
+            </button>
+          )}
+        </div>
       </div>
 
       {showConfirm && (
@@ -236,19 +216,34 @@ function RequestCard({
   );
 }
 
-// ─── Section Header ───────────────────────────────────────────────────────────
-function SectionHeader({ title }: { title: string }) {
+// ─── Tab Button ───────────────────────────────────────────────────────────────
+function TabButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
   return (
-    <h2 className="text-[18px] font-medium text-gray-900 mb-5 pb-3 border-b border-[#E5E7EB]">
-      {title}
-    </h2>
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 text-[13px] rounded-lg transition-colors ${
+        active
+          ? "text-gray-800 font-semibold"
+          : "text-gray-500 font-medium hover:text-gray-700"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="py-8 text-center text-[13px] text-gray-400 border border-[#E5E7EB] rounded-xl mb-6">
+    <div className="py-10 text-center text-[13px] text-gray-400 border border-[#E5E7EB] rounded-xl">
       {message}
     </div>
   );
@@ -256,23 +251,40 @@ function EmptyState({ message }: { message: string }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function RequestsPage() {
+  const [activeTab, setActiveTab] = useState<TabKey>("active");
+  const router = useRouter();
+
   const { data, isLoading, error, refetch } = useRequests();
   const cancelRequest = useCancelRequest();
-
-  // ✅ One hook call at the top level — passed down as prop
   const practiceAreaMap = usePracticeAreaMap();
 
   const items = data?.items ?? [];
   const stats = useRequestStats(items);
 
-  const pending = items.filter((r) => r.status === "pending");
-  const active = items.filter((r) => r.status === "accepted");
-  const declined = items.filter((r) => r.status === "declined");
-  const completed = items.filter((r) => r.status === "completed");
+  const tabItems: Record<TabKey, LegalRequest[]> = {
+    active: items.filter((r) => r.status === "pending"),
+    accepted: items.filter((r) => r.status === "accepted"),
+    declined: items.filter((r) => r.status === "declined"),
+    expired: items.filter((r) => r.status === "cancelled"),
+  };
+
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: "active", label: "Active" },
+    { key: "accepted", label: "Accepted" },
+    { key: "declined", label: "Declined" },
+    { key: "expired", label: "Expired" },
+  ];
+
+  const emptyMessages: Record<TabKey, string> = {
+    active: "No active requests",
+    accepted: "No accepted requests",
+    declined: "No declined requests",
+    expired: "No expired requests",
+  };
 
   if (isLoading) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="w-full px-4 py-6">
         <div className="flex items-center gap-2 text-[13px] text-gray-400">
           <Loader2 className="w-4 h-4 animate-spin" />
           Loading requests...
@@ -283,7 +295,7 @@ export default function RequestsPage() {
 
   if (error) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="w-full px-4 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-[13px] text-red-500">
             <AlertTriangle className="w-4 h-4" />
@@ -300,26 +312,16 @@ export default function RequestsPage() {
     );
   }
 
-  // ✅ Helper to render RequestCard with map injected
-  const renderCard = (r: LegalRequest, showCancel = true) => (
-    <RequestCard
-      key={r.id}
-      request={r}
-      onCancel={(id) => cancelRequest.mutate(id)}
-      isCancelling={cancelRequest.isPending}
-      showCancel={showCancel}
-      practiceAreaMap={practiceAreaMap} // ✅ passed as prop
-    />
-  );
+  const currentItems = tabItems[activeTab];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
-      <h1 className="text-[22px] font-medium text-gray-900 mb-5 pb-4 border-b border-[#E5E7EB]">
-        Requests
-      </h1>
+    <div className="w-full px-4 py-6">
+      {/* Page title */}
+      <h1 className="text-[22px] font-regulal text-gray-900 mb-[17px] font-[Instrument_Serif] ">Requests</h1>
+      <span className="block h-px bg-[#E5E7EB] mb-5 -mx-4" />
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-7">
+      {/* Stats — only 2 cards */}
+      <div className="grid grid-cols-2 gap-3 mb-7 w-1/2">
         <div className="bg-white border border-[#E5E7EB] rounded-xl p-4">
           <p className="text-[12px] text-gray-400 mb-2">Total Requests</p>
           <p className="text-[32px] font-light text-gray-900 leading-none mb-1.5">
@@ -333,50 +335,45 @@ export default function RequestsPage() {
             {stats.active}
           </p>
           <p className="text-[12px] text-green-600">
-            ↑ {stats.pending} pending
+            ↑ {stats.active} this month
           </p>
-        </div>
-        <div className="bg-white border border-[#E5E7EB] rounded-xl p-4">
-          <p className="text-[12px] text-gray-400 mb-2">Declined Requests</p>
-          <p className="text-[32px] font-light text-gray-900 leading-none mb-1.5">
-            {stats.declined}
-          </p>
-          <button className="text-[12px] text-blue-600 hover:underline text-left">
-            Request legal help again.
-          </button>
         </div>
       </div>
 
-      {/* Pending */}
-      <SectionHeader title="Pending Requests" />
-      {pending.length === 0 ? (
-        <EmptyState message="No pending requests" />
+      {/* Tabs */}
+      <div className="flex items-center gap-1 border-b border-[#E5E7EB] mb-6 pb-px">
+        {tabs.map((t) => (
+          <TabButton
+            key={t.key}
+            label={t.label}
+            active={activeTab === t.key}
+            onClick={() => setActiveTab(t.key)}
+          />
+        ))}
+      </div>
+
+      {/* Tab content */}
+      {currentItems.length === 0 ? (
+        <EmptyState message={emptyMessages[activeTab]} />
       ) : (
-        pending.map((r) => renderCard(r))
-      )}
-
-      {/* Active */}
-      {active.length > 0 && (
-        <>
-          <SectionHeader title="Active Requests" />
-          {active.map((r) => renderCard(r))}
-        </>
-      )}
-
-      {/* Completed */}
-      {completed.length > 0 && (
-        <>
-          <SectionHeader title="Completed Requests" />
-          {completed.map((r) => renderCard(r, false))}
-        </>
-      )}
-
-      {/* Declined */}
-      {declined.length > 0 && (
-        <>
-          <SectionHeader title="Declined Requests" />
-          {declined.map((r) => renderCard(r, false))}
-        </>
+        currentItems.map((r) => (
+          <RequestCard
+            key={r.id}
+            request={r}
+            tab={activeTab}
+            onCancel={(id) => cancelRequest.mutate(id)}
+            isCancelling={cancelRequest.isPending}
+            practiceAreaMap={practiceAreaMap}
+            onViewMessage={(req) => {
+              if (req.conversationId) {
+                router.push(`/dashboard/messages?conversationId=${req.conversationId}`);
+              }
+            }}
+            onSearchAgain={(_req) => {
+              router.push(`/dashboard/find-lawyer`);
+            }}
+          />
+        ))
       )}
     </div>
   );
