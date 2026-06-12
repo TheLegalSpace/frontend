@@ -53,7 +53,7 @@ export default function Navbar() {
   return (
     <>
       {/* Floating navbar wrapper */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-6xl z-50 font-dmSans">
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[1440px] z-50 font-dmSans">
         <motion.nav
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

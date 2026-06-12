@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "framer-motion";
+import Image from "next/image";
 
 const individualsSteps = [
   {
@@ -49,7 +50,7 @@ export default function HowItWorks() {
 
   return (
     <section id="how-it-works" className="py-24 bg-[#F9FAFB] px-4 sm:px-8 lg:px-16">
-      <div className="max-w-6xl mx-auto" ref={ref}>
+      <div className="max-w-[1440px] mx-auto" ref={ref}>
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -123,95 +124,8 @@ export default function HowItWorks() {
         </AnimatePresence>
 
         {/* App mockup */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden shadow-lg"
-        >
-          {/* Bar */}
-          <div className="bg-[#F3F4F6] border-b border-[#E5E7EB] px-4 py-2.5 flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
-            <span className="flex-1 bg-white border border-[#E5E7EB] rounded-md px-3 py-1 text-xs text-gray-400 mx-3 max-w-xs">
-              thelegalspace.com
-            </span>
-          </div>
-          {/* Body */}
-          <div className="grid grid-cols-[180px_1fr_240px] min-h-[240px]">
-            {/* Sidebar */}
-            <div className="border-r border-[#E5E7EB] p-4">
-              <p className="text-[10px] font-bold tracking-widest mb-3">THE LEGAL SPACE</p>
-              {["👤 Profile", "📋 Feeds", "🔗 Leads", "💬 Messages", "📝 Posts"].map((item, i) => (
-                <div
-                  key={item}
-                  className={`text-[11px] px-2 py-1.5 rounded-lg mb-0.5 ${
-                    i === 1 ? "bg-[#E8F0FE] text-[#1A56DB] font-medium" : "text-gray-400"
-                  }`}
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-            {/* Feed */}
-            <div className="p-4 border-r border-[#E5E7EB]">
-              <div className="flex gap-2 mb-4">
-                {["All", "Top Firms", "Top Lawyers", "Articles"].map((f, i) => (
-                  <button
-                    key={f}
-                    className={`text-[11px] px-3 py-1 rounded-md border ${
-                      i === 0
-                        ? "bg-gray-900 text-white border-gray-900"
-                        : "bg-white text-gray-400 border-[#E5E7EB]"
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <div className="w-7 h-7 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-xs">
-                  👤
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold">
-                    Chisom Azimi <span className="font-normal text-gray-400">· 1 day ago</span>
-                  </p>
-                  <p className="text-[11px] text-gray-600 leading-relaxed mt-1">
-                    Thrilled to share that I recently wrote an article for the NBA Lagos Branch Annual
-                    Conference. It explores the intersection of technology and criminal law...
-                  </p>
-                  <div className="mt-2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg p-2 flex gap-2">
-                    <span className="bg-gray-900 text-white text-[9px] font-bold px-2 py-0.5 rounded self-start">
-                      ARTICLE
-                    </span>
-                    <div>
-                      <p className="text-[10px] font-semibold leading-tight">
-                        From Formality to Substance: Patent Examination in Nigeria
-                      </p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">📅 March 29, 2026</p>
-                      <p className="text-[10px] text-[#1A56DB] mt-0.5">123 Reads</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* Right panel */}
-            <div className="p-4">
-              <div className="bg-[#1A56DB] rounded-xl p-3 text-white mb-3">
-                <p className="text-[11px] font-semibold mb-1">On The Docket</p>
-                <p className="text-[10px] opacity-85 leading-relaxed">
-                  Want to feature your event? Request coverage, promotion, or partnership through TLS Services.
-                </p>
-              </div>
-              <div className="bg-gray-900 rounded-xl h-16 flex items-center justify-center text-white text-[11px] font-bold">
-                🏛 NBA LAGOS 2026
-              </div>
-            </div>
-          </div>
-        </motion.div>
+      
+        <Image src="/how-it-works.png" className="w-full h-full" width={1000} height={1000} alt="How it works" />
       </div>
     </section>
   );

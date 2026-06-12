@@ -28,7 +28,7 @@ export default function Hero() {
       className="relative bg-[#F7F9FF] pt-32 pb-0 px-4 sm:px-8 lg:px-16 overflow-hidden"
     >
       {/* ── Main content row ── */}
-      <div className="max-w-6xl mx-auto relative">
+      <div className="max-w-[1440px] mx-auto relative">
         {/* LEFT — text, sits in its own column, ~45% wide */}
         <div className="w-full md:w-[45%] pt-4 pb-16 relative z-10">
           <motion.p

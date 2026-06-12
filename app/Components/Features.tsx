@@ -33,7 +33,7 @@ export default function Features() {
   return (
     <section id="about" className="py-24 bg-white px-4 sm:px-8 lg:px-16">
       {/* [2fr_3fr] gives image ~40% and text ~60%, matching the screenshot */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-12 lg:gap-16 items-center">
+      <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-12 lg:gap-16 items-center">
 
         {/* Image side — just render naturally, border + slight rounding like screenshot */}
         <motion.div
