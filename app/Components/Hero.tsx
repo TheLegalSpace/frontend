@@ -1,85 +1,118 @@
-// components/Hero.tsx
+"use client";
+
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 24 },
+  animate: { opacity: 1, y: 0 },
+  transition: {
+    duration: 0.55,
+    ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+    delay,
+  },
+});
 
 export default function Hero() {
+  const router = useRouter();
+
+  const loginType = (type: "lawyer" | "user") => {
+    localStorage.setItem("loginType", type);
+    router.push("/signin");
+  };
+
   return (
-    <section className="px-4 pt-4 pb-10 md:px-8 lg:px-42 md:pt-28 lg:pt-32 md:pb-16">
-      <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-10 items-center">
-        {/* LEFT */}
-        <div className="space-y-6">
-          <p className="inline-flex items-center gap-2 bg-[#E8F0FE] text-[#1A56DB] text-sm px-4 py-1.5 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#1A56DB]" />
-            Verified Legal Help Across Nigeria
-          </p>
+    <section
+      id="hero"
+      className="relative bg-[#F7F9FF] pt-32 pb-0 px-4 sm:px-8 lg:px-16 overflow-hidden"
+    >
+      {/* ── Main content row ── */}
+      <div className="max-w-6xl mx-auto relative">
+        {/* LEFT — text, sits in its own column, ~45% wide */}
+        <div className="w-full md:w-[45%] pt-4 pb-16 relative z-10">
+          <motion.p
+            {...fadeUp(0)}
+            className="text-[#1A56DB] text-xs font-semibold uppercase tracking-widest mb-5"
+          >
+            THE LEGAL SPACE
+          </motion.p>
 
-          <h1 className="text-4xl md:text-5xl lg:text-[54px] leading-tight lg:leading-15 tracking-tight font-['Instrument_Serif']">
-            Find <span className="text-[#1A56DB]">trusted</span> legal help,
-            <br className="hidden md:block" /> fast and privately
-          </h1>
+          <motion.h1
+            {...fadeUp(0.1)}
+            className="text-5xl lg:text-[60px] leading-[1.08] tracking-tight font-['Instrument_Serif'] text-gray-900 mb-6"
+          >
+            Where Legal <em className="text-[#1A56DB] italic">Connections</em>
+            <br />
+            Begin...
+          </motion.h1>
 
-          <p className="text-[#6B7280] text-base leading-relaxed max-w-lg font-['Geist']">
-            Describe your situation. Get matched with verified lawyers and law
-            firms based on your practice area, location, and budget. Stay
-            anonymous until you are ready to connect.
-          </p>
+          <motion.p
+            {...fadeUp(0.18)}
+            className="text-gray-500 text-base leading-[1.85] max-w-[440px] mb-10"
+          >
+            The Legal Space brings together lawyers, legal knowledge,
+            professional opportunities, and the people who need them through one
+            trusted platform.
+          </motion.p>
 
-          <div className="flex flex-col sm:flex-row gap-3 font-[Geist]">
-            <button className="bg-[#E8F0FE] text-[#1A56DB] px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-[#d1e3fc] transition-colors">
-              I&apos;m a Legal Professional
+          <motion.div {...fadeUp(0.26)} className="flex flex-wrap gap-3">
+            <button
+              onClick={() => loginType("lawyer")}
+              className="px-6 py-3 border border-gray-200 bg-white text-gray-800 rounded-full text-sm font-medium hover:border-[#1A56DB] hover:shadow-sm transition-all duration-200"
+            >
+              Join as a Lawyer
             </button>
-            <button className="bg-[#1A56DB] text-white px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-[#1648b8] transition-colors">
-              Get Legal Help
+            <button
+              onClick={() => loginType("user")}
+              className="px-6 py-3 bg-[#1A56DB] text-white rounded-full text-sm font-medium hover:bg-[#1648b8] transition-colors"
+            >
+              Find a lawyer
             </button>
-          </div>
-
-          {/* STATS */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-[#E5E7EB] font-['Geist']">
-            {[
-              { value: "240+", label: "Verified Lawyers" },
-              { value: "80+", label: "Law Firms" },
-              { value: "4.8★", label: "Average Rating" },
-              { value: "4hrs", label: "Response" },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <p className="text-2xl lg:text-[26px] font-serif">
-                  {stat.value}
-                </p>
-                <p className="text-[#9CA3AF] text-xs mt-1">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Partnerships */}
-          <div className="flex items-center gap-6 pt-4">
-            <Image
-              src="/NBA.png"
-              alt="Nigerian Bar Association"
-              width={50}
-              height={50}
-              className="h-8 w-auto object-contain"
-            />
-            <Image
-              src="/SPAA.png"
-              alt="SPAA Partnership"
-              width={300}
-              height={50}
-              className="h-8 w-auto object-contain"
-            />
-          </div>
+          </motion.div>
         </div>
 
-        {/* RIGHT */}
-        <div className="flex justify-center md:justify-end">
+        {/* RIGHT — mockup: absolutely positioned, breaks out of the column,
+            starts from roughly the vertical center of the text block,
+            extends to the right viewport edge */}
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.65, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          className="hidden md:block absolute top-0 right-[-6vw] w-[62%] z-20"
+        >
           <Image
-            src="/lawyer.png"
-            alt="Professional lawyer"
-            width={500}
-            height={600}
-            className="rounded-xl w-full max-w-md md:max-w-none h-auto"
+            src="/firstInterfaceimage.png"
+            alt="TLS platform interface"
+            width={900}
+            height={620}
+            className="w-full h-auto object-contain drop-shadow-2xl"
             priority
           />
-        </div>
+        </motion.div>
       </div>
+
+      {/* ── Bottom: full-bleed network/avatars visualization ── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1, delay: 0.4 }}
+        className="relative z-10"
+        style={{
+          marginLeft: "calc(-50vw + 50%)",
+          width: "100vw",
+          marginTop: "-60px",
+        }}
+      >
+        <Image
+          src="/Avatars.png"
+          alt="Legal network visualization"
+          width={1440}
+          height={480}
+          className="w-full h-auto object-cover object-top"
+          priority
+        />
+      </motion.div>
     </section>
   );
 }
