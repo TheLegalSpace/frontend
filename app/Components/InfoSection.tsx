@@ -1,80 +1,83 @@
-// components/InfoSection.tsx
-import Image from "next/image";
+"use client";
+
+import { motion } from "framer-motion";
+import { useInView } from "framer-motion";
+import { useRef } from "react";
+
+const stats = [
+  { num: "5,400+", label: "Legal Requests Submitted" },
+  { num: "1,200+", label: "Legal Professionals" },
+  { num: "450+", label: "Legal Articles Published" },
+  { num: "40+", label: "Practice Areas" },
+  { num: "50+", label: "Events & Opportunities" },
+];
+
+function StatItem({ num, label, index }: { num: string; label: string; index: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay: index * 0.08 }}
+      className="text-center px-6 border-r border-[#E5E7EB] last:border-r-0"
+    >
+      <p className="font-dmSans text-4xl lg:text-[44px] tracking-tight leading-none text-gray-900">
+        {num.replace("+", "")}
+        <span className="text-[#1A56DB]">+</span>
+      </p>
+      <p className="text-[13px] text-gray-400 mt-2">{label}</p>
+    </motion.div>
+  );
+}
 
 export default function InfoSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+
   return (
-    <section className="bg-[#161C2D] px-4 pt-4 pb-10 md:px-8 lg:px-42 md:pt-28 lg:pt-32 md:pb-16 font-['Geist']">
-      <div className="max-w-7xl mx-auto space-y-16 md:space-y-20">
-        {/* Row 1: Text Left, Image Right */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-center">
-          <div className="space-y-4 md:space-y-6 order-1">
-            <h2 className="text-2xl md:text-3xl lg:text-[30px] text-white leading-tight lg:leading-snug font-medium">
-              Finding the right lawyer shouldn&apos;t feel like guesswork
-            </h2>
-            <p className="text-white/80 text-sm md:text-base leading-relaxed lg:leading-7">
-              Finding legal assistance can often feel overwhelming for many individuals. 
-              They frequently depend on referrals or go through a process of trial and 
-              error, making it challenging to determine whom to trust or how to initiate 
-              a conversation. TheLegalSpace addresses these concerns by providing a secure 
-              platform where users can explore various options, gain a clearer understanding 
-              of their circumstances, and connect with the appropriate legal expert, all in 
-              a pressure-free environment. This method empowers users to navigate the 
-              complexities of the legal landscape with both confidence and ease.
-            </p>
-            <button className="bg-[#1A56DB] text-white hover:bg-blue-700 px-5 py-2.5 rounded-lg text-sm transition-colors">
-              Get Legal Help
-            </button>
-          </div>
-          
-          <div className="order-2">
-            <div className="relative aspect-4/3 md:aspect-auto md:h-100 lg:h-125">
-              <Image
-                src="/worried.png"
-                alt="Person feeling overwhelmed about legal matters"
-                fill
-                className="object-cover rounded-2xl md:rounded-3xl"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-            </div>
-          </div>
+    <section id="stats" className="py-20 bg-white border-b border-[#E5E7EB] px-4 sm:px-8 lg:px-16">
+      <div className="max-w-6xl mx-auto">
+        {/* Label */}
+        <motion.div
+          ref={ref}
+          initial={{ opacity: 0, y: 12 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.4 }}
+          className="text-center mb-12"
+        >
+          <span className="inline-block border border-[#E5E7EB] rounded-full px-6 py-2 text-sm text-black">
+            Our Growing Community
+          </span>
+        </motion.div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-0">
+          {stats.map((s, i) => (
+            <StatItem key={s.label} {...s} index={i} />
+          ))}
         </div>
 
-        {/* Row 2: Image Left, Text Right */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-center">
-          <div className="order-2 md:order-1">
-            <div className="relative aspect-4/3 md:aspect-auto md:h-100 lg:h-125">
-              <Image
-                src="/two-lawyers.jpg"
-                alt="Legal professionals ready to help"
-                fill
-                className="object-cover rounded-2xl md:rounded-3xl"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-            </div>
+        {/* Partner logos */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="mt-16 pt-10 border-t border-[#E5E7EB]"
+        >
+          <div className="flex flex-wrap items-center justify-center gap-10 lg:gap-16">
+            {["⚡ Logoipsum", "🐻 logo ipsum", "✕ Logoipsum", "🌐 logo–ipsum", "✈ LOGOIPSUM"].map((logo) => (
+              <span key={logo} className="text-gray-400 text-base font-bold tracking-tight">
+                {logo}
+              </span>
+            ))}
           </div>
-          
-          <div className="space-y-4 md:space-y-6 order-1 md:order-2">
-            <h2 className="text-2xl md:text-3xl lg:text-[30px] text-white leading-tight lg:leading-snug font-medium">
-              A better way for lawyers to connect with the right clients
-            </h2>
-            <p className="text-white/80 text-sm md:text-base leading-relaxed lg:leading-7">
-              Legal professionals have the expertise needed to navigate complex legal 
-              issues, yet they often face challenges in connecting with clients who 
-              genuinely need their services in a manner that is ethical and respectful. 
-              TheLegalSpace effectively bridges this gap by offering a comprehensive 
-              platform where verified lawyers and forward-thinking firms can showcase 
-              their services. Rather than resorting to aggressive client acquisition 
-              tactics, these professionals become easily discoverable and build credibility, 
-              ensuring they are accessible when clients require assistance the most. This 
-              organized approach not only strengthens the relationships between clients 
-              and lawyers but also reinforces the integrity and ethical standards of the 
-              legal profession.
-            </p>
-            <button className="bg-[#1A56DB] text-white hover:bg-blue-700 px-5 py-2.5 rounded-lg text-sm transition-colors">
-              I&apos;m a Legal Professional
-            </button>
-          </div>
-        </div>
+          <p className="text-center text-sm text-gray-400 mt-5">
+            Building stronger legal connections through meaningful partnerships.
+          </p>
+        </motion.div>
       </div>
     </section>
   );

@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-inter), var(--font-geist), sans-serif;
+  --font-dmSans: var(--font-dmSans), sans-serif;
+  --font-instrument: var(--font-instrument), serif;
+}
+
 .signinbg {
   background: url("../public/signinbg.jpg") no-repeat #000000d3;
   background-size: cover;
