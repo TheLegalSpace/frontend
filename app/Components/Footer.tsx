@@ -44,7 +44,7 @@ export default function Footer() {
     <>
       {/* FAQ Section */}
       <section id="faqs" className="py-24 bg-white px-4 sm:px-8 lg:px-16">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+        <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
           {/* Image */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}

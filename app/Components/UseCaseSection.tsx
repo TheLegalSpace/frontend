@@ -45,100 +45,222 @@ const lawyersTestimonials = [
   },
 ];
 
-export default function UseCaseSection() {
-  const [tab, setTab] = useState<"individuals" | "lawyers">("individuals");
-  const testimonials = tab === "individuals" ? individualsTestimonials : lawyersTestimonials;
+type Testimonial = {
+  text: string;
+  author: string;
+  avatar: string;
+  featured: boolean;
+};
+
+function TestimonialCard({
+  testimonial,
+}: {
+  testimonial: Testimonial;
+}) {
+  return (
+    <div
+      className={`bg-white rounded-3xl p-7 border border-[#EAEAEA] transition-all duration-300 ${
+        testimonial.featured
+          ? "shadow-[0_20px_60px_rgba(0,0,0,0.08)] scale-[1.04] relative z-10"
+          : "shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
+      }`}
+    >
+      <div className="text-[#F5B400] text-lg mb-5">★★★★★</div>
+
+      <p className="text-[#262626] text-[15px] leading-8 mb-8">
+        {testimonial.text}
+      </p>
+
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-[#F3F4F6] flex items-center justify-center">
+          {testimonial.avatar}
+        </div>
+
+        <span className="text-[15px] text-[#262626] font-medium">
+          {testimonial.author}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function TestimonialGrid({
+  testimonials,
+  mirrored = false,
+}: {
+  testimonials: Testimonial[];
+  mirrored?: boolean;
+}) {
+  return (
+    <div
+      className={`grid md:grid-cols-3 gap-6 ${
+        mirrored ? "scale-y-[-1]" : ""
+      }`}
+    >
+      {testimonials.map((testimonial, index) => (
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, y: mirrored ? -20 : 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.4,
+            delay: index * 0.08,
+          }}
+        >
+          <TestimonialCard testimonial={testimonial} />
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+export default function TestimonialsSection() {
+  const [tab, setTab] = useState<"individuals" | "lawyers">(
+    "individuals"
+  );
+
+  const testimonials =
+    tab === "individuals"
+      ? individualsTestimonials
+      : lawyersTestimonials;
 
   return (
-    <section id="testimonials" className="py-24 bg-gradient-to-b from-[#EEF2FF] to-[#F0F9FF] px-4 sm:px-8 lg:px-16">
-      <div className="max-w-6xl mx-auto">
+    <section
+      id="testimonials"
+      className="relative overflow-hidden py-24 px-4 sm:px-8 lg:px-16"
+      style={{
+        backgroundImage: "url('/testimonial-bg.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="max-w-[1440px] mx-auto">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
           className="text-center mb-14"
         >
-          <p className="text-[11px] font-semibold tracking-widest uppercase text-[#1A56DB] mb-3">
+          <p className="text-[11px] tracking-[0.25em] font-semibold text-[#1A56DB] mb-3">
             TESTIMONIALS
           </p>
-          <h2 className="font-['Instrument_Serif'] text-4xl tracking-tight text-gray-900 mb-6">
+
+          <h2 className="font-['Instrument_Serif'] text-5xl mb-6">
             What People Are Saying
           </h2>
 
-          {/* Tabs */}
           <div className="flex gap-1 bg-white border border-[#E5E7EB] rounded-xl p-1 w-fit mx-auto">
-            {(["individuals", "lawyers"] as const).map((t) => (
+            {(["individuals", "lawyers"] as const).map((item) => (
               <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`relative px-5 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                  tab === t ? "text-white" : "text-gray-500 hover:text-gray-700"
+                key={item}
+                onClick={() => setTab(item)}
+                className={`relative px-5 py-2 rounded-lg text-sm font-medium ${
+                  tab === item
+                    ? "text-white"
+                    : "text-gray-500"
                 }`}
               >
-                {tab === t && (
+                {tab === item && (
                   <motion.span
-                    layoutId="testi-tab-bg"
-                    className="absolute inset-0 bg-gray-900 rounded-lg"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    layoutId="tab-bg"
+                    className="absolute inset-0 bg-[#111827] rounded-lg"
+                    transition={{
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 30,
+                    }}
                   />
                 )}
+
                 <span className="relative z-10">
-                  For {t.charAt(0).toUpperCase() + t.slice(1)}
+                  For{" "}
+                  {item.charAt(0).toUpperCase() +
+                    item.slice(1)}
                 </span>
               </button>
             ))}
           </div>
         </motion.div>
 
-        {/* Cards */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={tab}
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -14 }}
-            transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start"
-          >
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                className={`bg-white rounded-2xl p-7 border border-black/4 ${
-                  t.featured
-                    ? "shadow-xl shadow-black/8 scale-[1.03] z-10 relative"
-                    : "shadow-md shadow-black/4"
-                }`}
-              >
-                <div className="text-[#F59E0B] text-xl tracking-wide mb-4">★★★★★</div>
-                <p className="text-[15px] text-gray-800 leading-relaxed mb-6">{t.text}</p>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-base">
-                    {t.avatar}
-                  </div>
-                  <span className="text-[14px] font-medium text-gray-700">{t.author}</span>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </AnimatePresence>
+        {/* Cards + Reflection */}
+        <div className="relative">
+          {/* MAIN CARDS */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tab}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3 }}
+            >
+              <TestimonialGrid testimonials={testimonials} />
+            </motion.div>
+          </AnimatePresence>
 
-        {/* Social CTA */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-center mt-14"
-        >
-          <button className="bg-[#1A56DB] text-white px-7 py-3 rounded-xl text-sm font-medium hover:bg-[#1648b8] transition-colors shadow-md">
+          {/* REFLECTION */}
+          <div
+            className="
+              mt-8
+              pointer-events-none
+              opacity-70
+              overflow-hidden
+              mask-[linear-gradient(to_bottom,black,transparent)]
+              [-webkit-mask-image:linear-gradient(to_bottom,black,transparent)]
+            "
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`reflection-${tab}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="blur-[0.15px]"
+              >
+                <TestimonialGrid
+                  testimonials={testimonials}
+                  mirrored
+                />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* White fade like the design */}
+          {/* <div
+            className="
+              absolute
+              left-0
+              right-0
+              bottom-0
+              h-[300px]
+              bg-gradient-to-b
+              from-transparent
+              via-white/70
+              to-white
+              pointer-events-none
+            "
+          /> */}
+        </div>
+
+        {/* CTA */}
+        <div className="text-center mt-[-5%]">
+          <button
+            className="
+              bg-[#1A56DB]
+              text-white
+              px-8
+              py-3
+              mt-[-50%]
+              rounded-full
+              shadow-lg
+              hover:bg-[#184BC2]
+              transition-colors
+            "
+          >
             Follow us on Social Media
           </button>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
