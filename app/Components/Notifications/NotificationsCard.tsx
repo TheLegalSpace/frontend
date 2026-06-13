@@ -14,6 +14,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { Notification, NotificationType } from "@/app/types/notification";
+import Link from "next/link";
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -73,7 +74,7 @@ function ArticlePreview({
   article: NonNullable<Notification["payload"]["article"]>;
 }) {
   return (
-    <a
+    <Link
       href={`/articles/${article.slug}`}
       className="mt-3 flex items-center gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50 transition"
     >
@@ -101,7 +102,7 @@ function ArticlePreview({
           </span>
         </div>
       </div>
-    </a>
+    </Link>
   );
 }
 
