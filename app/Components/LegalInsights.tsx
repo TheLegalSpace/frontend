@@ -83,7 +83,7 @@ export default function LegalInsights() {
                 } items-center gap-0`}
               >
                 {/* ── IMAGE — takes 62% ── */}
-                <div className="w-full md:w-[62%] flex-shrink-0">
+                <div className="w-full md:w-[62%] shrink-0">
                   <Image
                     src={previews[r.preview]}
                     alt={r.tag}
@@ -95,7 +95,7 @@ export default function LegalInsights() {
 
                 {/* ── TEXT — takes remaining 38%, padded inward ── */}
                 <div
-                  className={`w-full md:w-[38%] flex-shrink-0 ${
+                  className={`w-full md:w-[38%] shrink-0 ${
                     isEven
                       ? "md:pr-12 lg:pr-20 py-8 md:py-0"
                       : "md:pl-12 lg:pl-20 py-8 md:py-0"

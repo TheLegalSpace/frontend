@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "framer-motion";
 import Image from "next/image";
+import { MoveRight } from "lucide-react";
 
 const individualsSteps = [
   {
@@ -49,8 +50,42 @@ export default function HowItWorks() {
   const steps = tab === "individuals" ? individualsSteps : lawyersSteps;
 
   return (
-    <section id="how-it-works" className="py-24 bg-[#F9FAFB] px-4 sm:px-8 lg:px-16">
+    <section
+      id="how-it-works"
+      className="py-24 bg-[#F9FAFB] px-4 sm:px-8 lg:px-16"
+    >
       <div className="max-w-[1440px] mx-auto" ref={ref}>
+        {/* Tabs — centered */}
+        <div className="flex items-center w-full justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="flex gap-1 bg-white border border-[#E5E7EB] rounded-xl p-1 w-fit mb-12"
+          >
+            {(["individuals", "lawyers"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`relative px-5 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                  tab === t ? "text-white" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {tab === t && (
+                  <motion.span
+                    layoutId="tab-bg"
+                    className="absolute inset-0 bg-gray-900 rounded-lg"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 capitalize">
+                  For {t.charAt(0).toUpperCase() + t.slice(1)}
+                </span>
+              </button>
+            ))}
+          </motion.div>
+        </div>
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -62,37 +97,10 @@ export default function HowItWorks() {
             HOW IT WORKS
           </p>
           <h2 className="font-['Instrument_Serif'] text-4xl lg:text-[40px] tracking-tight text-gray-900 italic">
-            Simple. Seamless. Connected.
+            {tab === "individuals"
+              ? "Simple. Seamless. Connected."
+              : "Connect. Research. Grow."}
           </h2>
-        </motion.div>
-
-        {/* Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="flex gap-1 bg-white border border-[#E5E7EB] rounded-xl p-1 w-fit mb-12"
-        >
-          {(["individuals", "lawyers"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`relative px-5 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                tab === t ? "text-white" : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {tab === t && (
-                <motion.span
-                  layoutId="tab-bg"
-                  className="absolute inset-0 bg-gray-900 rounded-lg"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-              <span className="relative z-10 capitalize">
-                For {t.charAt(0).toUpperCase() + t.slice(1)}
-              </span>
-            </button>
-          ))}
         </motion.div>
 
         {/* Step cards */}
@@ -116,16 +124,50 @@ export default function HowItWorks() {
                 <span className="font-['Instrument_Serif'] text-5xl text-[#E5E7EB] leading-none block mb-5">
                   {step.num}
                 </span>
-                <h3 className="text-[15px] font-semibold mb-2.5">{step.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{step.desc}</p>
+                <h3 className="text-[15px] font-semibold mb-2.5">
+                  {step.title}
+                </h3>
+                <p className="text-gray-500 text-sm leading-relaxed">
+                  {step.desc}
+                </p>
               </motion.div>
             ))}
           </motion.div>
         </AnimatePresence>
 
-        {/* App mockup */}
-      
-        <Image src="/how-it-works.png" className="w-full h-full" width={1000} height={1000} alt="How it works" />
+        {/* Image with button absolutely centred on top */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative"
+        >
+          <Image
+            src={
+              tab === "individuals"
+                ? "/how-it-works.png"
+                : "/how-it-works-lawyer.png"
+            }
+            className="w-full h-auto block"
+            width={1000}
+            height={1000}
+            alt="How it works"
+          />
+
+          {/* Button pinned to the exact centre of the image */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <button className="text-[12px] md:text-[14px] flex items-center gap-2 bg-white border border-[#E5E7EB] text-[#000000] px-6 py-3 rounded-lg font-dmSans shadow-md hover:bg-[#1A56DB] hover:text-white hover:border-[#1A56DB] transition-colors duration-200">
+              {tab === "individuals" ? (
+                "Login to find a lawyer today!"
+              ) : (
+                <>
+                  Create a profile today! <MoveRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -8,7 +8,10 @@ function scrollToSection(href: string) {
   const id = href.replace("#", "");
   const el = document.getElementById(id);
   if (!el) return;
-  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 90, behavior: "smooth" });
+  window.scrollTo({
+    top: el.getBoundingClientRect().top + window.scrollY - 90,
+    behavior: "smooth",
+  });
 }
 
 const faqs = [
@@ -43,17 +46,29 @@ export default function Footer() {
   return (
     <>
       {/* FAQ Section */}
-      <section id="faqs" className="py-24 bg-white px-4 sm:px-8 lg:px-16">
-        <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+      <section id="faqs" className="max-w-[1440px]  mx-auto py-24 bg-white px-4 sm:px-8 lg:px-16 xl:px-0">
+        <p className="text-[12px] font-semibold tracking-[2px] uppercase text-[#1A56DB] ">
+          SUPPORT
+        </p>
+        <h2 className="font-['Instrument_Serif']  text-[36px] italic tracking-[2px] text-gray-900 ">
+          Frequently asked questions
+        </h2>
+
+        <p className="text-sm text-gray-400 mb-10">
+          Find answers to common questions about finding legal professionals,
+          joining the platform, and accessing resources.
+        </p>
+
+        <div className=" grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
           {/* Image */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="rounded-3xl bg-gradient-to-br from-[#F0FDF4] to-[#DCFCE7] aspect-[3/4] flex items-center justify-center text-[100px]"
+            className=" "
           >
-            🤔
+            <Image src="/faq.png" alt="FAQ" width={1000} height={1000} />
           </motion.div>
 
           {/* Questions */}
@@ -63,16 +78,6 @@ export default function Footer() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <p className="text-[11px] font-semibold tracking-widest uppercase text-[#1A56DB] mb-3">
-              SUPPORT
-            </p>
-            <h2 className="font-['Instrument_Serif'] text-[38px] italic tracking-tight text-gray-900 mb-2">
-              Frequently asked questions
-            </h2>
-            <p className="text-sm text-gray-400 mb-10">
-              Find answers to common questions about finding legal professionals, joining the platform, and accessing resources.
-            </p>
-
             <ul className="divide-y divide-[#E5E7EB]">
               {faqs.map((faq, i) => (
                 <motion.li
@@ -84,12 +89,16 @@ export default function Footer() {
                   className="py-5"
                 >
                   <div className="flex gap-4">
-                    <div className="w-9 h-9 rounded-full bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-base flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-base shrink-0">
                       {faq.icon}
                     </div>
                     <div>
-                      <p className="text-[15px] font-semibold mb-1.5">{faq.q}</p>
-                      <p className="text-[14px] text-gray-500 leading-relaxed">{faq.a}</p>
+                      <p className="text-[15px] font-semibold mb-1.5">
+                        {faq.q}
+                      </p>
+                      <p className="text-[14px] text-gray-500 leading-relaxed">
+                        {faq.a}
+                      </p>
                     </div>
                   </div>
                 </motion.li>
@@ -105,16 +114,25 @@ export default function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-12 mb-12">
             {/* Brand */}
             <div>
-              <Image src="/logo.png" alt="The Legal Space" width={120} height={32} className="h-8 w-auto mb-4" />
+              <Image
+                src="/logo.png"
+                alt="The Legal Space"
+                width={120}
+                height={32}
+                className="h-8 w-auto mb-4"
+              />
               <p className="text-[14px] text-gray-400 leading-relaxed max-w-[200px] mb-2">
-                Connecting legal professionals, legal knowledge, and opportunity through one trusted network.
+                Connecting legal professionals, legal knowledge, and opportunity
+                through one trusted network.
               </p>
               <p className="text-[12px] text-gray-300 italic">Est. 2026</p>
             </div>
 
             {/* Explore */}
             <div>
-              <h5 className="text-[13px] font-semibold text-gray-900 mb-4">Explore</h5>
+              <h5 className="text-[13px] font-semibold text-gray-900 mb-4">
+                Explore
+              </h5>
               <ul className="space-y-3">
                 {[
                   ["About", "#about"],
@@ -137,37 +155,54 @@ export default function Footer() {
 
             {/* Resources */}
             <div>
-              <h5 className="text-[13px] font-semibold text-gray-900 mb-4">Resources</h5>
+              <h5 className="text-[13px] font-semibold text-gray-900 mb-4">
+                Resources
+              </h5>
               <ul className="space-y-3">
-                {["Articles", "Events", "TLS Research", "Legal News"].map((item) => (
-                  <li key={item}>
-                    <Link href="#" className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors">
-                      {item}
-                    </Link>
-                  </li>
-                ))}
+                {["Articles", "Events", "TLS Research", "Legal News"].map(
+                  (item) => (
+                    <li key={item}>
+                      <Link
+                        href="#"
+                        className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
+                      >
+                        {item}
+                      </Link>
+                    </li>
+                  ),
+                )}
               </ul>
             </div>
 
             {/* Socials */}
             <div>
-              <h5 className="text-[13px] font-semibold text-gray-900 mb-4">Socials</h5>
+              <h5 className="text-[13px] font-semibold text-gray-900 mb-4">
+                Socials
+              </h5>
               <ul className="space-y-3">
-                {["Instagram", "X (Twitter)", "TikTok", "LinkedIn"].map((item) => (
-                  <li key={item}>
-                    <Link href="#" className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors">
-                      {item}
-                    </Link>
-                  </li>
-                ))}
+                {["Instagram", "X (Twitter)", "TikTok", "LinkedIn"].map(
+                  (item) => (
+                    <li key={item}>
+                      <Link
+                        href="#"
+                        className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
+                      >
+                        {item}
+                      </Link>
+                    </li>
+                  ),
+                )}
               </ul>
             </div>
 
             {/* Newsletter */}
             <div>
-              <h5 className="text-[15px] font-semibold text-gray-900 mb-2">Stay Connected To The Legal Community</h5>
+              <h5 className="text-[15px] font-semibold text-gray-900 mb-2">
+                Stay Connected To The Legal Community
+              </h5>
               <p className="text-[13.5px] text-gray-400 leading-relaxed mb-4">
-                Get the latest articles, events, opportunities, and updates from The Legal Space delivered directly to your inbox.
+                Get the latest articles, events, opportunities, and updates from
+                The Legal Space delivered directly to your inbox.
               </p>
               <div className="flex border border-[#E5E7EB] rounded-xl overflow-hidden focus-within:border-[#1A56DB] transition-colors">
                 <input
@@ -184,7 +219,9 @@ export default function Footer() {
 
           {/* Bottom bar */}
           <div className="border-t border-[#E5E7EB] py-5 flex items-center justify-between">
-            <p className="text-[13px] text-gray-400">© 2026 The Legal Space. All rights reserved.</p>
+            <p className="text-[13px] text-gray-400">
+              © 2026 The Legal Space. All rights reserved.
+            </p>
             <div className="flex gap-2">
               {[
                 { icon: "📷", label: "Instagram" },
