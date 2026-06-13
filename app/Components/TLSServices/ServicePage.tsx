@@ -1,9 +1,18 @@
-import { Monitor, Clock, BarChart2, Sparkles } from "lucide-react";
+import { Monitor, Clock, BarChart2, Sparkles, type LucideIcon } from "lucide-react";
 import { Instrument_Serif, Geist } from "next/font/google";
 import Link from "next/link";
 
 const instrumentSerif = Instrument_Serif({ subsets: ["latin"], weight: "400" });
 const geist = Geist({ subsets: ["latin"] });
+
+interface Service {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  tags: string[];
+  cta: string;
+  href: string;
+}
 
 const services = [
   {
@@ -44,7 +53,7 @@ const services = [
   },
 ];
 
-function ServiceCard({ icon: Icon, title, description, tags, cta, href }) {
+function ServiceCard({ icon: Icon, title, description, tags, cta, href }: Service) {
   return (
     <div
       className={`${geist.className} bg-white rounded-2xl border border-gray-100 p-6 flex flex-col gap-4`}
