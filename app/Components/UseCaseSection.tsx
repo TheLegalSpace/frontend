@@ -307,8 +307,7 @@ export default function TestimonialsSection() {
               left-1/2
               bottom-[90px]
               -translate-x-1/2
-              z-50
-            "
+             "
           >
             <button
               className="
