@@ -52,31 +52,38 @@ type Testimonial = {
   featured: boolean;
 };
 
-function TestimonialCard({
-  testimonial,
-}: {
-  testimonial: Testimonial;
-}) {
+function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
     <div
-      className={`bg-white rounded-3xl p-7 border border-[#EAEAEA] transition-all duration-300 ${
-        testimonial.featured
-          ? "shadow-[0_20px_60px_rgba(0,0,0,0.08)] scale-[1.04] relative z-10"
-          : "shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
-      }`}
+      className={`
+        bg-white
+        rounded-[32px]
+        border border-[#E9EBF1]
+        p-8
+        transition-all
+        duration-300 font-dmSans flex flex-col justify-between
+        ${
+          testimonial.featured
+            ? "min-h-[340px] shadow-[0_20px_80px_rgba(0,0,0,0.08)]"
+            : "min-h-[254px] shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
+        }
+      `}
     >
-      <div className="text-[#F5B400] text-lg mb-5">★★★★★</div>
+      <div className="flex flex-col">
+        <div className="text-[#F5B400] text-xl mb-6 tracking-wide">★★★★★</div>
 
-      <p className="text-[#262626] text-[15px] leading-8 mb-8">
-        {testimonial.text}
-      </p>
-
+        <p
+          className={`text-[#262626] text-[12px] ${testimonial.featured ? " leading-8" : "mb-5 leading-6"}`}
+        >
+          {testimonial.text}
+        </p>
+      </div>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-[#F3F4F6] flex items-center justify-center">
+        <div className="w-11 h-11 rounded-full bg-[#F3F4F6] flex items-center justify-center">
           {testimonial.avatar}
         </div>
 
-        <span className="text-[15px] text-[#262626] font-medium">
+        <span className="text-[14px] font-medium text-[#262626]">
           {testimonial.author}
         </span>
       </div>
@@ -84,7 +91,7 @@ function TestimonialCard({
   );
 }
 
-function TestimonialGrid({
+function TestimonialShowcase({
   testimonials,
   mirrored = false,
 }: {
@@ -93,41 +100,99 @@ function TestimonialGrid({
 }) {
   return (
     <div
-      className={`grid md:grid-cols-3 gap-6 ${
-        mirrored ? "scale-y-[-1]" : ""
-      }`}
+      className={`
+        relative
+        flex
+        justify-center
+        items-start px-5
+        ${mirrored ? "scale-y-[-1]" : ""}
+      `}
     >
-      {testimonials.map((testimonial, index) => (
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, y: mirrored ? -20 : 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.4,
-            delay: index * 0.08,
+      {/* MOBILE LEFT PEEK */}
+      <div
+        className="
+          md:hidden
+          absolute
+          left-[-72%]
+          top-4
+          w-[85%]
+          opacity-60
+        "
+      >
+        <TestimonialCard testimonial={testimonials[0]} />
+      </div>
+
+      {/* DESKTOP LEFT */}
+      <div
+        className="
+          hidden
+          md:block
+          w-[286px]
+          shrink-0
+          translate-y-8
+        "
+      >
+        <TestimonialCard testimonial={testimonials[0]} />
+      </div>
+
+      {/* CENTER */}
+      <div
+        className="
+          relative
+          z-20
+          w-full
+          max-w-[360px]
+          mx-4
+        "
+      >
+        <TestimonialCard
+          testimonial={{
+            ...testimonials[1],
+            featured: true,
           }}
-        >
-          <TestimonialCard testimonial={testimonial} />
-        </motion.div>
-      ))}
+        />
+      </div>
+
+      {/* DESKTOP RIGHT */}
+      <div
+        className="
+          hidden
+          md:block
+          w-[286px]
+          shrink-0
+          translate-y-8
+        "
+      >
+        <TestimonialCard testimonial={testimonials[2]} />
+      </div>
+
+      {/* MOBILE RIGHT PEEK */}
+      <div
+        className="
+          md:hidden
+          absolute
+          right-[-72%]
+          top-4
+          w-[85%]
+          opacity-60
+        "
+      >
+        <TestimonialCard testimonial={testimonials[2]} />
+      </div>
     </div>
   );
 }
 
 export default function TestimonialsSection() {
-  const [tab, setTab] = useState<"individuals" | "lawyers">(
-    "individuals"
-  );
+  const [tab, setTab] = useState<"individuals" | "lawyers">("individuals");
 
   const testimonials =
-    tab === "individuals"
-      ? individualsTestimonials
-      : lawyersTestimonials;
+    tab === "individuals" ? individualsTestimonials : lawyersTestimonials;
 
   return (
     <section
       id="testimonials"
-      className="relative overflow-hidden py-24 px-4 sm:px-8 lg:px-16"
+      className="relative overflow-hidden py-24"
       style={{
         backgroundImage: "url('/testimonial-bg.png')",
         backgroundSize: "cover",
@@ -135,20 +200,20 @@ export default function TestimonialsSection() {
       }}
     >
       <div className="max-w-[1440px] mx-auto">
-        {/* Header */}
+        {/* HEADER */}
         <motion.div
-          initial={{ opacity: 0, y: 15 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="text-center mb-16"
         >
           <p className="text-[11px] tracking-[0.25em] font-semibold text-[#1A56DB] mb-3">
             TESTIMONIALS
           </p>
 
-          <h2 className="font-['Instrument_Serif'] text-5xl mb-6">
+          {/* <h2 className="font-['Instrument_Serif'] text-5xl text-[#111827] mb-6">
             What People Are Saying
-          </h2>
+          </h2> */}
 
           <div className="flex gap-1 bg-white border border-[#E5E7EB] rounded-xl p-1 w-fit mx-auto">
             {(["individuals", "lawyers"] as const).map((item) => (
@@ -158,7 +223,7 @@ export default function TestimonialsSection() {
                 className={`relative px-5 py-2 rounded-lg text-sm font-medium ${
                   tab === item
                     ? "text-white"
-                    : "text-gray-500"
+                    : "text-gray-500 hover:text-gray-700"
                 }`}
               >
                 {tab === item && (
@@ -174,18 +239,15 @@ export default function TestimonialsSection() {
                 )}
 
                 <span className="relative z-10">
-                  For{" "}
-                  {item.charAt(0).toUpperCase() +
-                    item.slice(1)}
+                  For {item.charAt(0).toUpperCase() + item.slice(1)}
                 </span>
               </button>
             ))}
           </div>
         </motion.div>
 
-        {/* Cards + Reflection */}
+        {/* SHOWCASE */}
         <div className="relative">
-          {/* MAIN CARDS */}
           <AnimatePresence mode="wait">
             <motion.div
               key={tab}
@@ -194,16 +256,16 @@ export default function TestimonialsSection() {
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.3 }}
             >
-              <TestimonialGrid testimonials={testimonials} />
+              <TestimonialShowcase testimonials={testimonials} />
             </motion.div>
           </AnimatePresence>
 
           {/* REFLECTION */}
           <div
             className="
-              mt-8
+              mt-10
               pointer-events-none
-              opacity-70
+              opacity-40
               overflow-hidden
               mask-[linear-gradient(to_bottom,black,transparent)]
               [-webkit-mask-image:linear-gradient(to_bottom,black,transparent)]
@@ -216,50 +278,55 @@ export default function TestimonialsSection() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="blur-[0.15px]"
+                className="blur-[1.5px]"
               >
-                <TestimonialGrid
-                  testimonials={testimonials}
-                  mirrored
-                />
+                <TestimonialShowcase testimonials={testimonials} mirrored />
               </motion.div>
             </AnimatePresence>
           </div>
 
-          {/* White fade like the design */}
-          {/* <div
+          {/* REFLECTION FADE */}
+          <div
             className="
               absolute
-              left-0
-              right-0
+              inset-x-0
               bottom-0
-              h-[300px]
-              bg-gradient-to-b
+              h-[400px]
+              bg-linear-to-b
               from-transparent
               via-white/70
               to-white
               pointer-events-none
             "
-          /> */}
-        </div>
+          />
 
-        {/* CTA */}
-        <div className="text-center mt-[-5%]">
-          <button
+          {/* CTA BUTTON */}
+          <div
             className="
-              bg-[#1A56DB]
-              text-white
-              px-8
-              py-3
-              mt-[-50%]
-              rounded-full
-              shadow-lg
-              hover:bg-[#184BC2]
-              transition-colors
+              absolute
+              left-1/2
+              bottom-[90px]
+              -translate-x-1/2
+              z-50
             "
           >
-            Follow us on Social Media
-          </button>
+            <button
+              className="
+                bg-[#1A56DB]
+                text-white
+                px-8
+                py-4
+                rounded-full
+                text-sm
+                font-medium
+                shadow-xl z-50
+                hover:bg-[#184BC2]
+                transition-colors
+              "
+            >
+              Follow us on Social Media
+            </button>
+          </div>
         </div>
       </div>
     </section>

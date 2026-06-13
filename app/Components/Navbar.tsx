@@ -53,14 +53,14 @@ export default function Navbar() {
   return (
     <>
       {/* Floating navbar wrapper */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[1440px] z-50 font-dmSans">
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[1440px] z-50 font-dmSans px-0 sm:px-4 lg:px-12 xl:p-0">
         <motion.nav
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className={`flex items-center justify-between px-5 py-3 rounded-2xl border border-[#E5E7EB] transition-all duration-300 ${
+          className={`flex items-center justify-between px-5 py-3 rounded-[999px] z-5000 border border-[#E5E7EB] transition-all duration-300 ${
             scrolled
-              ? "bg-white/95 backdrop-blur-md shadow-lg shadow-black/5"
+              ? "bg-white/95 backdrop-blur-md shadow-lg shadow-black/5 nav-glass"
               : "bg-white/90 backdrop-blur-sm shadow-md shadow-black/4"
           }`}
         >
