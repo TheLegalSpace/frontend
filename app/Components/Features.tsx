@@ -41,7 +41,7 @@ export default function Features() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.6 }}
-          className="rounded-2xl border border-[#E5E7EB] overflow-hidden"
+          className=""
         >
           <Image
             src="/lawyer.png"
