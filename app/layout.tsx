@@ -2,7 +2,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
-import { DM_Sans, Geist, Inter } from "next/font/google";
+import { Geist } from "next/font/google";
 import { Instrument_Serif } from "next/font/google";
 import { Providers } from "./providers";
 import Script from "next/script";
@@ -28,21 +28,11 @@ const instrumentSerif = Instrument_Serif({
   variable: "--font-instrument",
 });
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dmSans",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
-
 const MainLayout = ({ children }: MainLayoutProps) => {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geist.variable} ${instrumentSerif.variable} ${dmSans.variable} ${inter.variable} bg-page-bg`}
+        className={`${geist.variable} ${instrumentSerif.variable} bg-page-bg`}
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>
