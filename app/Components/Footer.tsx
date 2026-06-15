@@ -46,7 +46,7 @@ export default function Footer() {
   return (
     <>
       {/* FAQ Section */}
-      <section id="faqs" className="max-w-[1440px]  mx-auto py-24 bg-white px-4 sm:px-8 lg:px-16 xl:px-">
+      <section id="faqs" className="max-w-[1440px]  mx-auto py-24 bg-white px-4 sm:px-8 lg:px-16 xl:px-0 section-alignment">
         <p className="text-[12px] font-semibold tracking-[2px] uppercase text-[#1A56DB] ">
           SUPPORT
         </p>

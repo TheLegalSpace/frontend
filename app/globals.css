@@ -76,3 +76,11 @@ button[disabled] {
   border-radius: 999px;
   
 }
+
+
+@media (min-width: 1280px) {
+  .section-alignment{
+    padding-left: 60px;
+    padding-right: 60px;
+  }
+}
