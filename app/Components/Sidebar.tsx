@@ -29,6 +29,7 @@ import {
   User,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import Image from "next/image";
 
 type UserRole = "USER" | "LAWYER" | "FIRM" | "ADMIN";
 
@@ -198,9 +199,9 @@ function LogoutModal({
 function LogoutOverlay() {
   return (
     <div className="fixed inset-0 z-200 flex flex-col items-center justify-center bg-white">
-      <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white text-xl mb-6">
-        ⚖
-      </div>
+      {/* <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white text-xl mb-6"> */}
+      <Image src="/logo.png" width={130} height={130} alt="Logo" />
+      {/* </div> */}
       <Loader2 className="w-6 h-6 text-gray-400 animate-spin mb-3" />
       <p className="text-[14px] font-medium text-gray-700">
         Signing you out...
@@ -434,21 +435,21 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="p-3 border-t border-[#E5E7EB] flex flex-col gap-2">
-      {footerCta && (
-        <Link
-          href={footerCta.href}
-          className="w-full py-2 rounded-2xl text-[13px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-          style={{
-            border: "2px solid transparent",
-            backgroundImage:
-              "linear-gradient(white, white), linear-gradient(90deg, #216399 0%, #FFE500 50%, #C34B00 100%)",
-            backgroundOrigin: "border-box",
-            backgroundClip: "padding-box, border-box",
-          }}
-        >
-          {footerCta.label}
-        </Link>
-      )}
+        {footerCta && (
+          <Link
+            href={footerCta.href}
+            className="w-full py-2 rounded-2xl text-[13px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            style={{
+              border: "2px solid transparent",
+              backgroundImage:
+                "linear-gradient(white, white), linear-gradient(90deg, #216399 0%, #FFE500 50%, #C34B00 100%)",
+              backgroundOrigin: "border-box",
+              backgroundClip: "padding-box, border-box",
+            }}
+          >
+            {footerCta.label}
+          </Link>
+        )}
         <button
           onClick={() => setShowLogoutModal(true)}
           className="w-full py-2 bg-red-50 border border-red-100 rounded-2xl text-[14px] font-medium text-red-500 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"

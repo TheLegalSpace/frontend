@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "framer-motion";
 import Image from "next/image";
 import { MoveRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const individualsSteps = [
   {
@@ -48,7 +49,17 @@ export default function HowItWorks() {
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
   const steps = tab === "individuals" ? individualsSteps : lawyersSteps;
+  const router = useRouter();
 
+  const handleLandingNav = (type: "individuals" | "lawyers") => {
+    if (type === "individuals") {
+      localStorage.setItem("loginType", "user");
+      router.push("/signin");
+    } else {
+      localStorage.setItem("loginType", "lawyer");
+      router.push("/signin");
+    }
+  };
   return (
     <section
       id="how-it-works"
@@ -157,7 +168,10 @@ export default function HowItWorks() {
 
           {/* Button pinned to the exact centre of the image */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <button className="text-[12px] md:text-[14px] flex items-center gap-2 bg-white border border-[#E5E7EB] text-[#000000] px-6 py-3 rounded-lg font-dmSans shadow-md hover:bg-[#1A56DB] hover:text-white hover:border-[#1A56DB] transition-colors duration-200">
+            <button
+              className="text-[12px] md:text-[14px] flex items-center gap-2 bg-white border border-[#E5E7EB] text-[#000000] px-6 py-3 rounded-lg font-dmSans shadow-md hover:bg-[#1A56DB] hover:text-white hover:border-[#1A56DB] transition-colors duration-200"
+              onClick={() => handleLandingNav(tab)}
+            >
               {tab === "individuals" ? (
                 "Login to find a lawyer today!"
               ) : (

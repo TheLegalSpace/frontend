@@ -53,7 +53,7 @@ export default function Navbar() {
   return (
     <>
       {/* Floating navbar wrapper */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[1440px] z-50 font-dmSans px-0 sm:px-4 lg:px-12 xl:p-0">
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[1440px] z-50 font-dmSans px-0 sm:px-0 lg:px-12 xl:p-0">
         <motion.nav
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -76,7 +76,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop links */}
-          <ul className="hidden md:flex items-center gap-1">
+          <ul className="hidden md:flex items-center gap-1 navLink">
             {navLinks.map((link) =>
               link.dropdown ? (
                 <li
@@ -130,7 +130,7 @@ export default function Navbar() {
           </ul>
 
           {/* CTA */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2 ctaLink" >
             <button
               onClick={() => loginType("lawyer")}
               className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors font-medium"
@@ -148,7 +148,7 @@ export default function Navbar() {
           {/* Mobile hamburger */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+            className="hamBtn md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
           >
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
