@@ -292,10 +292,10 @@ export default function TestimonialsSection() {
               inset-x-0
               bottom-0
               h-[400px]
-              bg-linear-to-b
-              from-transparent
-              via-white/70
-              to-white
+              // bg-linear-to-b
+              // from-transparent
+              // via-white/10
+              // to-transparent
               pointer-events-none
             "
           />

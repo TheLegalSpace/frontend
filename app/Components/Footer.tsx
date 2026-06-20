@@ -42,72 +42,80 @@ const faqs = [
   },
 ];
 
-export default function Footer() {
+interface FooterProps {
+  visible?: boolean;
+}
+
+export default function Footer({ visible = true }: FooterProps) {
   return (
     <>
       {/* FAQ Section */}
-      <section id="faqs" className="max-w-[1440px]  mx-auto py-24 bg-white px-4 sm:px-8 lg:px-16 xl:px-0 section-alignment">
-        <p className="text-[12px] font-semibold tracking-[2px] uppercase text-[#1A56DB] ">
-          SUPPORT
-        </p>
-        <h2 className="font-['Instrument_Serif']  text-[36px] italic tracking-[2px] text-gray-900 ">
-          Frequently asked questions
-        </h2>
+      {visible && (
+        <section
+          id="faqs"
+          className="max-w-[1440px]  mx-auto py-24 bg-white px-4 sm:px-8 lg:px-16 xl:px-0 section-alignment"
+        >
+          <p className="text-[12px] font-semibold tracking-[2px] uppercase text-[#1A56DB] ">
+            SUPPORT
+          </p>
+          <h2 className="font-['Instrument_Serif']  text-[36px] italic tracking-[2px] text-gray-900 ">
+            Frequently asked questions
+          </h2>
 
-        <p className="text-sm text-gray-400 mb-10">
-          Find answers to common questions about finding legal professionals,
-          joining the platform, and accessing resources.
-        </p>
+          <p className="text-sm text-gray-400 mb-10">
+            Find answers to common questions about finding legal professionals,
+            joining the platform, and accessing resources.
+          </p>
 
-        <div className=" grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
-          {/* Image */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className=" "
-          >
-            <Image src="/faq.png" alt="FAQ" width={1000} height={1000} />
-          </motion.div>
+          <div className=" grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+            {/* Image */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className=" "
+            >
+              <Image src="/faq.png" alt="FAQ" width={1000} height={1000} />
+            </motion.div>
 
-          {/* Questions */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <ul className="divide-y divide-[#E5E7EB]">
-              {faqs.map((faq, i) => (
-                <motion.li
-                  key={faq.q}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.07 }}
-                  className="py-5"
-                >
-                  <div className="flex gap-4">
-                    <div className="w-9 h-9 rounded-full bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-base shrink-0">
-                      {faq.icon}
+            {/* Questions */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <ul className="divide-y divide-[#E5E7EB]">
+                {faqs.map((faq, i) => (
+                  <motion.li
+                    key={faq.q}
+                    initial={{ opacity: 0, y: 12 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: i * 0.07 }}
+                    className="py-5"
+                  >
+                    <div className="flex gap-4">
+                      <div className="w-9 h-9 rounded-full bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-base shrink-0">
+                        {faq.icon}
+                      </div>
+                      <div>
+                        <p className="text-[15px] font-semibold mb-1.5">
+                          {faq.q}
+                        </p>
+                        <p className="text-[14px] text-gray-500 leading-relaxed">
+                          {faq.a}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[15px] font-semibold mb-1.5">
-                        {faq.q}
-                      </p>
-                      <p className="text-[14px] text-gray-500 leading-relaxed">
-                        {faq.a}
-                      </p>
-                    </div>
-                  </div>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-        </div>
-      </section>
-
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.div>
+          </div>
+        </section>
+      )}
       {/* Footer */}
       <footer className="bg-white border-t border-[#E5E7EB] px-4 sm:px-8 lg:px-16 pt-16 pb-0">
         <div className="max-w-6xl mx-auto">
