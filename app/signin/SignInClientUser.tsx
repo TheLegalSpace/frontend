@@ -102,14 +102,14 @@ export default function SignInClient() {
 
       {/* Main content area — vertically centered */}
       <main className="flex-1 w-full flex items-center">
-        <div className="w-full mt-[100px]">
+        <div className="w-full h-[90vh]">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             {/* Illustration — desktop only */}
             <div className="hidden lg:block">
               <Image
                 src={signinIllustration}
                 alt="The Legal Space community illustration"
-                className="w-full h-auto rounded-2xl object-cover"
+                className="w-full h-auto  object-cover"
                 priority
               />
             </div>
