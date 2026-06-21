@@ -64,11 +64,11 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
       href: "/dashboard/TLS-Research",
       icon: FolderSearch,
     },
-    {
-      label: "TLS Library",
-      href: "/dashboard/legal-library",
-      icon: BookText,
-    },
+    // {
+    //   label: "TLS Library",
+    //   href: "/dashboard/legal-library",
+    //   icon: BookText,
+    // },
     {
       label: "TLS Services",
       href: "/dashboard/tls-services",
@@ -89,11 +89,11 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
       icon: FolderSearch,
     },
     { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
-    {
-      label: "Legal Library",
-      href: "/dashboard/legal-library",
-      icon: BookText,
-    },
+    // {
+    //   label: "Legal Library",
+    //   href: "/dashboard/legal-library",
+    //   icon: BookText,
+    // },
     {
       label: "TLS Services",
       href: "/dashboard/tls-services",
@@ -114,11 +114,11 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
       icon: FolderSearch,
     },
     { label: "Legal News", href: "/dashboard/Legal-News", icon: BookOpenText },
-    {
-      label: "Legal Library",
-      href: "/dashboard/legal-library",
-      icon: BookText,
-    },
+    // {
+    //   label: "Legal Library",
+    //   href: "/dashboard/legal-library",
+    //   icon: BookText,
+    // },
     {
       label: "TLS Services",
       href: "/dashboard/tls-services",
