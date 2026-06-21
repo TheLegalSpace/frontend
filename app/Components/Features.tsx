@@ -31,10 +31,12 @@ export default function Features() {
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <section id="about" className="py-24 bg-white px-0 px-4 lg:px-12 xl:p max-w-[1440px] mx-auto ">
+    <section
+      id="about"
+      className="py-24 bg-white  px-4 lg:px-12 xl:p max-w-[1440px] mx-auto "
+    >
       {/* [2fr_3fr] gives image ~40% and text ~60%, matching the screenshot */}
       <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-12 lg:gap-16 items-center">
-
         {/* Image side — just render naturally, border + slight rounding like screenshot */}
         <motion.div
           initial={{ opacity: 0, x: -24 }}
@@ -96,13 +98,16 @@ export default function Features() {
                 className={`rounded-2xl border p-4 ${card.bg}`}
               >
                 <div className="text-xl mb-2.5">{card.icon}</div>
-                <h4 className="text-[13px] font-semibold mb-1.5">{card.title}</h4>
-                <p className="text-[11.5px] text-gray-500 leading-relaxed">{card.desc}</p>
+                <h4 className="text-[13px] font-semibold mb-1.5">
+                  {card.title}
+                </h4>
+                <p className="text-[11.5px] text-gray-500 leading-relaxed">
+                  {card.desc}
+                </p>
               </motion.div>
             ))}
           </div>
         </div>
-
       </div>
     </section>
   );

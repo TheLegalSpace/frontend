@@ -150,13 +150,13 @@ function LogoutModal({
   isLoggingOut: boolean;
 }) {
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-1000000001 flex items-center justify-center px-4">
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm z-1000000000"
         onClick={!isLoggingOut ? onCancel : undefined}
       />
 
-      <div className="relative w-full max-w-xs bg-white rounded-2xl shadow-xl p-6 z-10">
+      <div className="relative w-full max-w-xs bg-white rounded-2xl shadow-xl p-6  z-1000000000">
         <div className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
           <AlertTriangle className="w-5 h-5 text-red-500" />
         </div>
@@ -219,12 +219,11 @@ function SidebarSkeleton() {
   return (
     <aside className="w-55 h-screen fixed top-0 left-0 border-r border-[#E5E7EB] flex flex-col bg-white">
       <div className="px-5 py-5 border-b border-[#E5E7EB] flex items-center gap-2">
-        <div className="w-7 h-7 bg-black rounded-md flex items-center justify-center text-white text-xs">
-          ⚖
-        </div>
-        <span className="text-sm font-medium text-gray-900">
+              <Image src="/logo.png" width={130} height={130} alt="Logo" />
+
+        {/* <span className="text-sm font-medium text-gray-900">
           The Legal Space
-        </span>
+        </span> */}
       </div>
       <div className="px-5 py-4 border-b border-[#E5E7EB] animate-pulse">
         <div className="w-10 h-10 rounded-full bg-gray-100 mb-2.5" />

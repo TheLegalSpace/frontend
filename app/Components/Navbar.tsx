@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,6 +38,7 @@ export default function Navbar() {
   const [resourcesOpen, setResourcesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
+  const usePathName = usePathname();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -47,6 +48,10 @@ export default function Navbar() {
 
   const loginType = (type: "lawyer" | "user") => {
     localStorage.setItem("loginType", type);
+    if (usePathName === "/signin") {
+      window.location.reload();
+      return;
+    }
     router.push("/signin");
   };
 
@@ -106,7 +111,10 @@ export default function Navbar() {
                         {link.dropdown.map((item) => (
                           <button
                             key={item.label}
-                            onClick={() => { scrollToSection(item.href); setResourcesOpen(false); }}
+                            onClick={() => {
+                              scrollToSection(item.href);
+                              setResourcesOpen(false);
+                            }}
                             className="block w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                           >
                             {item.label}
@@ -125,12 +133,12 @@ export default function Navbar() {
                     {link.label}
                   </button>
                 </li>
-              )
+              ),
             )}
           </ul>
 
           {/* CTA */}
-          <div className="hidden md:flex items-center gap-2 ctaLink" >
+          <div className="hidden md:flex items-center gap-2 ctaLink">
             <button
               onClick={() => loginType("lawyer")}
               className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors font-medium"
@@ -167,7 +175,10 @@ export default function Navbar() {
               {navLinks.map((link) => (
                 <button
                   key={link.label}
-                  onClick={() => { scrollToSection(link.href); setIsOpen(false); }}
+                  onClick={() => {
+                    scrollToSection(link.href);
+                    setIsOpen(false);
+                  }}
                   className="block w-full text-left px-4 py-3 text-sm text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
                 >
                   {link.label}
