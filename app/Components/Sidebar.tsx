@@ -219,7 +219,7 @@ function SidebarSkeleton() {
   return (
     <aside className="w-55 h-screen fixed top-0 left-0 border-r border-[#E5E7EB] flex flex-col bg-white">
       <div className="px-5 py-5 border-b border-[#E5E7EB] flex items-center gap-2">
-              <Image src="/logo.png" width={130} height={130} alt="Logo" />
+        <Image src="/logo.png" width={130} height={130} alt="Logo" />
 
         {/* <span className="text-sm font-medium text-gray-900">
           The Legal Space

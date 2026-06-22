@@ -357,6 +357,7 @@ export default function ProfileCard({
   const displayName = isAnonymous ? "Anonymous User" : profile.fullName;
   const displayEmail = isAnonymous ? maskEmail(profile.email) : profile.email;
 
+  const handleProfileModal = () => {};
   return (
     <div className="w-full">
       <div className="overflow-hidden rounded-2xl  bg-white">
@@ -417,12 +418,13 @@ export default function ProfileCard({
                 <div className="flex items-center gap-2 shrink-0">
                   {isOwnProfile ? (
                     <>
-                      <Link
-                        href="/dashboard/settings"
+                      <div
+                        // href="/dashboard/settings"
+                        onClick={() => handleProfileModal()}
                         className="text-[12px] font-medium text-[#2563EB] hover:underline whitespace-nowrap"
                       >
                         Profile Management
-                      </Link>
+                      </div>
 
                       {/* Anonymous toggle — users only */}
                       {isUser && (
