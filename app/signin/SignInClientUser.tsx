@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { AuthError, useAuth } from "../context/AuthContext";
 import Image from "next/image";
 // Save your illustration here (rename if needed):
-import signinIllustration from "../../public/signin-illustration.png";
+import signinIllustration from "../../public/signin-illustration.jpg";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
 

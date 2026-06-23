@@ -27,7 +27,6 @@ import { useAuth } from "../context/AuthContext";
 import { USER_ROLES } from "../types/types";
 import ProfileManagementModal from "./ProfileManagementModal";
 
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface LawyerProfile {
   id: string;
@@ -249,16 +248,24 @@ function ReviewCard({ review }: { review: Review }) {
   return (
     <div className="mb-5 last:mb-0">
       <div className="flex items-start justify-between gap-4 mb-2">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F4DDE7] text-[12px] font-medium text-[#8B3A5A] overflow-hidden">
+        <div className="flex items-center gap-3 ps-2">
+          <div
+            className={`h-9 w-9 overflow-hidden rounded-full border-[3px] border-white shadow-sm transition-all duration-300 ${
+              review.reviewer.isAnonymous ? "blur-sm" : ""
+            }`}
+          >
             {review.reviewer.avatarUrl ? (
               <img
                 src={review.reviewer.avatarUrl}
                 alt={review.reviewer.fullName}
-                className="w-full h-full object-cover"
+                className="h-full w-full object-cover"
               />
             ) : (
-              getInitials(review.reviewer.fullName)
+              <div className="flex h-full w-full items-center justify-center bg-[#D1D5DB] text-4xl font-bold tracking-wider text-[#374151]">
+                {review.reviewer.isAnonymous
+                  ? "??"
+                  : getInitials(review.reviewer.fullName)}
+              </div>
             )}
           </div>
           <div>
@@ -526,7 +533,7 @@ export default function ProfileCard({
           <div className="px- py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center justify-between">
               <span className="text-[14px] font-semibold text-[#000000]">
-                Firm Establishment 
+                Firm Establishment
               </span>
               <span className="text-[11px] text-[#000000] font-['Geist']">
                 {String(profile.firmProfile.firmEstablishmentYear ?? "")}
