@@ -48,11 +48,11 @@ export default function Navbar() {
 
   const loginType = (type: "lawyer" | "user") => {
     localStorage.setItem("loginType", type);
-    if (usePathName === "/signin") {
-      window.location.reload();
-      return;
-    }
-    router.push("/signin");
+    // if (usePathName === "/signin") {
+    //   window.location.reload();
+    //   return;
+    // }
+    router.replace("/signin");
   };
 
   return (

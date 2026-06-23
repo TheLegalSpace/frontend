@@ -25,6 +25,8 @@ import { useProfileArticles, useProfileReviews } from "@/hooks/useProfile";
 import type { Review } from "@/services/profile.services";
 import { useAuth } from "../context/AuthContext";
 import { USER_ROLES } from "../types/types";
+import ProfileManagementModal from "./ProfileManagementModal";
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface LawyerProfile {
@@ -303,6 +305,7 @@ export default function ProfileCard({
   const [isAnonymous, setIsAnonymous] = useState(profile.isAnonymous);
   const [showTooltip, setShowTooltip] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -357,7 +360,7 @@ export default function ProfileCard({
   const displayName = isAnonymous ? "Anonymous User" : profile.fullName;
   const displayEmail = isAnonymous ? maskEmail(profile.email) : profile.email;
 
-  const handleProfileModal = () => {};
+  const handleProfileModal = () => setShowProfileModal(true);
   return (
     <div className="w-full">
       <div className="overflow-hidden rounded-2xl  bg-white">
@@ -515,6 +518,18 @@ export default function ProfileCard({
               </span>
               <span className="text-[13px] text-[#6B7280]">
                 {profile.lawyerProfile.callToBarYear}
+              </span>
+            </div>
+          </div>
+        )}
+        {isFirm && profile.firmProfile && (
+          <div className="px- py-4 border-b border-[#E5E7EB]">
+            <div className="flex items-center justify-between">
+              <span className="text-[14px] font-semibold text-[#000000]">
+                Firm Establishment 
+              </span>
+              <span className="text-[11px] text-[#000000] font-['Geist']">
+                {String(profile.firmProfile.firmEstablishmentYear ?? "")}
               </span>
             </div>
           </div>
@@ -681,6 +696,14 @@ export default function ProfileCard({
           )}
         </div>
       </div>
+
+      {/* Profile Management modal */}
+      {isOwnProfile && showProfileModal && (
+        <ProfileManagementModal
+          profile={profile}
+          onClose={() => setShowProfileModal(false)}
+        />
+      )}
     </div>
   );
 }

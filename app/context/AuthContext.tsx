@@ -15,7 +15,7 @@ import {
 } from "@/services/auth.services";
 import { profileService } from "@/services/profile.services";
 import { parseApiError } from "@/lib/error";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   disconnectSocket,
   refreshSocketAuth,
@@ -71,53 +71,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthResponse["data"]["account"] | null>(
     null,
   );
-  const [isLoading, setIsLoading] = useState(true);
+  // Only treat the app as "loading a session" while we actually verify one —
+  // i.e. on a protected /dashboard route that has a stored token. On public
+  // routes (landing, /signin, /register, …) there is nothing to verify.
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const onDashboard = window.location.pathname.startsWith("/dashboard");
+    return onDashboard && !!localStorage.getItem("accessToken");
+  });
   const router = useRouter();
+  const pathname = usePathname();
+
+  // ── Session check — DASHBOARD ROUTES ONLY ───────────────────────────────────
+  // The "is there a logged-in user?" check must be confined to /dashboard and
+  // its children. Running it on public routes fires a token-less /profile/me
+  // call that the API treats as an expired session, which triggers auth:logout
+  // and bounces the user out of the sign-in flow.
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const isProtectedRoute = pathname?.startsWith("/dashboard") ?? false;
+    if (!isProtectedRoute) return; // public route — nothing to check
+
+    const token = localStorage.getItem("accessToken");
+    const savedUser = localStorage.getItem("user");
+
+    // No token on a protected route → isLoading already starts false (see
+    // initializer), so the dashboard guard can redirect right away.
+    if (!token) return;
+
+    // Hydrate immediately from cache so the dashboard guard doesn't flash.
+    if (savedUser) {
+      try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setUser(JSON.parse(savedUser));
+      } catch {
+        // Corrupt cache — drop it and let getMe below refetch a fresh profile.
+        localStorage.removeItem("user");
+      }
+    }
+
     let cancelled = false;
     profileService
       .getMe()
       .then((r) => {
         if (cancelled) return;
-        setUser(r.data.data);
+        const fresh = r.data.data;
+        localStorage.setItem("user", JSON.stringify(fresh));
+        setUser(fresh);
+        refreshSocketAuth(token);
       })
+      .catch(() => {})
       .finally(() => {
         if (!cancelled) setIsLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
-  }, []);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const token = localStorage.getItem("accessToken");
-    const savedUser = localStorage.getItem("user");
-
-    if (token && savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
-        setIsLoading(false);
-        return;
-      }
-
-      profileService
-        .getMe()
-        .then((r) => {
-          const fresh = r.data.data;
-          localStorage.setItem("user", JSON.stringify(fresh));
-          setUser(fresh);
-          refreshSocketAuth(token);
-        })
-        .catch(() => {})
-        .finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
-    }
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     const handleAuthLogout = () => {
@@ -125,7 +137,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
       setUser(null);
-      router.replace("/");
+      // Only redirect away on protected routes. On public routes (landing,
+      // /signin, /register, …) a failed token check should clear state
+      // silently without interrupting what the user is doing.
+      if (window.location.pathname.startsWith("/dashboard")) {
+        router.replace("/");
+      }
     };
     window.addEventListener("auth:logout", handleAuthLogout);
     return () => window.removeEventListener("auth:logout", handleAuthLogout);
