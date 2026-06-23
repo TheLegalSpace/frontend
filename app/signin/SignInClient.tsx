@@ -7,7 +7,7 @@ import { LoginPayload } from "@/services/auth.services";
 import { AuthError, useAuth } from "../context/AuthContext";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import signupIllustration from "../../public/signup-illustration.png";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
@@ -159,26 +159,29 @@ export default function SignInClient() {
                 className="flex flex-col gap-4 font-dmSans"
               >
                 {/* Email */}
-                <div className="relative flex flex-col gap-1.5">
+               <div className="flex flex-col gap-1.5">
                   <label className="text-[13px] text-gray-600">
                     Email Address
                   </label>
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={anyLoading}
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
-                  />
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2  text-gray-400 hover:text-gray-600 transition-colors" />
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={anyLoading}
+                      className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
+                    />
+                  </div>
                 </div>
-
+ 
                 {/* Password */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[13px] text-gray-600">Password</label>
                   <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
@@ -186,7 +189,7 @@ export default function SignInClient() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={anyLoading}
-                      className="w-full px-4 py-3 pr-11 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
+                      className="w-full pl-11 pr-11 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
                     />
                     <button
                       type="button"
