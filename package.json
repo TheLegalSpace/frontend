@@ -15,6 +15,7 @@
     "@types/google-one-tap": "^1.2.7",
     "axios": "^1.16.0",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.41.0",
     "lucide-react": "^1.17.0",
     "mammoth": "^1.12.0",
     "next": "16.2.4",
