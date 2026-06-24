@@ -1,131 +1,122 @@
-"use client";
-
-import { motion } from "framer-motion";
+// components/LegalInsights.tsx
+import { ArrowUpRight, BookOpen, Calendar } from "lucide-react";
 import Image from "next/image";
 
-const resources = [
+interface Article {
+  id: number;
+  title: string;
+  excerpt: string;
+  date: string;
+  author: string;
+  reads: number;
+  image: string;
+}
+
+const articles: Article[] = [
   {
-    num: "01",
-    tag: "Articles",
-    title: "Insights from Legal Professionals",
-    desc: "Explore expert perspectives, practical guidance, and thought leadership from legal professionals across a wide range of practice areas.",
-    cta: "Explore Articles",
-    preview: "article",
+    id: 1,
+    title: "Energy Investments in West Africa",
+    excerpt:
+      "Explore how energy consumption is evolving in West Africa, particularly in the wake of significant investments in infrastructure.",
+    date: "March 29, 2026",
+    author: "Adaeze Okafor",
+    reads: 120,
+    image: "/Article.png",
   },
   {
-    num: "02",
-    tag: "On the Docket",
-    title: "Discover Opportunities to Connect",
-    desc: "Stay engaged with conferences, networking events, workshops, and professional gatherings happening across the legal community.",
-    cta: "View Events",
-    preview: "events",
+    id: 2,
+    title: "Energy Investments in West Africa",
+    excerpt:
+      "Explore how energy consumption is evolving in West Africa, particularly in the wake of significant investments in infrastructure.",
+    date: "March 29, 2026",
+    author: "Adaeze Okafor",
+    reads: 120,
+    image: "/Article.png",
   },
   {
-    num: "03",
-    tag: "TLS Research",
-    title: "Research Built for Legal Work",
-    desc: "Conduct legal research, analyse documents, and access source backed responses designed to support more efficient legal practice.",
-    cta: "Explore TLS Research",
-    preview: "research",
-  },
-  {
-    num: "04",
-    tag: "Legal News",
-    title: "Help Shape What's Next",
-    desc: "We're exploring a dedicated legal news experience and would love your input. Tell us if legal news is something you'd actively use on The Legal Space.",
-    cta: "Take Survey 🥺",
-    preview: "news",
+    id: 3,
+    title: "Energy Investments in West Africa",
+    excerpt:
+      "Explore how energy consumption is evolving in West Africa, particularly in the wake of significant investments in infrastructure.",
+    date: "March 29, 2026",
+    author: "Adaeze Okafor",
+    reads: 120,
+    image: "/Article.png",
   },
 ];
 
-const previews: Record<string, string> = {
-  article: "/chisom-article-image.png",
-  events: "/feature.png",
-  research: "/research.png",
-  news: "/news.png",
-};
-
 export default function LegalInsights() {
   return (
-    <section id="resources" className="py-24 bg-white px-4 sm:px-8 lg:px-16">
-      <div className="max-w-[1440px] mx-auto">
-
+    <section className="px-4 pt-4 pb-10 md:px-8 lg:px-42 md:pt-28 lg:pt-32 md:pb-16 font-['Geist'] bg-[#F9F9F9]">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-20"
-        >
-          <p className="text-[11px] font-semibold tracking-widest uppercase text-[#1A56DB] mb-3">
-            RESOURCES
+        <div className="mb-8 md:mb-12">
+          <p className="text-[#1A56DB] text-xs uppercase tracking-wider font-medium">
+            Legal Insights
           </p>
-          <h2 className="font-['Instrument_Serif'] text-4xl lg:text-[42px] italic tracking-tight text-gray-900">
-            Everything You Need to Stay Informed and Connected
+          <h2 className="text-3xl md:text-4xl lg:text-[40px] text-[#0A0A0A] font-['Instrument_Serif'] leading-tight mt-2">
+            Written by verified practitioners
           </h2>
-        </motion.div>
+        </div>
 
-        {/* Resource rows */}
-        <div className="space-y-16">
-          {resources.map((r, i) => {
-            const isEven = i % 2 === 1;
-            return (
-              <motion.div
-                key={r.num}
-                initial={{ opacity: 0, y: 28 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.55, delay: 0.05 }}
-                /* image is ~62%, text is ~38% */
-                className={`flex flex-col ${
-                  isEven ? "md:flex-row-reverse" : "md:flex-row"
-                } items-center gap-0`}
-              >
-                {/* ── IMAGE — takes 62% ── */}
-                <div className="w-full md:w-[62%] shrink-0">
-                  <Image
-                    src={previews[r.preview]}
-                    alt={r.tag}
-                    width={1000}
-                    height={600}
-                    className="w-full h-auto object-cover block"
-                  />
+        {/* Articles Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {articles.map((article) => (
+            <article
+              key={article.id}
+              className="bg-white rounded-3xl overflow-hidden border border-[#E5E7EB] hover:shadow-lg transition-shadow duration-300 group"
+            >
+              {/* Image */}
+              <div className="relative h-44 overflow-hidden">
+                <Image
+                  src={article.image}
+                  alt={article.title}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
+              </div>
+
+              {/* Content */}
+              <div className="p-5 md:p-6 space-y-3">
+                {/* Date */}
+                <div className="flex items-center gap-2 text-gray-400 text-xs">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{article.date}</span>
                 </div>
 
-                {/* ── TEXT — takes remaining 38%, padded inward ── */}
-                <div
-                  className={`w-full md:w-[38%] shrink-0 ${
-                    isEven
-                      ? "md:pr-12 lg:pr-20 py-8 md:py-0"
-                      : "md:pl-12 lg:pl-20 py-8 md:py-0"
-                  }`}
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-[12px] text-black font-medium">
-                      {r.num}
-                    </span>
-                    <div className="h-px w-8 bg-black" />
-                    <span className="text-[12px] text-black font-medium">
-                      {r.tag}
-                    </span>
-                  </div>
+                {/* Title */}
+                <h3 className="text-base md:text-lg font-semibold text-gray-900 leading-snug">
+                  {article.title}
+                </h3>
 
-                  <h3 className="font-['Instrument_Serif'] text-[24px] leading-snug text-gray-900 mb-4">
-                    {r.title}
-                  </h3>
+                {/* Excerpt */}
+                <p className="text-gray-500 text-sm leading-relaxed line-clamp-3">
+                  {article.excerpt}
+                </p>
 
-                  <p className="text-black text-[13px] leading-relaxed font-light mb-7">
-                    {r.desc}
-                  </p>
+                {/* Author */}
+                <p className="text-gray-400 text-xs">
+                  By <span className="text-gray-600">{article.author}</span>
+                </p>
 
-                  <button className="px-5 py-2.5 border border-[#E5E7EB] rounded-full text-sm font-medium text-gray-700 hover:border-[#1A56DB] hover:text-[#1A56DB] transition-colors duration-200">
-                    {r.cta} →
-                  </button>
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-blue-600 text-xs font-medium">
+                    {article.reads} Reads
+                  </span>
+                  <a
+                    href={`/articles/${article.id}`}
+                    className="flex items-center gap-1 text-gray-500 text-xs font-medium hover:text-blue-600 transition-colors duration-200 group/link"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>Read Article</span>
+                    <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all duration-200" />
+                  </a>
                 </div>
-              </motion.div>
-            );
-          })}
+              </div>
+            </article>
+          ))}
         </div>
       </div>
     </section>
