@@ -158,7 +158,7 @@ export default function Step2FirmInfo({ subStep, email, onNext }: Props) {
               </label>
               <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden focus-within:border-[#1A56DB] transition-colors">
                 <span className="px-3 py-2.5 text-[13px] text-gray-500 bg-gray-50 border-r border-gray-200 shrink-0">
-                  +234 ∨
+                  +234
                 </span>
                 <input
                   value={phone}

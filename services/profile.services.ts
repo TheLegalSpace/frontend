@@ -24,8 +24,8 @@ export type ProfileResponse = {
   email?: string;
   isAnonymous?: boolean;
   fullName?: string;
-  phone?:string
-  role?:string
+  phone?: string;
+  role?: string;
 };
 export interface Review {
   id: string;
@@ -38,6 +38,7 @@ export interface Review {
     id: string;
     fullName: string;
     avatarUrl: string | null;
+    isAnonymous: boolean;
     role: string;
   };
 }

@@ -2,11 +2,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { LoginPayload } from "@/services/auth.services";
 import { AuthError, useAuth } from "../context/AuthContext";
+import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
+import signupIllustration from "../../public/signup-illustration.png";
+import Navbar from "../Components/Navbar";
+import Footer from "../Components/Footer";
 
 declare const google: {
   accounts: {
@@ -30,7 +34,6 @@ declare const google: {
 
 export default function SignInClient() {
   const { login, loginWithGoogle } = useAuth();
-  // const router = useRouter();
   const searchParams = useSearchParams();
   const googleButtonRef = useRef<HTMLDivElement>(null);
 
@@ -50,8 +53,6 @@ export default function SignInClient() {
     try {
       const payload: LoginPayload = { authProvider: "email", email, password };
       await login(payload);
-      // const redirect = searchParams.get("redirect") ?? "/dashboard/feeds";
-      // router.push(redirect);
     } catch (err: unknown) {
       const authErr = err as AuthError;
       setError(authErr?.message ?? "Login failed. Please try again.");
@@ -80,7 +81,6 @@ export default function SignInClient() {
               `${payload.given_name ?? ""} ${payload.family_name ?? ""}`.trim();
             const avatarUrl = payload.picture ?? undefined;
             await loginWithGoogle(resp.credential, fullName, avatarUrl);
-            // router.push(searchParams.get("redirect") ?? "/dashboard/feeds");
           } catch (err: unknown) {
             const authErr = err as AuthError;
             setError(
@@ -115,177 +115,195 @@ export default function SignInClient() {
   const anyLoading = isLoading || googleLoading;
 
   return (
-    <div
-      className="min-h-screen w-full flex flex-col"
-      style={{
-        backgroundImage: "url('/signinbg.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundColor: "#000000cc",
-        backgroundBlendMode: "darken",
-      }}
-    >
-      {/* ✅ Top logo — matches Figma top-left */}
-      <div className="px-6 pt-5">
-        <div className="flex items-center gap-2">
-          <img src="/tls-logo-white.png" alt="TLS" className="h-9" />
-        </div>
-      </div>
+    <div className="min-h-screen w-full flex flex-col bg-white text-black">
+      <Navbar />
 
-      {/* ✅ Centered card */}
-      <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-[400px] bg-[#111111]/50 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-14">
-          {/* Title */}
-          <div className="text-center mb-6">
-            <h1 className="font-[Instrument_Serif] text-[28px] text-white font-normal mb-1.5">
-              TheLegalSpace
-            </h1>
-            <p className="text-[13px] text-white/50">
-              Your legal community is waiting.
-            </p>
-          </div>
-
-          {/* Callback error */}
-          {callbackError && (
-            <div className="mb-4 px-3 py-2.5 bg-red-500/20 border border-red-400/30 rounded-xl">
-              <p className="text-[12px] text-red-300">
-                {callbackError === "google_failed"
-                  ? "Google sign in failed. Please try again."
-                  : "Something went wrong. Please try again."}
-              </p>
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleEmailSubmit} className="flex flex-col gap-4">
-            {/* Email */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] text-white/60">Email Address</label>
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={anyLoading}
-                className="w-full px-4 py-3 bg-[#1a1a1a] border border-white/10 rounded-xl text-[13px] text-white placeholder:text-white/20 outline-none focus:border-white/30 disabled:opacity-50 transition-colors"
+      {/* Main content area — vertically centered */}
+      <main className="flex-1 w-full flex items-center pb-12">
+        <div className="w-full  mx-auto s">
+          <div className="grid grid-cols-1 lg:grid-cols-2  items-center">
+            {/* Illustration — desktop only */}
+            <div className="hidden lg:block">
+              <Image
+                src={signupIllustration}
+                alt="The Legal Space community illustration"
+                className="w-full h-auto object-cover"
+                priority
               />
             </div>
 
-            {/* Password */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] text-white/60">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+            {/* Sign-in content */}
+            <div className="w-full px-8 md:px-20 text-left">
+              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
+                Welcome Back
+              </h1>
+              <p className="text-base sm:text-lg text-gray-500 mb-8 leading-relaxed font-dmSans">
+                Sign in to access your profile, opportunities, research tools,
+                and everything The Legal Space has to offer.
+              </p>
+
+              {/* Callback error */}
+              {callbackError && (
+                <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-[13px] text-red-600 font-dmSans">
+                    {callbackError === "google_failed"
+                      ? "Google sign in failed. Please try again."
+                      : "Something went wrong. Please try again."}
+                  </p>
+                </div>
+              )}
+
+              {/* Email / password form */}
+              <form
+                onSubmit={handleEmailSubmit}
+                className="flex flex-col gap-4 font-dmSans"
+              >
+                {/* Email */}
+               <div className="flex flex-col gap-1.5">
+                  <label className="text-[13px] text-gray-600">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={anyLoading}
+                      className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
+                    />
+                  </div>
+                </div>
+ 
+                {/* Password */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[13px] text-gray-600">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={anyLoading}
+                      className="w-full pl-11 pr-11 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showPassword ? (
+                        <Eye className="w-4 h-4" />
+                      ) : (
+                        <EyeOff className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Error */}
+                {error && (
+                  <p className="text-[13px] text-red-600 -mt-1">{error}</p>
+                )}
+
+                {/* Forgot password */}
+                <div className="flex justify-end -mt-1">
+                  <Link
+                    href="/forgot-password"
+                    className="text-[13px] text-blue-600 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
                   disabled={anyLoading}
-                  className="w-full px-4 py-3 pr-11 bg-[#1a1a1a] border border-white/10 rounded-xl text-[13px] text-white placeholder:text-white/20 outline-none focus:border-white/30 disabled:opacity-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#1A56DB] px-4 py-3.5 text-[15px] font-medium text-white shadow-sm transition hover:bg-[#1648b8] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Signing in...
+                    </>
+                  ) : (
+                    "Login"
+                  )}
+                </button>
+              </form>
+
+              {/* OR divider */}
+              <div className="flex items-center gap-3 my-5">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-[12px] text-gray-400 font-dmSans">
+                  OR
+                </span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+
+              {/* Google button (hidden real button overlaid by custom one) */}
+              <div className="relative">
+                <div
+                  ref={googleButtonRef}
+                  className="absolute inset-0 opacity-0 z-10 w-full overflow-hidden"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                  disabled={anyLoading}
+                  className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed font-dmSans"
                 >
-                  {showPassword ? (
-                    <Eye className="w-4 h-4" />
+                  {googleLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <EyeOff className="w-4 h-4" />
+                    <GoogleIcon />
                   )}
+                  Continue with Google
                 </button>
               </div>
+
+              {/* Register link */}
+              <p className="mt-6 text-center text-sm text-gray-600 font-dmSans">
+                New to TheLegalSpace?{" "}
+                <Link
+                  href="/signup"
+                  className="font-semibold text-blue-600 hover:underline"
+                >
+                  Create a free account
+                </Link>
+              </p>
             </div>
-
-            {/* Error */}
-            {error && <p className="text-[12px] text-red-400 -mt-1">{error}</p>}
-
-            {/* Forgot password */}
-            <div className="flex justify-end -mt-1">
-              <Link
-                href="/forgot-password"
-                className="text-[13px] text-[#1A56DB] hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={anyLoading}
-              className="w-full py-3 bg-[#1A56DB] hover:bg-[#1648b8] text-white text-[14px] font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Signing in...
-                </>
-              ) : (
-                "Login"
-              )}
-            </button>
-          </form>
-
-          {/* OR divider */}
-          <div className="flex items-center gap-3 my-5">
-            <div className="ms-6 flex-1 h-px bg-white" />
-            <span className="text-[12px] text-white">OR</span>
-            <div className="flex-1 h-px bg-white me-6" />
           </div>
-
-          {/* ✅ Custom Google button matching Figma dark style */}
-          <div className="relative">
-            {/* Hidden Google button for functionality */}
-            <div
-              ref={googleButtonRef}
-              className="absolute inset-0 opacity-0 z-10 w-full overflow-hidden"
-            />
-            {/* Visible custom button */}
-            <button
-              type="button"
-              disabled={anyLoading}
-              className="w-full py-3 bg-[#1a1a1a] border border-white/10 hover:border-white/20 hover:bg-[#222] text-white text-[14px] font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-3"
-            >
-              {googleLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-              )}
-              Continue with Google
-            </button>
-          </div>
-
-          {/* Register link */}
-          <p className="text-center text-[13px] text-white/40 mt-5">
-            New to TheLegalSpace?{" "}
-            <Link
-              href="/signup"
-              className="text-[#1A56DB] hover:underline font-medium"
-            >
-              Create a free account
-            </Link>
-          </p>
         </div>
-      </div>
+      </main>
+
+      <Footer visible={false} />
     </div>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"
+      />
+      <path
+        fill="#34A853"
+        d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.34A9 9 0 0 0 9 18z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.94H.96a9 9 0 0 0 0 8.12l3.01-2.34z"
+      />
+      <path
+        fill="#EA4335"
+        d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.94l3.01 2.34C4.68 5.16 6.66 3.58 9 3.58z"
+      />
+    </svg>
   );
 }

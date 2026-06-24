@@ -54,6 +54,17 @@ export const useUpdateMe = () => {
   });
 };
 
+export const useUploadAvatar = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) =>
+      profileService.uploadAvatar(file).then((r) => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", "me"] }); // auto-refresh
+    },
+  });
+};
+
 export const useProfileReviews = (
   accountId: string,
   page = 1,

@@ -29,6 +29,7 @@ import {
   User,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import Image from "next/image";
 
 type UserRole = "USER" | "LAWYER" | "FIRM" | "ADMIN";
 
@@ -45,7 +46,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Requests", href: "/dashboard/requests", icon: Briefcase },
     {
       label: "TLS Services",
-      href: "/dashboard/TLS-Services",
+      href: "/dashboard/tls-services",
       icon: PackageSearch,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
@@ -57,20 +58,20 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Leads", href: "/dashboard/leads", icon: Users },
     { label: "Messages", href: "/dashboard/messages", icon: MessageCircle },
     { label: "Posts", href: "/dashboard/posts", icon: MonitorUp },
-    { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
+    { label: "Legal News", href: "/dashboard/Legal-News", icon: BookOpenText },
     {
       label: "TLS Research",
       href: "/dashboard/TLS-Research",
       icon: FolderSearch,
     },
-    {
-      label: "TLS Library",
-      href: "/dashboard/legal-library",
-      icon: BookText,
-    },
+    // {
+    //   label: "TLS Library",
+    //   href: "/dashboard/legal-library",
+    //   icon: BookText,
+    // },
     {
       label: "TLS Services",
-      href: "/dashboard/TLS-Services",
+      href: "/dashboard/tls-services",
       icon: PackageSearch,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
@@ -87,15 +88,15 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
       href: "/dashboard/TLS-Research",
       icon: FolderSearch,
     },
-    { label: "Legal News", href: "/dashboard/legal-news", icon: BookOpenText },
-    {
-      label: "Legal Library",
-      href: "/dashboard/legal-library",
-      icon: BookText,
-    },
+    { label: "Legal News", href: "/dashboard/Legal-News", icon: BookOpenText },
+    // {
+    //   label: "Legal Library",
+    //   href: "/dashboard/legal-library",
+    //   icon: BookText,
+    // },
     {
       label: "TLS Services",
-      href: "/dashboard/TLS-Services",
+      href: "/dashboard/tls-services",
       icon: PackageSearch,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
@@ -113,14 +114,14 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
       icon: FolderSearch,
     },
     { label: "Legal News", href: "/dashboard/Legal-News", icon: BookOpenText },
-    {
-      label: "Legal Library",
-      href: "/dashboard/legal-library",
-      icon: BookText,
-    },
+    // {
+    //   label: "Legal Library",
+    //   href: "/dashboard/legal-library",
+    //   icon: BookText,
+    // },
     {
       label: "TLS Services",
-      href: "/dashboard/TLS-Services",
+      href: "/dashboard/tls-services",
       icon: PackageSearch,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
@@ -149,13 +150,13 @@ function LogoutModal({
   isLoggingOut: boolean;
 }) {
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-1000000001 flex items-center justify-center px-4">
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm z-1000000000"
         onClick={!isLoggingOut ? onCancel : undefined}
       />
 
-      <div className="relative w-full max-w-xs bg-white rounded-2xl shadow-xl p-6 z-10">
+      <div className="relative w-full max-w-xs bg-white rounded-2xl shadow-xl p-6  z-1000000000">
         <div className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
           <AlertTriangle className="w-5 h-5 text-red-500" />
         </div>
@@ -198,9 +199,9 @@ function LogoutModal({
 function LogoutOverlay() {
   return (
     <div className="fixed inset-0 z-200 flex flex-col items-center justify-center bg-white">
-      <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white text-xl mb-6">
-        ⚖
-      </div>
+      {/* <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white text-xl mb-6"> */}
+      <Image src="/logo.png" width={130} height={130} alt="Logo" />
+      {/* </div> */}
       <Loader2 className="w-6 h-6 text-gray-400 animate-spin mb-3" />
       <p className="text-[14px] font-medium text-gray-700">
         Signing you out...
@@ -218,12 +219,11 @@ function SidebarSkeleton() {
   return (
     <aside className="w-55 h-screen fixed top-0 left-0 border-r border-[#E5E7EB] flex flex-col bg-white">
       <div className="px-5 py-5 border-b border-[#E5E7EB] flex items-center gap-2">
-        <div className="w-7 h-7 bg-black rounded-md flex items-center justify-center text-white text-xs">
-          ⚖
-        </div>
-        <span className="text-sm font-medium text-gray-900">
+        <Image src="/logo.png" width={130} height={130} alt="Logo" />
+
+        {/* <span className="text-sm font-medium text-gray-900">
           The Legal Space
-        </span>
+        </span> */}
       </div>
       <div className="px-5 py-4 border-b border-[#E5E7EB] animate-pulse">
         <div className="w-10 h-10 rounded-full bg-gray-100 mb-2.5" />
@@ -364,6 +364,9 @@ export default function Sidebar() {
           <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
             <p className="text-[11px] text-gray-400 truncate">{user?.email}</p>
           </div>
+          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border mb-2.5 bg-gray-50 text-gray-500 border-gray-200">
+            {role.charAt(0) + role.slice(1).toLowerCase()}
+          </span>
           <div className="flex flex-col gap-1 mb-3">
             <div className="flex justify-between text-xs">
               <span className="text-gray-500">Reviews</span>
@@ -431,21 +434,21 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="p-3 border-t border-[#E5E7EB] flex flex-col gap-2">
-      {footerCta && (
-        <Link
-          href={footerCta.href}
-          className="w-full py-2 rounded-2xl text-[13px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-          style={{
-            border: "2px solid transparent",
-            backgroundImage:
-              "linear-gradient(white, white), linear-gradient(90deg, #216399 0%, #FFE500 50%, #C34B00 100%)",
-            backgroundOrigin: "border-box",
-            backgroundClip: "padding-box, border-box",
-          }}
-        >
-          {footerCta.label}
-        </Link>
-      )}
+        {footerCta && (
+          <Link
+            href={footerCta.href}
+            className="w-full py-2 rounded-2xl text-[13px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            style={{
+              border: "2px solid transparent",
+              backgroundImage:
+                "linear-gradient(white, white), linear-gradient(90deg, #216399 0%, #FFE500 50%, #C34B00 100%)",
+              backgroundOrigin: "border-box",
+              backgroundClip: "padding-box, border-box",
+            }}
+          >
+            {footerCta.label}
+          </Link>
+        )}
         <button
           onClick={() => setShowLogoutModal(true)}
           className="w-full py-2 bg-red-50 border border-red-100 rounded-2xl text-[14px] font-medium text-red-500 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
