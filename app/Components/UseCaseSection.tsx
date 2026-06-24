@@ -56,10 +56,89 @@ export default function UseCaseSection() {
               <button className="px-5 py-2.5 rounded-lg border-2 border-blue-600 text-blue-700 text-sm font-semibold hover:bg-blue-600 hover:text-white transition-colors duration-200">
                 I&apos;m a Legal Professional
               </button>
-              <button className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors duration-200">
-                Get Legal Help
-              </button>
-            </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* SHOWCASE */}
+        <div className="relative">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tab}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3 }}
+            >
+              <TestimonialShowcase testimonials={testimonials} />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* REFLECTION */}
+          <div
+            className="
+              mt-10
+              pointer-events-none
+              opacity-40
+              overflow-hidden
+              mask-[linear-gradient(to_bottom,black,transparent)]
+              [-webkit-mask-image:linear-gradient(to_bottom,black,transparent)]
+            "
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`reflection-${tab}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="blur-[1.5px]"
+              >
+                <TestimonialShowcase testimonials={testimonials} mirrored />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* REFLECTION FADE */}
+          <div
+            className="
+              absolute
+              inset-x-0
+              bottom-0
+              h-[400px]
+              // bg-linear-to-b
+              // from-transparent
+              // via-white/10
+              // to-transparent
+              pointer-events-none
+            "
+          />
+
+          {/* CTA BUTTON */}
+          <div
+            className="
+              absolute
+              left-1/2
+              bottom-[90px]
+              -translate-x-1/2
+             "
+          >
+            <button
+              className="
+                bg-[#1A56DB]
+                text-white
+                px-8
+                py-4
+                rounded-full
+                text-sm
+                font-medium
+                shadow-xl z-50
+                hover:bg-[#184BC2]
+                transition-colors
+              "
+            >
+              Follow us on Social Media
+            </button>
           </div>
         </div>
       </div>

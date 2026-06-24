@@ -201,7 +201,7 @@ export default function PersonalInfoSection({
                 : "border-gray-200 bg-gray-50"
             }`}
           >
-            <span className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-gray-500 border-r border-gray-200 bg-gray-50 flex-shrink-0">
+            <span className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-gray-500 border-r border-gray-200 bg-gray-50 shrink-0">
               +234
             </span>
             <input
