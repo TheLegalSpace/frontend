@@ -51,7 +51,7 @@ export default function ResearchSidebar({
   }, [editingId]);
 
   const filtered = threads.filter((t) =>
-    t.title.toLowerCase().includes(search.toLowerCase())
+    t.title.toLowerCase().includes(search.toLowerCase()),
   );
   const pinned = filtered.filter((t) => t.pinned);
   const unpinned = filtered.filter((t) => !t.pinned);
@@ -72,12 +72,17 @@ export default function ResearchSidebar({
     const isActive = thread.id === activeId;
     const isEditing = editingId === thread.id;
     const isMenu = menuId === thread.id;
-  
+
     return (
       <div className="relative group">
         {/* Changed outer button → div with onClick */}
         <div
-          onClick={() => { if (!isEditing) { onSelect(thread.id); setMenuId(null); } }}
+          onClick={() => {
+            if (!isEditing) {
+              onSelect(thread.id);
+              setMenuId(null);
+            }
+          }}
           className={`w-full text-left px-4 py-2.5 text-[14px] flex items-center gap-2 transition-all b cursor-pointer ${
             isActive
               ? "border-l-blue-500 text-gray-900 font-medium bg-transparent"
@@ -87,7 +92,7 @@ export default function ResearchSidebar({
           {thread.pinned && (
             <Pin size={10} className="shrink-0 text-gray-400" />
           )}
-  
+
           {isEditing ? (
             <input
               ref={editRef}
@@ -104,31 +109,48 @@ export default function ResearchSidebar({
           ) : (
             <span className="flex-1 truncate">{thread.title}</span>
           )}
-  
+
           {isEditing ? (
-            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => commitEdit(thread.id)} className="text-green-600 hover:text-green-500">
+            <div
+              className="flex items-center gap-1 shrink-0"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => commitEdit(thread.id)}
+                className="text-green-600 hover:text-green-500"
+              >
                 <Check size={13} />
               </button>
-              <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => setEditingId(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
                 <X size={13} />
               </button>
             </div>
           ) : (
             <button
-              onClick={(e) => { e.stopPropagation(); setMenuId(isMenu ? null : thread.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuId(isMenu ? null : thread.id);
+              }}
               className="shrink-0 opacity-0 group-hover:opacity-100 p-0.5 rounded transition-opacity"
             >
-              <span className="text-gray-400 text-[16px] leading-none">···</span>
+              <span className="text-gray-400 text-[16px] leading-none">
+                ···
+              </span>
             </button>
           )}
         </div>
-  
+
         {/* Context menu */}
         {isMenu && !isEditing && (
           <div className="absolute right-2 top-9 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-40">
             <button
-              onClick={() => { onPin(thread.id, !thread.pinned); setMenuId(null); }}
+              onClick={() => {
+                onPin(thread.id, !thread.pinned);
+                setMenuId(null);
+              }}
               className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-gray-700 hover:bg-gray-50 transition"
             >
               <Pin size={12} />
@@ -142,7 +164,10 @@ export default function ResearchSidebar({
               Rename
             </button>
             <button
-              onClick={() => { onDelete(thread.id); setMenuId(null); }}
+              onClick={() => {
+                onDelete(thread.id);
+                setMenuId(null);
+              }}
               className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-red-500 hover:bg-red-50 transition"
             >
               <Trash2 size={12} />
@@ -162,7 +187,10 @@ export default function ResearchSidebar({
       {/* Header */}
       <div className="px-4 pt-5 pb-3 flex items-center gap-2">
         {onBack && (
-          <button onClick={onBack} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
+          <button
+            onClick={onBack}
+            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+          >
             <ArrowLeft size={15} className="text-gray-500" />
           </button>
         )}
@@ -174,7 +202,10 @@ export default function ResearchSidebar({
       {/* Search */}
       <div className="px-4 pb-3">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
           <input
             type="text"
             value={search}
@@ -202,14 +233,20 @@ export default function ResearchSidebar({
       {/* Thread list */}
       <div className="flex-1 overflow-y-auto pb-4">
         {loading ? (
-          <div className="text-[12px] text-gray-400 text-center py-6">Loading…</div>
+          <div className="text-[12px] text-gray-400 text-center py-6">
+            Loading…
+          </div>
         ) : (
           <>
             {pinned.length > 0 && (
               <div className="mb-2">
-                <p className="text-[11px] uppercase tracking-widest text-gray-400 px-4 mb-1">Pinned</p>
+                <p className="text-[11px] uppercase tracking-widest text-gray-400 px-4 mb-1">
+                  Pinned
+                </p>
                 <div className="flex flex-col">
-                  {pinned.map((t) => <ThreadItem key={t.id} thread={t} />)}
+                  {pinned.map((t) => (
+                    <ThreadItem key={t.id} thread={t} />
+                  ))}
                 </div>
               </div>
             )}
@@ -220,7 +257,9 @@ export default function ResearchSidebar({
                   onClick={() => setPastOpen((v) => !v)}
                   className="w-full flex items-center justify-between px-4 mb-1"
                 >
-                  <p className="text-[11px] uppercase tracking-widest text-gray-400">Past Research</p>
+                  <p className="text-[11px] uppercase tracking-widest text-gray-400">
+                    Past Research
+                  </p>
                   <ChevronDown
                     size={13}
                     className={`text-gray-400 transition-transform ${pastOpen ? "" : "-rotate-90"}`}
@@ -228,14 +267,18 @@ export default function ResearchSidebar({
                 </button>
                 {pastOpen && (
                   <div className="flex flex-col">
-                    {unpinned.map((t) => <ThreadItem key={t.id} thread={t} />)}
+                    {unpinned.map((t) => (
+                      <ThreadItem key={t.id} thread={t} />
+                    ))}
                   </div>
                 )}
               </div>
             )}
 
             {threads.length === 0 && !loading && (
-              <p className="text-[13px] text-gray-400 text-center py-6">No research yet</p>
+              <p className="text-[13px] text-gray-400 text-center py-6">
+                No research yet
+              </p>
             )}
           </>
         )}
