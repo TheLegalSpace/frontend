@@ -1,5 +1,6 @@
 // components/Hero.tsx
 import Image from "next/image";
+import { useEffect } from "react";
 
 export default function Hero() {
   return (
@@ -83,3 +84,5 @@ export default function Hero() {
     </section>
   );
 }
+
+
