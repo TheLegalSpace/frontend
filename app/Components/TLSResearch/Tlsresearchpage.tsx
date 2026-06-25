@@ -15,6 +15,10 @@ import ResearchLanding from "./Researchlanding";
 
 type ErrorState = { message: string; onRetry: () => void } | null;
 
+/** Sentinel id for a thread that exists only in the UI and has NOT been
+ *  registered on the backend yet. It becomes a real thread on first send. */
+const DRAFT_ID = "__draft__";
+
 /** Tell the dashboard Sidebar whether the research thread view is active */
 function signalResearchThread(active: boolean) {
   window.dispatchEvent(
@@ -90,25 +94,54 @@ export default function TLSResearchPage() {
     }
   }, []);
 
-  // ── New thread ────────────────────────────────────────────────────────────
-  async function handleNew(prefillText?: string, prefillPdf?: File) {
+  // ── New thread (DRAFT ONLY) ───────────────────────────────────────────────
+  // Creates the thread *visually* only. It is NOT registered on the backend
+  // until the first message is actually sent (see persistAndSend).
+  function startDraft() {
+    const now = new Date().toISOString();
+    const draft: ResearchThreadDetail = {
+      id: DRAFT_ID,
+      accountId: "",
+      title: "New research",
+      pinned: false,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+      messages: [],
+    };
+    setActiveId(DRAFT_ID);
+    activeIdRef.current = DRAFT_ID;
+    setActiveThread(draft);
+    setMessages([]);
+    setError(null);
+    setMobileView("chat");
+  }
+
+  // ── Persist the draft on the FIRST message, then send it ──────────────────
+  async function persistAndSend(text: string, pdf?: File) {
+    setError(null);
+    let thread: ResearchThread;
     try {
-      const thread = await researchService.createThread();
-      if (!isMountedRef.current) return;
-      setThreads((prev) => [thread, ...prev]);
-      setActiveId(thread.id);
-      activeIdRef.current = thread.id;
-      setActiveThread({ ...thread, messages: [] });
-      setMessages([]);
-      setError(null);
-      setMobileView("chat");
-      if (prefillText) {
-        // Auto-send the prefill after thread creation
-        await doSend(thread.id, prefillText, prefillPdf);
-      }
+      thread = await researchService.createThread();
     } catch (err) {
       console.error("Failed to create thread:", err);
+      if (isMountedRef.current) {
+        setError({
+          message: "Couldn't start a new research thread. Please try again.",
+          onRetry: () => persistAndSend(text, pdf),
+        });
+      }
+      return;
     }
+    if (!isMountedRef.current) return;
+    // Promote the visual draft into a real, registered thread.
+    setThreads((prev) => [thread, ...prev]);
+    setActiveId(thread.id);
+    activeIdRef.current = thread.id;
+    setActiveThread({ ...thread, messages: [] });
+    setMessages([]);
+    setMobileView("chat");
+    await doSend(thread.id, text, pdf);
   }
 
   // ── Core send ─────────────────────────────────────────────────────────────
@@ -134,7 +167,7 @@ export default function TLSResearchPage() {
 
     try {
       const assistant = await researchService.ask(threadId, text, pdf);
-      
+
       if (activeIdRef.current !== threadId) {
         // Active thread changed, do not leak this query response to the new thread's UI messages state.
         // But refresh sidebar if needed (e.g. name of new thread created)
@@ -191,8 +224,10 @@ export default function TLSResearchPage() {
   }
 
   function handleSend(text: string, pdf?: File) {
-    if (!activeId) {
-      handleNew(text, pdf);
+    // No active thread, or an unsaved draft → register on the backend now,
+    // as part of sending the first message.
+    if (!activeId || activeId === DRAFT_ID) {
+      persistAndSend(text, pdf);
       return;
     }
     doSend(activeId, text, pdf);
@@ -212,6 +247,17 @@ export default function TLSResearchPage() {
 
   // ── Sidebar actions ───────────────────────────────────────────────────────
   async function handleDelete(id: string) {
+    if (id === DRAFT_ID) {
+      // Draft was never registered — just discard it locally.
+      if (activeIdRef.current === DRAFT_ID) {
+        setActiveId(null);
+        activeIdRef.current = null;
+        setMessages([]);
+        setActiveThread(null);
+        setMobileView("sidebar");
+      }
+      return;
+    }
     await researchService.deleteThread(id);
     if (!isMountedRef.current) return;
     setThreads((prev) => prev.filter((t) => t.id !== id));
@@ -225,6 +271,7 @@ export default function TLSResearchPage() {
   }
 
   async function handleRename(id: string, title: string) {
+    if (id === DRAFT_ID) return; // not registered yet — nothing to rename
     const updated = await researchService.patchThread(id, { title });
     if (!isMountedRef.current) return;
     setThreads((prev) => prev.map((t) => (t.id === id ? updated : t)));
@@ -234,6 +281,7 @@ export default function TLSResearchPage() {
   }
 
   async function handlePin(id: string, pinned: boolean) {
+    if (id === DRAFT_ID) return; // not registered yet — nothing to pin
     const updated = await researchService.patchThread(id, { pinned });
     if (!isMountedRef.current) return;
     setThreads((prev) =>
@@ -247,9 +295,20 @@ export default function TLSResearchPage() {
     );
   }
 
+  // ── Back to the research landing (exit the current chat) ─────────────────
+  function handleBackToLanding() {
+    setActiveId(null);
+    activeIdRef.current = null;
+    setActiveThread(null);
+    setMessages([]);
+    setError(null);
+    setMobileView("sidebar");
+  }
+
   // ── Landing suggestion ────────────────────────────────────────────────────
   function handleSuggestion(text: string) {
-    handleNew(text);
+    // A suggestion IS the first message → register the thread as we send.
+    persistAndSend(text);
   }
 
   // ── Landing: always shown when no thread is active ───────────────────────
@@ -258,8 +317,8 @@ export default function TLSResearchPage() {
       <div className="flex h-screen bg-white overflow-hidden font-['Geist']">
         <ResearchLanding
           onSuggestion={handleSuggestion}
-          onNewThread={() => handleNew()}
-          onUploadAndNew={() => handleNew()}
+          onNewThread={startDraft}
+          onUploadAndNew={startDraft}
         />
       </div>
     );
@@ -272,18 +331,18 @@ export default function TLSResearchPage() {
       <div
         className={`${
           mobileView === "chat" ? "hidden" : "flex"
-        } md:flex flex-col w-full md:w-56 md:min-w-56 shrink-0 border-r border-gray-800`}
+        } md:flex flex-col w-full md:w-56 md:min-w-56 shrink-0 border-r border-[#E5E7EB]`}
       >
         <ResearchSidebar
           threads={threads}
           activeId={activeId}
           onSelect={openThread}
-          onNew={() => handleNew()}
+          onNew={startDraft}
           onDelete={handleDelete}
           onRename={handleRename}
           onPin={handlePin}
           loading={loadingThreads}
-          onBack={() => setMobileView("sidebar")}
+          onBack={handleBackToLanding}
         />
       </div>
 

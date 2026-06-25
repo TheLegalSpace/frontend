@@ -1,12 +1,6 @@
+import { ApiEnvelope, EventPromotionFormValues, EventPromotionResponseData, ServiceRequest, ServiceRequestListResponse, ServiceRequestPayload } from "@/app/types/services";
 import { api } from "./api";
-import type {
-  ApiEnvelope,
-  ServiceRequest,
-  ServiceRequestPayload,
-  EventPromotionFormValues,
-  EventPromotionResponseData,
-  ServiceRequestListResponse,
-} from "../app/types/services";
+
 
 export async function submitServiceRequest(
   body: ServiceRequestPayload
