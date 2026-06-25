@@ -46,7 +46,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Requests", href: "/dashboard/requests", icon: Briefcase },
     {
       label: "TLS Services",
-      href: "/dashboard/tls-services",
+      href: "/dashboard/TLS-Services",
       icon: PackageSearch,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
@@ -71,7 +71,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     // },
     {
       label: "TLS Services",
-      href: "/dashboard/tls-services",
+      href: "/dashboard/TLS-Services",
       icon: PackageSearch,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
@@ -96,7 +96,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     // },
     {
       label: "TLS Services",
-      href: "/dashboard/tls-services",
+      href: "/dashboard/TLS-Services",
       icon: PackageSearch,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
@@ -121,7 +121,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     // },
     {
       label: "TLS Services",
-      href: "/dashboard/tls-services",
+      href: "/dashboard/TLS-Services",
       icon: PackageSearch,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },

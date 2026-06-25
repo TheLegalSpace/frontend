@@ -167,7 +167,7 @@ export default function TLSResearchPage() {
 
     try {
       const assistant = await researchService.ask(threadId, text, pdf);
-      
+
       if (activeIdRef.current !== threadId) {
         // Active thread changed, do not leak this query response to the new thread's UI messages state.
         // But refresh sidebar if needed (e.g. name of new thread created)
