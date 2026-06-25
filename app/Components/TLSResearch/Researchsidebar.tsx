@@ -78,7 +78,7 @@ export default function ResearchSidebar({
         {/* Changed outer button → div with onClick */}
         <div
           onClick={() => { if (!isEditing) { onSelect(thread.id); setMenuId(null); } }}
-          className={`w-full text-left px-4 py-2.5 text-[14px] flex items-center gap-2 transition-all border-l-2 cursor-pointer ${
+          className={`w-full text-left px-4 py-2.5 text-[14px] flex items-center gap-2 transition-all b cursor-pointer ${
             isActive
               ? "border-l-blue-500 text-gray-900 font-medium bg-transparent"
               : "border-l-transparent text-gray-700 hover:bg-gray-50"
@@ -242,12 +242,12 @@ export default function ResearchSidebar({
       </div>
 
       {/* Logout */}
-      <div className="px-4 pb-5 pt-3">
+      {/* <div className="px-4 pb-5 pt-3">
         <button className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-full border border-gray-200 text-[13px] text-red-400 hover:bg-red-50 transition">
           <LogOut size={14} />
           Logout
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -295,6 +295,16 @@ export default function TLSResearchPage() {
     );
   }
 
+  // ── Back to the research landing (exit the current chat) ─────────────────
+  function handleBackToLanding() {
+    setActiveId(null);
+    activeIdRef.current = null;
+    setActiveThread(null);
+    setMessages([]);
+    setError(null);
+    setMobileView("sidebar");
+  }
+
   // ── Landing suggestion ────────────────────────────────────────────────────
   function handleSuggestion(text: string) {
     // A suggestion IS the first message → register the thread as we send.
@@ -321,7 +331,7 @@ export default function TLSResearchPage() {
       <div
         className={`${
           mobileView === "chat" ? "hidden" : "flex"
-        } md:flex flex-col w-full md:w-56 md:min-w-56 shrink-0 border-r border-gray-800`}
+        } md:flex flex-col w-full md:w-56 md:min-w-56 shrink-0 border-r border-[#E5E7EB]`}
       >
         <ResearchSidebar
           threads={threads}
@@ -332,7 +342,7 @@ export default function TLSResearchPage() {
           onRename={handleRename}
           onPin={handlePin}
           loading={loadingThreads}
-          onBack={() => setMobileView("sidebar")}
+          onBack={handleBackToLanding}
         />
       </div>
 
