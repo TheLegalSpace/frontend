@@ -6,10 +6,11 @@ export const postsService = {
     return data;
   },
 
-  async createArticlePost(body: string, pdf: File) {
+  async createArticlePost(body: string, pdf: File, title: string) {
     const form = new FormData();
     form.append("body", body);
     form.append("pdf", pdf);
+    form.append("pdfName", title);
     const { data } = await api.post("/posts/article", form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
