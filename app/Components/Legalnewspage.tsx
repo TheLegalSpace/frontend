@@ -65,14 +65,21 @@ export default function LegalNewsPage() {
         </div>
         <div className="w-full h-px bg-amber-100 mb-5" />
 
-        {/* Card with fixed height */}
-        <div className="relative rounded-xl border border-gray-200 overflow-hidden mb-6" style={{ maxHeight: "420px" }}>
+        {/* Intro copy */}
+        <p className="text-[14px] text-gray-600 leading-relaxed mb-1">
+          We're building a smarter legal news experience tailored for lawyers and legal professionals.
+        </p>
+        <p className="text-[14px] text-gray-600 leading-relaxed mb-6">
+          <span className="font-semibold text-gray-900">Before</span> we launch publicly, we want to
+          understand whether legal professionals would actively use a legal news experience inside The Legal Space.
+        </p>
 
-          {/* Blur overlay — covers full card height, hidden when previewing */}
+        {/* Card — fixed height viewport */}
+        <div className="relative rounded-xl border border-gray-200 mb-6" style={{ height: "420px" }}>
+
+          {/* Absolute blur overlay */}
           {!showPreview && (
-            <div
-              className="absolute inset-0 z-10 flex flex-col items-center justify-center backdrop-blur-xl bg-white/40"
-            >
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center backdrop-blur-xl bg-white/40 rounded-xl">
               <div className="flex flex-col items-center">
                 <button
                   onClick={() => setShowPreview(true)}
@@ -91,8 +98,10 @@ export default function LegalNewsPage() {
           )}
 
           {/* Scrollable article area */}
-          <div className="overflow-y-auto" style={{ maxHeight: "420px" }}>
-            {/* Re-blur button */}
+          <div
+            className="h-full"
+            style={{ overflowY: showPreview ? "auto" : "hidden" }}
+          >
             {showPreview && (
               <div className="flex justify-end px-5 pt-4 pb-0">
                 <button
@@ -107,19 +116,12 @@ export default function LegalNewsPage() {
 
             <div className={`p-5 space-y-5 ${!showPreview ? "select-none pointer-events-none" : ""}`}>
               {PREVIEW_ARTICLES.map((article, i) => (
-                <div
-                  key={i}
-                  className={i > 0 ? "border-t border-[#E5E7EB] pt-5" : ""}
-                >
+                <div key={i} className={i > 0 ? "border-t border-[#E5E7EB] pt-5" : ""}>
                   <div className="flex items-center justify-between mb-2">
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${article.tagColor}`}
-                    >
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${article.tagColor}`}>
                       {article.tag}
                     </span>
-                    <span className="text-[11px] text-gray-400">
-                      {article.date}
-                    </span>
+                    <span className="text-[11px] text-gray-400">{article.date}</span>
                   </div>
                   <h3 className="text-[14px] font-semibold text-gray-900 leading-snug mb-2">
                     {article.title}
@@ -137,35 +139,18 @@ export default function LegalNewsPage() {
                   </div>
                   <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center gap-2">
-                      <div
-                        className={`w-6 h-6 rounded-full ${article.avatarColor} flex items-center justify-center text-white text-[11px] font-semibold`}
-                      >
+                      <div className={`w-6 h-6 rounded-full ${article.avatarColor} flex items-center justify-center text-white text-[11px] font-semibold`}>
                         {article.avatar}
                       </div>
-                      <span className="text-[11px] text-gray-400">
-                        TLS Editorial
-                      </span>
+                      <span className="text-[11px] text-gray-400">TLS Editorial</span>
                     </div>
-                    <span className="text-[11px] text-gray-400">
-                      {article.readTime}
-                    </span>
+                    <span className="text-[11px] text-gray-400">{article.readTime}</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
-
-        {/* Intro copy */}
-        <p className="text-[14px] text-gray-600 leading-relaxed mb-1">
-          We're building a smarter legal news experience tailored for lawyers
-          and legal professionals.
-        </p>
-        <p className="text-[14px] text-gray-600 leading-relaxed mb-6">
-          <span className="font-semibold text-gray-900">Before</span> we launch
-          publicly, we want to understand whether legal professionals would
-          actively use a legal news experience inside The Legal Space.
-        </p>
 
         {submitted ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -187,9 +172,8 @@ export default function LegalNewsPage() {
                 Would you actively use legal news inside The Legal Space?
               </h2>
               <p className="text-[12px] text-gray-400 mb-4">
-                Please choose all options that are relevant to you. This
-                information will assist us in determining which coverage areas
-                to prioritise.
+                Please choose all options that are relevant to you. This information will assist us
+                in determining which coverage areas to prioritise.
               </p>
               <div className="flex flex-wrap gap-2">
                 {USE_OPTIONS.map((opt) => (
@@ -214,9 +198,8 @@ export default function LegalNewsPage() {
                 What type of legal news would matter most to you?
               </h2>
               <p className="text-[12px] text-gray-400 mb-4">
-                Please choose all options that are relevant to you. This
-                information will assist us in determining which coverage areas
-                to prioritise.
+                Please choose all options that are relevant to you. This information will assist us
+                in determining which coverage areas to prioritise.
               </p>
               <div className="flex flex-wrap gap-2">
                 {NEWS_TYPES.map((item) => (
