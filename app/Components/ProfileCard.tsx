@@ -372,7 +372,7 @@ export default function ProfileCard({
     <div className="w-full">
       <div className="overflow-hidden rounded-2xl  bg-white">
         {/* Cover */}
-        <div className="relative h-44 w-full overflow-hidden bg-[#E5E7EB]">
+        {/* <div className="relative h-44 w-full overflow-hidden bg-[#E5E7EB]">
           {profile.coverUrl ? (
             <img
               src={profile.coverUrl}
@@ -384,7 +384,7 @@ export default function ProfileCard({
               <span>No Cover Photo</span>
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Profile header */}
         <div className="px- pt-4 pb-5 border-b border-[#E5E7EB]">
