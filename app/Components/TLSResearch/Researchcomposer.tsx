@@ -81,12 +81,12 @@ export default function ResearchComposer({
       )}
 
       {/* Input row */}
-      <div className="flex items-end gap-2">
+      <div className="flex items-center gap-2">
         {/* PDF upload button */}
         <button
           onClick={() => fileRef.current?.click()}
           disabled={disabled || !!pdf}
-          className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition disabled:opacity-40 shrink-0 mb-0.5"
+          className="w-16 h-12 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition disabled:opacity-40 shrink-0 mb-0.5"
           title="Attach PDF"
         >
           <Paperclip size={15} />
@@ -131,7 +131,7 @@ export default function ResearchComposer({
         <button
           onClick={handleSend}
           disabled={!text.trim() || disabled || overLimit}
-          className="w-9 h-9 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition disabled:opacity-40 shrink-0 mb-0.5"
+          className="w-16 h-12 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition disabled:opacity-40 shrink-0 mb-0.5"
           aria-label="Send"
         >
           {disabled ? (
