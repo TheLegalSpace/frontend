@@ -42,6 +42,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
 
   const [tab, setTab] = useState<Tab>("caption");
   const [body, setBody] = useState("");
+  const [title, setTitle] = useState("");
   const [audience, setAudience] = useState<Audience>("everyone");
   const [audienceOpen, setAudienceOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -83,6 +84,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
 
   function resetCompose() {
     setBody("");
+    setTitle("");
     clearPdf();
     setError("");
   }
@@ -115,6 +117,10 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
       setError("Add a caption for your article.");
       return;
     }
+    if (!title.trim()) {
+      setError("Please add an article name.");
+      return;
+    }
     if (!pdfFile) {
       setError("Please attach a PDF.");
       return;
@@ -122,7 +128,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
 
     setSubmitting(true);
     try {
-      await postsService.createArticlePost(body.trim(), pdfFile);
+      await postsService.createArticlePost(body.trim(), pdfFile, title.trim());
       onCreated();
       setModalState("success");
     } catch (err: unknown) {
@@ -218,7 +224,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
   const canSubmit =
     tab === "caption"
       ? body.trim().length > 0
-      : body.trim().length > 0 && pdfFile !== null;
+      : body.trim().length > 0 && title.trim().length > 0 && pdfFile !== null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -331,9 +337,18 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
             className="w-full resize-none outline-none text-[13px] text-gray-800 leading-relaxed placeholder:text-gray-400 mb-3"
           />
 
-          {/* Article tab — PDF only */}
+          {/* Article tab */}
           {tab === "article" && (
             <>
+              {/* Article name field */}
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Article name"
+                className="w-full px-0 py-1.5 outline-none text-[13px] text-gray-800 placeholder:text-gray-400 border-b border-gray-200 focus:border-gray-400 transition bg-transparent mb-3"
+              />
+
               <div className="border-t border-[#E5E7EB] pt-3 mb-3" />
 
               {!pdfFile ? (
