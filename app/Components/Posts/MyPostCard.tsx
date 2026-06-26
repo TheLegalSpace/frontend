@@ -9,6 +9,7 @@ import {
   Loader2,
   FileText,
   X,
+  BookOpen
 } from "lucide-react";
 import { MyPost } from "@/app/types/posts";
 import { postsService } from "@/services/posts.services";
@@ -173,18 +174,32 @@ export default function MyPostCard({
         {post.pdfUrl && (
           <button
             onClick={() => setViewingPdf(true)}
-            className="w-full flex items-center gap-2.5 mt-2 mb-3 p-3 rounded-xl border border-[#E5E7EB] hover:bg-gray-50 transition group text-left"
+            className="w-full flex items-center gap-3 mt-2 mb-3 p-3 rounded-xl border border-[#E5E7EB] hover:bg-gray-50 transition group text-left"
           >
-            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
-              <FileText size={15} className="text-red-500" />
+            {/* Dark "ARTICLE" thumbnail */}
+            <div className="w-12 h-12 rounded-lg bg-gray-900 flex flex-col items-center justify-center shrink-0">
+              <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400">
+                Article
+              </span>
             </div>
-            <div className="min-w-0">
-              <p className="text-[12px] font-semibold text-gray-800 truncate group-hover:text-blue-600 transition">
-                {post.pdfName ?? "Attached PDF Article"}
+
+            {/* Title + meta */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold text-gray-900 leading-snug truncate group-hover:text-blue-600 transition">
+                {post.pdfName ?? "Attached Article"}
               </p>
-              <p className="text-[11px] text-gray-400">
-                PDF Article · tap to read
-              </p>
+              <div className="flex items-center gap-3 mt-1.5 text-[11px] text-gray-400 flex-wrap">
+                {post.pdfSizeBytes && (
+                  <span className="flex items-center gap-1">
+                    <BookOpen size={10} />
+                    {(post.pdfSizeBytes / (1024 * 1024)).toFixed(1)} MB
+                  </span>
+                )}
+                <span className="ml-auto text-blue-600 font-medium flex items-center gap-1">
+                  <FileText size={10} />
+                  Read Article
+                </span>
+              </div>
             </div>
           </button>
         )}
