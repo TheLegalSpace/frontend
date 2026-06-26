@@ -1,3 +1,4 @@
+"use client";
 import FindALawyer from "@/app/Components/FindALawyer";
 import { useAuth } from "@/app/context/AuthContext";
 import { UserRole } from "@/app/types/types";
@@ -9,7 +10,7 @@ const page = () => {
   const { user } = useAuth();
   const role: UserRole = (user?.role as UserRole) ?? "USER";
 
-  return role === "LAWYER" ? (
+  return role === "USER" ? (
     <FindALawyer />
   ) : (
     <div className="flex-1 flex items-center justify-center px-4">
