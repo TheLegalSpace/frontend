@@ -27,6 +27,7 @@ import {
   Loader2,
   AlertTriangle,
   User,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Image from "next/image";
@@ -74,6 +75,11 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
       href: "/dashboard/TLS-Services",
       icon: PackageSearch,
     },
+    {
+      label: "Membership",
+      href: "/dashboard/membership",
+      icon: ShieldCheck,
+    },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { label: "Settings", href: "/dashboard/settings", icon: Settings },
   ],
@@ -98,6 +104,11 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
       label: "TLS Services",
       href: "/dashboard/TLS-Services",
       icon: PackageSearch,
+    },
+    {
+      label: "Membership",
+      href: "/dashboard/membership",
+      icon: ShieldCheck,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { label: "Settings", href: "/dashboard/settings", icon: Settings },
