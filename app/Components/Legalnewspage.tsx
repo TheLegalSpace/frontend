@@ -20,22 +20,6 @@ const PREVIEW_ARTICLES = [
     avatarColor: "bg-pink-500",
     readTime: "3 min read",
   },
-  {
-    tag: "Employment",
-    tagColor: "text-emerald-600 bg-emerald-50",
-    date: "Yesterday",
-    title:
-      "Supreme Court Rules on Constructive Dismissal: What Employers Must Know",
-    excerpt:
-      "In a landmark judgment, the Supreme Court expanded the definition of constructive dismissal to include sustained managerial misconduct, opening new grounds for employees to seek redress without formal termination notices.",
-    highlight: {
-      label: "WHAT THIS MEANS FOR YOU",
-      text: "HR policies and employment contracts should be reviewed immediately. Employers face heightened liability if internal grievance procedures are not properly documented and followed.",
-    },
-    avatar: "A",
-    avatarColor: "bg-violet-500",
-    readTime: "5 min read",
-  },
 ];
 
 const USE_OPTIONS = ["Not really", "Yes, I would use it"];
@@ -71,10 +55,6 @@ export default function LegalNewsPage() {
   return (
     <div className="min-h-screen bg-white font-['Geist']">
       <div className="max-w-3xl mx-auto px-6 py-8">
-        {/* Page title */}
-        <h1 className="text-[22px] font-medium text-gray-900 font-['Instrument_Serif'] mb-6 border-b border-[#E5E7EB] pb-4">
-          Legal News
-        </h1>
 
         {/* Coming soon banner */}
         <div className="flex items-center gap-2 mb-4">
@@ -85,13 +65,14 @@ export default function LegalNewsPage() {
         </div>
         <div className="w-full h-px bg-amber-100 mb-5" />
 
-        {/* Blurred preview card */}
-        <div className="relative rounded-xl border border-gray-200 overflow-hidden mb-6">
-          {/* Blur overlay */}
-          <div
-            className={`absolute inset-0 z-10 flex flex-col items-center justify-center transition-all duration-300 ${showPreview ? "backdrop-blur-none bg-transparent pointer-events-none" : "backdrop-blur-xl bg-white/40"}`}
-          >
-            {!showPreview && (
+        {/* Card with fixed height */}
+        <div className="relative rounded-xl border border-gray-200 overflow-hidden mb-6" style={{ maxHeight: "420px" }}>
+
+          {/* Blur overlay — covers full card height, hidden when previewing */}
+          {!showPreview && (
+            <div
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center backdrop-blur-xl bg-white/40"
+            >
               <div className="flex flex-col items-center">
                 <button
                   onClick={() => setShowPreview(true)}
@@ -106,72 +87,72 @@ export default function LegalNewsPage() {
                   Help shape what TLS News becomes…
                 </p>
               </div>
-            )}
-          </div>
-
-          {/* Re-blur button shown inside card when unblurred */}
-          {showPreview && (
-            <div className="flex justify-end px-5 pt-4 pb-0">
-              <button
-                onClick={() => setShowPreview(false)}
-                className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-gray-600 transition"
-              >
-                <BookOpen size={12} />
-                Hide preview
-              </button>
             </div>
           )}
 
-          {/* Article previews (blurred underneath) */}
-          <div
-            className={`p-5 space-y-5 ${!showPreview ? "select-none pointer-events-none" : ""}`}
-          >
-            {PREVIEW_ARTICLES.map((article, i) => (
-              <div
-                key={i}
-                className={i > 0 ? "border-t border-[#E5E7EB] pt-5" : ""}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span
-                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${article.tagColor}`}
-                  >
-                    {article.tag}
-                  </span>
-                  <span className="text-[11px] text-gray-400">
-                    {article.date}
-                  </span>
-                </div>
-                <h3 className="text-[14px] font-semibold text-gray-900 leading-snug mb-2">
-                  {article.title}
-                </h3>
-                <p className="text-[12px] text-gray-500 leading-relaxed mb-3">
-                  {article.excerpt}
-                </p>
-                <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
-                  <p className="text-[10px] font-bold text-amber-700 tracking-widest mb-1">
-                    {article.highlight.label}
-                  </p>
-                  <p className="text-[12px] text-amber-900 leading-relaxed">
-                    {article.highlight.text}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-6 h-6 rounded-full ${article.avatarColor} flex items-center justify-center text-white text-[11px] font-semibold`}
+          {/* Scrollable article area */}
+          <div className="overflow-y-auto" style={{ maxHeight: "420px" }}>
+            {/* Re-blur button */}
+            {showPreview && (
+              <div className="flex justify-end px-5 pt-4 pb-0">
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-gray-600 transition"
+                >
+                  <BookOpen size={12} />
+                  Hide preview
+                </button>
+              </div>
+            )}
+
+            <div className={`p-5 space-y-5 ${!showPreview ? "select-none pointer-events-none" : ""}`}>
+              {PREVIEW_ARTICLES.map((article, i) => (
+                <div
+                  key={i}
+                  className={i > 0 ? "border-t border-[#E5E7EB] pt-5" : ""}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${article.tagColor}`}
                     >
-                      {article.avatar}
-                    </div>
+                      {article.tag}
+                    </span>
                     <span className="text-[11px] text-gray-400">
-                      TLS Editorial
+                      {article.date}
                     </span>
                   </div>
-                  <span className="text-[11px] text-gray-400">
-                    {article.readTime}
-                  </span>
+                  <h3 className="text-[14px] font-semibold text-gray-900 leading-snug mb-2">
+                    {article.title}
+                  </h3>
+                  <p className="text-[12px] text-gray-500 leading-relaxed mb-3">
+                    {article.excerpt}
+                  </p>
+                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
+                    <p className="text-[10px] font-bold text-amber-700 tracking-widest mb-1">
+                      {article.highlight.label}
+                    </p>
+                    <p className="text-[12px] text-amber-900 leading-relaxed">
+                      {article.highlight.text}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between mt-3">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-6 h-6 rounded-full ${article.avatarColor} flex items-center justify-center text-white text-[11px] font-semibold`}
+                      >
+                        {article.avatar}
+                      </div>
+                      <span className="text-[11px] text-gray-400">
+                        TLS Editorial
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-gray-400">
+                      {article.readTime}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
