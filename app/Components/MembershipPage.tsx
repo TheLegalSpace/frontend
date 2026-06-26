@@ -8,7 +8,6 @@ import type {
   MembershipView,
   Invoice,
   BillingRole,
-  PlanView,
 } from "../types/membership";
 
 import { membershipService, formatNaira } from "@/services/membership.services";
@@ -421,7 +420,6 @@ function CommunityView({
     (p) => p.tier === "professional" && p.forRole === billingRole
   );
 
-  // The API has a 6-month plan; annual price is derived (×2) client-side.
   const basePriceKobo    = proPlan?.priceKobo ?? 0;
   const displayPriceKobo = isAnnual ? basePriceKobo * 2 : basePriceKobo;
   const proCycle         = isAnnual ? "Annually" : `Every ${proPlan?.intervalMonths ?? 6} Months`;
@@ -457,6 +455,7 @@ function CommunityView({
     <>
       {error && <ErrorBanner message={error} />}
 
+      {/* Current subscription summary */}
       <Section>
         <div className="flex gap-6">
           <div className="flex-1 min-w-0">
@@ -491,72 +490,77 @@ function CommunityView({
         </div>
       </Section>
 
+      {/* Plan comparison */}
       <div className="mb-5">
         <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-widest mb-1">Plans</p>
         <h3 className="text-[20px] font-semibold text-gray-900 mb-4">Change plan</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
           {/* Community card */}
-          <div className="border-2 border-blue-100 bg-blue-50/30 rounded-xl p-5">
-            <div className="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-[12px] font-medium mb-4">
-              Forever
+          <div className="border border-gray-200 rounded-xl overflow-hidden bg-white p-5">
+            <div className="rounded-xl border-blue-100 px-5 py-3"  style={{ background: "#E7F0FF", border: "1px solid #1A56DB33" }}>
+              <span className="text-[13px] font-medium text-blue-700">Forever</span>
             </div>
-            <div className="mb-1">
-              <span className="text-[32px] font-bold text-gray-900">₦Free</span>
-            </div>
-            <p className="text-[13px] text-gray-500 mb-5">
-              Establish your presence on The Legal Space.
-            </p>
-            <ul className="space-y-2.5 mb-6">
-              {communityFeatures.map((f) => (
-                <li key={f} className="flex items-center gap-2.5 text-[13px] text-gray-700">
-                  <Check size={15} className="text-green-500 shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <div className="border border-gray-200 rounded-lg py-2.5 text-center text-[13px] font-medium text-gray-500 bg-white">
-              Current Plan
+            <div className="">
+              <div className="mb-1">
+                <span className="text-[32px] font-bold text-gray-900">₦Free</span>
+              </div>
+              <p className="text-[13px] text-gray-500 mb-5">
+                Establish your presence on The Legal Space.
+              </p>
+              <ul className="space-y-3 mb-6">
+                {communityFeatures.map((f) => (
+                  <li key={f} className="flex items-center gap-2.5 text-[13px] text-gray-700">
+                    <Check size={15} className="text-green-500 shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <div className="border border-gray-200 rounded-lg py-2.5 text-center text-[13px] font-semibold text-gray-600 bg-white">
+                Current Plan
+              </div>
             </div>
           </div>
 
           {/* Professional card */}
-          <div className="border border-gray-200 rounded-xl p-5 bg-white">
-            <div className="flex items-center justify-between mb-4">
-              <div className="inline-block px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-[12px] font-medium">
-                {proCycle}
-              </div>
+          <div className="border border-gray-200 rounded-xl overflow-hidden bg-white p-5">
+            <div className="rounded-xl bg-blue-50 px-5 py-3 flex items-center justify-between" style={{ background: "#E7F0FF", border: "1px solid #1A56DB33" }}>
+              <span className="text-[13px] font-medium text-blue-600">{proCycle}</span>
               <div className="flex items-center gap-2 text-[12px] text-gray-500">
                 Annually
                 <Toggle checked={isAnnual} onChange={setIsAnnual} />
               </div>
             </div>
-            <div className="mb-1">
-              <span className="text-[32px] font-bold text-gray-900">
-                {formatNaira(displayPriceKobo)}
-              </span>
+            <div className="">
+              <div className="mb-1">
+                <span className="text-[32px] font-bold text-gray-900">
+                  {formatNaira(displayPriceKobo)}
+                </span>
+              </div>
+              <p className="text-[13px] text-gray-500 mb-5">
+                {isFirm
+                  ? "Designed for law firms looking to grow their visibility, manage their team, and access premium tools."
+                  : "Access the full experience designed for modern legal professionals."}
+              </p>
+              <ul className="space-y-3 mb-6">
+                {(proPlan?.features ?? []).map((f, i) => (
+                  <li key={i} className="flex items-center gap-2.5 text-[13px] text-gray-700">
+                    <Check size={15} className="text-green-500 shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={handleSubscribe}
+                disabled={loading}
+                className="block w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-medium rounded-lg text-center transition disabled:opacity-60"
+              >
+                {loading ? "Redirecting…" : `Choose ${isFirm ? "Firm" : "Professional"}`}
+              </button>
             </div>
-            <p className="text-[13px] text-gray-500 mb-5">
-              {isFirm
-                ? "Designed for law firms looking to grow their visibility, manage their team, and access premium tools."
-                : "Access the full experience designed for modern legal professionals."}
-            </p>
-            <ul className="space-y-2.5 mb-6">
-              {(proPlan?.features ?? []).map((f, i) => (
-                <li key={i} className="flex items-center gap-2.5 text-[13px] text-gray-700">
-                  <Check size={15} className="text-green-500 shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <button
-              onClick={handleSubscribe}
-              disabled={loading}
-              className="block w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-[14px] font-medium rounded-lg text-center transition disabled:opacity-60"
-            >
-              {loading ? "Redirecting…" : `Choose ${isFirm ? "Firm" : "Professional"}`}
-            </button>
           </div>
+
         </div>
       </div>
     </>
@@ -597,7 +601,6 @@ export default function MembershipPage() {
   }, []);
 
   useEffect(() => {
-    // Handle Paystack redirect back: verify payment then clean up the URL
     const params    = new URLSearchParams(window.location.search);
     const reference = params.get("reference");
     if (reference) {
@@ -606,13 +609,12 @@ export default function MembershipPage() {
         window.history.replaceState({}, "", window.location.pathname);
       });
     }
-
     loadData();
   }, [loadData]);
 
   if (!billingRole) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-24">
         <p className="text-[14px] text-gray-400">
           Membership is not available for your account type.
         </p>
@@ -621,32 +623,29 @@ export default function MembershipPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="px-6 py-8">
+      {loading && (
+        <div className="flex items-center justify-center py-24 text-[13px] text-gray-400">
+          Loading…
+        </div>
+      )}
 
-        {loading && (
-          <div className="flex items-center justify-center py-24 text-[13px] text-gray-400">
-            Loading…
-          </div>
-        )}
+      {!loading && pageError && <ErrorBanner message={pageError} />}
 
-        {!loading && pageError && <ErrorBanner message={pageError} />}
-
-        {!loading && membership && (
-          membership.tier === "professional" ? (
-            <ProView
-              membership={membership}
-              invoices={invoices}
-              onMembershipUpdate={setMembership}
-            />
-          ) : (
-            <CommunityView
-              membership={membership}
-              billingRole={billingRole}
-            />
-          )
-        )}
-      </div>
+      {!loading && membership && (
+        membership.tier === "professional" ? (
+          <ProView
+            membership={membership}
+            invoices={invoices}
+            onMembershipUpdate={setMembership}
+          />
+        ) : (
+          <CommunityView
+            membership={membership}
+            billingRole={billingRole}
+          />
+        )
+      )}
     </div>
   );
 }
