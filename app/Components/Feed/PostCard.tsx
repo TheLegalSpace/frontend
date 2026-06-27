@@ -13,6 +13,7 @@ export interface Post {
   timeAgo: string;
   body: string;
   pdfUrl?: string | null;
+  title?: string | null;
   pdfName?: string | null;
   pdfSizeBytes?: number | null;
   likes: number;
@@ -71,7 +72,7 @@ export default function PostCard({ post, onReact }: Props) {
           {/* Title + meta */}
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold text-gray-900 leading-snug truncate group-hover:text-blue-600 transition">
-              {post.pdfName ?? "Attached Article"}
+              {post.title ?? post.pdfName ?? "Attached Article"}
             </p>
             <div className="flex items-center gap-3 mt-1.5 text-[11px] text-gray-400 flex-wrap">
               {post.pdfSizeBytes && (

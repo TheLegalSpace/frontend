@@ -23,6 +23,7 @@ interface RawPost {
   };
   pdfUrl?: string | null;
   pdfName?: string | null;
+  title?: string | null;
   pdfSizeBytes?: number | null;
 }
 
@@ -89,6 +90,7 @@ function normalizePost(
     body: raw.body,
     pdfUrl: raw.pdfUrl ?? null,
     pdfName: raw.pdfName ?? null,
+    title: raw.title ?? null,
     pdfSizeBytes: raw.pdfSizeBytes ?? null,
     likes: raw.likeCount,
     dislikes: raw.dislikeCount,
