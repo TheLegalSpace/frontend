@@ -4,11 +4,14 @@ import EventsPanel from '@/app/Components/EventPanel'
 export default function Page() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Fixed header */}
-      <div className="fixed w-full top-0 z-10 bg-white border-b border-[#E6EAED]">
-        <h1 className="text-[22px] font-regular text-gray-900 font-[Instrument_Serif] ps-4 pt-6 pb-4">
-          Legal News
-        </h1>
+      {/* Fixed heading */}
+      <div className="fixed top-0 left-[220px] right-0 bg-white z-10 border-b border-[#E6EAED]">
+        <div className="px-6 pt-5 pb-1">
+          <p className="text-[22px] font-regular text-gray-900" style={{ fontFamily: "'Instrument Serif', serif" }}>
+            Legal News
+          </p>
+          <span className="block mb-[17px]" />
+        </div>
       </div>
 
       {/* Content */}

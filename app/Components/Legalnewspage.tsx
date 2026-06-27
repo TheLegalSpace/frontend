@@ -54,16 +54,16 @@ export default function LegalNewsPage() {
 
   return (
     <div className="min-h-screen bg-white font-['Geist']">
-      <div className="max-w-3xl mx-auto px-6 py-8">
+      <div className="max-w-3xl mx-auto px-6 py-0">
 
-        {/* Coming soon banner */}
-        <div className="flex items-center gap-2 mb-4">
-          <BookOpen size={14} className="text-amber-500" />
-          <span className="text-[11px] font-semibold tracking-widest text-amber-500 uppercase">
-            Coming Soon
-          </span>
-        </div>
-        <div className="w-full h-px bg-amber-100 mb-5" />
+       {/* Coming soon banner */}
+          <div className="flex items-center gap-2 mb-5">
+            <BookOpen size={14} className="text-amber-500" />
+            <span className="text-[11px] font-semibold tracking-widest text-amber-500 uppercase">
+              Coming Soon
+            </span>
+            <div className="flex-1 h-px bg-amber-100" />
+          </div>
 
         {/* Intro copy */}
         <p className="text-[14px] text-gray-600 leading-relaxed mb-1">
@@ -74,33 +74,33 @@ export default function LegalNewsPage() {
           understand whether legal professionals would actively use a legal news experience inside The Legal Space.
         </p>
 
-        {/* Card — fixed height viewport */}
-        <div className="relative rounded-xl border border-gray-200 mb-6" style={{ height: "420px" }}>
+        {/* Wrapper — relative so overlay can sit exactly over the card */}
+        <div className="relative mb-6">
 
-          {/* Absolute blur overlay */}
+          {/* Blur overlay — sibling to card, not inside it */}
           {!showPreview && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center backdrop-blur-xl bg-white/40 rounded-xl">
-              <div className="flex flex-col items-center">
-                <button
-                  onClick={() => setShowPreview(true)}
-                  className="bg-white border border-gray-200 shadow-lg rounded-2xl px-5 py-3 flex items-center gap-2 hover:bg-gray-50 transition"
-                >
-                  <BookOpen size={15} className="text-gray-500" />
-                  <span className="text-[13px] font-medium text-gray-700">
-                    Preview
-                  </span>
-                </button>
-                <p className="text-[12px] text-gray-500 mt-2">
-                  Help shape what TLS News becomes…
-                </p>
-              </div>
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center backdrop-blur-xl bg-white/40 rounded-xl"
+            >
+              <button
+                onClick={() => setShowPreview(true)}
+                className="bg-white border border-gray-200 shadow-lg rounded-2xl px-5 py-3 flex items-center gap-2 hover:bg-gray-50 transition"
+              >
+                <BookOpen size={15} className="text-gray-500" />
+                <span className="text-[13px] font-medium text-gray-700">
+                  Preview
+                </span>
+              </button>
+              <p className="text-[12px] text-gray-500 mt-2">
+                Help shape what TLS News becomes…
+              </p>
             </div>
           )}
 
-          {/* Scrollable article area */}
+          {/* Card — plain scrollable div, no relative/overflow conflict */}
           <div
-            className="h-full"
-            style={{ overflowY: showPreview ? "auto" : "hidden" }}
+            className="rounded-xl border border-gray-200 overflow-y-auto"
+            style={{ height: "420px" }}
           >
             {showPreview && (
               <div className="flex justify-end px-5 pt-4 pb-0">
@@ -114,7 +114,7 @@ export default function LegalNewsPage() {
               </div>
             )}
 
-            <div className={`p-5 space-y-5 ${!showPreview ? "select-none pointer-events-none" : ""}`}>
+            <div className="p-5 space-y-5">
               {PREVIEW_ARTICLES.map((article, i) => (
                 <div key={i} className={i > 0 ? "border-t border-[#E5E7EB] pt-5" : ""}>
                   <div className="flex items-center justify-between mb-2">
