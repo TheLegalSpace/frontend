@@ -1,7 +1,7 @@
 import { ApiEnvelope, EventPromotionFormValues, EventPromotionResponseData, ServiceRequest, ServiceRequestListResponse, ServiceRequestPayload } from "@/app/types/services";
 import { api } from "./api";
 
-
+ 
 export async function submitServiceRequest(
   body: ServiceRequestPayload
 ): Promise<ApiEnvelope<ServiceRequest>> {
@@ -25,6 +25,7 @@ export async function submitEventPromotion(
   if (values.contactEmail) fd.append("contactEmail", values.contactEmail);
   if (values.contactPhone) fd.append("contactPhone", values.contactPhone);
   if (values.firmName) fd.append("firmName", values.firmName);
+  if (values.location) fd.append("address", values.location);
 
   const res = await api.post("/services/event-promotion", fd, {
     headers: { "Content-Type": "multipart/form-data" },

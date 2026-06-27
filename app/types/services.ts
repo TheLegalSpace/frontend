@@ -128,6 +128,7 @@ export interface EventPromotionFormValues {
   contactEmail?: string;
   contactPhone?: string;
   firmName?: string;
+  location?: string;
 }
 
 export interface EventPromotionResponseData {
