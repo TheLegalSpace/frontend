@@ -25,6 +25,7 @@ export default function EventPromotionForm() {
   const [flyer, setFlyer] = useState<File | null>(null);
   const [flyerPreview, setFlyerPreview] = useState<string | null>(null);
   const [title, setTitle] = useState("");
+  const [location, setLocation] = useState("");
   const [links, setLinks] = useState("");
   const [startAt, setStartAt] = useState("");
   const [endAt, setEndAt] = useState("");
@@ -87,6 +88,7 @@ export default function EventPromotionForm() {
       await submitEventPromotion({
         flyer,
         title: title.trim(),
+        location: location || undefined,
         startAt: new Date(startAt).toISOString(),
         endAt: new Date(endAt).toISOString(),
         shareOnSocial,
@@ -123,7 +125,6 @@ export default function EventPromotionForm() {
 
   return (
     <div className={geist.className}>
-
       <form onSubmit={handleSubmit} className="px-6 py-6 flex flex-col max-w-2xl">
         <div>
           <SectionBadge>Promotion Assets</SectionBadge>
@@ -170,11 +171,11 @@ export default function EventPromotionForm() {
 
           {flyerPreview && (
             <div className="mt-3 rounded-xl overflow-hidden border border-gray-100 w-1/2">
-                <img
+              <img
                 src={flyerPreview}
                 alt="Flyer preview"
                 className="w-full h-auto object-contain"
-                />
+              />
             </div>
           )}
 
@@ -185,6 +186,15 @@ export default function EventPromotionForm() {
               placeholder="e.g. NBA Ikeja Law Week 2026"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+
+          <div className="mt-4">
+            <FieldLabel>Event Address</FieldLabel>
+            <TextInput
+              placeholder="e.g. Nigerian Bar Association, Lagos"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
             />
           </div>
         </div>
