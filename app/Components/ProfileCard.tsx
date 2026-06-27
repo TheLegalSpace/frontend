@@ -372,7 +372,7 @@ export default function ProfileCard({
     <div className="w-full">
       <div className="overflow-hidden rounded-2xl  bg-white">
         {/* Cover */}
-        <div className="relative h-44 w-full overflow-hidden bg-[#E5E7EB]">
+        {/* <div className="relative h-44 w-full overflow-hidden bg-[#E5E7EB]">
           {profile.coverUrl ? (
             <img
               src={profile.coverUrl}
@@ -384,15 +384,15 @@ export default function ProfileCard({
               <span>No Cover Photo</span>
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Profile header */}
-        <div className="px- pt-4 pb-5 border-b border-[#E5E7EB]">
+        <div className="px- pt-4 pb-5">
           <div className="flex gap-4">
             {/* Avatar */}
             <div className="mt-1 shrink-0">
               <div
-                className={`h-20 w-20 overflow-hidden rounded-full border-[3px] border-white shadow-sm transition-all duration-300 ${
+                className={`h-20 w-20 overflow-hidden rounded-full border-[3px] border-white  transition-all duration-300 ${
                   isAnonymous ? "blur-sm" : ""
                 }`}
               >
@@ -403,7 +403,7 @@ export default function ProfileCard({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-[#D1D5DB] text-4xl font-bold tracking-wider text-[#374151]">
+                  <div className="flex h-full w-full items-center justify-center text-4xl font-bold tracking-wider text-[#374151]">
                     {isAnonymous ? "??" : getInitials(profile.fullName)}
                   </div>
                 )}

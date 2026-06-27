@@ -194,9 +194,9 @@ export default function ResearchSidebar({
             <ArrowLeft size={15} className="text-gray-500" />
           </button>
         )}
-        <span className="text-[16px] font-semibold text-gray-900">
+        {/* <span className="text-[16px] font-semibold text-gray-900">
           TLS Research
-        </span>
+        </span> */}
       </div>
 
       {/* Search */}

@@ -1,10 +1,17 @@
-import FindALawyer from '@/app/Components/FindALawyer'
-import React from 'react'
+"use client";
+import AccessRestricted from "@/app/Components/Accessrestricted";
+import FindALawyer from "@/app/Components/FindALawyer";
+import { useAuth } from "@/app/context/AuthContext";
+import { UserRole } from "@/app/types/types";
+import Link from "next/link";
+
+import React from "react";
 
 const page = () => {
-  return (
-    <FindALawyer/>
-  )
-}
+  const { user } = useAuth();
+  const role: UserRole = (user?.role as UserRole) ?? "USER";
 
-export default page
+  return role === "USER" ? <FindALawyer /> : <AccessRestricted />;
+};
+
+export default page;
