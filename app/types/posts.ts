@@ -15,6 +15,7 @@ export interface MyPost {
   updatedAt: string;
   author: PostAuthor;
   pdfUrl?: string | null;
+  title?: string | null;
   pdfName?: string | null;
   pdfSizeBytes?: number | null;
 }

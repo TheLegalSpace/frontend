@@ -13,6 +13,7 @@ export interface Post {
   timeAgo: string;
   body: string;
   pdfUrl?: string | null;
+  title?: string | null;
   pdfName?: string | null;
   pdfSizeBytes?: number | null;
   likes: number;

@@ -186,7 +186,7 @@ export default function MyPostCard({
             {/* Title + meta */}
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-semibold text-gray-900 leading-snug truncate group-hover:text-blue-600 transition">
-                {post.pdfName ?? "Attached Article"}
+                {post.title ?? post.pdfName ?? "Attached Article"}
               </p>
               <div className="flex items-center gap-3 mt-1.5 text-[11px] text-gray-400 flex-wrap">
                 {post.pdfSizeBytes && (
@@ -261,7 +261,7 @@ export default function MyPostCard({
             <div className="flex items-center gap-2 min-w-0">
               <FileText size={15} className="text-gray-400 shrink-0" />
               <span className="text-[13px] text-gray-200 font-medium truncate">
-                {post.pdfName ?? "Article PDF"}
+                {post.title ?? post.pdfName ?? "Article PDF"}
               </span>
             </div>
             <button
@@ -276,7 +276,7 @@ export default function MyPostCard({
           <iframe
             src={post.pdfUrl}
             className="flex-1 w-full border-0 bg-white"
-            title={post.pdfName ?? "Article PDF"}
+            title={post.title ?? post.pdfName ?? "Article PDF"}
           />
         </div>
       )}
