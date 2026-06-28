@@ -32,7 +32,7 @@ export default function AccessRestricted({ message }: AccessRestrictedProps) {
       : "You don't have permission to view this page.");
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 px-4 font-dmSans">
+    <div className="min-h-screen w-full flex items-center justify-center bg-white px-4 font-dmSans">
       <div className="w-full max-w-md rounded-2xl bg-white border border-gray-200 shadow-sm px-8 py-10 text-center">
         {/* Icon */}
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
@@ -63,7 +63,7 @@ export default function AccessRestricted({ message }: AccessRestrictedProps) {
           <button
             type="button"
             onClick={() => router.back()}
-            className="w-full py-3 rounded-xl border border-gray-200 bg-white text-[14px] font-medium text-gray-600 transition hover:bg-gray-50 flex items-center justify-center gap-1.5"
+            className="w-full py-3 rounded-xl border border-gray-200 bg-white text-[14px] font-medium text-gray-600 transition hover:bg-white flex items-center justify-center gap-1.5"
           >
             <ArrowLeft className="h-4 w-4" />
             Go back

@@ -86,7 +86,7 @@ export default function ResearchSidebar({
           className={`w-full text-left px-4 py-2.5 text-[14px] flex items-center gap-2 transition-all b cursor-pointer ${
             isActive
               ? "border-l-blue-500 text-gray-900 font-medium bg-transparent"
-              : "border-l-transparent text-gray-700 hover:bg-gray-50"
+              : "border-l-transparent text-gray-700 hover:bg-white"
           }`}
         >
           {thread.pinned && (
@@ -151,14 +151,14 @@ export default function ResearchSidebar({
                 onPin(thread.id, !thread.pinned);
                 setMenuId(null);
               }}
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-gray-700 hover:bg-gray-50 transition"
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-gray-700 hover:bg-white transition"
             >
               <Pin size={12} />
               {thread.pinned ? "Unpin" : "Pin research"}
             </button>
             <button
               onClick={() => startEdit(thread)}
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-gray-700 hover:bg-gray-50 transition"
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-gray-700 hover:bg-white transition"
             >
               <Pencil size={12} />
               Rename
@@ -211,7 +211,7 @@ export default function ResearchSidebar({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search"
-            className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-700 placeholder:text-gray-400 outline-none focus:border-gray-300"
+            className="w-full pl-8 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-[13px] text-gray-700 placeholder:text-gray-400 outline-none focus:border-gray-300"
           />
         </div>
       </div>
@@ -220,7 +220,7 @@ export default function ResearchSidebar({
       <div className="px-4 pb-3">
         <button
           onClick={onNew}
-          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-200 text-[14px] text-gray-700 hover:bg-gray-50 transition font-medium"
+          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-200 text-[14px] text-gray-700 hover:bg-white transition font-medium"
         >
           <div className="flex items-center gap-2">
             <MessageSquare size={15} className="text-gray-500" />

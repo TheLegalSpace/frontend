@@ -116,7 +116,7 @@ export default function PracticeAreasModal({
             <label className="block text-[11px] text-gray-500 mb-1.5">
               Primary Area <span className="text-red-400">*</span>
             </label>
-            <div className="min-h-[36px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 flex items-center">
+            <div className="min-h-[36px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white flex items-center">
               {primaryId ? (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 border border-blue-200 text-[#2563EB] rounded-full text-[11px] font-medium">
                   {getAreaName(primaryId)} <Check className="w-3 h-3" />
@@ -130,7 +130,7 @@ export default function PracticeAreasModal({
             <label className="block text-[11px] text-gray-500 mb-1.5">
               Secondary Area <span className="text-red-400">*</span>
             </label>
-            <div className="min-h-[36px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-gray-50 flex items-center">
+            <div className="min-h-[36px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white flex items-center">
               {secondaryId ? (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 border border-blue-200 text-[#2563EB] rounded-full text-[11px] font-medium">
                   {getAreaName(secondaryId)} <Check className="w-3 h-3" />
@@ -170,7 +170,7 @@ export default function PracticeAreasModal({
                     ? "bg-blue-50 border-blue-200 text-[#2563EB]"
                     : isDisabled
                       ? "border-[#E5E7EB] text-gray-300 cursor-not-allowed"
-                      : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                      : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-white"
                 }`}
               >
                 {area.name}

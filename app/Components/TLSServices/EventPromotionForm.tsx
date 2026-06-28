@@ -346,7 +346,7 @@ function SummaryRow({
     <div
       className={`flex items-center justify-between px-4 py-3 text-[13px] ${
         !last ? "border-b border-gray-100" : ""
-      } ${bold ? "bg-gray-50" : "bg-white"}`}
+      } ${bold ? "bg-white" : "bg-white"}`}
     >
       <span className={bold ? "text-gray-900 font-medium" : "text-gray-400"}>
         {label}

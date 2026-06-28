@@ -41,7 +41,7 @@ export default function PracticeAreaPicker({
           <label className="block text-[11px] text-gray-500 mb-1.5">
             Primary Area <span className="text-red-400">*</span>
           </label>
-          <div className="min-h-[36px] px-2.5 py-1.5 border border-gray-200 rounded-lg text-[12px] bg-gray-50">
+          <div className="min-h-[36px] px-2.5 py-1.5 border border-gray-200 rounded-lg text-[12px] bg-white">
             {primaryId ? (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-[#1A56DB] border border-blue-200 rounded-full text-[11px]">
                 {getAreaName(primaryId)}
@@ -56,7 +56,7 @@ export default function PracticeAreaPicker({
           <label className="block text-[11px] text-gray-500 mb-1.5">
             Secondary Area <span className="text-red-400">*</span>
           </label>
-          <div className="min-h-[36px] px-2.5 py-1.5 border border-gray-200 rounded-lg text-[12px] bg-gray-50">
+          <div className="min-h-[36px] px-2.5 py-1.5 border border-gray-200 rounded-lg text-[12px] bg-white">
             {secondaryId ? (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-[#1A56DB] border border-blue-200 rounded-full text-[11px]">
                 {getAreaName(secondaryId)}
@@ -92,7 +92,7 @@ export default function PracticeAreaPicker({
                 if (selectedIds.length < maxSelect) onToggle(area.id);
               }}
               disabled={selectedIds.length >= maxSelect}
-              className="inline-flex items-center gap-1 px-3 py-1.5 border border-gray-200 rounded-full text-[12px] text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1 px-3 py-1.5 border border-gray-200 rounded-full text-[12px] text-gray-700 hover:border-gray-300 hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {area.name}
               <Plus className="w-3 h-3" />

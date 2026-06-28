@@ -90,7 +90,7 @@ function MarkdownContent({ content }: { content: string }) {
           </div>
         ),
         th: ({ children }) => (
-          <th className="text-left px-3 py-2 bg-gray-50 border-b border-gray-200 font-semibold text-gray-700">
+          <th className="text-left px-3 py-2 bg-white border-b border-gray-200 font-semibold text-gray-700">
             {children}
           </th>
         ),
@@ -155,7 +155,7 @@ export function ThinkingBubble({ hasPdf }: { hasPdf?: boolean }) {
         <span className="text-white text-[10px] font-bold">TLS</span>
       </div>
       <div className="flex-1">
-        <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl rounded-tl-sm">
+        <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-2xl rounded-tl-sm">
           <div className="flex gap-1">
             <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0ms]" />
             <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]" />
@@ -246,7 +246,7 @@ function MessageBubble({ msg }: { msg: ResearchMessage }) {
           className={`px-4 py-3.5 rounded-2xl rounded-tl-sm text-[14px] border ${
             kind === "refusal"
               ? "bg-amber-50 border-amber-100"
-              : "bg-gray-50 border-gray-200"
+              : "bg-white border-gray-200"
           }`}
         >
           {/* Refusal label */}

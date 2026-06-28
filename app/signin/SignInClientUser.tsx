@@ -146,7 +146,7 @@ export default function SignInClient() {
 
               {/* Custom button / loading */}
               {isLoading ? (
-                <div className="w-full px-3 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-center">
+                <div className="w-full px-3 py-3.5 bg-white border border-gray-200 rounded-xl text-center">
                   <p className="text-[14px] text-gray-600 font-dmSans">
                     Signing you in…
                   </p>
@@ -156,7 +156,7 @@ export default function SignInClient() {
                   type="button"
                   onClick={triggerGoogle}
                   disabled={!googleReady}
-                  className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed font-dmSans"
+                  className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] font-medium text-gray-700 shadow-sm transition hover:bg-white active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed font-dmSans"
                 >
                   <GoogleIcon />
                   Sign in with Google

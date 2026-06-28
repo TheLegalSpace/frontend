@@ -111,7 +111,7 @@ const ConversationList = memo(function ConversationList({
               <button
                 key={convo.id}
                 onClick={() => onSelect(convo.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 border-b border-[#E5E7EB] hover:bg-gray-50 transition text-left ${
+                className={`w-full flex items-center gap-3 px-4 py-3 border-b border-[#E5E7EB] hover:bg-white transition text-left ${
                   activeId === convo.id ? "bg-gray-100" : ""
                 }`}
               >

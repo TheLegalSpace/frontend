@@ -229,7 +229,7 @@ function ConfirmDialog({
         <div className="flex gap-3 justify-end">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg border border-gray-200 text-[13px] text-gray-700 hover:bg-gray-50 transition"
+            className="px-4 py-2 rounded-lg border border-gray-200 text-[13px] text-gray-700 hover:bg-white transition"
           >
             Keep membership
           </button>
@@ -403,7 +403,7 @@ function ProView({
               <button
                 onClick={() => setShowCancelDialog(true)}
                 disabled={cancelLoading}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-[13px] text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+                className="px-4 py-2 rounded-lg border border-gray-300 text-[13px] text-gray-700 hover:bg-white transition disabled:opacity-50"
               >
                 Cancel subscription
               </button>
@@ -415,7 +415,7 @@ function ProView({
             )}
           </div>
 
-          <div className="w-52 shrink-0 border border-gray-100 rounded-xl bg-gray-50 flex items-center justify-center py-6">
+          <div className="w-52 shrink-0 border border-gray-100 rounded-xl bg-white flex items-center justify-center py-6">
             {membership.daysRemaining !== null && expiresAt
               ? <DaysRing daysLeft={membership.daysRemaining} totalDays={totalDays} expiresAt={expiresAt} />
               : <FreeRing />
@@ -459,7 +459,7 @@ function ProView({
             <button
               onClick={handleUpdateCard}
               disabled={cardLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-[13px] text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-[13px] text-gray-700 hover:bg-white transition disabled:opacity-50"
             >
               <CreditCard size={13} />
               {cardLoading ? "Opening…" : "Update card"}
@@ -519,7 +519,7 @@ function ProView({
                     <td className="py-3.5">
                       <button
                         onClick={() => handleInvoiceDownload(inv)}
-                        className="px-3 py-1.5 rounded-lg border border-gray-200 text-[12px] text-gray-600 hover:bg-gray-50 transition flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-lg border border-gray-200 text-[12px] text-gray-600 hover:bg-white transition flex items-center gap-1"
                       >
                         <Download size={11} />
                         Download
@@ -621,7 +621,7 @@ function CommunityView({
               )}
             </button>
           </div>
-          <div className="w-52 shrink-0 border border-gray-100 rounded-xl bg-gray-50 flex items-center justify-center py-6">
+          <div className="w-52 shrink-0 border border-gray-100 rounded-xl bg-white flex items-center justify-center py-6">
             <FreeRing />
           </div>
         </div>

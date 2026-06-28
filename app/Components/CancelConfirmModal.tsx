@@ -51,7 +51,7 @@ export default function CancelConfirmModal({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="w-full py-3 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-900 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="w-full py-3 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-900 hover:bg-white transition-colors disabled:opacity-50"
           >
             Keep Request
           </button>

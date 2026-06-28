@@ -75,7 +75,7 @@ function ArticlePreview({
   return (
     <a
       href={`/articles/${article.slug}`}
-      className="mt-3 flex items-center gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50 transition"
+      className="mt-3 flex items-center gap-3 rounded-xl border border-gray-200 p-3 hover:bg-white transition"
     >
       <div className="w-12 h-12 rounded-lg bg-gray-900 flex flex-col items-center justify-center shrink-0">
         <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400">
@@ -206,8 +206,8 @@ export default function NotificationCard({ notification, onMarkRead }: Props) {
   return (
     <div
       onClick={handleClick}
-      className={`relative px-4 md:px-5 py-4 cursor-pointer transition hover:bg-gray-50/60 ${
-        isUnread ? "bg-white" : "bg-gray-50/30"
+      className={`relative px-4 md:px-5 py-4 cursor-pointer transition hover:bg-white/60 ${
+        isUnread ? "bg-white" : "bg-white/30"
       }`}
     >
       {/* Header row */}

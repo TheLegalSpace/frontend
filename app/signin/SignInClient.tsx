@@ -254,7 +254,7 @@ export default function SignInClient() {
                 <button
                   type="button"
                   disabled={anyLoading}
-                  className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed font-dmSans"
+                  className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] font-medium text-gray-700 shadow-sm transition hover:bg-white active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed font-dmSans"
                 >
                   {googleLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

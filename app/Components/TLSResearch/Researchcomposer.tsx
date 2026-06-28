@@ -86,7 +86,7 @@ export default function ResearchComposer({
         <button
           onClick={() => fileRef.current?.click()}
           disabled={disabled || !!pdf}
-          className="w-16 h-12 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition disabled:opacity-40 shrink-0 mb-0.5"
+          className="w-16 h-12 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:bg-white hover:text-gray-600 transition disabled:opacity-40 shrink-0 mb-0.5"
           title="Attach PDF"
         >
           <Paperclip size={15} />
@@ -108,7 +108,7 @@ export default function ResearchComposer({
             disabled={disabled}
             placeholder={placeholder ?? "Describe your legal issue or case…"}
             rows={1}
-            className="w-full px-4 py-2.5 text-[14px] bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:border-gray-300 placeholder:text-gray-400 resize-none leading-relaxed disabled:opacity-50 max-h-40 overflow-y-auto"
+            className="w-full px-4 py-2.5 text-[14px] bg-white border border-gray-200 rounded-2xl outline-none focus:border-gray-300 placeholder:text-gray-400 resize-none leading-relaxed disabled:opacity-50 max-h-40 overflow-y-auto"
             style={{ minHeight: "44px" }}
             onInput={(e) => {
               const el = e.currentTarget;

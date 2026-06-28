@@ -199,7 +199,7 @@ export default function ServicesModal({
         {/* Add row */}
         <button
           onClick={addRow}
-          className="w-full py-2.5 border border-gray-200 border-dashed rounded-xl text-[12px] text-gray-400 hover:bg-gray-50 flex items-center justify-center gap-1.5 transition-colors mb-4"
+          className="w-full py-2.5 border border-gray-200 border-dashed rounded-xl text-[12px] text-gray-400 hover:bg-white flex items-center justify-center gap-1.5 transition-colors mb-4"
         >
           <Plus className="w-3.5 h-3.5" />
           Add New
