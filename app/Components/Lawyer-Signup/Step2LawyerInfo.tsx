@@ -196,7 +196,7 @@ export default function Step2LawyerInfo({ subStep, email, onNext }: Props) {
                 <input
                   value={email}
                   disabled
-                  className="w-full pl-9 pr-9 py-2.5 border border-gray-200 rounded-xl text-[13px] text-gray-500 bg-gray-50 outline-none"
+                  className="w-full pl-9 pr-9 py-2.5 border border-gray-200 rounded-xl text-[13px] text-gray-500 bg-white outline-none"
                 />
                 <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300" />
               </div>
@@ -207,7 +207,7 @@ export default function Step2LawyerInfo({ subStep, email, onNext }: Props) {
                 WhatsApp Number <span className="text-red-400">*</span>
               </label>
               <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden focus-within:border-[#1A56DB] transition-colors">
-                <span className="px-3 py-2.5 text-[13px] text-gray-500 bg-gray-50 border-r border-gray-200 shrink-0">
+                <span className="px-3 py-2.5 text-[13px] text-gray-500 bg-white border-r border-gray-200 shrink-0">
                   +234
                 </span>
                 <input
@@ -292,7 +292,7 @@ export default function Step2LawyerInfo({ subStep, email, onNext }: Props) {
               <label className="block text-[11px] text-gray-500 mb-1.5">
                 Primary Area <span className="text-red-400">*</span>
               </label>
-              <div className="min-h-[38px] px-2.5 py-1.5 border border-[#E5E7EB] rounded-lg bg-gray-50 flex items-center">
+              <div className="min-h-[38px] px-2.5 py-1.5 border border-[#E5E7EB] rounded-lg bg-white flex items-center">
                 {primaryId ? (
                   <button
                     onClick={() => handleAreaClick(primaryId)}
@@ -314,7 +314,7 @@ export default function Step2LawyerInfo({ subStep, email, onNext }: Props) {
                 Secondary Area{" "}
                 <span className="text-gray-300 text-[10px]">(optional)</span>
               </label>
-              <div className="min-h-[38px] px-2.5 py-1.5 border border-[#E5E7EB] rounded-lg bg-gray-50 flex items-center">
+              <div className="min-h-[38px] px-2.5 py-1.5 border border-[#E5E7EB] rounded-lg bg-white flex items-center">
                 {secondaryId ? (
                   <button
                     onClick={() => handleAreaClick(secondaryId)}
@@ -365,7 +365,7 @@ export default function Step2LawyerInfo({ subStep, email, onNext }: Props) {
                         ? "bg-blue-50 border-blue-200 text-[#1A56DB]"
                         : isDisabled
                           ? "border-[#E5E7EB] text-gray-300 cursor-not-allowed"
-                          : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                          : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-white"
                   }`}
                 >
                   {area.name}
@@ -492,7 +492,7 @@ export default function Step2LawyerInfo({ subStep, email, onNext }: Props) {
                     ))}
                     <button
                       onClick={() => addRow(areaId)}
-                      className="w-full py-2 border border-[#E5E7EB] rounded-xl text-[12px] text-gray-400 hover:bg-gray-50 flex items-center justify-center gap-1 transition-colors"
+                      className="w-full py-2 border border-[#E5E7EB] rounded-xl text-[12px] text-gray-400 hover:bg-white flex items-center justify-center gap-1 transition-colors"
                     >
                       Add New <Plus className="w-3.5 h-3.5" />
                     </button>

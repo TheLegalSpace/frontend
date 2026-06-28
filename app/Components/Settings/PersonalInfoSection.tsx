@@ -141,7 +141,7 @@ export default function PersonalInfoSection({
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               disabled={!editing}
-              className="w-full px-3 py-2.5 pr-9 border border-gray-200 rounded-lg text-[13px] text-gray-800 outline-none focus:border-[#2563EB] disabled:bg-gray-50 disabled:text-gray-600 transition-colors"
+              className="w-full px-3 py-2.5 pr-9 border border-gray-200 rounded-lg text-[13px] text-gray-800 outline-none focus:border-[#2563EB] disabled:bg-white disabled:text-gray-600 transition-colors"
             />
             {!editing && (
               <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300" />
@@ -161,7 +161,7 @@ export default function PersonalInfoSection({
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 disabled={!editing}
-                className="w-full px-3 py-2.5 pr-9 border border-gray-200 rounded-lg text-[13px] text-gray-800 outline-none focus:border-[#2563EB] disabled:bg-gray-50 disabled:text-gray-600 transition-colors"
+                className="w-full px-3 py-2.5 pr-9 border border-gray-200 rounded-lg text-[13px] text-gray-800 outline-none focus:border-[#2563EB] disabled:bg-white disabled:text-gray-600 transition-colors"
               />
               {!editing && (
                 <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300" />
@@ -183,7 +183,7 @@ export default function PersonalInfoSection({
               type="email"
               value={email}
               disabled
-              className="w-full pl-9 pr-9 py-2.5 border border-gray-200 rounded-lg text-[13px] text-gray-600 bg-gray-50 outline-none"
+              className="w-full pl-9 pr-9 py-2.5 border border-gray-200 rounded-lg text-[13px] text-gray-600 bg-white outline-none"
             />
             <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300" />
           </div>
@@ -198,10 +198,10 @@ export default function PersonalInfoSection({
             className={`flex items-center border rounded-lg overflow-hidden transition-colors ${
               editing
                 ? "border-gray-200 focus-within:border-[#2563EB]"
-                : "border-gray-200 bg-gray-50"
+                : "border-gray-200 bg-white"
             }`}
           >
-            <span className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-gray-500 border-r border-gray-200 bg-gray-50 shrink-0">
+            <span className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-gray-500 border-r border-gray-200 bg-white shrink-0">
               +234
             </span>
             <input

@@ -92,7 +92,7 @@ export default function Navbar() {
                 >
                   <button
                     onClick={() => scrollToSection(link.href)}
-                    className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors font-dmSans"
+                    className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-white transition-colors font-dmSans"
                   >
                     {link.label}
                     <ChevronDown
@@ -115,7 +115,7 @@ export default function Navbar() {
                               scrollToSection(item.href);
                               setResourcesOpen(false);
                             }}
-                            className="block w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                            className="block w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-white hover:text-gray-900 transition-colors"
                           >
                             {item.label}
                           </button>
@@ -128,7 +128,7 @@ export default function Navbar() {
                 <li key={link.label}>
                   <button
                     onClick={() => scrollToSection(link.href)}
-                    className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors font-dmSans"
+                    className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-white transition-colors font-dmSans"
                   >
                     {link.label}
                   </button>
@@ -141,7 +141,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-2 ctaLink">
             <button
               onClick={() => loginType("lawyer")}
-              className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-white transition-colors font-medium"
             >
               Lawyer Login
             </button>
@@ -156,7 +156,7 @@ export default function Navbar() {
           {/* Mobile hamburger */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="hamBtn md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+            className="hamBtn md:hidden p-2 rounded-lg text-gray-600 hover:bg-white transition-colors"
           >
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -179,7 +179,7 @@ export default function Navbar() {
                     scrollToSection(link.href);
                     setIsOpen(false);
                   }}
-                  className="block w-full text-left px-4 py-3 text-sm text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                  className="block w-full text-left px-4 py-3 text-sm text-gray-700 rounded-xl hover:bg-white transition-colors font-medium"
                 >
                   {link.label}
                 </button>
@@ -187,7 +187,7 @@ export default function Navbar() {
               <div className="border-t border-[#E5E7EB] mt-2 pt-2 space-y-1">
                 <button
                   onClick={() => loginType("lawyer")}
-                  className="block w-full text-left px-4 py-3 text-sm text-gray-700 rounded-xl hover:bg-gray-50 font-medium"
+                  className="block w-full text-left px-4 py-3 text-sm text-gray-700 rounded-xl hover:bg-white font-medium"
                 >
                   Lawyer Login
                 </button>

@@ -284,7 +284,7 @@ export default function ResearchLanding({
             <button
               key={s}
               onClick={() => onSuggestion(s)}
-              className="px-3 py-1.5 border border-gray-200 rounded-full text-[12px] text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition"
+              className="px-3 py-1.5 border border-gray-200 rounded-full text-[12px] text-gray-600 hover:bg-white hover:border-gray-300 transition"
             >
               {s}
             </button>

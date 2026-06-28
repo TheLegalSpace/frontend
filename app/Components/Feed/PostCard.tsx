@@ -28,7 +28,7 @@ interface Props {
 
 export default function PostCard({ post, onReact }: Props) {
   return (
-    <div className="border-b border-[#E6EAED] py-5 last:border-b-0 hover:bg-gray-50/30 transition w-full">
+    <div className="border-b border-[#E6EAED] py-5 last:border-b-0 hover:bg-white/30 transition w-full">
       {/* Header */}
       <div className="flex items-center gap-3 mb-3 px-4">
         <Avatar
@@ -60,7 +60,7 @@ export default function PostCard({ post, onReact }: Props) {
           href={post.pdfUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mx-4 flex items-center gap-3 mt-2 mb-3 p-3 rounded-xl border border-[#E5E7EB] hover:bg-gray-50 transition group"
+          className="mx-4 flex items-center gap-3 mt-2 mb-3 p-3 rounded-xl border border-[#E5E7EB] hover:bg-white transition group"
         >
           {/* Dark "ARTICLE" thumbnail */}
           <div className="w-12 h-12 rounded-lg bg-gray-900 flex flex-col items-center justify-center shrink-0">

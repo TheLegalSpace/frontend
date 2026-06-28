@@ -56,7 +56,7 @@ export default function Step1AccountType({ onNext }: Props) {
                     setOpen(false);
                     setError("");
                   }}
-                  className="w-full text-left px-4 py-3 text-[13px] text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="w-full text-left px-4 py-3 text-[13px] text-gray-700 hover:bg-white transition-colors"
                 >
                   Law Firm
                 </button>
@@ -66,7 +66,7 @@ export default function Step1AccountType({ onNext }: Props) {
                     setOpen(false);
                     setError("");
                   }}
-                  className="w-full text-left px-4 py-3 text-[13px] text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-50"
+                  className="w-full text-left px-4 py-3 text-[13px] text-gray-700 hover:bg-white transition-colors border-t border-gray-50"
                 >
                   Independent Lawyer
                 </button>

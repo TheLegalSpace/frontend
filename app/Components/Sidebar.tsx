@@ -196,7 +196,7 @@ function LogoutModal({
           <button
             onClick={onCancel}
             disabled={isLoggingOut}
-            className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-[13px] font-medium rounded-xl transition-colors disabled:opacity-50"
+            className="w-full py-2.5 bg-white hover:bg-gray-100 text-gray-700 text-[13px] font-medium rounded-xl transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
@@ -249,11 +249,11 @@ function SidebarSkeleton() {
       </div>
       <nav className="flex-1 px-3 pt-3 flex flex-col gap-1">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-8 bg-gray-50 rounded-lg animate-pulse" />
+          <div key={i} className="h-8 bg-white rounded-lg animate-pulse" />
         ))}
       </nav>
       <div className="p-3 border-t border-[#E5E7EB]">
-        <div className="h-8 bg-gray-50 rounded-lg animate-pulse" />
+        <div className="h-8 bg-white rounded-lg animate-pulse" />
       </div>
     </aside>
   );
@@ -375,7 +375,7 @@ export default function Sidebar() {
           <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
             <p className="text-[11px] text-gray-400 truncate">{user?.email}</p>
           </div>
-          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border mb-2.5 bg-gray-50 text-gray-500 border-gray-200">
+          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border mb-2.5 bg-white text-gray-500 border-gray-200">
             {role.charAt(0) + role.slice(1).toLowerCase()}
           </span>
           <div className="flex flex-col gap-1 mb-3">
@@ -413,7 +413,7 @@ export default function Sidebar() {
           </div>
           <Link
             href="/dashboard/profile"
-            className="w-full py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-800 flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors"
+            className="w-full py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-800 flex items-center justify-center gap-1.5 hover:bg-white transition-colors"
           >
             Visit Profile <ArrowRight className="w-3 h-3" />
           </Link>
@@ -431,7 +431,7 @@ export default function Sidebar() {
               className={`flex items-center gap-2.5 px-2.5 py-[12px]  text-[14px] mb-[14px]  transition-colors ${
                 isActive
                   ? "bg-blue-50 text-blue-700 font-medium"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  : "text-gray-500 hover:bg-white hover:text-gray-900"
               }`}
             >
               <Icon

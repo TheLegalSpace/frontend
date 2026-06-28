@@ -84,7 +84,7 @@ export default function LegalNewsPage() {
             >
               <button
                 onClick={() => setShowPreview(true)}
-                className="bg-white border border-gray-200 shadow-lg rounded-2xl px-5 py-3 flex items-center gap-2 hover:bg-gray-50 transition"
+                className="bg-white border border-gray-200 shadow-lg rounded-2xl px-5 py-3 flex items-center gap-2 hover:bg-white transition"
               >
                 <BookOpen size={15} className="text-gray-500" />
                 <span className="text-[13px] font-medium text-gray-700">
@@ -183,7 +183,7 @@ export default function LegalNewsPage() {
                     className={`px-4 py-2 rounded-full text-[13px] border transition ${
                       useChoice === opt
                         ? "bg-blue-700 text-white border-blue-700"
-                        : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                        : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-white"
                     }`}
                   >
                     {opt}
@@ -209,7 +209,7 @@ export default function LegalNewsPage() {
                     className={`px-4 py-2 rounded-full text-[13px] border transition ${
                       newsChoices.includes(item)
                         ? "bg-blue-700 text-white border-blue-700"
-                        : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+                        : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-white"
                     }`}
                   >
                     {item}

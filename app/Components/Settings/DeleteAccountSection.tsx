@@ -73,7 +73,7 @@ export default function DeleteAccountSection() {
               <button
                 onClick={() => setShowModal(false)}
                 disabled={deleteAccount.isPending}
-                className="w-full py-3 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="w-full py-3 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-700 hover:bg-white transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>

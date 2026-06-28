@@ -386,7 +386,7 @@ export default function TLSResearchPage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] border transition ${
                 activeThread?.pinned
                   ? "bg-blue-50 text-blue-700 border-blue-100"
-                  : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                  : "border-gray-200 text-gray-500 hover:bg-white"
               }`}
             >
               <Pin size={12} />

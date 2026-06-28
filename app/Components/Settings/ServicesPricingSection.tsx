@@ -58,7 +58,7 @@ export default function ServicesPricingSection({ practiceAreas }: Props) {
             {practiceAreas.map((_, i) => (
               <div
                 key={i}
-                className="h-16 bg-gray-50 rounded-xl animate-pulse"
+                className="h-16 bg-white rounded-xl animate-pulse"
               />
             ))}
           </div>
@@ -87,7 +87,7 @@ export default function ServicesPricingSection({ practiceAreas }: Props) {
                   {areaServices.length === 0 ? (
                     <button
                       onClick={() => setEditingAreaId(area.id)}
-                      className="w-full py-3 border border-dashed border-gray-200 rounded-xl text-[12px] text-gray-400 hover:bg-gray-50 flex items-center justify-center gap-1.5 transition-colors"
+                      className="w-full py-3 border border-dashed border-gray-200 rounded-xl text-[12px] text-gray-400 hover:bg-white flex items-center justify-center gap-1.5 transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       Add services for {area.name}
@@ -104,10 +104,10 @@ export default function ServicesPricingSection({ practiceAreas }: Props) {
                       </div>
                       {areaServices.map((s, i) => (
                         <div key={i} className="grid grid-cols-2 gap-3">
-                          <div className="px-3 py-2.5 border border-[#E5E7EB] rounded-lg bg-gray-50 text-[13px] text-gray-700 truncate">
+                          <div className="px-3 py-2.5 border border-[#E5E7EB] rounded-lg bg-white text-[13px] text-gray-700 truncate">
                             {s.name}
                           </div>
-                          <div className="px-3 py-2.5 border border-[#E5E7EB] rounded-lg bg-gray-50 text-[13px] text-gray-700">
+                          <div className="px-3 py-2.5 border border-[#E5E7EB] rounded-lg bg-white text-[13px] text-gray-700">
                             {formatNaira(s.price)}
                           </div>
                         </div>

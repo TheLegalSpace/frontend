@@ -173,8 +173,8 @@ export default function EngagementModal({
                 className={`flex items-center gap-4 w-full px-4 py-3.5 rounded-xl border transition text-left
                   ${
                     opt.disabled
-                      ? "border-[#E5E7EB] bg-gray-50 opacity-50 cursor-not-allowed"
-                      : "border-gray-200 bg-white hover:bg-gray-50 cursor-pointer active:scale-[0.99]"
+                      ? "border-[#E5E7EB] bg-white opacity-50 cursor-not-allowed"
+                      : "border-gray-200 bg-white hover:bg-white cursor-pointer active:scale-[0.99]"
                   }`}
               >
                 <div className="shrink-0">{opt.icon}</div>

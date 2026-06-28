@@ -385,7 +385,7 @@ export default function ChatWindow({
               disabled={!isClosed}
               className={`w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${
                 isClosed
-                  ? "border-gray-300 text-amber-500 hover:bg-gray-50 cursor-pointer"
+                  ? "border-gray-300 text-amber-500 hover:bg-white cursor-pointer"
                   : "border-gray-200 text-gray-300 cursor-not-allowed"
               }`}
               aria-label="Review"
@@ -413,7 +413,7 @@ export default function ChatWindow({
 
         {/* Closed notice */}
         {isClosed && (
-          <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-center text-[12px] text-gray-500">
+          <div className="px-4 py-2 bg-white border-b border-gray-200 text-center text-[12px] text-gray-500">
             This conversation has been closed.{" "}
             {!hasReviewed ? (
               <button
@@ -443,7 +443,7 @@ export default function ChatWindow({
             <>
               {/* ── E2E encryption notice — lock on top, gray closed-notice style ── */}
               <div className="flex justify-center my-3">
-                <div className="flex flex-col items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-5 py-3 max-w-sm text-center">
+                <div className="flex flex-col items-center gap-1.5 bg-white border border-gray-200 rounded-xl px-5 py-3 max-w-sm text-center">
                   <Lock size={14} className="text-gray-400" />
                   <p className="text-[11px] text-gray-500 leading-relaxed">
                     Messages use end-to-end encryption, only chat participants can read them.
@@ -537,7 +537,7 @@ export default function ChatWindow({
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={() => setShowEngagePopover(false)}
-                  className="flex-1 py-2 rounded-lg border border-gray-200 text-[12px] font-medium text-gray-600 hover:bg-gray-50 transition"
+                  className="flex-1 py-2 rounded-lg border border-gray-200 text-[12px] font-medium text-gray-600 hover:bg-white transition"
                 >
                   Cancel
                 </button>
@@ -562,7 +562,7 @@ export default function ChatWindow({
                 className={`w-8 h-8 flex items-center justify-center rounded-full border transition shrink-0 ${
                   showEngagePopover
                     ? "border-blue-300 bg-blue-50 text-blue-600"
-                    : "border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300"
+                    : "border-gray-200 text-gray-500 hover:bg-white hover:border-gray-300"
                 }`}
                 aria-label="Propose engagement outside TLS"
               >
@@ -580,7 +580,7 @@ export default function ChatWindow({
                   hasReviewed
                     ? "border-green-200 text-green-600 cursor-default"
                     : isClosed
-                      ? "border-gray-300 text-amber-500 hover:bg-gray-50 cursor-pointer"
+                      ? "border-gray-300 text-amber-500 hover:bg-white cursor-pointer"
                       : "border-gray-200 text-gray-300 cursor-not-allowed"
                 }`}
                 aria-label={reviewLabel}
