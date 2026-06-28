@@ -1,4 +1,4 @@
-﻿import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import type { Post } from "@/app/Components/Feed/PostCard";
 
@@ -95,6 +95,7 @@ function normalizePost(
     likes: raw.likeCount,
     dislikes: raw.dislikeCount,
     userReaction: cachedReactions[raw.id] ?? null,
+    createdAt: raw.createdAt,
   };
 }
 

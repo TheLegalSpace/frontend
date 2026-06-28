@@ -47,6 +47,17 @@ function timeAgo(dateStr: string) {
   if (days === 1) return "1 day ago";
   return `${days} days ago`;
 }
+function formatArticleDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  } catch {
+    return "";
+  }
+}
 
 interface Props {
   post: MyPost;
@@ -172,37 +183,39 @@ export default function MyPostCard({
 
         {/* Article pill */}
         {post.pdfUrl && (
-          <button
-            onClick={() => setViewingPdf(true)}
-            className="w-full flex items-center gap-3 mt-2 mb-3 p-3 rounded-xl border border-[#E5E7EB] hover:bg-white transition group text-left"
-          >
-            {/* Dark "ARTICLE" thumbnail */}
-            <div className="w-12 h-12 rounded-lg bg-gray-900 flex flex-col items-center justify-center shrink-0">
-              <span className="text-[8px] font-bold uppercase tracking-widest text-gray-400">
-                Article
-              </span>
-            </div>
-
-            {/* Title + meta */}
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-gray-900 leading-snug truncate group-hover:text-blue-600 transition">
-                {post.title ?? post.pdfName ?? "Attached Article"}
-              </p>
-              <div className="flex items-center gap-3 mt-1.5 text-[11px] text-gray-400 flex-wrap">
-                {post.pdfSizeBytes && (
-                  <span className="flex items-center gap-1">
-                    <BookOpen size={10} />
-                    {(post.pdfSizeBytes / (1024 * 1024)).toFixed(1)} MB
-                  </span>
-                )}
-                <span className="ml-auto text-blue-600 font-medium flex items-center gap-1">
-                  <FileText size={10} />
-                  Read Article
+          <div className="border border-[#E5E7EB] rounded-xl overflow-hidden mb-3">
+            <div className="flex items-center gap-3 p-3">
+              <div className="w-12 h-12 bg-[#1F2937] rounded-lg flex items-center justify-center shrink-0">
+                <span className="text-white text-[9px] font-bold tracking-wide">
+                  ARTICLE
                 </span>
               </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-medium text-[#1F2937] leading-tight line-clamp-2">
+                  {post.title ?? post.pdfName ?? "Attached Article"}
+                </p>
+                {post.createdAt && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <Clock className="w-3 h-3 text-[#9CA3AF]" />
+                    <span className="text-[11px] text-[#9CA3AF]">
+                      {formatArticleDate(post.createdAt)}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </button>
+            <div className="flex items-center justify-between px-3 py-2 border-t border-[#F3F4F6]">
+              <button
+                onClick={() => setViewingPdf(true)}
+                className="flex items-center gap-1 text-[11px] text-[#6B7280] hover:text-[#1F2937] transition-colors cursor-pointer"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                Read Article
+              </button>
+            </div>
+          </div>
         )}
+
 
         {/* Actions */}
         <div className="flex items-center gap-3 mt-1">

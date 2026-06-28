@@ -443,9 +443,9 @@ export default function ChatWindow({
             <>
               {/* ── E2E encryption notice — lock on top, gray closed-notice style ── */}
               <div className="flex justify-center my-3">
-                <div className="flex flex-col items-center gap-1.5 bg-white border border-gray-200 rounded-xl px-5 py-3 max-w-sm text-center">
+                <div className="flex flex-col items-center gap-1.5 bg-white border border-gray-200 rounded-xl px-5 py-3 max-w-md text-center">
                   <Lock size={14} className="text-gray-400" />
-                  <p className="text-[11px] text-gray-500 leading-relaxed">
+                  <p className="text-[11px] text-gray-500 leading-relaxed whitespace-nowrap">
                     Messages use end-to-end encryption, only chat participants can read them.
                   </p>
                   <p className="text-[11px] text-gray-500">
