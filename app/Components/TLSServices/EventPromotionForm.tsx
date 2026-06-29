@@ -102,8 +102,8 @@ export default function EventPromotionForm() {
     } catch (err: any) {
       setError(
         err?.response?.data?.message ??
-          err?.message ??
-          "Something went wrong. Please try again."
+        err?.message ??
+        "Something went wrong. Please try again."
       );
     } finally {
       setLoading(false);
@@ -125,7 +125,7 @@ export default function EventPromotionForm() {
 
   return (
     <div className={geist.className}>
-      <form onSubmit={handleSubmit} className="px-6 py-6 flex flex-col max-w-2xl">
+      <form onSubmit={handleSubmit} className="px-6 py-6 flex flex-col max-w-full">
         <div>
           <SectionBadge>Promotion Assets</SectionBadge>
 
@@ -249,7 +249,7 @@ export default function EventPromotionForm() {
 
           <FieldLabel>Where would you like your event to be promoted?</FieldLabel>
           <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
-            <Checkbox label="TLS Platform Listing (Included)" checked onChange={() => {}} />
+            <Checkbox label="TLS Platform Listing (Included)" checked onChange={() => { }} />
             <Checkbox
               label="Share on TLS Social Media (+₦5,000)"
               checked={shareOnSocial}
@@ -344,9 +344,8 @@ function SummaryRow({
 }) {
   return (
     <div
-      className={`flex items-center justify-between px-4 py-3 text-[13px] ${
-        !last ? "border-b border-gray-100" : ""
-      } ${bold ? "bg-white" : "bg-white"}`}
+      className={`flex items-center justify-between px-4 py-3 text-[13px] ${!last ? "border-b border-gray-100" : ""
+        } ${bold ? "bg-white" : "bg-white"}`}
     >
       <span className={bold ? "text-gray-900 font-medium" : "text-gray-400"}>
         {label}

@@ -250,7 +250,7 @@ function ReviewCard({ review }: { review: Review }) {
       <div className="flex items-start justify-between gap-4 mb-2">
         <div className="flex items-center gap-3 ps-2">
           <div
-            className={`h-9 w-9 overflow-hidden rounded-full border-[3px] border-white shadow-sm transition-all duration-300 ${
+            className={`h-9 w-9 overflow-hidden rounded-full border-[3px] border-white transition-all duration-300 ${
               review.reviewer.isAnonymous ? "blur-sm" : ""
             }`}
           >

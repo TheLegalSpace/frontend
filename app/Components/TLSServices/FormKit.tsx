@@ -165,7 +165,7 @@ export function SubmitButton({
     <button
       type="submit"
       disabled={loading}
-      className="w-full flex items-center justify-center gap-1.5 py-3 rounded-md text-[13px] font-medium text-white transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-60"
+      className="w-full flex items-center justify-center gap-1.5 py-3 rounded-md text-[13px] font-medium text-white transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-60 mt-4"
       style={{ background: "#1A56DB" }}
     >
       {loading ? "Submitting…" : children}

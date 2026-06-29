@@ -67,8 +67,8 @@ export default function WebsiteForm() {
     } catch (err: any) {
       setError(
         err?.response?.data?.message ??
-          err?.message ??
-          "Something went wrong. Please try again."
+        err?.message ??
+        "Something went wrong. Please try again."
       );
     } finally {
       setLoading(false);
@@ -89,7 +89,7 @@ export default function WebsiteForm() {
   return (
     <div className={geist.className}>
 
-      <form onSubmit={handleSubmit} className="px-6 py-6 flex flex-col max-w-2xl">
+      <form onSubmit={handleSubmit} className="px-6 py-6 flex flex-col max-w-full">
         <div>
           <SectionBadge>Contact Information</SectionBadge>
           <FieldRow>
