@@ -41,7 +41,7 @@ function setCachedMessages(conversationId: string, messages: Message[]) {
       `messages:${conversationId}`,
       JSON.stringify({ updatedAt: Date.now(), items: messages.slice(-MESSAGE_CACHE_LIMIT) }),
     );
-  } catch {}
+  } catch { }
 }
 
 function getHasReviewed(conversationId: string): boolean {
@@ -55,7 +55,7 @@ function getHasReviewed(conversationId: string): boolean {
 function setHasReviewed(conversationId: string) {
   try {
     localStorage.setItem(`reviewed:${conversationId}`, "true");
-  } catch {}
+  } catch { }
 }
 
 function formatTime(dateStr: string) {
@@ -220,7 +220,7 @@ export default function ChatWindow({
         localStorage.getItem(`engage-dismissed:${conversationId}`) === "true";
       if (!alreadyDismissed) {
         setShowEngageBanner(true);
-        try { localStorage.setItem(engageBannerKey, "true"); } catch {}
+        try { localStorage.setItem(engageBannerKey, "true"); } catch { }
       }
     }
   }, [isClosed, isLawyer, conversationId, engageBannerKey]);
@@ -242,7 +242,7 @@ export default function ChatWindow({
     try {
       localStorage.removeItem(engageBannerKey);
       localStorage.setItem(`engage-dismissed:${conversationId}`, "true");
-    } catch {}
+    } catch { }
   }
 
   // ── Socket setup ──────────────────────────────────────────────────────────
@@ -383,11 +383,10 @@ export default function ChatWindow({
             <button
               onClick={onReviewClick}
               disabled={!isClosed}
-              className={`w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${
-                isClosed
-                  ? "border-gray-300 text-amber-500 hover:bg-white cursor-pointer"
-                  : "border-gray-200 text-gray-300 cursor-not-allowed"
-              }`}
+              className={`w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${isClosed
+                ? "border-gray-300 text-amber-500 hover:bg-white cursor-pointer"
+                : "border-gray-200 text-gray-300 cursor-not-allowed"
+                }`}
               aria-label="Review"
             >
               ★
@@ -443,7 +442,7 @@ export default function ChatWindow({
             <>
               {/* ── E2E encryption notice — lock on top, gray closed-notice style ── */}
               <div className="flex justify-center my-3">
-                <div className="flex flex-col items-center gap-1.5 bg-white border border-gray-200 rounded-xl px-5 py-3 max-w-md text-center">
+                <div className="flex flex-col items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-5 py-3 max-w-md text-center">
                   <Lock size={14} className="text-gray-400" />
                   <p className="text-[11px] text-gray-500 leading-relaxed whitespace-nowrap">
                     Messages use end-to-end encryption, only chat participants can read them.
@@ -468,13 +467,11 @@ export default function ChatWindow({
                         className={`flex mb-2 ${isSent ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`max-w-[75%] md:max-w-[65%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed transition-opacity ${
-                            isTemp ? "opacity-60" : "opacity-100"
-                          } ${
-                            isSent
+                          className={`max-w-[75%] md:max-w-[65%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed transition-opacity ${isTemp ? "opacity-60" : "opacity-100"
+                            } ${isSent
                               ? "bg-blue-700 text-white rounded-br-sm"
                               : "bg-gray-100 text-gray-800 border border-gray-200 rounded-bl-sm"
-                          }`}
+                            }`}
                         >
                           <p>{msg.body}</p>
                           <p className={`text-[11px] mt-1 ${isSent ? "text-blue-200" : "text-gray-400"}`}>
@@ -559,11 +556,10 @@ export default function ChatWindow({
               <button
                 onClick={() => setShowEngagePopover((v) => !v)}
                 title="Propose engagement outside TLS"
-                className={`w-8 h-8 flex items-center justify-center rounded-full border transition shrink-0 ${
-                  showEngagePopover
-                    ? "border-blue-300 bg-blue-50 text-blue-600"
-                    : "border-gray-200 text-gray-500 hover:bg-white hover:border-gray-300"
-                }`}
+                className={`w-8 h-8 flex items-center justify-center rounded-full border transition shrink-0 ${showEngagePopover
+                  ? "border-blue-300 bg-blue-50 text-blue-600"
+                  : "border-gray-200 text-gray-500 hover:bg-white hover:border-gray-300"
+                  }`}
                 aria-label="Propose engagement outside TLS"
               >
                 <Plus size={16} />
@@ -576,13 +572,12 @@ export default function ChatWindow({
                 onClick={() => !reviewDisabled && setShowReview(true)}
                 disabled={reviewDisabled}
                 title={reviewTitle}
-                className={`md:hidden w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${
-                  hasReviewed
-                    ? "border-green-200 text-green-600 cursor-default"
-                    : isClosed
-                      ? "border-gray-300 text-amber-500 hover:bg-white cursor-pointer"
-                      : "border-gray-200 text-gray-300 cursor-not-allowed"
-                }`}
+                className={`md:hidden w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${hasReviewed
+                  ? "border-green-200 text-green-600 cursor-default"
+                  : isClosed
+                    ? "border-gray-300 text-amber-500 hover:bg-white cursor-pointer"
+                    : "border-gray-200 text-gray-300 cursor-not-allowed"
+                  }`}
                 aria-label={reviewLabel}
               >
                 ★

@@ -13,7 +13,7 @@ export default function Page() {
     <div className="min-h-screen">
       {/* Fixed heading */}
       <div className="fixed top-0 left-[220px] right-0 bg-white z-10 border-b border-[#E6EAED]">
-        <div className="px-6 pt-5 pb-1 flex items-center gap-2">
+        <div className="px-6 pt-5 pb-[21px] flex items-center gap-2">
           <BackArrow href="/dashboard/TLS-Services" />
           <p className="text-[22px] font-regular text-gray-900" style={{ fontFamily: "'Instrument Serif', serif" }}>
             Book A Consultation
