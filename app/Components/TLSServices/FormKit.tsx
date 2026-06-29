@@ -71,14 +71,31 @@ export function Select(
   props: React.SelectHTMLAttributes<HTMLSelectElement> & { children: ReactNode }
 ) {
   return (
-    <select
-      {...props}
-      className={`w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition bg-white appearance-none ${
-        props.className ?? ""
-      }`}
-    >
-      {props.children}
-    </select>
+    <div className="relative">
+      <select
+        {...props}
+        className={`w-full rounded-xl border border-gray-200 px-3.5 py-2.5 pr-9 text-[13px] text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition bg-white appearance-none ${
+          props.className ?? ""
+        }`}
+      >
+        {props.children}
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-gray-400"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+    </div>
   );
 }
 
