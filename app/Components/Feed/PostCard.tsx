@@ -118,7 +118,7 @@ export default function PostCard({ post, onReact }: Props) {
         >
           <ThumbsUp
             size={16}
-            className={post.userReaction === "like" ? "fill-blue-600" : ""}
+            className={post.userReaction === "like" ? "border-blue-600" : ""}
           />
           {post.likes > 0 && <span className="font-medium">{post.likes}</span>}
         </button>
@@ -133,7 +133,7 @@ export default function PostCard({ post, onReact }: Props) {
         >
           <ThumbsDown
             size={16}
-            className={post.userReaction === "dislike" ? "fill-red-600" : ""}
+            className={post.userReaction === "dislike" ? "border-red-600" : ""}
           />
           {post.dislikes > 0 && (
             <span className="font-medium">{post.dislikes}</span>

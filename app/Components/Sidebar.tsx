@@ -462,7 +462,7 @@ export default function Sidebar() {
         )}
         <button
           onClick={() => setShowLogoutModal(true)}
-          className="w-full py-2 bg-red-50 border border-red-100 rounded-2xl text-[14px] font-medium text-red-500 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+          className="w-full py-2 bg-red-50 text-[14px] font-medium text-red-500 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
         >
           <LogOut className="w-4 h-4" />
           Logout
