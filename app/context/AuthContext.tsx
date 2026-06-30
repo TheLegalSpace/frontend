@@ -61,6 +61,9 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function getPostAuthRoute(
   account: AuthResponse["data"]["account"],
 ): string {
+  if (account.role === "ADMIN") {
+    return "/admin";
+  }
   if (account.role === "PENDING_PROFESSIONAL") {
     return "/register/lawyer-setup";
   }

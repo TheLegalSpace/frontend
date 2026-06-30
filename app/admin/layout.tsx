@@ -1,9 +1,9 @@
-// app/(dashboard)/layout.tsx
+// app/admin/layout.tsx
 "use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "../Components/Sidebar";
+import AdminSidebar from "../Components/Admin/AdminSidebar";
 import { useAuth } from "../context/AuthContext";
 import { Providers } from "../providers";
 
@@ -13,7 +13,7 @@ function hasSession() {
   return typeof window !== "undefined" && !!localStorage.getItem("accessToken");
 }
 
-export default function DashboardLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -27,28 +27,12 @@ export default function DashboardLayout({
       router.replace("/");
       return;
     }
-    if (user.role === "ADMIN") {
-      router.replace("/admin");
+    if (user.role !== "ADMIN") {
+      router.replace("/dashboard/feeds");
     }
   }, [user, isLoading, router]);
 
-  // Re-check auth when restored from browser back/forward cache
-  useEffect(() => {
-    const redirectIfUnauthenticated = () => {
-      if (!hasSession()) {
-        router.replace("/");
-      }
-    };
-
-    window.addEventListener("pageshow", redirectIfUnauthenticated);
-    window.addEventListener("popstate", redirectIfUnauthenticated);
-    return () => {
-      window.removeEventListener("pageshow", redirectIfUnauthenticated);
-      window.removeEventListener("popstate", redirectIfUnauthenticated);
-    };
-  }, [router]);
-
-  if (isLoading || !user || !hasSession()) {
+  if (isLoading || !user || !hasSession() || user.role !== "ADMIN") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="w-7 h-7 rounded-full border-2 border-gray-300 border-t-black animate-spin" />
@@ -59,10 +43,8 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-white">
       <Providers>
-        <Sidebar />
-        <main className="flex-1 min-w-0 overflow-y-auto  md:pt-0">
-          {children}
-        </main>
+        <AdminSidebar />
+        <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
       </Providers>
     </div>
   );
