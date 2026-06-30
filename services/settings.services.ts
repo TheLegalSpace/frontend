@@ -9,43 +9,12 @@ export interface UpdateProfilePayload {
   locationCountry?: string;
 }
 export interface UpdatePersonalInfoPayload {
-  fullName: string;   // ✅ not firstName/lastName
+  fullName: string; // ✅ not firstName/lastName
   phone: string;
   role: string;
   bio?: string;
   locationCity?: string;
   locationCountry?: string;
-}
-
-export interface UpdatePracticeAreasPayload {
-  practiceAreaIds: string[];
-  primaryAreaId: string;
-  secondaryAreaId: string;
-}
-
-export interface SignupServiceRow {
-  service: string;
-  pricing: string;
-}
-
-export interface UpdateServicesPayload {
-  practiceAreaId: string;
-  services: SignupServiceRow[];
-}
-
-export interface ServiceOffering {
-  id: string;
-  accountId: string;
-  practiceAreaId: string;
-  name: string;
-  price: number; // in kobo
-  createdAt: string;
-  updatedAt: string;
-}
-export interface ServiceRow {
-  practiceAreaId: string;
-  name: string;
-  price: number; // in kobo
 }
 
 /**
@@ -60,6 +29,16 @@ export interface PracticeAreaFee {
   minFee: number;
   maxFee: number;
 }
+
+/**
+ * PATCH /profile/me/practice-areas now takes a single array of practice areas,
+ * each with its fee range. (The old practiceAreaIds + separate services arrays,
+ * and GET/PUT /profile/me/services, were removed by the backend.)
+ */
+export interface UpdatePracticeAreasPayload {
+  practiceAreas: PracticeAreaFee[];
+}
+
 export const settingsService = {
   updateProfile: (payload: UpdateProfilePayload) =>
     api.patch("/profile/me", payload),
@@ -68,19 +47,12 @@ export const settingsService = {
     api.patch("/profile/me/anonymous", { isAnonymous }),
 
   deleteAccount: () => api.delete("/auth/account"),
-getServices: () =>
-    api.get<{ error: boolean; message: string; data: ServiceOffering[] }>(
-      "/profile/me/services"
-    ),
+
   updatePersonalInfo: (payload: UpdatePersonalInfoPayload) =>
     api.patch("/profile/me", payload),
 
   updatePracticeAreas: (payload: UpdatePracticeAreasPayload) =>
     api.patch("/profile/me/practice-areas", payload),
-
-  updateServices: (services: ServiceRow[]) =>
-    api.put<{ data: { items: ServiceOffering[]; feeRangeMin: number; feeRangeMax: number } }>(
-      "/profile/me/services",
-      { services }
-    ),
 };
+
+

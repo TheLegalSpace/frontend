@@ -1,6 +1,7 @@
 // services/profile.service.ts
 import { api } from "./api";
 import { AuthResponse } from "./auth.services";
+import type { PracticeAreaFee } from "./settings.services";
 
 export type PracticeAreaRef =
   | string
@@ -115,8 +116,8 @@ export const profileService = {
   toggleAnonymous: (isAnonymous: boolean) =>
     api.patch("/profile/me/anonymous", { isAnonymous }),
 
-  updatePracticeAreas: (practiceAreaIds: string[]) =>
-    api.patch("/profile/me/practice-areas", { practiceAreaIds }),
+  updatePracticeAreas: (practiceAreas: PracticeAreaFee[]) =>
+    api.patch("/profile/me/practice-areas", { practiceAreas }),
 
   getConnections: (accountId: string, page = 1, limit = 20) =>
     api.get(`/profile/${accountId}/connections`, { params: { page, limit } }),
