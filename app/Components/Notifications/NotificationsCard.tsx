@@ -12,6 +12,7 @@ import {
   Bell,
   BookOpen,
   Calendar,
+  Clock,
 } from "lucide-react";
 import { Notification, NotificationType } from "@/app/types/notification";
 
@@ -62,6 +63,17 @@ function getNotificationMeta(type: NotificationType): {
       return { icon: <CheckCircle size={15} />, label: "Request Accepted" };
     case "request_declined":
       return { icon: <XCircle size={15} />, label: "Request Declined" };
+    case "chat_expiring":
+      return { icon: <Clock size={15} />, label: "Chat Expiring Soon" };
+    case "request_expiring":
+      return { icon: <Clock size={15} />, label: "Lead Expiring Soon" };
+    case "reply_reminder":
+      return { icon: <MessageSquare size={15} />, label: "Reply Reminder" };
+    case "unread_client_message":
+      return {
+        icon: <AlertTriangle size={15} />,
+        label: "Unread Client Message",
+      };
     default:
       return { icon: <Bell size={15} />, label: "Notification" };
   }
@@ -181,6 +193,35 @@ function getBodyText(notif: Notification): {
             your request.
           </>
         ),
+      };
+    case "chat_expiring": {
+      const when = notif.payload.expiresAt;
+      return {
+        primary: "One of your conversations is about to be archived.",
+        secondary: when
+          ? `Chats archive after 14 days of inactivity. Send a message before ${formatDate(when)} to keep it active.`
+          : "Chats archive after 14 days of inactivity. Send a message to keep it active.",
+      };
+    }
+    case "request_expiring": {
+      const when = notif.payload.expiresAt;
+      return {
+        primary: "A lead is about to expire.",
+        secondary: when
+          ? `Respond before ${formatDate(when)} so you don't lose it.`
+          : "Respond soon so you don't lose it.",
+      };
+    }
+    case "reply_reminder":
+      return {
+        primary: "You have an unread message waiting for your reply.",
+        secondary: "Open the conversation to read it and respond.",
+      };
+    case "unread_client_message":
+      return {
+        primary: "A client is still waiting to hear from you.",
+        secondary:
+          "You have an unread client message — reply to keep the conversation moving.",
       };
     default:
       return {
