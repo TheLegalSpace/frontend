@@ -23,6 +23,7 @@ import { SendRequestPayload } from "@/services/requests.services";
 import { useSearchLawyers, useSearchByText } from "@/hooks/useIntake";
 import { useSendRequest } from "@/hooks/useRequests";
 import Image from "next/image";
+import LawyerProfileView from "./LawyerProfileView";
 
 interface SearchState {
   results: MatchResult[];
@@ -117,9 +118,11 @@ function QuestionBlock({
 function LawyerCard({
   match,
   extracted,
+  onViewProfile,
 }: {
   match: MatchResult;
   extracted: ExtractedIntake;
+  onViewProfile: (accountId: string) => void;
 }) {
   const sendRequest = useSendRequest();
 
@@ -265,7 +268,10 @@ function LawyerCard({
       {error && <p className="text-[12px] text-red-500 mt-4">{error}</p>}
 
       <div className="grid grid-cols-2 gap-3 mt-6">
-        <button className="h-11  border border-[#EAEAEA] text-[13px] font-medium text-[#444] hover:bg-[#FAFAFA] bg-[#F7F7F7] transition-colors rounded">
+        <button
+          onClick={() => onViewProfile(account.id)}
+          className="h-11 rounded-2xl border border-[#EAEAEA] text-[13px] font-medium text-[#444] hover:bg-[#FAFAFA] transition-colors"
+        >
           View Profile
         </button>
 
@@ -301,6 +307,10 @@ export default function FindALawyer() {
   const [hasSearched, setHasSearched] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "firms" | "lawyers">(
     "firms",
+  );
+  // When set, show that account's profile in place (search results stay mounted).
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
+    null,
   );
 
   const searchByText = useSearchByText();
@@ -406,254 +416,269 @@ export default function FindALawyer() {
       : `No matching ${activeTab === "firms" ? "firms" : "lawyers"} found`;
 
   return (
-    <div className="grid grid-cols-[55%_45%] h-[calc(100vh-64px)] bg-[#FAFAFA] overflow-hidden">
-      {/* LEFT PANEL */}
-      <div className="bg-white border-r border-[#ECECEC] flex flex-col overflow-hidden">
-        {/* HEADER */}
-        <div className="h-18 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0">
-          <div>
-            <h1 className="text-[28px] font-serif text-[#202020]">
-              Find a Lawyer
-            </h1>
-          </div>
+    <>
+      {/* In-place lawyer/firm profile — search results stay in memory */}
+      {selectedAccountId && (
+        <LawyerProfileView
+          accountId={selectedAccountId}
+          onBack={() => setSelectedAccountId(null)}
+        />
+      )}
 
-          {hasSearched && (
-            <button
-              onClick={handleRestart}
-              className="rounded-full bg-[#F7F7F7] px-4 py-2 text-[12px] text-[#555] hover:bg-[#EFEFEF] transition-colors flex items-center gap-2"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Restart search
-            </button>
-          )}
-        </div>
-
-        {/* CONVERSATION */}
-        <div className="flex-1 overflow-y-auto px-8 py-8">
-          {!hasSearched && (
-            <div className="max-w-xl pt-12">
-              <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] flex items-center justify-center mb-8">
-                <Send className="w-6 h-6 text-[#1D4ED8]" />
-              </div>
-
-              <h2 className="text-[32px] leading-tight font-serif text-[#202020] max-w-lg">
-                Tell us about your legal situation.
-              </h2>
-
-              <p className="mt-6 text-[15px] leading-8 text-[#6B6B6B] max-w-xl">
-                Describe your issue naturally. Mention your location,
-                approximate budget, and the kind of legal help you need.
-              </p>
-
-              <div className="mt-10 rounded-3xl border border-[#ECECEC] bg-[#FCFCFC] p-6">
-                <p className="text-[13px] text-[#9B9B9B] uppercase tracking-wide mb-3">
-                  Example
-                </p>
-
-                <p className="text-[15px] leading-8 text-[#444]">
-                  &quot;My landlord is trying to evict me illegally in Lagos and
-                  I can pay around ₦150k for legal representation.&quot;
-                </p>
-              </div>
-            </div>
-          )}
-
-          {isSearching && (
-            <div className="h-full flex items-center justify-center">
-              <div className="flex flex-col items-center gap-4">
-                <Loader2 className="w-8 h-8 text-[#1D4ED8] animate-spin" />
-
-                <div className="text-center">
-                  <p className="text-[16px] font-medium text-[#202020]">
-                    Analysing your request
-                  </p>
-
-                  <p className="text-[14px] text-[#777] mt-1">
-                    Finding the best legal matches for you...
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!isSearching && searchState && extracted && (
-            <div className="max-w-2xl space-y-8">
-              <QuestionBlock
-                question="What is your legal matter about?"
-                answer={extracted.matter?.name || "General Legal Matter"}
-              />
-
-              <QuestionBlock
-                question="What is your budget?"
-                answer={formatBudgetLabel(extracted.budget) || "Flexible"}
-              />
-
-              <QuestionBlock
-                question="Where do you need legal help?"
-                answer={extracted.location || "Anywhere"}
-              />
-
-              <QuestionBlock
-                question="Who would you prefer?"
-                answer={extracted.preference || "Either"}
-              />
-            </div>
-          )}
-
-          <div ref={bottomRef} />
-        </div>
-
-        {/* INPUT */}
-        <div className="border-t border-[#ECECEC] bg-white px-6 py-5 shrink-0">
-          {validationError && (
-            <p className="text-[12px] text-red-500 mb-3">{validationError}</p>
-          )}
-
-          <div className="flex items-end gap-3 rounded-3xl border border-[#EAEAEA] bg-white px-5 py-4 shadow-sm">
-            <textarea
-              ref={inputRef}
-              rows={1}
-              value={inputValue}
-              disabled={isSearching}
-              placeholder="Describe your legal situation..."
-              onChange={(e) => {
-                setInputValue(e.target.value);
-
-                e.target.style.height = "auto";
-                e.target.style.height = `${Math.min(
-                  e.target.scrollHeight,
-                  140,
-                )}px`;
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              className="flex-1 resize-none bg-transparent outline-none text-[15px] leading-7 text-[#202020] placeholder:text-[#999] max-h-35"
-            />
-
-            <button
-              onClick={handleSubmit}
-              disabled={!inputValue.trim() || isSearching}
-              className="w-12 h-12 rounded-2xl bg-[#1D4ED8] flex items-center justify-center hover:bg-[#1947C6] transition-colors disabled:opacity-40 shrink-0"
-            >
-              {isSearching ? (
-                <Loader2 className="w-4 h-4 text-white animate-spin" />
-              ) : (
-                <Send className="w-4 h-4 text-white" />
-              )}
-            </button>
-          </div>
-
-          <p className="text-center text-[11px] text-[#B0B0B0] mt-3">
-            Press Enter to search
-          </p>
-        </div>
-      </div>
-
-      {/* RIGHT PANEL */}
-      <div className="bg-[#FCFCFC] overflow-y-auto">
-        <div className="px-8 py-8 max-w-3xl">
-          <div className="flex items-center justify-between mb-6">
+      <div
+        className={`grid grid-cols-[55%_45%] h-[calc(100vh-64px)] bg-[#FAFAFA] overflow-hidden ${
+          selectedAccountId ? "hidden" : ""
+        }`}
+      >
+        {/* LEFT PANEL */}
+        <div className="bg-white border-r border-[#ECECEC] flex flex-col overflow-hidden">
+          {/* HEADER */}
+          <div className="h-18 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0">
             <div>
-              <h2 className="text-[32px] font-serif text-[#202020] leading-none">
-                Search Result
-              </h2>
-
-              {searchState && (
-                <p className="text-[14px] text-[#777] mt-3">
-                  {resultsSummaryText}
-                </p>
-              )}
+              <h1 className="text-[28px] font-serif text-[#202020]">
+                Get A Lawyer
+              </h1>
             </div>
+
+            {hasSearched && (
+              <button
+                onClick={handleRestart}
+                className="rounded-full bg-[#F7F7F7] px-4 py-2 text-[12px] text-[#555] hover:bg-[#EFEFEF] transition-colors flex items-center gap-2"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Restart search
+              </button>
+            )}
           </div>
 
-          {searchState && (
-            <div className="flex gap-2 mb-8">
-              <button
-                type="button"
-                onClick={() => setActiveTab("firms")}
-                className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
-                  activeTab === "firms"
-                    ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
-                    : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
-                }`}
-              >
-                Firms
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("lawyers")}
-                className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
-                  activeTab === "lawyers"
-                    ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
-                    : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
-                }`}
-              >
-                Lawyers
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("all")}
-                className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
-                  activeTab === "all"
-                    ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
-                    : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
-                }`}
-              >
-                All
-              </button>
-            </div>
-          )}
-
-          {!hasSearched && (
-            <div className="h-[70vh] flex items-center justify-center">
-              <div className="text-center max-w-sm">
-                <div className="w-16 h-16 rounded-3xl bg-white border border-[#EFEFEF] shadow-sm mx-auto flex items-center justify-center mb-6">
-                  <Users className="w-7 h-7 text-[#999]" />
+          {/* CONVERSATION */}
+          <div className="flex-1 overflow-y-auto px-8 py-8">
+            {!hasSearched && (
+              <div className="max-w-xl pt-12">
+                <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] flex items-center justify-center mb-8">
+                  <Send className="w-6 h-6 text-[#1D4ED8]" />
                 </div>
 
-                <h3 className="text-[20px] font-semibold text-[#202020]">
-                  Firm and lawyer matches will appear here
-                </h3>
+                <h2 className="text-[32px] leading-tight font-serif text-[#202020] max-w-lg">
+                  Tell us about your legal situation.
+                </h2>
 
-                <p className="text-[15px] leading-7 text-[#777] mt-4">
-                  Once you describe your legal situation, we will find the best
-                  legal matches (law firms and independent lawyers) based on
-                  expertise, budget, and location.
+                <p className="mt-6 text-[15px] leading-8 text-[#6B6B6B] max-w-xl">
+                  Describe your issue naturally. Mention your location,
+                  approximate budget, and the kind of legal help you need.
                 </p>
+
+                <div className="mt-10 rounded-3xl border border-[#ECECEC] bg-[#FCFCFC] p-6">
+                  <p className="text-[13px] text-[#9B9B9B] uppercase tracking-wide mb-3">
+                    Example
+                  </p>
+
+                  <p className="text-[15px] leading-8 text-[#444]">
+                    &quot;My landlord is trying to evict me illegally in Lagos
+                    and I can pay around ₦150k for legal representation.&quot;
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {isSearching && (
+              <div className="h-full flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                  <Loader2 className="w-8 h-8 text-[#1D4ED8] animate-spin" />
+
+                  <div className="text-center">
+                    <p className="text-[16px] font-medium text-[#202020]">
+                      Analysing your request
+                    </p>
+
+                    <p className="text-[14px] text-[#777] mt-1">
+                      Finding the best legal matches for you...
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!isSearching && searchState && extracted && (
+              <div className="max-w-2xl space-y-8">
+                <QuestionBlock
+                  question="What is your legal matter about?"
+                  answer={extracted.matter?.name || "General Legal Matter"}
+                />
+
+                <QuestionBlock
+                  question="What is your budget?"
+                  answer={formatBudgetLabel(extracted.budget) || "Flexible"}
+                />
+
+                <QuestionBlock
+                  question="Where do you need legal help?"
+                  answer={extracted.location || "Anywhere"}
+                />
+
+                <QuestionBlock
+                  question="Who would you prefer?"
+                  answer={extracted.preference || "Either"}
+                />
+              </div>
+            )}
+
+            <div ref={bottomRef} />
+          </div>
+
+          {/* INPUT */}
+          <div className="border-t border-[#ECECEC] bg-white px-6 py-5 shrink-0">
+            {validationError && (
+              <p className="text-[12px] text-red-500 mb-3">{validationError}</p>
+            )}
+
+            <div className="flex items-end gap-3 rounded-3xl border border-[#EAEAEA] bg-white px-5 py-4 shadow-sm">
+              <textarea
+                ref={inputRef}
+                rows={1}
+                value={inputValue}
+                disabled={isSearching}
+                placeholder="Describe your legal situation..."
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+
+                  e.target.style.height = "auto";
+                  e.target.style.height = `${Math.min(
+                    e.target.scrollHeight,
+                    140,
+                  )}px`;
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                className="flex-1 resize-none bg-transparent outline-none text-[15px] leading-7 text-[#202020] placeholder:text-[#999] max-h-35"
+              />
+
+              <button
+                onClick={handleSubmit}
+                disabled={!inputValue.trim() || isSearching}
+                className="w-12 h-12 rounded-2xl bg-[#1D4ED8] flex items-center justify-center hover:bg-[#1947C6] transition-colors disabled:opacity-40 shrink-0"
+              >
+                {isSearching ? (
+                  <Loader2 className="w-4 h-4 text-white animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4 text-white" />
+                )}
+              </button>
+            </div>
+
+            <p className="text-center text-[11px] text-[#B0B0B0] mt-3">
+              Press Enter to search
+            </p>
+          </div>
+        </div>
+
+        {/* RIGHT PANEL */}
+        <div className="bg-[#FCFCFC] overflow-y-auto">
+          <div className="px-8 py-8 max-w-3xl">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-[32px] font-serif text-[#202020] leading-none">
+                  Search Result
+                </h2>
+
+                {searchState && (
+                  <p className="text-[14px] text-[#777] mt-3">
+                    {resultsSummaryText}
+                  </p>
+                )}
               </div>
             </div>
-          )}
 
-          {!isSearching && searchState && (
-            <div className="space-y-5">
-              {orderedResults.length > 0 ? (
-                orderedResults.map((match) => (
-                  <LawyerCard
-                    key={match.account.id}
-                    match={match}
-                    extracted={searchState.extracted}
-                  />
-                ))
-              ) : (
-                <div className="rounded-3xl border border-[#ECECEC] bg-white p-10 text-center">
-                  <h3 className="text-[18px] font-semibold text-[#202020]">
-                    {emptyStateTitle}
+            {searchState && (
+              <div className="flex gap-2 mb-8">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("firms")}
+                  className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                    activeTab === "firms"
+                      ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
+                      : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
+                  }`}
+                >
+                  Firms
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("lawyers")}
+                  className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                    activeTab === "lawyers"
+                      ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
+                      : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
+                  }`}
+                >
+                  Lawyers
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("all")}
+                  className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                    activeTab === "all"
+                      ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
+                      : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
+                  }`}
+                >
+                  All
+                </button>
+              </div>
+            )}
+
+            {!hasSearched && (
+              <div className="h-[70vh] flex items-center justify-center">
+                <div className="text-center max-w-sm">
+                  <div className="w-16 h-16 rounded-3xl bg-white border border-[#EFEFEF] shadow-sm mx-auto flex items-center justify-center mb-6">
+                    <Users className="w-7 h-7 text-[#999]" />
+                  </div>
+
+                  <h3 className="text-[20px] font-semibold text-[#202020]">
+                    Firm and lawyer matches will appear here
                   </h3>
 
-                  <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
-                    Try adjusting your legal description, budget, or preferred
-                    location to broaden the search.
+                  <p className="text-[15px] leading-7 text-[#777] mt-4">
+                    Once you describe your legal situation, we will find the
+                    best legal matches (law firms and independent lawyers) based
+                    on expertise, budget, and location.
                   </p>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+
+            {!isSearching && searchState && (
+              <div className="space-y-5">
+                {orderedResults.length > 0 ? (
+                  orderedResults.map((match) => (
+                    <LawyerCard
+                      key={match.account.id}
+                      match={match}
+                      extracted={searchState.extracted}
+                      onViewProfile={setSelectedAccountId}
+                    />
+                  ))
+                ) : (
+                  <div className="rounded-3xl border border-[#ECECEC] bg-white p-10 text-center">
+                    <h3 className="text-[18px] font-semibold text-[#202020]">
+                      {emptyStateTitle}
+                    </h3>
+
+                    <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
+                      Try adjusting your legal description, budget, or preferred
+                      location to broaden the search.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

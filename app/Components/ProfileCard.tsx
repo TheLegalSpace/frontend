@@ -21,6 +21,7 @@ import {
   type ProfileArticle,
 } from "@/services/profile.services";
 import { useProfileArticles, useProfileReviews } from "@/hooks/useProfile";
+import { useToggleFollow } from "@/hooks/useFollows";
 
 import type { Review } from "@/services/profile.services";
 import { useAuth } from "../context/AuthContext";
@@ -313,8 +314,11 @@ export default function ProfileCard({
   const [showTooltip, setShowTooltip] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(!!profile.isFollowing);
+  const [showFollowTip, setShowFollowTip] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const toggleFollow = useToggleFollow();
 
   const isLawyer = profile.role === USER_ROLES.LAWYER;
   const isFirm = profile.role === USER_ROLES.FIRM;
@@ -348,6 +352,29 @@ export default function ProfileCard({
     setIsAnonymous(profile.isAnonymous);
   }, [profile.isAnonymous]);
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsFollowing(!!profile.isFollowing);
+  }, [profile.isFollowing]);
+
+  const handleToggleFollow = async () => {
+    if (isOwnProfile || toggleFollow.isPending) return;
+    const wasFollowing = isFollowing;
+    setIsFollowing(!wasFollowing); // optimistic
+    if (!wasFollowing) {
+      setShowFollowTip(true);
+      setTimeout(() => setShowFollowTip(false), 3000);
+    }
+    try {
+      await toggleFollow.mutateAsync({
+        accountId: profile.id,
+        isFollowing: wasFollowing,
+      });
+    } catch {
+      setIsFollowing(wasFollowing); // revert on failure
+    }
+  };
+
   const handleToggleAnonymous = async () => {
     if (!isOwnProfile) return;
     setIsToggling(true);
@@ -372,19 +399,21 @@ export default function ProfileCard({
     <div className="w-full">
       <div className="overflow-hidden rounded-2xl  bg-white">
         {/* Cover */}
-        {/* <div className="relative h-44 w-full overflow-hidden bg-[#E5E7EB]">
-          {profile.coverUrl ? (
-            <img
-              src={profile.coverUrl}
-              alt="cover"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="h-full w-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-              <span>No Cover Photo</span>
-            </div>
-          )}
-        </div> */}
+        {isFirm && (
+          <div className="relative h-44 w-full overflow-hidden bg-[#E5E7EB]">
+            {profile.coverUrl ? (
+              <img
+                src={profile.coverUrl}
+                alt="cover"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                <span>No Cover Photo</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Profile header */}
         <div className="px- pt-4 pb-5">
