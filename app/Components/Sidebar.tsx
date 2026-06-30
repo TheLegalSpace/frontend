@@ -270,6 +270,9 @@ export default function Sidebar() {
   const [researchThreadActive, setResearchThreadActive] = useState(false);
 
   const role: UserRole = (user?.role as UserRole) ?? "USER";
+  const unreadMessageCount = user?.unreadMessageCount as number;
+  const pendingLeadCount = user?.pendingLeadCount as number;
+  // console.log(unreadMessageCount);
   const navItems = NAV_ITEMS[role] ?? NAV_ITEMS.USER;
   const footerCta = FOOTER_CTA[role];
 
@@ -438,6 +441,16 @@ export default function Sidebar() {
                 className={`w-4 h-4 shrink-0 ${isActive ? "text-blue-600" : "text-gray-400"}`}
               />
               {label}
+              {label === "Messages" && unreadMessageCount > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                  {unreadMessageCount}
+                </span>
+              )}
+              {label === "Leads" && pendingLeadCount > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                  {pendingLeadCount}
+                </span>
+              )}
             </Link>
           );
         })}

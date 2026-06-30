@@ -47,6 +47,19 @@ export interface ServiceRow {
   name: string;
   price: number; // in kobo
 }
+
+/**
+ * New per-practice-area fee shape used by:
+ *   POST /profile/me/lawyer/setup
+ *   POST /profile/me/firm/setup
+ *   PATCH /profile/me/practice-areas
+ * Fees are in kobo (naira × 100); minFee ≤ maxFee.
+ */
+export interface PracticeAreaFee {
+  practiceAreaId: string;
+  minFee: number;
+  maxFee: number;
+}
 export const settingsService = {
   updateProfile: (payload: UpdateProfilePayload) =>
     api.patch("/profile/me", payload),

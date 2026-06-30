@@ -10,6 +10,9 @@ export type PracticeAreaRef =
       slug?: string;
       isActive?: boolean;
       createdAt?: string;
+      // Backend now returns a fee range (in kobo) per practice area.
+      minFee?: number;
+      maxFee?: number;
     };
 
 export type ProfileData = AuthResponse["data"]["account"] & {

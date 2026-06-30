@@ -37,7 +37,13 @@ export interface AuthError {
 }
 
 interface AuthContextType {
-  user: AuthResponse["data"]["account"] | null;
+  user:
+    | (AuthResponse["data"]["account"] & {
+        unreadMessageCount?: number;
+        unreadNotificationCount?: number;
+        pendingLeadCount?: number;
+      })
+    | null;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
   loginWithGoogle: (

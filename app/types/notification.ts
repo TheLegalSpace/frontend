@@ -6,6 +6,10 @@ export type NotificationType = | "new_article"
   | "request_declined"
   | "new_follower"
   | "new_review"
+  | "chat_expiring"
+  | "request_expiring"
+  | "reply_reminder"
+  | "unread_client_message"
   | string;
 
 export interface NotificationArticle {
@@ -26,6 +30,10 @@ export interface Notification {
         message?: string;
         article?: NotificationArticle;
         conversationId?: string;
+        // ── New notification types ──
+        expiresAt?: string;   // chat_expiring, request_expiring
+        requestId?: string;   // request_expiring
+        messageId?: string;   // reply_reminder, unread_client_message
         [key: string]: unknown
     }
 }
