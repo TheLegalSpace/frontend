@@ -605,9 +605,9 @@ export default function ChatWindow({
                               {isUnread && (
                                 <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                               )}
-                              {!isUnread && !isSent && msg.readAt && (
+                              {/* {!isUnread && !isSent && msg.readAt && (
                                 <span className="text-[10px] text-green-500">✓ Read</span>
-                              )}
+                              )} */}
                             </p>
                           </div>
                         </div>
