@@ -177,7 +177,7 @@ function LawyerCard({
           {/* Avatar: show image if available, otherwise initials */}
           <div
             className={`relative w-14 h-14 rounded-2xl flex items-center justify-center font-semibold text-sm shrink-0 overflow-hidden ${getAvatarColor(
-              account.fullName
+              account.fullName,
             )}`}
           >
             {account.avatarUrl ? (
@@ -215,18 +215,18 @@ function LawyerCard({
 
             <div className="flex flex-wrap gap-2 mt-4">
               {account.locationCity && (
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F7F7F7] px-3 py-1.5 text-[12px] text-[#666]">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#22C55E1A] px-3 py-1.5 text-[12px] text-[#22C55E]">
                   <MapPin className="w-3 h-3" />
                   {account.locationCity}, {account.locationCountry}
                 </div>
               )}
 
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F7F7F7] px-3 py-1.5 text-[12px] text-[#666]">
-                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F5C4511A] px-3 py-1.5 text-[12px] text-[#F5C451]">
+                <Star className="w-3 h-3 fill-[#F5C451] text-[#F5C451]" />
                 {parseFloat(account.avgRating || "0").toFixed(1)}
               </div>
 
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F7F7F7] px-3 py-1.5 text-[12px] text-[#666]">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#0084FF1A] px-3 py-1.5 text-[12px] text-[#0084FF]">
                 <Users className="w-3 h-3" />
                 {account.connectionCount}+ connections
               </div>
@@ -249,7 +249,7 @@ function LawyerCard({
         </div>
       </div>
 
-      {matchedFactors.length > 0 && (
+      {/* {matchedFactors.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-5">
           {matchedFactors.map((factor) => (
             <div
@@ -260,19 +260,19 @@ function LawyerCard({
             </div>
           ))}
         </div>
-      )}
+      )} */}
 
       {error && <p className="text-[12px] text-red-500 mt-4">{error}</p>}
 
       <div className="grid grid-cols-2 gap-3 mt-6">
-        <button className="h-11 rounded-2xl border border-[#EAEAEA] text-[13px] font-medium text-[#444] hover:bg-[#FAFAFA] transition-colors">
+        <button className="h-11  border border-[#EAEAEA] text-[13px] font-medium text-[#444] hover:bg-[#FAFAFA] bg-[#F7F7F7] transition-colors rounded">
           View Profile
         </button>
 
         <button
           onClick={handleSend}
           disabled={sent || isSending || sendRequest.isPending}
-          className={`h-11 rounded-2xl text-[13px] font-medium transition-all flex items-center justify-center gap-2 ${
+          className={`h-11 text-[13px] font-medium transition-all flex items-center justify-center gap-2 rounded ${
             sent
               ? "bg-green-500 text-white"
               : "bg-[#1D4ED8] text-white hover:bg-[#1B46C4]"
@@ -372,11 +372,13 @@ export default function FindALawyer() {
   };
 
   const firmResults =
-    searchState?.results.filter((r) => classifyAccountType(r.account) === "firm") ??
-    [];
+    searchState?.results.filter(
+      (r) => classifyAccountType(r.account) === "firm",
+    ) ?? [];
   const lawyerResults =
-    searchState?.results.filter((r) => classifyAccountType(r.account) === "lawyer") ??
-    [];
+    searchState?.results.filter(
+      (r) => classifyAccountType(r.account) === "lawyer",
+    ) ?? [];
 
   // "All" should show firms first per product request.
   const orderedResults =
@@ -411,7 +413,7 @@ export default function FindALawyer() {
         <div className="h-18 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-[28px] font-serif text-[#202020]">
-              Get A Lawyer
+              Find a Lawyer
             </h1>
           </div>
 
@@ -434,13 +436,13 @@ export default function FindALawyer() {
                 <Send className="w-6 h-6 text-[#1D4ED8]" />
               </div>
 
-              <h2 className="text-[40px] leading-tight font-serif text-[#202020] max-w-lg">
+              <h2 className="text-[32px] leading-tight font-serif text-[#202020] max-w-lg">
                 Tell us about your legal situation.
               </h2>
 
               <p className="mt-6 text-[15px] leading-8 text-[#6B6B6B] max-w-xl">
-                Describe your issue naturally. Mention your location, approximate
-                budget, and the kind of legal help you need.
+                Describe your issue naturally. Mention your location,
+                approximate budget, and the kind of legal help you need.
               </p>
 
               <div className="mt-10 rounded-3xl border border-[#ECECEC] bg-[#FCFCFC] p-6">
@@ -449,8 +451,8 @@ export default function FindALawyer() {
                 </p>
 
                 <p className="text-[15px] leading-8 text-[#444]">
-                  &quot;My landlord is trying to evict me illegally in Lagos and I can
-                  pay around ₦150k for legal representation.&quot;
+                  &quot;My landlord is trying to evict me illegally in Lagos and
+                  I can pay around ₦150k for legal representation.&quot;
                 </p>
               </div>
             </div>
@@ -556,7 +558,7 @@ export default function FindALawyer() {
         <div className="px-8 py-8 max-w-3xl">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-[42px] font-serif text-[#202020] leading-none">
+              <h2 className="text-[32px] font-serif text-[#202020] leading-none">
                 Search Result
               </h2>
 
@@ -638,7 +640,9 @@ export default function FindALawyer() {
                 ))
               ) : (
                 <div className="rounded-3xl border border-[#ECECEC] bg-white p-10 text-center">
-                  <h3 className="text-[18px] font-semibold text-[#202020]">{emptyStateTitle}</h3>
+                  <h3 className="text-[18px] font-semibold text-[#202020]">
+                    {emptyStateTitle}
+                  </h3>
 
                   <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
                     Try adjusting your legal description, budget, or preferred
