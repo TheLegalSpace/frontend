@@ -1,7 +1,7 @@
 // app/Components/Messages/ChatWindow.tsx
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Send, Loader2, Lock, ArrowLeft, Plus, X } from "lucide-react";
 import { Message } from "@/app/types/message";
 import { messagesService } from "@/services/messages.services";
@@ -25,7 +25,10 @@ function getCachedMessages(conversationId: string): Message[] {
       | Message[]
       | { updatedAt?: number; items?: Message[] };
     if (Array.isArray(parsed)) return parsed;
-    if (parsed.updatedAt && Date.now() - parsed.updatedAt > MESSAGE_CACHE_TTL_MS) {
+    if (
+      parsed.updatedAt &&
+      Date.now() - parsed.updatedAt > MESSAGE_CACHE_TTL_MS
+    ) {
       localStorage.removeItem(`messages:${conversationId}`);
       return [];
     }
@@ -39,9 +42,12 @@ function setCachedMessages(conversationId: string, messages: Message[]) {
   try {
     localStorage.setItem(
       `messages:${conversationId}`,
-      JSON.stringify({ updatedAt: Date.now(), items: messages.slice(-MESSAGE_CACHE_LIMIT) }),
+      JSON.stringify({
+        updatedAt: Date.now(),
+        items: messages.slice(-MESSAGE_CACHE_LIMIT),
+      }),
     );
-  } catch { }
+  } catch {}
 }
 
 function getHasReviewed(conversationId: string): boolean {
@@ -55,7 +61,7 @@ function getHasReviewed(conversationId: string): boolean {
 function setHasReviewed(conversationId: string) {
   try {
     localStorage.setItem(`reviewed:${conversationId}`, "true");
-  } catch { }
+  } catch {}
 }
 
 function formatTime(dateStr: string) {
@@ -74,7 +80,11 @@ function formatDateLabel(dateStr: string) {
   const label =
     d.toDateString() === today.toDateString()
       ? "Today"
-      : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+      : d.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
   dateLabelCache.set(dateStr, label);
   if (dateLabelCache.size > 500) {
     const firstKey = dateLabelCache.keys().next().value;
@@ -124,11 +134,14 @@ export default function ChatWindow({
   const isMountedRef = useRef(true);
   useEffect(() => {
     isMountedRef.current = true;
-    return () => { isMountedRef.current = false; };
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   const queryClient = useQueryClient();
-  const { appendMessage, markMessageRead, setMessages } = useMessageCache(conversationId);
+  const { appendMessage, markMessageRead, setMessages } =
+    useMessageCache(conversationId);
 
   // ── Seed TanStack cache from localStorage on first load ───────────────────
   useEffect(() => {
@@ -154,7 +167,9 @@ export default function ChatWindow({
   const [showReview, setShowReview] = useState(false);
   const [showEngagementModal, setShowEngagementModal] = useState(false);
   const [showEngagePopover, setShowEngagePopover] = useState(false);
-  const [hasReviewed, setHasReviewedState] = useState(() => getHasReviewed(conversationId));
+  const [hasReviewed, setHasReviewedState] = useState(() =>
+    getHasReviewed(conversationId),
+  );
 
   // ── Identity revealed notice — auto-dismisses after 4s ───────────────────
   // Only shows when isAnonymous transitions to false (user just revealed).
@@ -186,7 +201,11 @@ export default function ChatWindow({
   const engageBannerKey = `engage-banner:${conversationId}`;
   const [showEngageBanner, setShowEngageBanner] = useState(() => {
     if (typeof window === "undefined") return false;
-    try { return localStorage.getItem(engageBannerKey) === "true"; } catch { return false; }
+    try {
+      return localStorage.getItem(engageBannerKey) === "true";
+    } catch {
+      return false;
+    }
   });
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -220,7 +239,9 @@ export default function ChatWindow({
         localStorage.getItem(`engage-dismissed:${conversationId}`) === "true";
       if (!alreadyDismissed) {
         setShowEngageBanner(true);
-        try { localStorage.setItem(engageBannerKey, "true"); } catch { }
+        try {
+          localStorage.setItem(engageBannerKey, "true");
+        } catch {}
       }
     }
   }, [isClosed, isLawyer, conversationId, engageBannerKey]);
@@ -242,7 +263,7 @@ export default function ChatWindow({
     try {
       localStorage.removeItem(engageBannerKey);
       localStorage.setItem(`engage-dismissed:${conversationId}`, "true");
-    } catch { }
+    } catch {}
   }
 
   // ── Socket setup ──────────────────────────────────────────────────────────
@@ -254,9 +275,16 @@ export default function ChatWindow({
     const handleMessage = (msg: Message) => {
       if (msg.conversationId === conversationId) appendMessage(msg);
     };
-    const handleMessageRead = ({ messageId }: {
-      conversationId: string; messageId: string; readAt: string; readByAccountId: string;
-    }) => { markMessageRead(messageId); };
+    const handleMessageRead = ({
+      messageId,
+    }: {
+      conversationId: string;
+      messageId: string;
+      readAt: string;
+      readByAccountId: string;
+    }) => {
+      markMessageRead(messageId);
+    };
     const handleConnectError = (err: { message: string }) => {
       if (err.message === "invalid token") {
         refreshSocketAuth(localStorage.getItem("accessToken") ?? "");
@@ -264,7 +292,9 @@ export default function ChatWindow({
     };
     const handleConnect = () => {
       socket.emit("conversation:join", { conversationId });
-      queryClient.invalidateQueries({ queryKey: messageKeys.list(conversationId) });
+      queryClient.invalidateQueries({
+        queryKey: messageKeys.list(conversationId),
+      });
     };
 
     socket.on("message", handleMessage);
@@ -316,7 +346,9 @@ export default function ChatWindow({
     try {
       const res = await messagesService.sendMessage(conversationId, text);
       const sentMessage: Message = res?.data ?? res;
-      setMessages((prev) => prev.map((m) => (m.id === tempId ? sentMessage : m)));
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? sentMessage : m)),
+      );
     } catch (err) {
       console.error("Failed to send message:", err);
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
@@ -327,7 +359,10 @@ export default function ChatWindow({
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   }
 
   function handleReviewSubmitted() {
@@ -357,6 +392,70 @@ export default function ChatWindow({
 
   const showLoading = isLoading && messages.length === 0;
 
+  // ── Mark messages as read when they appear ──────────────────────────────
+  // Track which messages have been marked as read
+  const markedReadRef = useRef<Set<string>>(new Set());
+
+  // Mark a single message as read
+  const markSingleMessageAsRead = useCallback(async (messageId: string) => {
+    if (markedReadRef.current.has(messageId)) return;
+    
+    try {
+      await messagesService.markRead(conversationId, messageId);
+      markedReadRef.current.add(messageId);
+      markMessageRead(messageId);
+    } catch (error) {
+      console.error("Failed to mark message as read:", error);
+    }
+  }, [conversationId, markMessageRead]);
+
+  // Mark multiple messages as read in batch
+  const markMultipleMessagesAsRead = useCallback(async (messageIds: string[]) => {
+    const unmarkedIds = messageIds.filter(id => !markedReadRef.current.has(id));
+    if (unmarkedIds.length === 0) return;
+
+    try {
+      await Promise.all(
+        unmarkedIds.map(messageId => 
+          messagesService.markRead(conversationId, messageId)
+        )
+      );
+      
+      unmarkedIds.forEach(id => {
+        markedReadRef.current.add(id);
+        markMessageRead(id);
+      });
+    } catch (error) {
+      console.error("Failed to mark messages as read:", error);
+    }
+  }, [conversationId, markMessageRead]);
+
+  // Effect to mark unread messages as read when they appear in the chat
+  useEffect(() => {
+    const unreadMessageIds = messages
+      .filter(
+        msg => 
+          !msg.readAt && 
+          msg.senderAccountId !== currentAccountId &&
+          !markedReadRef.current.has(msg.id)
+      )
+      .map(msg => msg.id);
+
+    if (unreadMessageIds.length > 0) {
+      // Add a small delay to ensure the UI has rendered
+      const timer = setTimeout(() => {
+        markMultipleMessagesAsRead(unreadMessageIds);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [messages, currentAccountId, isClosed, markMultipleMessagesAsRead]);
+
+  // Reset marked read ref when conversation changes
+  useEffect(() => {
+    markedReadRef.current.clear();
+  }, [conversationId]);
+
   return (
     <>
       <div className="flex-1 flex flex-col min-w-0 h-full">
@@ -383,10 +482,11 @@ export default function ChatWindow({
             <button
               onClick={onReviewClick}
               disabled={!isClosed}
-              className={`w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${isClosed
-                ? "border-gray-300 text-amber-500 hover:bg-white cursor-pointer"
-                : "border-gray-200 text-gray-300 cursor-not-allowed"
-                }`}
+              className={`w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${
+                isClosed
+                  ? "border-gray-300 text-amber-500 hover:bg-white cursor-pointer"
+                  : "border-gray-200 text-gray-300 cursor-not-allowed"
+              }`}
               aria-label="Review"
             >
               ★
@@ -396,7 +496,10 @@ export default function ChatWindow({
 
         {/* Anonymous banner — client only, only renders when isAnonymous === true */}
         {!isLawyer && (
-          <AnonymousBanner isAnonymous={isAnonymous} onToggle={onAnonymousToggle} />
+          <AnonymousBanner
+            isAnonymous={isAnonymous}
+            onToggle={onAnonymousToggle}
+          />
         )}
 
         {/* Identity revealed notice — fades out after 4s */}
@@ -404,8 +507,8 @@ export default function ChatWindow({
           <div className="px-5 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2 text-blue-700 text-[12px] animate-fade-in">
             <span>🔓</span>
             <span>
-              You are no longer chatting anonymously. This lawyer can see your name and contact
-              details.
+              You are no longer chatting anonymously. This lawyer can see your
+              name and contact details.
             </span>
           </div>
         )}
@@ -422,7 +525,9 @@ export default function ChatWindow({
                 Leave a review
               </button>
             ) : (
-              <span className="text-green-600 font-medium">Review submitted ✓</span>
+              <span className="text-green-600 font-medium">
+                Review submitted ✓
+              </span>
             )}
           </div>
         )}
@@ -445,7 +550,8 @@ export default function ChatWindow({
                 <div className="flex flex-col items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-5 py-3 max-w-md text-center">
                   <Lock size={14} className="text-gray-400" />
                   <p className="text-[11px] text-gray-500 leading-relaxed whitespace-nowrap">
-                    Messages use end-to-end encryption, only chat participants can read them.
+                    Messages use end-to-end encryption, only chat participants
+                    can read them.
                   </p>
                   <p className="text-[11px] text-gray-500">
                     Conversations will be closed after 14 days.
@@ -453,36 +559,63 @@ export default function ChatWindow({
                 </div>
               </div>
 
-              {grouped.map((group) => (
-                <div key={group.date}>
-                  <div className="text-center text-[11px] text-gray-400 my-2">
-                    {group.date} · Conversation started
-                  </div>
-                  {group.messages.map((msg) => {
-                    const isSent = msg.senderAccountId === currentAccountId;
-                    const isTemp = msg.id.startsWith("temp-");
-                    return (
-                      <div
-                        key={msg.id}
-                        className={`flex mb-2 ${isSent ? "justify-end" : "justify-start"}`}
-                      >
+              {grouped.map((group) => {
+                // Check if there are any unread messages from the other party in this group
+                const hasUnreadFromOther = group.messages.some(
+                  msg => 
+                    !msg.readAt && 
+                    msg.senderAccountId !== currentAccountId
+                );
+
+                return (
+                  <div key={group.date}>
+                    <div className="text-center text-[11px] text-gray-400 my-2">
+                      {group.date} · Conversation started
+                    </div>
+                    {group.messages.map((msg) => {
+                      const isSent = msg.senderAccountId === currentAccountId;
+                      const isTemp = msg.id.startsWith("temp-");
+                      const isUnread = !msg.readAt && !isSent;
+                      
+                      return (
                         <div
-                          className={`max-w-[75%] md:max-w-[65%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed transition-opacity ${isTemp ? "opacity-60" : "opacity-100"
-                            } ${isSent
-                              ? "bg-blue-700 text-white rounded-br-sm"
-                              : "bg-gray-100 text-gray-800 border border-gray-200 rounded-bl-sm"
-                            }`}
+                          key={msg.id}
+                          className={`flex mb-2 ${isSent ? "justify-end" : "justify-start"}`}
+                          data-message-id={msg.id}
+                          data-unread={isUnread ? "true" : "false"}
                         >
-                          <p>{msg.body}</p>
-                          <p className={`text-[11px] mt-1 ${isSent ? "text-blue-200" : "text-gray-400"}`}>
-                            {isTemp ? "Sending..." : formatTime(msg.createdAt)}
-                          </p>
+                          <div
+                            className={`max-w-[75%] md:max-w-[65%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed transition-opacity ${
+                              isTemp ? "opacity-60" : "opacity-100"
+                            } ${
+                              isSent
+                                ? "bg-blue-700 text-white rounded-br-sm"
+                                : `bg-gray-100 text-gray-800 border border-gray-200 rounded-bl-sm ${
+                                    isUnread ? "border-blue-300 border-2" : ""
+                                  }`
+                            }`}
+                          >
+                            <p>{msg.body}</p>
+                            <p
+                              className={`text-[11px] mt-1 flex items-center gap-2 ${
+                                isSent ? "text-blue-200" : "text-gray-400"
+                              }`}
+                            >
+                              {isTemp ? "Sending..." : formatTime(msg.createdAt)}
+                              {isUnread && (
+                                <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                              )}
+                              {/* {!isUnread && !isSent && msg.readAt && (
+                                <span className="text-[10px] text-green-500">✓ Read</span>
+                              )} */}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
+                      );
+                    })}
+                  </div>
+                );
+              })}
             </>
           )}
           <div ref={bottomRef} />
@@ -492,7 +625,9 @@ export default function ChatWindow({
         {!isLawyer && showEngageBanner && (
           <div className="border-t border-gray-200 bg-white px-4 py-3 flex items-center justify-between gap-3">
             <p className="text-[13px] text-gray-700 leading-snug">
-              <span className="font-bold text-gray-900">{participantName.toUpperCase()}</span>{" "}
+              <span className="font-bold text-gray-900">
+                {participantName.toUpperCase()}
+              </span>{" "}
               would like to proceed with your matter formally.
             </p>
             <button
@@ -519,8 +654,8 @@ export default function ChatWindow({
                   </p>
                   <p className="text-[12px] text-gray-500 mt-0.5 leading-relaxed">
                     This closes the TLS conversation and notifies{" "}
-                    <span className="font-medium">{participantName}</span> to connect with you
-                    directly via phone or email.
+                    <span className="font-medium">{participantName}</span> to
+                    connect with you directly via phone or email.
                   </p>
                 </div>
                 <button
@@ -556,10 +691,11 @@ export default function ChatWindow({
               <button
                 onClick={() => setShowEngagePopover((v) => !v)}
                 title="Propose engagement outside TLS"
-                className={`w-8 h-8 flex items-center justify-center rounded-full border transition shrink-0 ${showEngagePopover
-                  ? "border-blue-300 bg-blue-50 text-blue-600"
-                  : "border-gray-200 text-gray-500 hover:bg-white hover:border-gray-300"
-                  }`}
+                className={`w-8 h-8 flex items-center justify-center rounded-full border transition shrink-0 ${
+                  showEngagePopover
+                    ? "border-blue-300 bg-blue-50 text-blue-600"
+                    : "border-gray-200 text-gray-500 hover:bg-white hover:border-gray-300"
+                }`}
                 aria-label="Propose engagement outside TLS"
               >
                 <Plus size={16} />
@@ -572,12 +708,13 @@ export default function ChatWindow({
                 onClick={() => !reviewDisabled && setShowReview(true)}
                 disabled={reviewDisabled}
                 title={reviewTitle}
-                className={`md:hidden w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${hasReviewed
-                  ? "border-green-200 text-green-600 cursor-default"
-                  : isClosed
-                    ? "border-gray-300 text-amber-500 hover:bg-white cursor-pointer"
-                    : "border-gray-200 text-gray-300 cursor-not-allowed"
-                  }`}
+                className={`md:hidden w-8 h-8 flex items-center justify-center rounded-full border transition text-lg leading-none ${
+                  hasReviewed
+                    ? "border-green-200 text-green-600 cursor-default"
+                    : isClosed
+                      ? "border-gray-300 text-amber-500 hover:bg-white cursor-pointer"
+                      : "border-gray-200 text-gray-300 cursor-not-allowed"
+                }`}
                 aria-label={reviewLabel}
               >
                 ★
@@ -590,7 +727,9 @@ export default function ChatWindow({
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={isClosed}
-              placeholder={isClosed ? "Conversation closed" : "Type a message..."}
+              placeholder={
+                isClosed ? "Conversation closed" : "Type a message..."
+              }
               className="flex-1 px-4 py-2 text-sm bg-gray-100 border border-gray-200 rounded-full outline-none focus:border-gray-300 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button

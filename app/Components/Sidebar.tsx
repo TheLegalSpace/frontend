@@ -144,7 +144,7 @@ const FOOTER_CTA: Record<
   UserRole,
   { label: string; href: string; icon: React.ElementType } | null
 > = {
-  USER: { label: "Get a lawyer", href: "/dashboard/find-lawyer", icon: Scale },
+  USER: { label: "Find a Lawyer", href: "/dashboard/find-lawyer", icon: Scale },
   LAWYER: null,
   FIRM: null,
   ADMIN: null,
@@ -442,12 +442,16 @@ export default function Sidebar() {
               />
               {label}
               {label === "Messages" && unreadMessageCount > 0 && (
-                <span className="ml-auto bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                <span
+                  className={`ml-auto  text-white text-xs font-medium px-2 py-0.5 rounded-full ${isActive ? "bg-red-500" : "bg-gray-500"}`}
+                >
                   {unreadMessageCount}
                 </span>
               )}
               {label === "Leads" && pendingLeadCount > 0 && (
-                <span className="ml-auto bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                <span
+                  className={`ml-auto  text-white text-xs font-medium px-2 py-0.5 rounded-full ${isActive ? "bg-red-500" : "bg-gray-500"}`}
+                >
                   {pendingLeadCount}
                 </span>
               )}

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { X, Search, Plus, Check, Loader2 } from "lucide-react";
 import { useUpdatePracticeAreas } from "@/hooks/useSettings";
 import { PracticeArea } from "@/services/practice-areas.services";
+import type { PracticeAreaFee } from "@/services/settings.services";
 import { useToast } from "@/app/context/ToastContext";
 
 interface Props {
@@ -15,6 +16,8 @@ interface Props {
   onClose: () => void;
   /** 2 for LAWYER, 7 for FIRM */
   maxSelect: number;
+  /** Existing fee ranges (kobo) so they're preserved when areas change. */
+  existingFees?: { id: string; minFee: number; maxFee: number }[];
 }
 
 export default function PracticeAreasModal({
@@ -24,6 +27,7 @@ export default function PracticeAreasModal({
   secondaryId: initialSecondary,
   onClose,
   maxSelect,
+  existingFees = [],
 }: Props) {
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>(currentIds);
@@ -71,15 +75,30 @@ export default function PracticeAreasModal({
       return;
     }
     try {
-      await updateAreas.mutateAsync({
-        practiceAreaIds: selectedIds,
-        primaryAreaId: primaryId,
-        secondaryAreaId: secondaryId,
+      // Order: primary, then secondary, then any remaining selected areas.
+      const orderedIds = Array.from(
+        new Set([primaryId, secondaryId, ...selectedIds].filter(Boolean)),
+      );
+
+      // Preserve existing fee ranges for kept areas; new areas start at 0/0
+      // (the lawyer/firm sets them via the Professional Fees modal).
+      const practiceAreas: PracticeAreaFee[] = orderedIds.map((id) => {
+        const fee = existingFees.find((f) => f.id === id);
+        return {
+          practiceAreaId: id,
+          minFee: fee?.minFee ?? 0,
+          maxFee: fee?.maxFee ?? 0,
+        };
       });
+
+      await updateAreas.mutateAsync({ practiceAreas });
       onClose();
       showSuccess("Changes saved successfully");
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? "Failed to save.");
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Failed to save.";
+      setError(msg);
       showError("Error saving changes. Retry!");
     }
   };

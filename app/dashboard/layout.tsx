@@ -25,6 +25,10 @@ export default function DashboardLayout({
     if (isLoading) return;
     if (!user || !hasSession()) {
       router.replace("/");
+      return;
+    }
+    if (user.role === "ADMIN") {
+      router.replace("/admin");
     }
   }, [user, isLoading, router]);
 
