@@ -24,6 +24,11 @@ export default function SignInClient() {
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [googleReady, setGoogleReady] = useState<boolean>(false);
+  // Bumped whenever the tab regains focus, forcing the Google button
+  // wrapper to remount with a brand-new iframe. This is what fixes
+  // "works once, then does nothing after cancelling the popup" — GIS's
+  // popup handle can get stuck, and a fresh render clears that state.
+  const [resetKey, setResetKey] = useState(0);
 
   const callbackError = searchParams.get("error");
 
@@ -35,6 +40,7 @@ export default function SignInClient() {
 
       google.accounts.id.initialize({
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+        cancel_on_tap_outside: false,
         callback: async (resp: { credential: string }) => {
           setIsLoading(true);
           setError("");
@@ -71,6 +77,7 @@ export default function SignInClient() {
 
   // 2. Render the REAL Google button, sized to fill its wrapper and
   //    stacked on top of the styled button below via CSS (see JSX).
+  //    Re-runs whenever `resetKey` changes, giving us a clean iframe.
   useEffect(() => {
     if (!googleReady) return;
     const el = googleButtonRef.current;
@@ -85,9 +92,23 @@ export default function SignInClient() {
       shape: "rectangular",
       width: "100%",
     });
-  }, [googleReady]);
+  }, [googleReady, resetKey]);
 
-  // 3. "Sign up" is a plain text link, not a button we can overlay — use
+  // 3. If the tab regains focus (e.g. the user closed the Google popup,
+  //    whether by cancelling or completing sign-in) and we're not mid
+  //    sign-in, remount the button so the next click always gets a fresh,
+  //    unstuck instance.
+  useEffect(() => {
+    const handleFocus = () => {
+      if (!isLoading) {
+        setResetKey((k) => k + 1);
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [isLoading]);
+
+  // 4. "Sign up" is a plain text link, not a button we can overlay — use
   //    Google's own prompt() API to trigger sign-in programmatically
   //    instead of faking a click on a hidden element.
   const triggerGoogle = () => {
@@ -146,6 +167,7 @@ export default function SignInClient() {
               ) : (
                 <div className="relative w-full">
                   <div
+                    key={resetKey}
                     ref={googleButtonRef}
                     aria-hidden
                     className="absolute inset-0 z-10 w-full opacity-0 overflow-hidden [&>div]:!w-full"
