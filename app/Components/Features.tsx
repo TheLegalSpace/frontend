@@ -10,19 +10,19 @@ const aboutCards = [
     icon: "🎯",
     title: "Our Mission",
     desc: "To make legal support, knowledge, and professional opportunities more accessible through meaningful connections and trusted technology.",
-    bg: "bg-[#F0FFF4] border-[#BBF7D0]",
+    bg: "bg-[#E8F0FE] ",
   },
   {
     icon: "🚩",
     title: "Our Vision",
     desc: "To become the leading legal network where individuals, lawyers, and organisations connect, grow, and thrive.",
-    bg: "bg-[#F0FDF4] border-[#BBF7D0]",
+    bg: "bg-[#F0FDF4] ",
   },
   {
     icon: "🌐",
     title: "Our Purpose",
     desc: "To strengthen the legal ecosystem by empowering legal professionals and improving access to legal services for everyone.",
-    bg: "bg-[#EDE9FE] border-[#DDD6FE]",
+    bg: "bg-[#6E51E01A] ",
   },
 ];
 
@@ -33,7 +33,7 @@ export default function Features() {
   return (
     <section
       id="about"
-      className="py-24 bg-white  px-4 lg:px-12 xl:p max-w-[1440px] mx-auto "
+      className="py-24   px-4 lg:px-12 xl:p max-w-[1440px] mx-auto "
     >
       {/* [2fr_3fr] gives image ~40% and text ~60%, matching the screenshot */}
       <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-12 lg:gap-16 items-center">
@@ -95,7 +95,7 @@ export default function Features() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.45, delay: 0.2 + i * 0.1 }}
-                className={`rounded-2xl border p-4 ${card.bg}`}
+                className={`rounded-2xl  p-4 ${card.bg}`}
               >
                 <div className="text-xl mb-2.5">{card.icon}</div>
                 <h4 className="text-[13px] font-semibold mb-1.5">

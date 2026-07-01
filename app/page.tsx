@@ -14,7 +14,9 @@ export default function Home() {
       <Navbar />
       <Hero />
       <InfoSection />
-      <Features />
+      <div className="w-full  bg-[#F7F8FA]">
+        <Features />
+      </div>
       <HowItWorks />
       <LegalInsights />
       <UseCaseSection />

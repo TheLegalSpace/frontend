@@ -205,7 +205,7 @@ export default function SignInClient() {
                     key={resetKey}
                     ref={googleButtonRef}
                     aria-hidden
-                    className="absolute inset-0 z-10 opacity-0 overflow-hidden"
+                    className="absolute inset-0 z-10 opacity-0 overflow-hidden w-full h-full [&>div]:w-full! [&>div]:h-full! [&_iframe]:w-full! [&_iframe]:h-full!"
                   />
                   <button
                     type="button"
