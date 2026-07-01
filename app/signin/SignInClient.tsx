@@ -148,7 +148,7 @@ export default function SignInClient() {
                   <div
                     ref={googleButtonRef}
                     aria-hidden
-                    className="absolute inset-0 z-10 w-full opacity-0 overflow-hidden [&>div]:w-full!"
+                    className="absolute inset-0 z-10 w-full opacity-0 overflow-hidden [&>div]:!w-full"
                   />
                   <button
                     type="button"
