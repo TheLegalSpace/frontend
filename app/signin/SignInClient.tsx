@@ -159,7 +159,7 @@ export default function SignInClient() {
                 className="flex flex-col gap-4 font-dmSans"
               >
                 {/* Email */}
-               <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5">
                   <label className="text-[13px] text-gray-600">
                     Email Address
                   </label>
@@ -176,7 +176,7 @@ export default function SignInClient() {
                     />
                   </div>
                 </div>
- 
+
                 {/* Password */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[13px] text-gray-600">Password</label>
@@ -249,20 +249,14 @@ export default function SignInClient() {
               <div className="relative">
                 <div
                   ref={googleButtonRef}
-                  className="absolute inset-0 opacity-0 z-10 w-full overflow-hidden"
+                  className="w-full overflow-hidden"
+                  style={{ minHeight: "48px" }}
                 />
-                <button
-                  type="button"
-                  disabled={anyLoading}
-                  className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] font-medium text-gray-700 shadow-sm transition hover:bg-white active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed font-dmSans"
-                >
-                  {googleLoading ? (
+                {googleLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <GoogleIcon />
-                  )}
-                  Continue with Google
-                </button>
+                  </div>
+                )}
               </div>
 
               {/* Register link */}
