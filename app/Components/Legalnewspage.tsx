@@ -100,7 +100,7 @@ export default function LegalNewsPage() {
           {/* Card — plain scrollable div, no relative/overflow conflict */}
           <div
             className="rounded-xl border border-gray-200 overflow-y-auto"
-            style={{ height: "420px" }}
+            style={{ height: "360px" }}
           >
             {showPreview && (
               <div className="flex justify-end px-5 pt-4 pb-0">

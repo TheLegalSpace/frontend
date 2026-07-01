@@ -416,7 +416,7 @@ export default function ProfileCard({
         )}
 
         {/* Profile header */}
-        <div className="px- pt-4 pb-5">
+        <div className="px-4 pt-4 pb-5">
           <div className="flex gap-4">
             {/* Avatar */}
             <div className="mt-1 shrink-0">
@@ -547,7 +547,7 @@ export default function ProfileCard({
 
         {/* Call to bar — lawyers only */}
         {isLawyer && profile.lawyerProfile && (
-          <div className="px- py-4 border-b border-[#E5E7EB]">
+          <div className="px-4 py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center justify-between">
               <span className="text-[13px] font-medium text-[#1F2937]">
                 Call to bar
@@ -559,7 +559,7 @@ export default function ProfileCard({
           </div>
         )}
         {isFirm && profile.firmProfile && (
-          <div className="px- py-4 border-b border-[#E5E7EB]">
+          <div className="px-4 py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center justify-between">
               <span className="text-[14px] font-semibold text-[#000000]">
                 Firm Establishment
@@ -573,7 +573,7 @@ export default function ProfileCard({
 
         {/* Practice Areas */}
         {practiceAreaNames.length > 0 && (
-          <div className="px- py-4 border-b border-[#E5E7EB]">
+          <div className="px-4 py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[13px] font-medium text-[#1F2937]">
                 Practice Areas
@@ -603,7 +603,7 @@ export default function ProfileCard({
 
         {/* Recent Articles — lawyers & firms only */}
         {showArticles && (
-          <div className="px- py-4 border-b border-[#E5E7EB]">
+          <div className="px-4 py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[13px] font-medium text-[#1F2937]">
                 Recent Articles
@@ -657,7 +657,7 @@ export default function ProfileCard({
         )}
 
         {/* Ratings & Reviews */}
-        <div className="px- py-4">
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <span className="text-[13px] font-medium text-[#1F2937]">
               Ratings & Reviews
