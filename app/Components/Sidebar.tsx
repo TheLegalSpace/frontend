@@ -372,15 +372,15 @@ export default function Sidebar() {
               initials
             )}
           </div>
+          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border mb-2.5 bg-white text-gray-500 border-gray-200">
+            {role.charAt(0) + role.slice(1).toLowerCase()}
+          </span>
           <p className="text-[13px] font-medium text-gray-900">
             {user?.fullName}
           </p>
           <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
             <p className="text-[11px] text-gray-400 truncate">{user?.email}</p>
           </div>
-          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border mb-2.5 bg-white text-gray-500 border-gray-200">
-            {role.charAt(0) + role.slice(1).toLowerCase()}
-          </span>
           <div className="flex flex-col gap-1 mb-3">
             <div className="flex justify-between text-xs">
               <span className="text-gray-500">Reviews</span>
