@@ -4,6 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+// import the images
+import x from "@/public/x.png";
+import insta from "@/public/insta.png";
+import tiktok from "@/public/tiktok.png";
+import link from "@/public/link.png";
+import face from "@/public/face.png";
+
 function scrollToSection(href: string) {
   const id = href.replace("#", "");
   const el = document.getElementById(id);
@@ -164,21 +171,25 @@ export default function Footer({ visible = true }: FooterProps) {
             {/* Resources */}
             <div>
               <h5 className="text-[13px] font-semibold text-gray-900 mb-4">
-                Resources
+                Legal
               </h5>
               <ul className="space-y-3">
-                {["Articles", "Events", "TLS Research", "Legal News"].map(
-                  (item) => (
-                    <li key={item}>
-                      <Link
-                        href="#"
-                        className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
-                      >
-                        {item}
-                      </Link>
-                    </li>
-                  ),
-                )}
+                {[
+                  "Privacy Policy",
+                  "Terms of Services",
+                  "Membership Terms",
+                  "Verification Policy",
+                  "Contact Support",
+                ].map((item) => (
+                  <li key={item}>
+                    <Link
+                      href="#"
+                      className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
+                    >
+                      {item}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -188,18 +199,22 @@ export default function Footer({ visible = true }: FooterProps) {
                 Socials
               </h5>
               <ul className="space-y-3">
-                {["Instagram", "X (Twitter)", "TikTok", "LinkedIn"].map(
-                  (item) => (
-                    <li key={item}>
-                      <Link
-                        href="#"
-                        className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
-                      >
-                        {item}
-                      </Link>
-                    </li>
-                  ),
-                )}
+                {[
+                  "Instagram",
+                  "X (Twitter)",
+                  "TikTok",
+                  "LinkedIn",
+                  "Facebook",
+                ].map((item) => (
+                  <li key={item}>
+                    <Link
+                      href="#"
+                      className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
+                    >
+                      {item}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -232,19 +247,33 @@ export default function Footer({ visible = true }: FooterProps) {
             </p>
             <div className="flex gap-2">
               {[
-                { icon: "📷", label: "Instagram" },
-                { icon: "🐦", label: "Twitter" },
-                { icon: "🎵", label: "TikTok" },
-                { icon: "💼", label: "LinkedIn" },
-              ].map(({ icon, label }) => (
-                <a
+                {
+                  icon: insta,
+                  label: "Instagram",
+                  link: "https://www.instagram.com/thelegalspace_/",
+                },
+                {
+                  icon: x,
+                  label: "Twitter",
+                  link: "https://x.com/thelegalspace_",
+                },
+                {
+                  icon: tiktok,
+                  label: "TikTok",
+                  link: "https://www.tiktok.com/@thelegalspace_?lang=en-GB",
+                },
+                { icon: link, label: "LinkedIn", link: "#" },
+                { icon: face, label: "Facebook", link: "#" },
+              ].map(({ icon, label, link }) => (
+                <Link
                   key={label}
-                  href="#"
+                  href={link ? link : "#"}
                   aria-label={label}
+                  target="_blank"
                   className="w-8 h-8 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-sm hover:border-[#1A56DB] hover:bg-[#E8F0FE] transition-all"
                 >
-                  {icon}
-                </a>
+                  <Image src={icon} alt={label} width={20} height={20} />
+                </Link>
               ))}
             </div>
           </div>

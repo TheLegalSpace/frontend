@@ -2,55 +2,60 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image, { StaticImageData } from "next/image";
+import lawyerMan from "@/public/lawyer-man.png";
+import lawyerWoman from "@/public/lawyer-woman.png";
+import individualUser from "@/public/individual-man.png";
+import individualWoman from "@/public/individual-woman.png";
 
-const individualsTestimonials = [
+type Testimonial = {
+  text: string;
+  author: string;
+  avatar: string | StaticImageData;
+  featured: boolean;
+};
+
+const individualsTestimonials: Testimonial[] = [
   {
     text: "I kept putting off finding a lawyer for ages because I had no clue where to begin. But in just two days, I got three great replies and picked someone I really trusted.",
     author: "The Legal Space User",
-    avatar: "👤",
+    avatar: individualUser,
     featured: false,
   },
   {
     text: "Everything was clear and there were no hidden costs to simply find help. It felt built for ordinary people, not just corporations.",
     author: "The Legal Space User",
-    avatar: "👩",
+    avatar: individualWoman,
     featured: true,
   },
   {
     text: "Checking out the articles beforehand helped me walk into my consultation knowing what to expect. It really took the pressure off!",
     author: "The Legal Space User",
-    avatar: "👩🏽",
+    avatar: individualUser,
     featured: false,
   },
 ];
 
-const lawyersTestimonials = [
+const lawyersTestimonials: Testimonial[] = [
   {
     text: "The platform gives you a cool space to show off your skills, connect with others in the legal world, and really boost your visibility.",
     author: "Law Firm Representative",
-    avatar: "👨🏿‍💼",
+    avatar: lawyerMan,
     featured: false,
   },
   {
     text: "The Legal Space has helped increase my visibility and connect me with opportunities that align with my area of practice.",
     author: "Verified Legal Professional",
-    avatar: "👨🏾‍💼",
+    avatar: lawyerWoman,
     featured: true,
   },
   {
     text: "Access to resources, professional opportunities, and a wider audience has made The Legal Space a valuable part of my practice.",
     author: "Legal Professional",
-    avatar: "👨🏿‍💼",
+    avatar: lawyerMan,
     featured: false,
   },
 ];
-
-type Testimonial = {
-  text: string;
-  author: string;
-  avatar: string;
-  featured: boolean;
-};
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
@@ -79,8 +84,14 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
         </p>
       </div>
       <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-full bg-[#F3F4F6] flex items-center justify-center">
-          {testimonial.avatar}
+        <div className="w-11 h-11 rounded-full  flex items-center justify-center">
+          <Image
+            src={testimonial.avatar}
+            alt={testimonial.author}
+            width={30}
+            height={24}
+            className="rounded-full"
+          />
         </div>
 
         <span className="text-[14px] font-medium text-[#262626]">
@@ -228,7 +239,7 @@ export default function TestimonialsSection() {
               >
                 {tab === item && (
                   <motion.span
-                    layoutId="tab-bg"
+                    layoutId="testimonials-tab-bg"
                     className="absolute inset-0 bg-[#111827] rounded-lg"
                     transition={{
                       type: "spring",

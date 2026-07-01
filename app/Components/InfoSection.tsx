@@ -37,7 +37,7 @@ export default function InfoSection() {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section id="stats" className="py-20 bg-white border-b border-[#E5E7EB] px-4 sm:px-8 lg:px-16">
+    <section id="stats" className="py-20 bg-white border-b-0 border-[#E5E7EB] px-4 sm:px-8 lg:px-16">
       <div className="max-w-[1440px] mx-auto">
         {/* Label */}
         <motion.div

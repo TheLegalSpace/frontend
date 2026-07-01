@@ -25,7 +25,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative bg-[#F7F9FF] pt-32 pb-0 px-4 sm:px-8 lg:px-16 overflow-hidden"
+      className="relative bg-[#F7F8FA] pt-32 pb-0 px-4 sm:px-8 lg:px-16 overflow-hidden"
     >
       {/* ── Main content row ── */}
       <div className="max-w-[1440px] mx-auto relative">

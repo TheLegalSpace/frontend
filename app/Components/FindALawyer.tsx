@@ -436,7 +436,7 @@ export default function FindALawyer() {
           <div className="h-18 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0">
             <div>
               <h1 className="text-[28px] font-serif text-[#202020]">
-                Get A Lawyer
+                Find A Lawyer
               </h1>
             </div>
 
