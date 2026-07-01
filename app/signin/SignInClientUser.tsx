@@ -1,4 +1,4 @@
-// app/signin/SignInClient.tsx
+// app/signin/SignInClientUser.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -16,8 +16,10 @@ export default function SignInClient() {
   const { loginWithGoogle } = useAuth();
   const searchParams = useSearchParams();
 
-  // Hidden, real Google button — drives the actual auth
-  const googleHiddenRef = useRef<HTMLDivElement>(null);
+  // Real Google button — rendered directly over the visible custom button,
+  // not off-screen. The user's actual click lands on it, which is far more
+  // reliable than dispatching a synthetic .click() on a hidden iframe.
+  const googleButtonRef = useRef<HTMLDivElement>(null);
 
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -67,11 +69,11 @@ export default function SignInClient() {
     return () => clearInterval(interval);
   }, [loginWithGoogle]);
 
-  // 2. Render the REAL Google button once, hidden off-screen.
-  //    Width/shape don't matter here since the user never sees it.
+  // 2. Render the REAL Google button, sized to fill its wrapper and
+  //    stacked on top of the styled button below via CSS (see JSX).
   useEffect(() => {
     if (!googleReady) return;
-    const el = googleHiddenRef.current;
+    const el = googleButtonRef.current;
     if (!el || typeof google === "undefined") return;
 
     el.innerHTML = "";
@@ -81,19 +83,16 @@ export default function SignInClient() {
       size: "large",
       text: "signin_with",
       shape: "rectangular",
-      width: 400,
+      width: "100%",
     });
   }, [googleReady]);
 
-  // 3. Forward clicks from our custom button to the hidden Google button
+  // 3. "Sign up" is a plain text link, not a button we can overlay — use
+  //    Google's own prompt() API to trigger sign-in programmatically
+  //    instead of faking a click on a hidden element.
   const triggerGoogle = () => {
-    const root = googleHiddenRef.current;
-    if (!root) return;
-    const clickable =
-      root.querySelector<HTMLElement>('div[role="button"]') ??
-      root.querySelector<HTMLElement>("div") ??
-      root;
-    clickable.click();
+    if (typeof google === "undefined" || !googleReady) return;
+    google.accounts.id.prompt();
   };
 
   return (
@@ -136,15 +135,8 @@ export default function SignInClient() {
                 </div>
               )}
 
-              {/* Hidden real Google button (off-screen, fully rendered) */}
-              <div
-                ref={googleHiddenRef}
-                aria-hidden
-                className="absolute opacity-0 pointer-events-none"
-                style={{ left: "-9999px", top: 0, width: 400, height: 50 }}
-              />
-
-              {/* Custom button / loading */}
+              {/* Custom button / loading, with the real Google button
+                  overlaid invisibly on top so real clicks reach it */}
               {isLoading ? (
                 <div className="w-full px-3 py-3.5 bg-white border border-gray-200 rounded-xl text-center">
                   <p className="text-[14px] text-gray-600 font-dmSans">
@@ -152,27 +144,33 @@ export default function SignInClient() {
                   </p>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={triggerGoogle}
-                  disabled={!googleReady}
-                  className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] font-medium text-gray-700 shadow-sm transition hover:bg-white active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed font-dmSans"
-                >
-                  <GoogleIcon />
-                  Sign in with Google
-                </button>
+                <div className="relative w-full">
+                  <div
+                    ref={googleButtonRef}
+                    aria-hidden
+                    className="absolute inset-0 z-10 w-full opacity-0 overflow-hidden [&>div]:!w-full"
+                  />
+                  <button
+                    type="button"
+                    disabled={!googleReady}
+                    className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] font-medium text-gray-700 shadow-sm transition hover:bg-white active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed font-dmSans"
+                  >
+                    <GoogleIcon />
+                    Sign in with Google
+                  </button>
+                </div>
               )}
 
               {/* Account link */}
               <p className="mt-6 text-center text-sm text-gray-600 font-dmSans">
                 Don&apos;t have an account?{" "}
-                <a
-                  // href="/signup"
+                <button
+                  type="button"
                   onClick={triggerGoogle}
                   className="font-semibold text-blue-600 hover:underline"
                 >
                   Sign up
-                </a>
+                </button>
               </p>
             </div>
           </div>
