@@ -1,7 +1,7 @@
 // app/signin/SignInClientUser.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AuthError, useAuth } from "../context/AuthContext";
 import Image from "next/image";
@@ -12,10 +12,15 @@ import Footer from "../Components/Footer";
 
 declare const google: any;
 
+const GOOGLE_BTN_MIN_WIDTH = 200;
+const GOOGLE_BTN_MAX_WIDTH = 400;
+
 export default function SignInClient() {
   const { loginWithGoogle } = useAuth();
   const searchParams = useSearchParams();
 
+  // Wrapper we measure to size the real Google button in real pixels.
+  const wrapperRef = useRef<HTMLDivElement>(null);
   // Real Google button — rendered directly over the visible custom button,
   // not off-screen. The user's actual click lands on it, which is far more
   // reliable than dispatching a synthetic .click() on a hidden iframe.
@@ -29,6 +34,11 @@ export default function SignInClient() {
   // "works once, then does nothing after cancelling the popup" — GIS's
   // popup handle can get stuck, and a fresh render clears that state.
   const [resetKey, setResetKey] = useState(0);
+  // Google only accepts a fixed pixel width (200–400), not "100%". This
+  // tracks the wrapper's real measured width so the invisible real button
+  // always exactly matches the visible fake button underneath — otherwise
+  // only the fixed-width chunk Google actually renders is clickable.
+  const [btnWidth, setBtnWidth] = useState(GOOGLE_BTN_MAX_WIDTH);
 
   const callbackError = searchParams.get("error");
 
@@ -75,9 +85,32 @@ export default function SignInClient() {
     return () => clearInterval(interval);
   }, [loginWithGoogle]);
 
-  // 2. Render the REAL Google button, sized to fill its wrapper and
+  // 2. Measure the wrapper's real width and keep it clamped to Google's
+  //    supported range, re-measuring on resize (e.g. rotating a phone,
+  //    resizing a desktop window across the lg breakpoint).
+  useLayoutEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const width = Math.round(el.getBoundingClientRect().width);
+      const clamped = Math.min(
+        GOOGLE_BTN_MAX_WIDTH,
+        Math.max(GOOGLE_BTN_MIN_WIDTH, width),
+      );
+      setBtnWidth((prev) => (prev === clamped ? prev : clamped));
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // 3. Render the REAL Google button at the exact measured pixel width,
   //    stacked on top of the styled button below via CSS (see JSX).
-  //    Re-runs whenever `resetKey` changes, giving us a clean iframe.
+  //    Re-runs whenever `resetKey` or `btnWidth` changes, giving us a
+  //    clean, correctly-sized iframe every time.
   useEffect(() => {
     if (!googleReady) return;
     const el = googleButtonRef.current;
@@ -90,11 +123,11 @@ export default function SignInClient() {
       size: "large",
       text: "signin_with",
       shape: "rectangular",
-      width: "100%",
+      width: btnWidth,
     });
-  }, [googleReady, resetKey]);
+  }, [googleReady, resetKey, btnWidth]);
 
-  // 3. If the tab regains focus (e.g. the user closed the Google popup,
+  // 4. If the tab regains focus (e.g. the user closed the Google popup,
   //    whether by cancelling or completing sign-in) and we're not mid
   //    sign-in, remount the button so the next click always gets a fresh,
   //    unstuck instance.
@@ -108,7 +141,7 @@ export default function SignInClient() {
     return () => window.removeEventListener("focus", handleFocus);
   }, [isLoading]);
 
-  // 4. "Sign up" is a plain text link, not a button we can overlay — use
+  // 5. "Sign up" is a plain text link, not a button we can overlay — use
   //    Google's own prompt() API to trigger sign-in programmatically
   //    instead of faking a click on a hidden element.
   const triggerGoogle = () => {
@@ -156,21 +189,23 @@ export default function SignInClient() {
                 </div>
               )}
 
-              {/* Custom button / loading, with the real Google button
-                  overlaid invisibly on top so real clicks reach it */}
+              {/* Custom button / loading, capped to Google's max width
+                  (400px) so the invisible real button and the visible
+                  styled button are always exactly the same size — no
+                  partially-clickable dead zones. */}
               {isLoading ? (
-                <div className="w-full px-3 py-3.5 bg-white border border-gray-200 rounded-xl text-center">
+                <div className="w-full max-w-[400px] px-3 py-3.5 bg-white border border-gray-200 rounded-xl text-center">
                   <p className="text-[14px] text-gray-600 font-dmSans">
                     Signing you in…
                   </p>
                 </div>
               ) : (
-                <div className="relative w-full">
+                <div ref={wrapperRef} className="relative w-full max-w-[400px]">
                   <div
                     key={resetKey}
                     ref={googleButtonRef}
                     aria-hidden
-                    className="absolute inset-0 z-10 w-full opacity-0 overflow-hidden [&>div]:!w-full"
+                    className="absolute inset-0 z-10 opacity-0 overflow-hidden"
                   />
                   <button
                     type="button"
