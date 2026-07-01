@@ -144,9 +144,7 @@ const ConversationList = memo(function ConversationList({
                     </span>
                   </div>
                   <p className="text-[12px] text-gray-500 truncate mt-0.5">
-                    {convo.status === "closed" && convo.matterName
-                      ? "Closed"
-                      : (convo.lastMessagePreview ?? "No messages yet")}
+                    {convo.matterName?.trim() || convo.lastMessagePreview || "No messages yet"}
                   </p>
                 </div>
               </button>
