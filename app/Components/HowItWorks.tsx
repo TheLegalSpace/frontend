@@ -81,7 +81,7 @@ export default function HowItWorks() {
               >
                 {tab === t && (
                   <motion.span
-                    layoutId="tab-bg"
+                    layoutId="how-it-works-tab-bg"
                     className="absolute inset-0 bg-gray-900 rounded-lg"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />

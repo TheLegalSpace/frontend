@@ -141,13 +141,13 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-2 ctaLink">
             <button
               onClick={() => loginType("lawyer")}
-              className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-white transition-colors font-medium"
+              className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-full hover:bg-white transition-colors font-medium"
             >
               Lawyer Login
             </button>
             <button
               onClick={() => loginType("user")}
-              className="text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-xl hover:bg-[#1648b8] transition-colors font-medium shadow-sm"
+              className="text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-full hover:bg-[#1648b8] transition-colors font-medium shadow-sm"
             >
               Find a lawyer
             </button>
