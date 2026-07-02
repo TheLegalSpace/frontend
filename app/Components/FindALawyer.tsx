@@ -988,11 +988,53 @@ export default function FindALawyer() {
                     <h3 className="text-[18px] font-semibold text-[#202020]">
                       {emptyStateTitle}
                     </h3>
-
                     <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
                       Try adjusting your legal description, budget, or preferred
                       location to broaden the search.
                     </p>
+                    {activeTab === "firms" && (
+                      <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
+                        Check out the{" "}
+                        <button
+                          onClick={() => setActiveTab("lawyers")}
+                          className="text-[#1D4ED8] hover:text-[#1947C6]"
+                        >
+                          lawyers
+                        </button>{" "}
+                        instead.
+                      </p>
+                    )}
+                    {activeTab === "lawyers" && (
+                      <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
+                        Check out the{" "}
+                        <button
+                          onClick={() => setActiveTab("firms")}
+                          className="text-[#1D4ED8] hover:text-[#1947C6]"
+                        >
+                          firms
+                        </button>{" "}
+                        instead.
+                      </p>
+                    )}
+                    {activeTab === "all" && (
+                      <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
+                        Check out the{" "}
+                        <button
+                          onClick={() => setActiveTab("firms")}
+                          className="text-[#1D4ED8] hover:text-[#1947C6]"
+                        >
+                          firms
+                        </button>{" "}
+                        or{" "}
+                        <button
+                          onClick={() => setActiveTab("lawyers")}
+                          className="text-[#1D4ED8] hover:text-[#1947C6]"
+                        >
+                          lawyers
+                        </button>{" "}
+                        instead.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
