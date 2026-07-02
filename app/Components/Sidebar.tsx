@@ -144,7 +144,7 @@ const FOOTER_CTA: Record<
   UserRole,
   { label: string; href: string; icon: React.ElementType } | null
 > = {
-  USER: { label: "Get a Lawyer", href: "/dashboard/find-lawyer", icon: Scale },
+  USER: { label: "Find a Lawyer", href: "/dashboard/find-lawyer", icon: Scale },
   LAWYER: null,
   FIRM: null,
   ADMIN: null,

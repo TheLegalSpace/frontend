@@ -430,7 +430,7 @@ function LawyerCard({
     </div>
   );
 }
-// Same gradient-border technique used for the sidebar's "Get a lawyer"
+// Same gradient-border technique used for the sidebar's "Find a Lawyer"
 // pill — a transparent border painted with two layered backgrounds so the
 // gradient only shows on the border, not the fill.
 function GradientPill({ children }: { children: React.ReactNode }) {
@@ -476,7 +476,7 @@ export default function FindALawyer() {
 
   // Steps for whichever fields still need answers, sourced from the same
   // practice-areas list and option constants used by the dashboard's
-  // "Get a Lawyer" intake flow — keeps the chip choices consistent.
+  // "Find a Lawyer" intake flow — keeps the chip choices consistent.
   const clarifySteps = buildIntakeSteps(practiceAreas ?? []).filter(
     (step) =>
       step.key === "matter" || step.key === "budget" || step.key === "location",
@@ -709,7 +709,7 @@ export default function FindALawyer() {
           <div className="h-18 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0">
             <div>
               <h1 className="text-[28px] font-serif text-[#202020]">
-                Get a Lawyer
+                Find a Lawyer
               </h1>
             </div>
 
@@ -726,20 +726,20 @@ export default function FindALawyer() {
 
           {/* CONVERSATION */}
           <div className="flex-1 overflow-y-auto px-8 py-8">
-           {!hasSearched && (
+            {!hasSearched && (
               <div className="max-w-2xl">
                 <div className="pb-8 border-b border-[#EFEFEF]">
                   <GradientPill>The Legal Space AI</GradientPill>
 
                   <p className="mt-6 text-[15px] leading-8 text-[#6B6B6B] max-w-xl">
-                    Tell me your situation in plain language. I will read
-                    your intent, tag it to the right area of law, and match
-                    you with verified professionals.
+                    Tell me your situation in plain language. I will read your
+                    intent, tag it to the right area of law, and match you with
+                    verified professionals.
                   </p>
 
                   <p className="mt-2 text-[15px] leading-8 font-bold text-[#3A3A3A] max-w-xl">
-                    Note: Only send a request if you&apos;re ready to speak
-                    with a lawyer.
+                    Note: Only send a request if you&apos;re ready to speak with
+                    a lawyer.
                   </p>
                 </div>
 

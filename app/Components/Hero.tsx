@@ -67,7 +67,7 @@ export default function Hero() {
               onClick={() => loginType("user")}
               className="px-6 py-3 bg-[#1A56DB] text-white rounded-full text-sm font-medium hover:bg-[#1648b8] transition-colors"
             >
-              Get a Lawyer
+              Find a Lawyer
             </button>
           </motion.div>
         </div>

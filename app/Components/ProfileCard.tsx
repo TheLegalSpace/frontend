@@ -506,7 +506,7 @@ export default function ProfileCard({
                         href="/dashboard/find-lawyer"
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E5F5EA] text-[#16A34A] text-[12px] font-medium rounded-full hover:opacity-90 transition-opacity"
                       >
-                        Get a Lawyer
+                        Find a Lawyer
                       </Link>
                     )
                   )}

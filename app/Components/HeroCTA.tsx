@@ -55,7 +55,7 @@ export default function HeroCTA() {
               onClick={() => loginType("user")}
               className="px-5 py-2.5 bg-[#1A56DB] text-white rounded-4xl text-sm font-medium hover:bg-[#1648b8] transition-colors shadow-sm"
             >
-              Get a Lawyer
+              Find a Lawyer
             </button>
           </div>
         </motion.div>

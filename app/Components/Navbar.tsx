@@ -149,7 +149,7 @@ export default function Navbar() {
               onClick={() => loginType("user")}
               className="text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-full hover:bg-[#1648b8] transition-colors font-medium shadow-sm"
             >
-              Get a Lawyer
+              Find a Lawyer
             </button>
           </div>
 
@@ -195,7 +195,7 @@ export default function Navbar() {
                   onClick={() => loginType("user")}
                   className="block w-full text-center bg-[#1A56DB] text-white px-4 py-3 rounded-xl text-sm font-medium hover:bg-[#1648b8] transition-colors"
                 >
-                  Get a Lawyer
+                  Find a Lawyer
                 </button>
               </div>
             </motion.div>

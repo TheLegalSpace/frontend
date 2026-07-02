@@ -170,7 +170,7 @@ export default function HowItWorks() {
               onClick={() => handleLandingNav(tab)}
             >
               {tab === "individuals" ? (
-                "Login to Get a Lawyer today!"
+                "Login to Find a Lawyer today!"
               ) : (
                 <>
                   Create a profile today! <MoveRight className="w-4 h-4" />
