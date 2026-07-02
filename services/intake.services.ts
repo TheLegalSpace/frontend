@@ -29,20 +29,32 @@ export interface ExtractedIntake {
   preference: string | null;
 }
 
-export interface TextSearchResponse {
-  error: boolean;
-  message: string;
-  data: {
-    items: MatchResult[];
-    pagination: {
-      total: number;
-      page: number;
-      limit: number;
-      totalPages: number;
-    };
-    extracted: ExtractedIntake; // ← only in text search
-  };
+export interface TextSearchPagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
+
+// Returned when the backend has enough info to actually search.
+export interface TextSearchSuccessData {
+  items: MatchResult[];
+  pagination: TextSearchPagination;
+  extracted: ExtractedIntake;
+}
+
+// Returned when the backend couldn't confidently extract matter +
+// (budget or location) from the free text — `items`/`pagination` are
+// absent, and the frontend should prompt for the missing fields instead.
+export interface TextSearchClarifyData {
+  text: string;
+  extracted: ExtractedIntake;
+}
+
+// Discriminated on `error` so TS narrows `data` correctly at each call site.
+export type TextSearchBody =
+  | { error: true; message: string; data: TextSearchClarifyData }
+  | { error: false; message: string; data: TextSearchSuccessData };
 
 // add to intakeService object
 // export const intakeService = {
@@ -172,5 +184,5 @@ export const intakeService = {
 // //     api.post<SearchResponse>("/matchmaking/search", payload),
 
   searchByText: (payload: TextSearchPayload) =>
-    api.post<TextSearchResponse>("/matchmaking/search-by-text", payload),
+    api.post<TextSearchBody>("/matchmaking/search-by-text", payload),
 };

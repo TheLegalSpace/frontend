@@ -19,5 +19,5 @@ export const useSearchLawyers = () =>
 export const useSearchByText = () =>
   useMutation({
     mutationFn: (payload: TextSearchPayload) =>
-      intakeService.searchByText(payload).then((r) => r.data.data),
+      intakeService.searchByText(payload).then((r) => r.data),
   });
