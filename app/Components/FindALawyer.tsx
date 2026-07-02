@@ -430,6 +430,25 @@ function LawyerCard({
     </div>
   );
 }
+// Same gradient-border technique used for the sidebar's "Get a lawyer"
+// pill — a transparent border painted with two layered backgrounds so the
+// gradient only shows on the border, not the fill.
+function GradientPill({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="inline-flex items-center rounded-full bg-white px-5 py-2.5 text-[14px] font-medium text-[#202020] shadow-sm"
+      style={{
+        border: "2px solid transparent",
+        backgroundImage:
+          "linear-gradient(white, white), linear-gradient(90deg, #216399 0%, #FFE500 50%, #C34B00 100%)",
+        backgroundOrigin: "border-box",
+        backgroundClip: "padding-box, border-box",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function FindALawyer() {
   const [inputValue, setInputValue] = useState("");
@@ -457,7 +476,7 @@ export default function FindALawyer() {
 
   // Steps for whichever fields still need answers, sourced from the same
   // practice-areas list and option constants used by the dashboard's
-  // "Find A Lawyer" intake flow — keeps the chip choices consistent.
+  // "Get a Lawyer" intake flow — keeps the chip choices consistent.
   const clarifySteps = buildIntakeSteps(practiceAreas ?? []).filter(
     (step) =>
       step.key === "matter" || step.key === "budget" || step.key === "location",
@@ -690,7 +709,7 @@ export default function FindALawyer() {
           <div className="h-18 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0">
             <div>
               <h1 className="text-[28px] font-serif text-[#202020]">
-                Find A Lawyer
+                Get a Lawyer
               </h1>
             </div>
 
@@ -707,30 +726,25 @@ export default function FindALawyer() {
 
           {/* CONVERSATION */}
           <div className="flex-1 overflow-y-auto px-8 py-8">
-            {!hasSearched && (
-              <div className="max-w-xl pt-12">
-                <div className="w-14 h-14 rounded-2xl bg-[#EEF4FF] flex items-center justify-center mb-8">
-                  <Send className="w-6 h-6 text-[#1D4ED8]" />
+           {!hasSearched && (
+              <div className="max-w-2xl">
+                <div className="pb-8 border-b border-[#EFEFEF]">
+                  <GradientPill>The Legal Space AI</GradientPill>
+
+                  <p className="mt-6 text-[15px] leading-8 text-[#6B6B6B] max-w-xl">
+                    Tell me your situation in plain language. I will read
+                    your intent, tag it to the right area of law, and match
+                    you with verified professionals.
+                  </p>
+
+                  <p className="mt-2 text-[15px] leading-8 font-bold text-[#3A3A3A] max-w-xl">
+                    Note: Only send a request if you&apos;re ready to speak
+                    with a lawyer.
+                  </p>
                 </div>
 
-                <h2 className="text-[32px] leading-tight font-serif text-[#202020] max-w-lg">
-                  Tell us about your legal situation.
-                </h2>
-
-                <p className="mt-6 text-[15px] leading-8 text-[#6B6B6B] max-w-xl">
-                  Describe your issue naturally. Mention your location,
-                  approximate budget, and the kind of legal help you need.
-                </p>
-
-                <div className="mt-10 rounded-3xl border border-[#ECECEC] bg-[#FCFCFC] p-6">
-                  <p className="text-[13px] text-[#9B9B9B] uppercase tracking-wide mb-3">
-                    Example
-                  </p>
-
-                  <p className="text-[15px] leading-8 text-[#444]">
-                    &quot;My landlord is trying to evict me illegally in Lagos
-                    and I can pay around ₦150k for legal representation.&quot;
-                  </p>
+                <div className="pt-8">
+                  <GradientPill>What is your legal matter about?</GradientPill>
                 </div>
               </div>
             )}

@@ -29,7 +29,7 @@ const faqs = [
   },
   {
     icon: "🔍",
-    q: "How do I find a lawyer?",
+    q: "How do I Get a Lawyer?",
     a: "Simply describe your legal matter to TLS AI. Based on your needs, practice area, location, and other relevant factors, we help connect you with suitable lawyers.",
   },
   {
