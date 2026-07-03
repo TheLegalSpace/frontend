@@ -87,7 +87,7 @@ export function formatBudget(budget: string): string {
     "50k_to_100k": "₦50k–₦100k",
     "100k_to_500k": "₦100k–₦500k",
     "500k_to_1m": "₦500k–₦1M",
-    above_1m: "Above ₦1M",
+    "1m+": "Above ₦1M",
   };
   return map[budget] ?? budget;
 }

@@ -1,7 +1,7 @@
 // services/intake.service.ts
 import { api } from "./api";
 import { PracticeArea } from "./practice-areas.services";
- 
+
 export interface LawyerProfile {
   id: string;
   accountId: string;
@@ -118,7 +118,7 @@ export interface SearchResponse {
 
 // ✅ Exact shape the API expects
 export interface SearchPayload {
-  matter: string;       // practiceArea UUID
+  matter: string; // practiceArea UUID
   budget: string;
   location: string;
   preference: "lawyer" | "firm" | "either";
@@ -130,7 +130,7 @@ export const BUDGET_OPTIONS = [
   { label: "₦50k–₦100k", value: "50k_to_100k" },
   { label: "₦100k–₦500k", value: "100k_to_500k" },
   { label: "₦500k–₦1M", value: "500k_to_1m" },
-  { label: "Above ₦1M", value: "above_1m" },
+  { label: "Above ₦1M", value: "'1m+'" },
 ];
 
 export const LOCATION_OPTIONS = [
@@ -179,9 +179,8 @@ export const intakeService = {
   search: (payload: SearchPayload) =>
     api.post<SearchResponse>("/matchmaking/search", payload),
 
-
-//    search: (payload: SearchPayload) =>
-// //     api.post<SearchResponse>("/matchmaking/search", payload),
+  //    search: (payload: SearchPayload) =>
+  // //     api.post<SearchResponse>("/matchmaking/search", payload),
 
   searchByText: (payload: TextSearchPayload) =>
     api.post<TextSearchBody>("/matchmaking/search-by-text", payload),

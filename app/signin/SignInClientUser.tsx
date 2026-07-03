@@ -13,7 +13,7 @@ import Footer from "../Components/Footer";
 declare const google: any;
 
 const GOOGLE_BTN_MIN_WIDTH = 200;
-const GOOGLE_BTN_MAX_WIDTH = 400;
+const GOOGLE_BTN_MAX_WIDTH = 1200;
 
 export default function SignInClient() {
   const { loginWithGoogle } = useAuth();
@@ -21,24 +21,21 @@ export default function SignInClient() {
 
   // Wrapper we measure to size the real Google button in real pixels.
   const wrapperRef = useRef<HTMLDivElement>(null);
-  // Real Google button — rendered directly over the visible custom button,
-  // not off-screen. The user's actual click lands on it, which is far more
-  // reliable than dispatching a synthetic .click() on a hidden iframe.
+  // Real Google button — rendered directly over the visible custom button
   const googleButtonRef = useRef<HTMLDivElement>(null);
+  // Second Google button overlaying the "Sign up" link
+  const googleSignUpButtonRef = useRef<HTMLDivElement>(null);
 
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [googleReady, setGoogleReady] = useState<boolean>(false);
   // Bumped whenever the tab regains focus, forcing the Google button
-  // wrapper to remount with a brand-new iframe. This is what fixes
-  // "works once, then does nothing after cancelling the popup" — GIS's
-  // popup handle can get stuck, and a fresh render clears that state.
+  // wrapper to remount with a brand-new iframe.
   const [resetKey, setResetKey] = useState(0);
-  // Google only accepts a fixed pixel width (200–400), not "100%". This
-  // tracks the wrapper's real measured width so the invisible real button
-  // always exactly matches the visible fake button underneath — otherwise
-  // only the fixed-width chunk Google actually renders is clickable.
-  const [btnWidth, setBtnWidth] = useState(GOOGLE_BTN_MAX_WIDTH);
+  // Google only accepts a fixed pixel width, not "100%". We track the wrapper's
+  // width to size the invisible real button underneath.
+  const [btnWidth, setBtnWidth] = useState(400);
+  const [scaleX, setScaleX] = useState(1);
 
   const callbackError = searchParams.get("error");
 
@@ -85,20 +82,24 @@ export default function SignInClient() {
     return () => clearInterval(interval);
   }, [loginWithGoogle]);
 
-  // 2. Measure the wrapper's real width and keep it clamped to Google's
-  //    supported range, re-measuring on resize (e.g. rotating a phone,
-  //    resizing a desktop window across the lg breakpoint).
+  // 2. Measure the wrapper's real width
   useLayoutEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
 
     const measure = () => {
       const width = Math.round(el.getBoundingClientRect().width);
-      const clamped = Math.min(
-        GOOGLE_BTN_MAX_WIDTH,
-        Math.max(GOOGLE_BTN_MIN_WIDTH, width),
-      );
-      setBtnWidth((prev) => (prev === clamped ? prev : clamped));
+      if (width > 400) {
+        setBtnWidth(400);
+        setScaleX(width / 400);
+      } else {
+        const clamped = Math.min(
+          400,
+          Math.max(GOOGLE_BTN_MIN_WIDTH, width),
+        );
+        setBtnWidth((prev) => (prev === clamped ? prev : clamped));
+        setScaleX(1);
+      }
     };
 
     measure();
@@ -107,30 +108,39 @@ export default function SignInClient() {
     return () => observer.disconnect();
   }, []);
 
-  // 3. Render the REAL Google button at the exact measured pixel width,
-  //    stacked on top of the styled button below via CSS (see JSX).
-  //    Re-runs whenever `resetKey` or `btnWidth` changes, giving us a
-  //    clean, correctly-sized iframe every time.
+  // 3. Render the REAL Google buttons
   useEffect(() => {
     if (!googleReady) return;
     const el = googleButtonRef.current;
-    if (!el || typeof google === "undefined") return;
+    const signUpEl = googleSignUpButtonRef.current;
+    if (typeof google === "undefined") return;
 
-    el.innerHTML = "";
-    google.accounts.id.renderButton(el, {
-      type: "standard",
-      theme: "outline",
-      size: "large",
-      text: "signin_with",
-      shape: "rectangular",
-      width: btnWidth,
-    });
+    if (el) {
+      el.innerHTML = "";
+      google.accounts.id.renderButton(el, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular",
+        width: btnWidth,
+      });
+    }
+
+    if (signUpEl) {
+      signUpEl.innerHTML = "";
+      google.accounts.id.renderButton(signUpEl, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        text: "signup_with",
+        shape: "rectangular",
+        width: 200, // Smallest width allowed by Google, scaled to cover via absolute & css
+      });
+    }
   }, [googleReady, resetKey, btnWidth]);
 
-  // 4. If the tab regains focus (e.g. the user closed the Google popup,
-  //    whether by cancelling or completing sign-in) and we're not mid
-  //    sign-in, remount the button so the next click always gets a fresh,
-  //    unstuck instance.
+  // 4. If the tab regains focus, remount the buttons
   useEffect(() => {
     const handleFocus = () => {
       if (!isLoading) {
@@ -141,9 +151,7 @@ export default function SignInClient() {
     return () => window.removeEventListener("focus", handleFocus);
   }, [isLoading]);
 
-  // 5. "Sign up" is a plain text link, not a button we can overlay — use
-  //    Google's own prompt() API to trigger sign-in programmatically
-  //    instead of faking a click on a hidden element.
+  // 5. Fallback trigger
   const triggerGoogle = () => {
     if (typeof google === "undefined" || !googleReady) return;
     google.accounts.id.prompt();
@@ -189,23 +197,25 @@ export default function SignInClient() {
                 </div>
               )}
 
-              {/* Custom button / loading, capped to Google's max width
-                  (400px) so the invisible real button and the visible
-                  styled button are always exactly the same size — no
-                  partially-clickable dead zones. */}
+              {/* Custom button / loading */}
               {isLoading ? (
-                <div className="w-full max-w-[400px] px-3 py-3.5 bg-white border border-gray-200 rounded-xl text-center">
+                <div className="w-full px-3 py-3.5 bg-white border border-gray-200 rounded-xl text-center">
                   <p className="text-[14px] text-gray-600 font-dmSans">
                     Signing you in…
                   </p>
                 </div>
               ) : (
-                <div ref={wrapperRef} className="relative w-full max-w-[400px]">
+                <div ref={wrapperRef} className="relative w-full">
                   <div
                     key={resetKey}
                     ref={googleButtonRef}
                     aria-hidden
-                    className="absolute inset-0 z-10 opacity-0 overflow-hidden w-full h-full [&>div]:w-full! [&>div]:h-full! [&_iframe]:w-full! [&_iframe]:h-full!"
+                    className="absolute inset-y-0 left-0 z-10 opacity-0 overflow-hidden h-full [&_div]:w-full! [&_div]:h-full! [&_iframe]:w-full! [&_iframe]:h-full!"
+                    style={{
+                      width: `${btnWidth}px`,
+                      transform: `scaleX(${scaleX})`,
+                      transformOrigin: "left",
+                    }}
                   />
                   <button
                     type="button"
@@ -221,13 +231,17 @@ export default function SignInClient() {
               {/* Account link */}
               <p className="mt-6 text-center text-sm text-gray-600 font-dmSans">
                 Don&apos;t have an account?{" "}
-                <button
-                  type="button"
-                  onClick={triggerGoogle}
-                  className="font-semibold text-blue-600 hover:underline"
-                >
-                  Sign up
-                </button>
+                <span className="relative inline-block align-baseline">
+                  <span
+                    key={`signup-${resetKey}`}
+                    ref={googleSignUpButtonRef}
+                    aria-hidden
+                    className="absolute inset-0 z-10 opacity-0 overflow-hidden w-full h-full [&_div]:w-full! [&_div]:h-full! [&_iframe]:w-full! [&_iframe]:h-full!"
+                  />
+                  <span className="font-semibold text-blue-600 hover:underline cursor-pointer">
+                    Sign up
+                  </span>
+                </span>
               </p>
             </div>
           </div>

@@ -86,7 +86,7 @@ function formatBudgetLabel(budget: string | null): string {
     "50k_to_100k": "₦50k - ₦100k",
     "100k_to_500k": "₦100k - ₦500k",
     "500k_to_1m": "₦500k - ₦1M",
-    above_1m: "Above ₦1M",
+    "1m+": "₦1M+",
     under_100k: "Under ₦100k",
     "500k_to_2m": "₦500k - ₦2M",
     above_2m: "Above ₦2M",
@@ -436,7 +436,7 @@ function LawyerCard({
 function GradientPill({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="inline-flex items-center rounded-full bg-white px-5 py-2.5 text-[14px] font-medium text-[#202020] shadow-sm"
+      className="inline-flex items-center rounded-full bg-white px-5 py-2.5 text-[12px] font-medium text-[#202020] shadow-sm"
       style={{
         border: "2px solid transparent",
         backgroundImage:
@@ -708,7 +708,7 @@ export default function FindALawyer() {
           {/* HEADER */}
           <div className="h-18 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0">
             <div>
-              <h1 className="text-[28px] font-serif text-[#202020]">
+              <h1 className="text-[20px] font-serif text-[#202020]">
                 Find a Lawyer
               </h1>
             </div>
@@ -731,13 +731,13 @@ export default function FindALawyer() {
                 <div className="pb-8 border-b border-[#EFEFEF]">
                   <GradientPill>The Legal Space AI</GradientPill>
 
-                  <p className="mt-6 text-[15px] leading-8 text-[#6B6B6B] max-w-xl">
+                  <p className="mt-6 text-[14px] leading-8 text-[#6B6B6B] max-w-xl">
                     Tell me your situation in plain language. I will read your
                     intent, tag it to the right area of law, and match you with
                     verified professionals.
                   </p>
 
-                  <p className="mt-2 text-[15px] leading-8 font-bold text-[#3A3A3A] max-w-xl">
+                  <p className="mt-2 text-[14px] leading-8 font-bold text-[#3A3A3A] max-w-xl">
                     Note: Only send a request if you&apos;re ready to speak with
                     a lawyer.
                   </p>
@@ -902,7 +902,7 @@ export default function FindALawyer() {
           <div className="px-8 py-8 max-w-3xl">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-[32px] font-serif text-[#202020] leading-none">
+                <h2 className="text-[30px] font-serif text-[#202020] leading-none">
                   Search Result
                 </h2>
 
