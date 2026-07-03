@@ -502,12 +502,24 @@ export default function ProfileCard({
                     </>
                   ) : (
                     (isLawyer || isFirm) && (
-                      <Link
-                        href="/dashboard/find-lawyer"
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E5F5EA] text-[#16A34A] text-[12px] font-medium rounded-full hover:opacity-90 transition-opacity"
-                      >
-                        Find a Lawyer
-                      </Link>
+                      <div className="relative">
+                        <button
+                          onClick={handleToggleFollow}
+                          disabled={toggleFollow.isPending}
+                          className="text-[12px] font-medium text-[#2563EB] hover:underline whitespace-nowrap cursor-pointer disabled:opacity-50"
+                        >
+                          {isFollowing ? "Unfollow" : "Follow"}
+                        </button>
+
+                        {showFollowTip && (
+                          <div className="absolute right-0 top-7 z-20 w-52 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-md">
+                            <div className="absolute -top-1 right-4 h-2 w-2 rotate-45 border-l border-t border-gray-100 bg-white" />
+                            <p className="text-[12px] text-[#4b5563] text-center leading-normal">
+                              You&apos;ll be seeing more of this account&apos;s content!
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     )
                   )}
                 </div>
