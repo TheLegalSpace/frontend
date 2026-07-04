@@ -11,7 +11,7 @@ export function connectSocket(token: string): Socket {
   if (!socket) {
     socket = io(BASE_URL, {
       path: "/realtime",
-      transports: ["websocket"],
+      transports: ["polling", "websocket"],
       autoConnect: false,
       auth: { token },
     });
