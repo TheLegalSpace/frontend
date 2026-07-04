@@ -19,6 +19,7 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   disconnectSocket,
   refreshSocketAuth,
+  connectSocket,
 } from "@/services/socket.services";
 
 export type AuthErrorCode =
@@ -53,6 +54,7 @@ interface AuthContextType {
   ) => Promise<void>;
   logout: () => Promise<void>;
   saveSession: (data: AuthResponse["data"]) => void; // ✅ exposed for register flow
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -308,6 +310,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshUser = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+    try {
+      const r = await profileService.getMe();
+      const fresh = r.data.data;
+      localStorage.setItem("user", JSON.stringify(fresh));
+      setUser(fresh);
+    } catch (err) {
+      console.error("Failed to refresh user profile:", err);
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token || !user) return;
+
+    const socket = connectSocket(token);
+
+    const handleUpdate = () => {
+      refreshUser();
+    };
+
+    socket.on("notification", handleUpdate);
+    socket.on("message", handleUpdate);
+    socket.on("conversation:updated", handleUpdate);
+    socket.on("message:read", handleUpdate);
+
+    return () => {
+      socket.off("notification", handleUpdate);
+      socket.off("message", handleUpdate);
+      socket.off("conversation:updated", handleUpdate);
+      socket.off("message:read", handleUpdate);
+    };
+  }, [user?.id]);
+
   const logout = async (): Promise<void> => {
     try {
       await authService.logout();
@@ -320,7 +358,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, loginWithGoogle, logout, saveSession }}
+      value={{
+        user,
+        isLoading,
+        login,
+        loginWithGoogle,
+        logout,
+        saveSession,
+        refreshUser,
+      }}
     >
       {children}
     </AuthContext.Provider>
