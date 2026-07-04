@@ -11,28 +11,28 @@ interface Props {
 
 export default function Step1AccountType({ onNext }: Props) {
   const [selected, setSelected] = useState<AccountType | "">("");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [error, setError] = useState("");
 
-  const handleContinue = () => {
-    if (!selected) {
+  const handleContinue = (type: AccountType) => {
+    if (!type) {
       setError("Please select an account type.");
       return;
     }
-    onNext(selected as AccountType);
+    onNext(type);
   };
 
   return (
     <div className="w-full max-w-lg mx-auto md:mx-0 ">
-      <div className="border border-[#E5E7EB] rounded-2xl p-6 shadow-sm">
+      <div className="">
         <div className="mb-5">
-          <label className="block text-[13px] font-medium text-gray-700 mb-2">
+          {/* <label className="block text-[13px] font-medium text-gray-700 mb-2">
             Account Type
-          </label>
+          </label> */}
 
           {/* Dropdown */}
-          <div className="relative">
-            <button
+          <div className="">
+            {/* <button
               onClick={() => setOpen(!open)}
               className="w-full flex items-center justify-between px-4 py-3 border border-gray-200 rounded-xl text-[13px] text-left transition-colors hover:border-gray-300 bg-white"
             >
@@ -46,29 +46,36 @@ export default function Step1AccountType({ onNext }: Props) {
               <ChevronDown
                 className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
               />
-            </button>
-
+            </button> */}
+            <h3 className="text-xl sm:text-2xl font-medium tracking-tight mb-3 leading-tight font-dmSans">
+              Choose Your Membership Type{" "}
+            </h3>
+            <p className="text-sm sm:text-sm  text-[#84878F] mb- leading-relaxed font-dmSans">
+              How would you like to join The Legal Space?
+            </p>
             {open && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E5E7EB] rounded-xl shadow-lg z-10 overflow-hidden">
+              <div className="flex gap-4 flex-col mt-8 ">
                 <button
                   onClick={() => {
-                    setSelected("firm");
-                    setOpen(false);
-                    setError("");
+                    // setSelected("lawyer");
+                    // setOpen(false);
+                    // setError("");
+                    handleContinue("lawyer");
                   }}
-                  className="w-full text-left px-4 py-3 text-[13px] text-gray-700 hover:bg-white transition-colors"
+                  className="w-full text-left px-4 py-3 text-[13px] border border-[#E6EAED] rounded-lg text-gray-700 hover:bg-white transition-colors"
                 >
-                  Law Firm
+                  Lawyer
                 </button>
                 <button
                   onClick={() => {
-                    setSelected("lawyer");
-                    setOpen(false);
-                    setError("");
+                    // setSelected("firm");
+                    // setOpen(false);
+                    // setError("");
+                    handleContinue("firm");
                   }}
-                  className="w-full text-left px-4 py-3 text-[13px] text-gray-700 hover:bg-white transition-colors border-t border-gray-50"
+                  className="w-full text-left px-4 py-3 text-[13px] border border-[#E6EAED] rounded-lg text-gray-700 hover:bg-white transition-colors"
                 >
-                  Independent Lawyer
+                  Law Firm
                 </button>
               </div>
             )}
@@ -77,12 +84,12 @@ export default function Step1AccountType({ onNext }: Props) {
           {error && <p className="text-[12px] text-red-500 mt-2">{error}</p>}
         </div>
 
-        <button
+        {/* <button
           onClick={handleContinue}
           className="w-full py-3 bg-[#1A56DB] text-white text-[13px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors"
         >
           Continue
-        </button>
+        </button> */}
       </div>
     </div>
   );

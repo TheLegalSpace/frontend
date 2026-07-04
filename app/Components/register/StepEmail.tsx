@@ -2,7 +2,13 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft, Mail, Lock } from "lucide-react";
+import Link from "next/link";
+import Footer from "../Footer";
+import Navbar from "../Navbar";
+import Image from "next/image";
+
+import signupIllustration from "@/public/signupillustration.png";
 
 interface Props {
   onNext: (payload: {
@@ -55,173 +61,200 @@ export default function StepEmail({
   };
 
   return (
-    <div
-      className="min-h-screen w-full flex flex-col"
-      style={{
-        backgroundImage: "url('/sign-in-bg.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundColor: "#000000d3",
-        backgroundBlendMode: "darken",
-      }}
-    >
+    <div className="min-h-screen w-full flex flex-col bg-white text-black">
+      <Navbar />
       {/* Logo */}
-      <div className="px-8 py-6">
-        <img src="/tls-logo-white.png" alt="The Legal Space" className="h-9 w-auto" />
-      </div>
-
-      <div className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-md bg-transparent backdrop-blur-sm border border-white/30 rounded-2xl px-8 py-8">
-          <h1 className="text-[22px] font-light text-white mb-1 text-center font-[Instrument_Serif]">
-            Join TheLegalSpace as a Legal Professional
-          </h1>
-          <p className="text-[12px] leading-[24px] text-[#FFFFFFCC] mb-6 text-center">
-            Create your verified profile and start getting discovered by people
-            actively seeking legal help across Nigeria.
-          </p>
-
-          {displayError && (
-            <div className="mb-4 px-3 py-2.5 bg-red-500/20 border border-red-400/30 rounded-xl">
-              <p className="text-[12px] text-red-300">{displayError}</p>
-            </div>
-          )}
-
-          {/* Email */}
-          <div className="mb-4">
-            <label className="block text-[12px] text-white/60 mb-1.5">
-              Email Address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              disabled={isLoading}
-              className="w-full px-3 py-3 bg-[#2a2a2a] border border-white/10 rounded-xl text-[13px] text-white placeholder:text-white/20 outline-none focus:border-white/30 disabled:opacity-60 transition-colors"
-            />
-          </div>
-
-          {/* Password */}
-          <div className="mb-2">
-            <label className="block text-[12px] text-white/60 mb-1.5">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPw ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                disabled={isLoading}
-                className="w-full px-3 py-3 pr-10 bg-[#2a2a2a] border border-white/10 rounded-xl text-[13px] text-white placeholder:text-white/20 outline-none focus:border-white/30 disabled:opacity-60 transition-colors"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw(!showPw)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
-              >
-                {showPw ? (
-                  <EyeOff className="w-4 h-4 text-white" />
-                ) : (
-                  <Eye className="w-4 h-4 text-white" />
+      <main className="flex-1 w-full flex items-center">
+        <div className="w-full h-[90vh]">
+          <div className="w-full  mx-auto s">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+              <div className="hidden lg:block">
+                <Image
+                  src={signupIllustration}
+                  alt="The Legal Space community illustration"
+                  className="w-full h-auto  object-cover"
+                  priority
+                />
+              </div>
+              <div className="w-full px-4 lg:mx-0 text-left">
+                <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
+                  Welcome Back
+                </h1>
+                <p className="text-base sm:text-lg text-gray-500 mb-8 leading-relaxed font-dmSans">
+                  Sign in to access your profile, opportunities, research tools,
+                  and everything The Legal Space has to offer.
+                </p>
+                {displayError && (
+                  <div className="mb-4 px-3 py-2.5 bg-red-500/20 border border-red-400/30 rounded-xl">
+                    <p className="text-[12px] text-red-300">{displayError}</p>
+                  </div>
                 )}
-              </button>
+                <div className="w-full flex flex-col gap-4">
+                  {/* Header */}
+                  {/* <div className="text-center mb-8">
+                    <h1 className="text-[26px] font-light text-white mb-2 font-[Instrument_Serif]">
+                      Join TheLegalSpaces
+                    </h1>
+                    <p className="text-[13px] text-white/50 leading-relaxed">
+                      Create your verified profile and start getting discovered
+                      by people actively seeking legal help across Nigeria.
+                    </p>
+                  </div> */}
+
+                  {displayError && (
+                    <div className="mb-4 px-3 py-2.5 bg-red-500/20 border border-red-400/30 rounded-xl">
+                      <p className="text-[12px] text-red-300">{displayError}</p>
+                    </div>
+                  )}
+
+                  {/* Email */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[13px] text-gray-600">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                      <input
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[13px] text-gray-600">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                      <input
+                        type={showPw ? "text" : "password"}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="w-full pl-11 pr-11 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPw(!showPw)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {showPw ? (
+                          <Eye className="w-4 h-4" />
+                        ) : (
+                          <EyeOff className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Password hints */}
+                  <div className="my-4 flex flex-col gap-0.5 px-1">
+                    <p
+                      className={`text-[11px] flex items-center gap-1.5 transition-colors ${
+                        password.length >= 8
+                          ? "text-green-400"
+                          : "text-black/30"
+                      }`}
+                    >
+                      <span className="text-[10px]">
+                        {password.length >= 8 ? "✓" : "•"}
+                      </span>
+                      Must be at least 8 characters
+                    </p>
+                    <p
+                      className={`text-[11px] flex items-center gap-1.5 transition-colors ${
+                        /[^a-zA-Z0-9]/.test(password)
+                          ? "text-green-400"
+                          : "text-black/30"
+                      }`}
+                    >
+                      <span className="text-[10px] text-black/30">
+                        {/[^a-zA-Z0-9]/.test(password) ? "✓" : "•"}
+                      </span>
+                      Must contain one special character
+                    </p>
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div className="mb-6">
+                    <label className="text-[13px] text-gray-600">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      {" "}
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                      <input
+                        type={showConfirm ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Repeat your password"
+                        disabled={isLoading}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter")
+                            handleSubmit("PENDING_PROFESSIONAL");
+                        }}
+                        className="w-full pl-11 pr-11 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirm(!showConfirm)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {showConfirm ? (
+                          <Eye className="w-4 h-4" />
+                        ) : (
+                          <EyeOff className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    onClick={() => handleSubmit("PENDING_PROFESSIONAL")}
+                    disabled={isLoading}
+                    className="w-full py-3 bg-[#1A56DB] hover:bg-[#1648b8] text-white text-[14px] font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mb-4"
+                  >
+                    {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isLoading ? "Please wait..." : "Create Account"}
+                  </button>
+
+                  {/* Divider */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex-1 h-px bg-black/10" />
+                    <span className="text-[12px] text-black/30">or</span>
+                    <div className="flex-1 h-px bg-black/10" />
+                  </div>
+
+                  {/* Already have an account */}
+                  <div className="text-center">
+                    <p className="text-[13px] text-black/40">
+                      Already have an account?{" "}
+                      <Link
+                        href="/signin"
+                        className="text-[#1A56DB] hover:text-[#1648b8] transition-colors font-medium"
+                      >
+                        Sign in
+                      </Link>
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Password hints */}
-          <div className="mb-4 flex flex-col gap-0.5 px-1">
-            <p
-              className={`text-[11px] flex items-center gap-1.5 transition-colors ${
-                password.length >= 8 ? "text-green-400" : "text-white/30"
-              }`}
-            >
-              <span className="text-[10px]">
-                {password.length >= 8 ? "✓" : "•"}
-              </span>
-              Must be at least 8 characters
-            </p>
-            <p
-              className={`text-[11px] flex items-center gap-1.5 transition-colors ${
-                /[^a-zA-Z0-9]/.test(password)
-                  ? "text-green-400"
-                  : "text-white/30"
-              }`}
-            >
-              <span className="text-[10px]">
-                {/[^a-zA-Z0-9]/.test(password) ? "✓" : "•"}
-              </span>
-              Must contain one special character
-            </p>
-          </div>
-
-          {/* Confirm Password */}
-          <div className="mb-6">
-            <label className="block text-[12px] text-white/60 mb-1.5">
-              Confirm Password
-            </label>
-            <div className="relative">
-              <input
-                type={showConfirm ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repeat your password"
-                disabled={isLoading}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSubmit("PENDING_PROFESSIONAL");
-                }}
-                className="w-full px-3 py-3 pr-10 bg-[#2a2a2a7c] border border-white/10 rounded-xl text-[13px] text-white placeholder:text-white/20 outline-none focus:border-white/30 disabled:opacity-60 transition-colors"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
-              >
-                {showConfirm ? (
-                  <EyeOff className="w-4 h-4 text-white" />
-                ) : (
-                  <Eye className="w-4 h-4 text-white" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* ✅ Two separate CTAs */}
-          <button
-            onClick={() => handleSubmit("PENDING_PROFESSIONAL")}
-            disabled={isLoading}
-            className="w-full py-3 bg-[#1A56DB] text-white text-[14px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mb-3"
-          >
-            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {isLoading ? "Please wait..." : "Create Account"}
-          </button>
-
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-[11px] text-white/30">OR</span>
-            <div className="flex-1 h-px bg-white/10" />
-          </div>
-
-          {/* ✅ Google */}
-          <button
-            disabled={isLoading}
-            className="w-full py-3 bg-[#2a2a2a] border border-white/10 text-white text-[14px] font-medium rounded-xl hover:bg-[#333] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mb-5"
-          >
-            <img src="/google-icon.svg" alt="Google" className="w-5 h-5" />
-            Continue with Google
-          </button>
-
-          <p className="text-center text-[12px] text-white/40">
-            Have an account?{" "}
-            <a
-              href="/signin"
-              className="text-[#1A56DB] hover:underline font-medium"
-            >
-              Login
-            </a>
-          </p>
         </div>
-      </div>
+      </main>
+
+      <Footer visible={false} />
     </div>
   );
 }
