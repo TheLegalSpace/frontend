@@ -11,6 +11,9 @@ import Step3Verification from "./Step3Verification";
 import { registerService } from "@/services/auth.register.services";
 import { useToast } from "@/app/context/ToastContext";
 import { useAuth } from "@/app/context/AuthContext";
+import Image from "next/image";
+
+import signupIllustration from "@/public/registerillustration.png";
 
 export type AccountType = "lawyer" | "firm";
 
@@ -254,25 +257,22 @@ export default function LawyerSignup() {
 
   // ─── Main layout ───────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="">
       {/* Header */}
-      <div className="border-b border-[#E5E7EB] px-6 py-4 flex items-center justify-between">
+      {/* <div className="border-b border-[#E5E7EB] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {/* ✅ Back arrow */}
-          {canGoBack && (
+           {canGoBack && (
             <button
               onClick={handleBack}
               className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
               aria-label="Go back"
             >
-              <ArrowLeft className="w-4 h-4 text-gray-600" />
+              <ArrowLeft className="w-6 h-4 text-black" />
             </button>
           )}
-          <img src="/tls-logo-dark.png" alt="TLS" className="h-6" />
-        </div>
+         </div>
 
-        {/* Mobile hamburger */}
-        <button
+         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="md:hidden p-1.5 text-gray-400 hover:text-gray-600"
         >
@@ -282,7 +282,7 @@ export default function LawyerSignup() {
             <Menu className="w-5 h-5" />
           )}
         </button>
-      </div>
+      </div> */}
 
       {/* ✅ Mobile drawer — steps only, no sidebar on desktop */}
       {mobileMenuOpen && (
@@ -306,8 +306,7 @@ export default function LawyerSignup() {
         </>
       )}
 
-      {/* ✅ Horizontal stepper — top, both mobile and desktop */}
-      <div className="flex items-center justify-center py-5 border-b border-[#E5E7EB] px-4">
+      {/* <div className="flex items-center justify-center py-5 border-b border-[#E5E7EB] px-4">
         {MAIN_STEPS.map((s, i) => {
           const status = getStepStatus(s.id);
           return (
@@ -330,8 +329,7 @@ export default function LawyerSignup() {
                     <div className="w-2.5 h-2.5 rounded-full bg-gray-200" />
                   )}
                 </div>
-                {/* Hide text on small screens — just show dots */}
-                <p
+                 <p
                   className={`hidden md:block text-[12px] font-medium text-center max-w-[130px] ${
                     status === "pending" ? "text-gray-400" : "text-gray-900"
                   }`}
@@ -356,51 +354,83 @@ export default function LawyerSignup() {
             </div>
           );
         })}
-      </div>
+      </div> */}
+      <main className="flex-1 w-full flex items-center">
+        <div className="w-full h-[100vh]">
+          <div className="w-full h-full mx-auto ">
+            {/* ✅ Main content — full width, no sidebar */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-0 items-center h-full">
+              <div className="hidden lg:block h-full">
+                <Image
+                  src={signupIllustration}
+                  alt="The Legal Space community illustration"
+                  className="w-full h-full  object-cover"
+                  priority
+                />
+              </div>
+              <div className="flex-1 flex flex-col items-center px-4 py-8 lg:px-14 overflow-y-auto">
+                <div className="flex justify-between w-full my-4">
+                  {canGoBack && (
+                    <button
+                      onClick={handleBack}
+                      className=" rounded-lg hover:bg-gray-100 transition-colors"
+                      aria-label="Go back"
+                    >
+                      <ArrowLeft className="w-6 h-4 text-black" />
+                    </button>
+                  )}
+                  {/* Account type badge */}
+                  {accountType && mainStep > 1 && (
+                    <div className="">
+                      <span className="px-3 py-1.5 bg-[#F9FAFB] border border-[#D1D5DB] text-[#060B13] text-[12px] font-medium rounded-full shadow-[0_1px_1px_0_rgba(102,109,128,0.2)]">
+                        {accountType === "lawyer"
+                          ? "Lawyer"
+                          : "Law Firm"}
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-      {/* ✅ Main content — full width, no sidebar */}
-      <div className="flex-1 flex flex-col items-center px-4 py-8 overflow-y-auto">
-        {/* Account type badge */}
-        {accountType && mainStep > 1 && (
-          <div className="flex justify-center mb-4 w-full max-w-sm">
-            <span className="px-3 py-1.5 bg-blue-50 border border-blue-200 text-[#2563EB] text-[12px] font-medium rounded-full">
-              {accountType === "lawyer" ? "Independent Lawyer" : "Law Firm"}
-            </span>
+                {/* Step 1 */}
+                {mainStep === 1 && (
+                  <Step1AccountType
+                    onNext={handleAccountTypeSelect}
+                    canGoBack={canGoBack}
+                  />
+                )}
+
+                {/* Step 2 — lawyer */}
+                {mainStep === 2 && accountType === "lawyer" && (
+                  <Step2LawyerInfo
+                    subStep={subStep}
+                    email={user?.email ?? "text@esr.mk"}
+                    onNext={handleSubStepComplete}
+                    canGoBack={canGoBack}
+                  />
+                )}
+
+                {/* Step 2 — firm */}
+                {mainStep === 2 && accountType === "firm" && (
+                  <Step2FirmInfo
+                    subStep={subStep}
+                    email={user?.email ?? ""}
+                    onNext={handleSubStepComplete}
+                  />
+                )}
+
+                {/* Step 3 */}
+                {mainStep === 3 && accountType && (
+                  <Step3Verification
+                    accountType={accountType}
+                    onFinish={handleFinishSetup}
+                    isLoading={isLoading}
+                  />
+                )}
+              </div>
+            </div>
           </div>
-        )}
-
-        {/* Step 1 */}
-        {mainStep === 1 && (
-          <Step1AccountType onNext={handleAccountTypeSelect} />
-        )}
-
-        {/* Step 2 — lawyer */}
-        {mainStep === 2 && accountType === "lawyer" && (
-          <Step2LawyerInfo
-            subStep={subStep}
-            email={user?.email ?? ""}
-            onNext={handleSubStepComplete}
-          />
-        )}
-
-        {/* Step 2 — firm */}
-        {mainStep === 2 && accountType === "firm" && (
-          <Step2FirmInfo
-            subStep={subStep}
-            email={user?.email ?? ""}
-            onNext={handleSubStepComplete}
-          />
-        )}
-
-        {/* Step 3 */}
-        {mainStep === 3 && accountType && (
-          <Step3Verification
-            accountType={accountType}
-            onFinish={handleFinishSetup}
-            isLoading={isLoading}
-          />
-        )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
