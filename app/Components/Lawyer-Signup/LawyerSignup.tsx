@@ -62,7 +62,7 @@ function prevStep(
 export default function LawyerSignup() {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   const [step, setStep] = useState<Step>("account_type");
   const [accountType, setAccountType] = useState<AccountType | null>(null);
@@ -76,8 +76,11 @@ export default function LawyerSignup() {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await profileService.getMe();
-        const account = data.data;
+        const account = await refreshUser();
+        if (!account) {
+          setResuming(false);
+          return;
+        }
 
         if (account.role === "LAWYER" || account.role === "FIRM") {
           const type: AccountType =

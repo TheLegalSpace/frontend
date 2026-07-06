@@ -13,7 +13,7 @@ export function connectSocket(token: string): Socket {
   if (!socket) {
     socket = io(BASE_URL, {
       path: "/realtime",
-      transports: ["polling", "websocket"],
+      transports: ["websocket"],
       autoConnect: false,
       auth: { token },
     });

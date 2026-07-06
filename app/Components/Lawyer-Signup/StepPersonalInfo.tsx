@@ -12,11 +12,25 @@ interface Props {
 }
 
 const NIGERIAN_CITIES = [
-  "Lagos","Abuja","Port Harcourt","Kano","Ibadan",
-  "Enugu","Benin City","Kaduna","Uyo","Warri",
+  "Lagos",
+  "Abuja",
+  "Port Harcourt",
+  "Kano",
+  "Ibadan",
+  "Enugu",
+  "Benin City",
+  "Kaduna",
+  "Uyo",
+  "Warri",
 ];
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-0">
       {children}
@@ -25,17 +39,21 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export default function StepPersonalInfo({ accountType, email, onNext }: Props) {
+export default function StepPersonalInfo({
+  accountType,
+  email,
+  onNext,
+}: Props) {
   const isLawyer = accountType === "lawyer";
 
-  const [firstName,             setFirstName]             = useState("");
-  const [lastName,              setLastName]              = useState("");
-  const [firmName,              setFirmName]              = useState("");
-  const [phone,                 setPhone]                 = useState("");
-  const [callToBarYear,         setCallToBarYear]         = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [firmName, setFirmName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [callToBarYear, setCallToBarYear] = useState("");
   const [firmEstablishmentYear, setFirmEstablishmentYear] = useState("");
-  const [locationCity,          setLocationCity]          = useState("");
-  const [error,                 setError]                 = useState("");
+  const [locationCity, setLocationCity] = useState("");
+  const [error, setError] = useState("");
 
   const inputCls =
     "w-full px-3 py-3 border-b border-gray-200 text-[14px] outline-none focus:border-[#1A56DB] transition-colors bg-transparent placeholder:text-gray-400 font-dmSans";
@@ -43,13 +61,21 @@ export default function StepPersonalInfo({ accountType, email, onNext }: Props) 
   const handleNext = () => {
     setError("");
     if (isLawyer) {
-      if (!firstName || !lastName || !phone || !callToBarYear || !locationCity) {
-        setError("Please fill in all required fields."); return;
+      if (
+        !firstName ||
+        !lastName ||
+        !phone ||
+        !callToBarYear ||
+        !locationCity
+      ) {
+        setError("Please fill in all required fields.");
+        return;
       }
       onNext({ firstName, lastName, phone, callToBarYear, locationCity });
     } else {
       if (!firmName || !phone || !firmEstablishmentYear || !locationCity) {
-        setError("Please fill in all required fields."); return;
+        setError("Please fill in all required fields.");
+        return;
       }
       onNext({ firmName, phone, firmEstablishmentYear, locationCity });
     }
@@ -74,7 +100,8 @@ export default function StepPersonalInfo({ accountType, email, onNext }: Props) 
               <div className="relative border-r border-gray-200">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 <input
-                  value={firstName} onChange={(e) => setFirstName(e.target.value)}
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Enter firstname"
                   className={`${inputCls} pl-9`}
                 />
@@ -82,7 +109,8 @@ export default function StepPersonalInfo({ accountType, email, onNext }: Props) 
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 <input
-                  value={lastName} onChange={(e) => setLastName(e.target.value)}
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
                   placeholder="Enter lastname"
                   className={`${inputCls} pl-9`}
                 />
@@ -93,7 +121,8 @@ export default function StepPersonalInfo({ accountType, email, onNext }: Props) 
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <input
-              value={firmName} onChange={(e) => setFirmName(e.target.value)}
+              value={firmName}
+              onChange={(e) => setFirmName(e.target.value)}
               placeholder="Enter Firm Name"
               className={`${inputCls} pl-9`}
             />
@@ -104,7 +133,8 @@ export default function StepPersonalInfo({ accountType, email, onNext }: Props) 
         <div className="relative border-t border-gray-200">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <input
-            value={email} disabled
+            value={email}
+            disabled
             className={`${inputCls} pl-9 pr-9 text-gray-400`}
           />
           <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
@@ -114,13 +144,15 @@ export default function StepPersonalInfo({ accountType, email, onNext }: Props) 
         <div className="relative border-t border-gray-200">
           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <input
-            value={phone} onChange={(e) => setPhone(e.target.value)}
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             placeholder="WhatsApp Number"
             className={`${inputCls} pl-9`}
           />
         </div>
         <p className="text-[11px] text-gray-400 px-3 pb-2">
-          Your number will remain confidential and will only be shared if you choose to do so.
+          Your number will remain confidential and will only be shared if you
+          choose to do so.
         </p>
 
         {/* Call to bar / Year established */}
@@ -143,11 +175,16 @@ export default function StepPersonalInfo({ accountType, email, onNext }: Props) 
         <div className="relative border-t border-gray-200">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <select
-            value={locationCity} onChange={(e) => setLocationCity(e.target.value)}
+            value={locationCity}
+            onChange={(e) => setLocationCity(e.target.value)}
             className={`${inputCls} pl-9 pr-8 bg-white appearance-none`}
           >
             <option value="">Select location</option>
-            {NIGERIAN_CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            {NIGERIAN_CITIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
           </select>
         </div>
       </div>
