@@ -73,7 +73,7 @@ export function getPostAuthRoute(
     return "/register/lawyer-setup";
   }
   if (account.role === "FIRM" && !account.firmProfile) {
-    return "/register/firm-setup";
+    return "/register/lawyer-setup";
   }
   return "/dashboard/feeds";
 }

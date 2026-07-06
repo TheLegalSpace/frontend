@@ -1,0 +1,64 @@
+// app/membership/callback/MembershipCallbackClient.tsx
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { membershipService } from "@/services/membership.services";
+import { profileService } from "@/services/profile.services";
+
+export default function MembershipCallbackClient() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [message, setMessage] = useState("Confirming your payment…");
+  const ran = useRef(false);
+
+  useEffect(() => {
+    if (ran.current) return;
+    ran.current = true;
+
+    const reference = searchParams.get("reference");
+
+    (async () => {
+      // Verify the payment — safe even if it failed or was abandoned.
+      if (reference) {
+        try {
+          await membershipService.verifyPayment(reference);
+        } catch {
+          // Payment failed/abandoned — account stays Community. Not fatal.
+        }
+      }
+
+      // Figure out where this user was in onboarding, per the resume rules:
+      // - profile already exists → fully onboarded, go to dashboard
+      // - role LAWYER/FIRM, no profile yet → back into the setup wizard
+      // - anything else → safest fallback is the dashboard
+      try {
+        const { data } = await profileService.getMe();
+        const account = data.data;
+
+        if (account.role === "LAWYER" && !account.lawyerProfile) {
+          setMessage("Redirecting you back to profile setup…");
+          router.replace("/register/lawyer-setup");
+          return;
+        }
+        if (account.role === "FIRM" && !account.firmProfile) {
+          setMessage("Redirecting you back to profile setup…");
+          router.replace("/register/firm-setup");
+          return;
+        }
+      } catch {
+        // fall through to dashboard
+      }
+
+      router.replace("/dashboard/feeds");
+    })();
+  }, [router, searchParams]);
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-white">
+      <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      <p className="text-[14px] text-gray-500">{message}</p>
+    </div>
+  );
+}

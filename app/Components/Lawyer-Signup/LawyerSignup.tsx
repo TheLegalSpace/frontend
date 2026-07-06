@@ -1,9 +1,9 @@
 // app/Components/Lawyer-Signup/LawyerSignup.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { registerService } from "@/services/auth.register.services";
 import { useToast } from "@/app/context/ToastContext";
@@ -14,31 +14,48 @@ import Step1AccountType from "./Step1AccountType";
 import StepMembership from "./StepMembership";
 import StepPersonalInfo from "./StepPersonalInfo";
 import StepPracticeAreas from "./StepPracticeAreas";
-import StepProfessionalFees, { type AreaFeeEntry } from "./StepProfessionalFees";
+import StepProfessionalFees, {
+  type AreaFeeEntry,
+} from "./StepProfessionalFees";
 import StepVerification from "./StepVerification";
+import { profileService } from "@/services/profile.services";
+import { membershipService } from "@/services/membership.services";
 
 export type AccountType = "lawyer" | "firm";
 
 // ─── Step identifiers ────────────────────────────────────────────────────────
 type Step =
-  | "account_type"   // 1 — Lawyer / Law Firm
-  | "membership"     // 2 — Professional (pay) / Community (free)
-  | "personal_info"  // 3 — Tell Us About Yourself
+  | "account_type" // 1 — Lawyer / Law Firm
+  | "membership" // 2 — Professional (pay) / Community (free)
+  | "personal_info" // 3 — Tell Us About Yourself
   | "practice_areas" // 4 — Professional Information
-  | "fees"           // 5 — Professional Fees
-  | "verification"   // 6 — Verify Professional Status (lawyers only)
-  | "success";       // 7 — Registration Complete
+  | "fees" // 5 — Professional Fees
+  | "verification" // 6 — Verify Professional Status (lawyers only)
+  | "success"; // 7 — Registration Complete
 
-// Step order for Back navigation (firms skip verification)
-function prevStep(step: Step, accountType: AccountType | null): Step | null {
+// Step order for Back navigation (firms skip verification; locked users can't
+// reach account_type/membership once they've paid for Professional)
+function prevStep(
+  step: Step,
+  accountType: AccountType | null,
+  locked: boolean,
+): Step | null {
   const allSteps: Step[] = [
-    "account_type","membership","personal_info",
-    "practice_areas","fees","verification","success",
+    "account_type",
+    "membership",
+    "personal_info",
+    "practice_areas",
+    "fees",
+    "verification",
+    "success",
   ];
   const lawyerFlow = allSteps;
-  const firmFlow   = allSteps.filter((s) => s !== "verification");
-  const flow       = accountType === "firm" ? firmFlow : lawyerFlow;
-  const idx        = flow.indexOf(step);
+  const firmFlow = allSteps.filter((s) => s !== "verification");
+  let flow = accountType === "firm" ? firmFlow : lawyerFlow;
+  if (locked) {
+    flow = flow.filter((s) => s !== "account_type" && s !== "membership");
+  }
+  const idx = flow.indexOf(step);
   return idx > 0 ? flow[idx - 1] : null;
 }
 
@@ -47,22 +64,89 @@ export default function LawyerSignup() {
   const { showSuccess, showError } = useToast();
   const { user } = useAuth();
 
-  const [step,        setStep]        = useState<Step>("account_type");
+  const [step, setStep] = useState<Step>("account_type");
   const [accountType, setAccountType] = useState<AccountType | null>(null);
-  const [formData,    setFormData]    = useState<Record<string, unknown>>({});
-  const [isLoading,   setIsLoading]   = useState(false);
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [locked, setLocked] = useState(false); // true once Professional payment is confirmed
+  const [resuming, setResuming] = useState(true); // true while we check for a half-finished user
+
+  // Detect a returning half-finished user (per Plan Selection & Payment Flow doc)
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await profileService.getMe();
+        const account = data.data;
+
+        if (account.role === "LAWYER" || account.role === "FIRM") {
+          const type: AccountType =
+            account.role === "FIRM" ? "firm" : "lawyer";
+          setAccountType(type);
+
+          const hasProfile =
+            type === "lawyer"
+              ? !!account.lawyerProfile
+              : !!account.firmProfile;
+
+          if (hasProfile) {
+            router.replace("/dashboard/feeds"); // fully onboarded, shouldn't be here
+            return;
+          }
+
+          const membership = await membershipService.getMembership();
+          if (membership.data?.tier === "professional") {
+            setLocked(true);
+            setStep("personal_info"); // already paid — skip account_type + membership
+          } else {
+            setStep("membership"); // type already picked, still on Community
+          }
+        }
+        // role === "PENDING_PROFESSIONAL" → leave step at default "account_type"
+      } catch {
+        // no session / request failed — fall back to the start of the wizard
+      } finally {
+        setResuming(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const merge = (data: Record<string, unknown>) =>
     setFormData((prev) => ({ ...prev, ...data }));
 
+  // ─── Account type selection ──────────────────────────────────────────────
+  // NEW — calls PATCH /profile/me/professional-role immediately on selection,
+  // before the plans screen ever shows. Re-callable/idempotent per the API,
+  // so no need to guard against repeat calls if the user switches type.
+  const handleAccountType = async (type: AccountType) => {
+    setIsLoading(true);
+    try {
+      await profileService.setProfessionalRole(
+        type === "firm" ? "FIRM" : "LAWYER",
+      );
+      setAccountType(type);
+      setStep("membership");
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ?? "Couldn't save your selection. Please try again.";
+      showError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // ─── Back ────────────────────────────────────────────────────────────────
   const handleBack = () => {
-    const prev = prevStep(step, accountType);
+    const prev = prevStep(step, accountType, locked);
     if (prev) setStep(prev);
   };
-  const canGoBack = step !== "account_type" && step !== "success";
+  // Derives visibility from prevStep itself, so a locked user resumed on
+  // personal_info (whose filtered flow starts there) correctly gets no button.
+  const canGoBack = step !== "success" && prevStep(step, accountType, locked) !== null;
 
-  // ─── Submit (last step) ──────────────────────────────────────────────────
+  // ─── Submit (last step, lawyers — with cert upload) ─────────────────────
   const handleFinish = async (file: File) => {
     if (!accountType) return;
     setIsLoading(true);
@@ -72,23 +156,26 @@ export default function LawyerSignup() {
     try {
       if (accountType === "lawyer") {
         await registerService.lawyerSetup({
-          firstName:      String(formData.firstName ?? ""),
-          lastName:       String(formData.lastName  ?? ""),
+          firstName: String(formData.firstName ?? ""),
+          lastName: String(formData.lastName ?? ""),
           whatsappNumber: `+234${formData.phone}`,
-          callToBarYear:  parseInt(String(formData.callToBarYear), 10),
-          locationCity:   String(formData.locationCity ?? ""),
+          callToBarYear: parseInt(String(formData.callToBarYear), 10),
+          locationCity: String(formData.locationCity ?? ""),
           locationCountry: "Nigeria",
           practiceAreas,
         });
         await registerService.uploadDocument(file, "call_to_bar_cert");
       } else {
         await registerService.firmSetup({
-          firmName:               String(formData.firmName ?? ""),
-          whatsappNumber:         `+234${formData.phone}`,
-          officeAddress:          String(formData.officeAddress ?? ""),
-          firmEstablishmentYear:  parseInt(String(formData.firmEstablishmentYear), 10),
-          locationCity:           String(formData.locationCity ?? ""),
-          locationCountry:        "Nigeria",
+          firmName: String(formData.firmName ?? ""),
+          whatsappNumber: `+234${formData.phone}`,
+          officeAddress: String(formData.officeAddress ?? ""),
+          firmEstablishmentYear: parseInt(
+            String(formData.firmEstablishmentYear),
+            10,
+          ),
+          locationCity: String(formData.locationCity ?? ""),
+          locationCountry: "Nigeria",
           practiceAreas,
         });
         await registerService.uploadDocument(file, "cac_cert");
@@ -97,8 +184,8 @@ export default function LawyerSignup() {
       setStep("success");
     } catch (err: unknown) {
       const message =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Setup failed. Please try again.";
+        (err as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ?? "Setup failed. Please try again.";
       showError(message);
     } finally {
       setIsLoading(false);
@@ -106,31 +193,48 @@ export default function LawyerSignup() {
   };
 
   // ─── Firm submit (no verification doc) ──────────────────────────────────
-  const handleFirmFinish = async () => {
+  // Accepts an optional override so callers that just merged fees into state
+  // can pass them directly, instead of reading back a stale `formData` closure.
+  const handleFirmFinish = async (practiceAreasOverride?: AreaFeeEntry[]) => {
     if (!accountType) return;
     setIsLoading(true);
-    const practiceAreas = (formData.fees as AreaFeeEntry[] | undefined) ?? [];
+    const practiceAreas =
+      practiceAreasOverride ??
+      (formData.fees as AreaFeeEntry[] | undefined) ??
+      [];
     try {
       await registerService.firmSetup({
-        firmName:               String(formData.firmName ?? ""),
-        whatsappNumber:         `+234${formData.phone}`,
-        officeAddress:          "",
-        firmEstablishmentYear:  parseInt(String(formData.firmEstablishmentYear), 10),
-        locationCity:           String(formData.locationCity ?? ""),
-        locationCountry:        "Nigeria",
+        firmName: String(formData.firmName ?? ""),
+        whatsappNumber: `+234${formData.phone}`,
+        officeAddress: "",
+        firmEstablishmentYear: parseInt(
+          String(formData.firmEstablishmentYear),
+          10,
+        ),
+        locationCity: String(formData.locationCity ?? ""),
+        locationCountry: "Nigeria",
         practiceAreas,
       });
       showSuccess("Registration complete!");
       setStep("success");
     } catch (err: unknown) {
       const message =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Setup failed. Please try again.";
+        (err as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ?? "Setup failed. Please try again.";
       showError(message);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // ─── Resuming guard ──────────────────────────────────────────────────────
+  if (resuming) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      </div>
+    );
+  }
 
   // ─── Success screen ──────────────────────────────────────────────────────
   if (step === "success") {
@@ -199,9 +303,7 @@ export default function LawyerSignup() {
         {/* Content */}
         <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 lg:px-14 py-8">
           {step === "account_type" && (
-            <Step1AccountType
-              onNext={(type) => { setAccountType(type); setStep("membership"); }}
-            />
+            <Step1AccountType onNext={handleAccountType} />
           )}
 
           {step === "membership" && accountType && (
@@ -215,14 +317,20 @@ export default function LawyerSignup() {
             <StepPersonalInfo
               accountType={accountType}
               email={user?.email ?? ""}
-              onNext={(data) => { merge(data); setStep("practice_areas"); }}
+              onNext={(data) => {
+                merge(data);
+                setStep("practice_areas");
+              }}
             />
           )}
 
           {step === "practice_areas" && accountType && (
             <StepPracticeAreas
               accountType={accountType}
-              onNext={(data) => { merge(data); setStep("fees"); }}
+              onNext={(data) => {
+                merge(data);
+                setStep("fees");
+              }}
             />
           )}
 
@@ -234,32 +342,15 @@ export default function LawyerSignup() {
                 if (accountType === "lawyer") {
                   setStep("verification");
                 } else {
-                  // Firms: no cert upload — submit directly
-                  setIsLoading(true);
-                  const practiceAreas = fees;
-                  registerService.firmSetup({
-                    firmName:              String(formData.firmName ?? ""),
-                    whatsappNumber:        `+234${formData.phone}`,
-                    officeAddress:         "",
-                    firmEstablishmentYear: parseInt(String(formData.firmEstablishmentYear), 10),
-                    locationCity:          String(formData.locationCity ?? ""),
-                    locationCountry:       "Nigeria",
-                    practiceAreas,
-                  })
-                    .then(() => { showSuccess("Registration complete!"); setStep("success"); })
-                    .catch((err: unknown) => {
-                      const msg =
-                        (err as { response?: { data?: { message?: string } } })
-                          ?.response?.data?.message ?? "Setup failed. Please try again.";
-                      showError(msg);
-                    })
-                    .finally(() => setIsLoading(false));
+                  // Firms: no cert upload — submit directly. Pass fees straight
+                  // through instead of relying on the just-merged state.
+                  handleFirmFinish(fees);
                 }
               }}
             />
           )}
 
-          {step === "verification" && accountType && (
+          {step === "verification" && accountType === "lawyer" && (
             <StepVerification
               accountType={accountType}
               onFinish={handleFinish}
