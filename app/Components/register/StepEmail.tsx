@@ -1,14 +1,15 @@
 // app/Components/register/StepEmail.tsx
 "use client";
 
-import { useState } from "react";
-import { Eye, EyeOff, Loader2, ArrowLeft, Mail, Lock } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react";
 import Link from "next/link";
 import Footer from "../Footer";
 import Navbar from "../Navbar";
 import Image from "next/image";
 
 import signupIllustration from "@/public/signupillustration.png";
+import { AuthError, useAuth } from "@/app/context/AuthContext";
 
 interface Props {
   onNext: (payload: {
@@ -20,6 +21,47 @@ interface Props {
   error?: string;
 }
 
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.09-1.8 2.73v2.27h2.91c1.7-1.57 2.69-3.88 2.69-6.64z"
+      />
+      <path
+        fill="#34A853"
+        d="M9 18c2.43 0 4.47-.8 5.96-2.17l-2.91-2.27c-.81.54-1.84.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.34C2.44 15.98 5.48 18 9 18z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M3.96 10.71c-.18-.54-.29-1.11-.29-1.71s.11-1.17.29-1.71V4.95H.96A8.996 8.996 0 000 9c0 1.45.35 2.83.96 4.05l3-2.34z"
+      />
+      <path
+        fill="#EA4335"
+        d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.95l3 2.34C4.67 5.16 6.66 3.58 9 3.58z"
+      />
+    </svg>
+  );
+}
+declare const google: {
+  accounts: {
+    id: {
+      initialize: (config: {
+        client_id: string;
+        callback: (response: { credential: string }) => void;
+      }) => void;
+      renderButton: (
+        parent: HTMLElement,
+        options: {
+          theme?: string;
+          size?: string;
+          width?: string;
+          text?: string;
+        },
+      ) => void;
+    };
+  };
+};
 export default function StepEmail({
   onNext,
   isLoading = false,
@@ -32,18 +74,25 @@ export default function StepEmail({
   const [showConfirm, setShowConfirm] = useState(false);
   const [localError, setLocalError] = useState("");
 
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const { login, loginWithGoogle } = useAuth();
+
   const displayError = localError || error;
+
+  const hasMinLength = password.length >= 8;
+  const hasSpecialChar = /[^a-zA-Z0-9]/.test(password);
 
   const validate = () => {
     if (!email || !password || !confirmPassword) {
       setLocalError("Please fill in all fields.");
       return false;
     }
-    if (password.length < 8) {
+    if (!hasMinLength) {
       setLocalError("Password must be at least 8 characters.");
       return false;
     }
-    if (!/[^a-zA-Z0-9]/.test(password)) {
+    if (!hasSpecialChar) {
       setLocalError("Password must contain at least one special character.");
       return false;
     }
@@ -60,189 +109,238 @@ export default function StepEmail({
     await onNext({ email, password, role });
   };
 
+  useEffect(() => {
+    const initGoogle = () => {
+      if (typeof google === "undefined") return;
+
+      google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+        callback: async (resp: { credential: string }) => {
+          setGoogleLoading(true);
+          setLocalError("");
+          try {
+            const base64 = resp.credential
+              .split(".")[1]
+              .replace(/-/g, "+")
+              .replace(/_/g, "/");
+            const payload = JSON.parse(atob(base64));
+            const fullName =
+              payload.name ??
+              `${payload.given_name ?? ""} ${payload.family_name ?? ""}`.trim();
+            const avatarUrl = payload.picture ?? undefined;
+            await loginWithGoogle(resp.credential, fullName, avatarUrl);
+          } catch (err: unknown) {
+            const authErr = err as AuthError;
+            setLocalError(
+              authErr?.message ?? "Google sign in failed. Please try again.",
+            );
+          } finally {
+            setGoogleLoading(false);
+          }
+        },
+      });
+
+      if (googleButtonRef.current) {
+        google.accounts.id.renderButton(googleButtonRef.current, {
+          theme: "outline",
+          size: "large",
+          width: "100%",
+          text: "continue_with",
+        });
+      }
+    };
+
+    const interval = setInterval(() => {
+      if (typeof google !== "undefined") {
+        clearInterval(interval);
+        initGoogle();
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [loginWithGoogle]);
+  
   return (
     <div className="min-h-screen w-full flex flex-col bg-white text-black">
       <Navbar />
-      {/* Logo */}
-      <main className="flex-1 w-full flex items-center">
-        <div className="w-full h-[90vh]">
-          <div className="w-full  mx-auto s">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-              <div className="hidden lg:block">
-                <Image
-                  src={signupIllustration}
-                  alt="The Legal Space community illustration"
-                  className="w-full h-auto  object-cover"
-                  priority
-                />
-              </div>
-              <div className="w-full px-4 lg:mx-0 text-left">
-                <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
-                  Welcome Back
-                </h1>
-                <p className="text-base sm:text-lg text-gray-500 mb-8 leading-relaxed font-dmSans">
-                  Sign in to access your profile, opportunities, research tools,
-                  and everything The Legal Space has to offer.
-                </p>
 
-                <div className="w-full flex flex-col gap-4">
-                  {/* Header */}
-                  {/* <div className="text-center mb-8">
-                    <h1 className="text-[26px] font-light text-white mb-2 font-[Instrument_Serif]">
-                      Join TheLegalSpaces
-                    </h1>
-                    <p className="text-[13px] text-white/50 leading-relaxed">
-                      Create your verified profile and start getting discovered
-                      by people actively seeking legal help across Nigeria.
-                    </p>
-                  </div> */}
+      <main className="flex-1 w-full">
+        <div className="w-full   ">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-stretch">
+            {/* Illustration */}
+            <div className="hidden lg:block  overflow-hidden">
+              <Image
+                src={signupIllustration}
+                alt="The Legal Space community illustration"
+                className="w-full h-full object-cover "
+                priority
+              />
+            </div>
 
-                  {displayError && (
-                    <div className="mb-4 px-3 py-2.5 bg-red-500/20 border border-red-400/30 rounded-xl">
-                      <p className="text-[12px] text-red-300">{displayError}</p>
+            {/* Form */}
+            <div className="w-full flex flex-col justify-center py-8 lg:py-0 max-w-[640px] mx-auto mt-30 lg:pr-10 lg:mt-0 lg:mx-0">
+              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight">
+                Join as a legal professional
+              </h1>
+              <p className="text-[15px] text-gray-500 mb-8 leading-relaxed">
+                Create your verified profile and start building your
+                professional presence.
+              </p>
+
+              {displayError && (
+                <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-[12px] text-red-600">{displayError}</p>
+                </div>
+              )}
+
+              <div className="w-full flex flex-col gap-4">
+                {/* Email */}
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400 pointer-events-none" />
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
+                  />
+                </div>
+
+                {/* Password */}
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400 pointer-events-none" />
+                  <input
+                    type={showPw ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="w-full pl-11 pr-11 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw(!showPw)}
+                    aria-label={showPw ? "Hide password" : "Show password"}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showPw ? (
+                      <Eye className="w-4 h-4" />
+                    ) : (
+                      <EyeOff className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Password hints */}
+                <div className="flex flex-col gap-1">
+                  <p
+                    className={`text-[12px] flex items-center gap-2 transition-colors ${
+                      hasMinLength ? "text-green-600" : "text-gray-400"
+                    }`}
+                  >
+                    <span
+                      className={`flex items-center justify-center w-4 h-4 rounded border text-[10px] leading-none ${
+                        hasMinLength
+                          ? "bg-green-50 border-green-400 text-green-600"
+                          : "border-gray-300 text-transparent"
+                      }`}
+                    >
+                      ✓
+                    </span>
+                    Must be at least 8 characters
+                  </p>
+                  <p
+                    className={`text-[12px] flex items-center gap-2 transition-colors ${
+                      hasSpecialChar ? "text-green-600" : "text-gray-400"
+                    }`}
+                  >
+                    <span
+                      className={`flex items-center justify-center w-4 h-4 rounded border text-[10px] leading-none ${
+                        hasSpecialChar
+                          ? "bg-green-50 border-green-400 text-green-600"
+                          : "border-gray-300 text-transparent"
+                      }`}
+                    >
+                      ✓
+                    </span>
+                    Must contain one special character
+                  </p>
+                </div>
+
+                {/* Confirm Password */}
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400 pointer-events-none" />
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat your password"
+                    disabled={isLoading}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter")
+                        handleSubmit("PENDING_PROFESSIONAL");
+                    }}
+                    className="w-full pl-11 pr-11 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    aria-label={showConfirm ? "Hide password" : "Show password"}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showConfirm ? (
+                      <Eye className="w-4 h-4" />
+                    ) : (
+                      <EyeOff className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  onClick={() => handleSubmit("PENDING_PROFESSIONAL")}
+                  disabled={isLoading}
+                  className="w-full py-3 bg-[#1A56DB] hover:bg-[#1648b8] text-white text-[14px] font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
+                >
+                  {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {isLoading ? "Please wait..." : "Create Account"}
+                </button>
+
+                {/* Divider */}
+                {/* <div className="flex items-center gap-3 my-1">
+                  <div className="flex-1 h-px bg-gray-200" />
+                  <span className="text-[12px] text-gray-400">OR</span>
+                  <div className="flex-1 h-px bg-gray-200" />
+                </div> */}
+
+                {/* Google sign in */}
+                {/* <div className="relative">
+                  <div
+                    ref={googleButtonRef}
+                    className="w-full overflow-hidden"
+                    style={{ minHeight: "48px" }}
+                  />
+                  {googleLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl">
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     </div>
                   )}
+                </div> */}
 
-                  {/* Email */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[13px] text-gray-600">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                      <input
-                        type="email"
-                        placeholder="Enter your email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        disabled={isLoading}
-                        className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[13px] text-gray-600">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                      <input
-                        type={showPw ? "text" : "password"}
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        disabled={isLoading}
-                        className="w-full pl-11 pr-11 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPw(!showPw)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                      >
-                        {showPw ? (
-                          <Eye className="w-4 h-4" />
-                        ) : (
-                          <EyeOff className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Password hints */}
-                  <div className="my-4 flex flex-col gap-0.5 px-1">
-                    <p
-                      className={`text-[11px] flex items-center gap-1.5 transition-colors ${
-                        password.length >= 8
-                          ? "text-green-400"
-                          : "text-black/30"
-                      }`}
+                {/* Already have an account */}
+                <div className="text-center mt-2">
+                  <p className="text-[13px] text-gray-400">
+                    Already have an account?{" "}
+                    <Link
+                      href="/signin"
+                      className="text-[#1A56DB] hover:text-[#1648b8] transition-colors font-medium"
                     >
-                      <span className="text-[10px]">
-                        {password.length >= 8 ? "✓" : "•"}
-                      </span>
-                      Must be at least 8 characters
-                    </p>
-                    <p
-                      className={`text-[11px] flex items-center gap-1.5 transition-colors ${
-                        /[^a-zA-Z0-9]/.test(password)
-                          ? "text-green-400"
-                          : "text-black/30"
-                      }`}
-                    >
-                      <span className="text-[10px] text-black/30">
-                        {/[^a-zA-Z0-9]/.test(password) ? "✓" : "•"}
-                      </span>
-                      Must contain one special character
-                    </p>
-                  </div>
-
-                  {/* Confirm Password */}
-                  <div className="mb-6">
-                    <label className="text-[13px] text-gray-600">
-                      Confirm Password
-                    </label>
-                    <div className="relative">
-                      {" "}
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                      <input
-                        type={showConfirm ? "text" : "password"}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Repeat your password"
-                        disabled={isLoading}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter")
-                            handleSubmit("PENDING_PROFESSIONAL");
-                        }}
-                        className="w-full pl-11 pr-11 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirm(!showConfirm)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                      >
-                        {showConfirm ? (
-                          <Eye className="w-4 h-4" />
-                        ) : (
-                          <EyeOff className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    onClick={() => handleSubmit("PENDING_PROFESSIONAL")}
-                    disabled={isLoading}
-                    className="w-full py-3 bg-[#1A56DB] hover:bg-[#1648b8] text-white text-[14px] font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mb-4"
-                  >
-                    {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {isLoading ? "Please wait..." : "Create Account"}
-                  </button>
-
-                  {/* Divider */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex-1 h-px bg-black/10" />
-                    <span className="text-[12px] text-black/30">or</span>
-                    <div className="flex-1 h-px bg-black/10" />
-                  </div>
-
-                  {/* Already have an account */}
-                  <div className="text-center">
-                    <p className="text-[13px] text-black/40">
-                      Already have an account?{" "}
-                      <Link
-                        href="/signin"
-                        className="text-[#1A56DB] hover:text-[#1648b8] transition-colors font-medium"
-                      >
-                        Sign in
-                      </Link>
-                    </p>
-                  </div>
+                      Sign in
+                    </Link>
+                  </p>
                 </div>
               </div>
             </div>
