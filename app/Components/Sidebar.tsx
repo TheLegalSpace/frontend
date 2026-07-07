@@ -272,6 +272,7 @@ export default function Sidebar() {
   const role: UserRole = (user?.role as UserRole) ?? "USER";
   const unreadMessageCount = user?.unreadMessageCount as number;
   const pendingLeadCount = user?.pendingLeadCount as number;
+  const unreadNotificationCount = user?.unreadNotificationCount as number;
   // console.log(unreadMessageCount);
   const navItems = NAV_ITEMS[role] ?? NAV_ITEMS.USER;
   const footerCta = FOOTER_CTA[role];
@@ -453,6 +454,13 @@ export default function Sidebar() {
                   className={`ml-auto  text-white text-xs font-medium px-2 py-0.5 rounded-full ${isActive ? "bg-red-500" : "bg-gray-500"}`}
                 >
                   {pendingLeadCount}
+                </span>
+              )}
+              {label === "Notifications" && unreadNotificationCount > 0 && (
+                <span
+                  className={`ml-auto  text-white text-xs font-medium px-2 py-0.5 rounded-full ${isActive ? "bg-red-500" : "bg-gray-500"}`}
+                >
+                  {unreadNotificationCount}
                 </span>
               )}
             </Link>

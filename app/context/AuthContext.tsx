@@ -19,6 +19,7 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   disconnectSocket,
   refreshSocketAuth,
+  connectSocket,
 } from "@/services/socket.services";
 
 export type AuthErrorCode =
@@ -53,6 +54,7 @@ interface AuthContextType {
   ) => Promise<void>;
   logout: () => Promise<void>;
   saveSession: (data: AuthResponse["data"]) => void; // ✅ exposed for register flow
+  refreshUser: () => Promise<AuthResponse["data"]["account"] | null>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -71,7 +73,7 @@ export function getPostAuthRoute(
     return "/register/lawyer-setup";
   }
   if (account.role === "FIRM" && !account.firmProfile) {
-    return "/register/firm-setup";
+    return "/register/lawyer-setup";
   }
   return "/dashboard/feeds";
 }
@@ -91,34 +93,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // ── Session check — DASHBOARD ROUTES ONLY ───────────────────────────────────
-  // The "is there a logged-in user?" check must be confined to /dashboard and
-  // its children. Running it on public routes fires a token-less /profile/me
-  // call that the API treats as an expired session, which triggers auth:logout
-  // and bounces the user out of the sign-in flow.
+  // ── Session check ──────────────────────────────────────────────────────────
+  // Hydrate the user from localStorage on any route if present. The network
+  // check/verification must still be confined to /dashboard to avoid redirect loops
+  // or unauthorized API calls on public routes.
   useEffect(() => {
     if (typeof window === "undefined") return;
-
-    const isProtectedRoute = pathname?.startsWith("/dashboard") ?? false;
-    if (!isProtectedRoute) return; // public route — nothing to check
 
     const token = localStorage.getItem("accessToken");
     const savedUser = localStorage.getItem("user");
 
-    // No token on a protected route → isLoading already starts false (see
-    // initializer), so the dashboard guard can redirect right away.
-    if (!token) return;
-
-    // Hydrate immediately from cache so the dashboard guard doesn't flash.
+    // Hydrate immediately from cache so the user state is available on all pages.
     if (savedUser) {
       try {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setUser(JSON.parse(savedUser));
       } catch {
-        // Corrupt cache — drop it and let getMe below refetch a fresh profile.
+        // Corrupt cache — drop it.
         localStorage.removeItem("user");
       }
     }
+
+    const isProtectedRoute = pathname?.startsWith("/dashboard") ?? false;
+    if (!isProtectedRoute) return; // public route — nothing else to check
+
+    // No token on a protected route → isLoading already starts false (see
+    // initializer), so the dashboard guard can redirect right away.
+    if (!token) return;
 
     let cancelled = false;
     profileService
@@ -308,6 +308,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshUser = async (): Promise<AuthResponse["data"]["account"] | null> => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return null;
+    try {
+      const r = await profileService.getMe();
+      const fresh = r.data.data;
+      localStorage.setItem("user", JSON.stringify(fresh));
+      setUser(fresh);
+      return fresh;
+    } catch (err) {
+      console.error("Failed to refresh user profile:", err);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token || !user) return;
+
+    const socket = connectSocket(token);
+
+    const handleUpdate = () => {
+      refreshUser();
+    };
+
+    socket.on("notification", handleUpdate);
+    socket.on("message", handleUpdate);
+    socket.on("conversation:updated", handleUpdate);
+    socket.on("message:read", handleUpdate);
+
+    return () => {
+      socket.off("notification", handleUpdate);
+      socket.off("message", handleUpdate);
+      socket.off("conversation:updated", handleUpdate);
+      socket.off("message:read", handleUpdate);
+    };
+  }, [user?.id]);
+
   const logout = async (): Promise<void> => {
     try {
       await authService.logout();
@@ -320,7 +358,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, loginWithGoogle, logout, saveSession }}
+      value={{
+        user,
+        isLoading,
+        login,
+        loginWithGoogle,
+        logout,
+        saveSession,
+        refreshUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

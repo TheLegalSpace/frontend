@@ -9,6 +9,7 @@ interface Props {
   subStep: number;
   email: string;
   onNext: (data: any) => void;
+  canGoBack: boolean;
 }
 
 const NIGERIAN_CITIES = [
@@ -24,7 +25,12 @@ const NIGERIAN_CITIES = [
   "Warri",
 ];
 
-export default function Step2LawyerInfo({ subStep, email, onNext }: Props) {
+export default function Step2LawyerInfo({
+  subStep,
+  email,
+  onNext,
+  canGoBack,
+}: Props) {
   // Sub-step 1
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -151,14 +157,18 @@ export default function Step2LawyerInfo({ subStep, email, onNext }: Props) {
   // ─── Sub-step 1: Personal Info ─────────────────────────────────────────────
   if (subStep === 1) {
     return (
-      <div className="w-full max-w-sm mx-auto">
-        <div className="border border-[#E5E7EB] rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-[15px] font-semibold text-gray-900">
-              Personal Information
+      <div className="w-full">
+        <div className="">
+          <div className="flex items-center justify-between mb">
+            <h2 className="text-[30px] font-semibold text-gray-900 font-dmSans">
+              Tell Us About Yourself{" "}
             </h2>
             <span className="text-[12px] text-gray-400">1/3</span>
           </div>
+          <span className="text-[12px] text-gray-400 block mb-5 w-[75%]">
+            Share your details so clients and the legal community can better
+            understand your professional background.
+          </span>
 
           {error && <p className="text-[12px] text-red-500 mb-4">{error}</p>}
 
@@ -429,7 +439,7 @@ export default function Step2LawyerInfo({ subStep, email, onNext }: Props) {
         <div className="border border-[#E5E7EB] rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-[15px] font-semibold text-gray-900">
-              Specialization & Pricing
+              Specialization & Pricingv
             </h2>
             <span className="text-[12px] text-gray-400">3/3</span>
           </div>

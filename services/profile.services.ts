@@ -2,6 +2,7 @@
 import { api } from "./api";
 import { AuthResponse } from "./auth.services";
 import type { PracticeAreaFee } from "./settings.services";
+export type ProfessionalRole = "LAWYER" | "FIRM"; // NEW
 
 export type PracticeAreaRef =
   | string
@@ -96,6 +97,11 @@ export const profileService = {
 
   updateMe: (payload: Record<string, unknown>) =>
     api.patch<ProfileResponse>("/profile/me", payload),
+
+  // NEW — call the moment the user picks Lawyer or Firm, before showing plans.
+  // Re-callable and idempotent — safe to call again if they switch selection.
+  setProfessionalRole: (role: ProfessionalRole) =>
+    api.patch<ProfileResponse>("/profile/me/professional-role", { role }),
 
   uploadAvatar: (file: File) => {
     const form = new FormData();

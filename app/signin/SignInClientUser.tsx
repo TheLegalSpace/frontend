@@ -93,10 +93,7 @@ export default function SignInClient() {
         setBtnWidth(400);
         setScaleX(width / 400);
       } else {
-        const clamped = Math.min(
-          400,
-          Math.max(GOOGLE_BTN_MIN_WIDTH, width),
-        );
+        const clamped = Math.min(400, Math.max(GOOGLE_BTN_MIN_WIDTH, width));
         setBtnWidth((prev) => (prev === clamped ? prev : clamped));
         setScaleX(1);
       }

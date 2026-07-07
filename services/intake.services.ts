@@ -130,7 +130,7 @@ export const BUDGET_OPTIONS = [
   { label: "₦50k–₦100k", value: "50k_to_100k" },
   { label: "₦100k–₦500k", value: "100k_to_500k" },
   { label: "₦500k–₦1M", value: "500k_to_1m" },
-  { label: "Above ₦1M", value: "'1m+'" },
+  { label: "Above ₦1M", value: "1m+" },
 ];
 
 export const LOCATION_OPTIONS = [

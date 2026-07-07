@@ -1,13 +1,15 @@
 import { io, Socket } from "socket.io-client";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "https://legalspace.onrender.com";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 let socket: Socket | null = null;
 let socketToken: string | null = null;
 let debugListenersBound = false;
 
 export function connectSocket(token: string): Socket {
+  if (!BASE_URL) {
+    throw new Error("Error in configuration: URL is not defined");
+  }
   if (!socket) {
     socket = io(BASE_URL, {
       path: "/realtime",

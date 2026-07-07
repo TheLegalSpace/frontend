@@ -3,7 +3,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
 import { registerService } from "@/services/auth.register.services";
 import { useAuth, getPostAuthRoute } from "@/app/context/AuthContext";
 import StepEmail from "@/app/Components/register/StepEmail";
@@ -45,7 +44,7 @@ export default function RegisterFlow() {
         setOtpError(
           "A code was already sent to this email. Please check your inbox or wait before requesting a new one.",
         );
-        setStep("otp"); // ✅ still go to OTP screen
+        setStep("otp");
       } else if (
         status === 409 ||
         msg.toLowerCase().includes("already exists")
@@ -63,7 +62,7 @@ export default function RegisterFlow() {
 
   const handleVerify = async (otp: string) => {
     setError("");
-    setOtpError(""); // clear OTP-specific errors
+    setOtpError("");
     const res = await registerService.verify({ email, otp });
     const { account, session } = res.data.data;
     saveSession({ account, session });
