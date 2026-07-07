@@ -10,12 +10,18 @@ export function connectSocket(token: string): Socket {
   if (!BASE_URL) {
     throw new Error("Error in configuration: URL is not defined");
   }
+
   if (!socket) {
     socket = io(BASE_URL, {
       path: "/realtime",
-      transports: ["websocket"],
+      transports: ["polling", "websocket"],
       autoConnect: false,
       auth: { token },
+      reconnection: true,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 1000,
+      timeout: 5000,
+      upgrade: false,
     });
   }
 
@@ -25,10 +31,9 @@ export function connectSocket(token: string): Socket {
   }
 
   if (!debugListenersBound) {
-    socket.on("connect_error", (err: Error) => {
-      if (process.env.NODE_ENV !== "production") {
-        console.error("Socket error:", err.message);
-      }
+    socket.on("connect_error", () => {
+      // Real-time updates are optional; avoid noisy console errors when the
+      // backend does not support the preferred transport.
     });
     debugListenersBound = true;
   }

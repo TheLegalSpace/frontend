@@ -115,7 +115,16 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
     <div className="bg-white border-b border-[#E5E7EB] px-5 py-5">
       {/* Header — avatar + name + rating */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2.5">
+        <button
+          type="button"
+          onClick={() => {
+            const accountId = userAccount?.id ?? lead.userAccountId;
+            if (accountId) {
+              router.push(`/dashboard/leads?accountId=${encodeURIComponent(accountId)}`);
+            }
+          }}
+          className="flex items-center gap-2.5 text-left"
+        >
           <div
             className={`relative w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0 overflow-hidden ${avatarColor(
               userAccount?.fullName ?? "",
@@ -133,10 +142,10 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
               getInitials(userAccount?.fullName ?? "")
             )}
           </div>
-          <span className="text-[15px] font-semibold text-gray-900">
+          <span className="text-[15px] font-semibold text-gray-900 hover:text-[#1D4ED8] transition-colors">
             {displayName}
           </span>
-        </div>
+        </button>
         <span className="text-[13px] text-gray-500">{rating}/5★</span>
       </div>
 
