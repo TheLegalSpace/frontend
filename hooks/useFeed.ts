@@ -88,6 +88,7 @@ function normalizePost(
 ): Post {
   return {
     id: raw.id,
+    authorAccountId: raw.authorAccountId,
     author: raw.author?.fullName ?? "Unknown",
     authorInitials: getInitials(raw.author?.fullName ?? ""),
     avatarUrl: raw.author?.avatarUrl,
