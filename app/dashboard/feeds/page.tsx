@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Feed from "../../Components/Feed/Feed";
 import EventsPanel from "@/app/Components/EventPanel";
+import LawyerProfileView from "@/app/Components/LawyerProfileView";
 import { useAuth } from "../../context/AuthContext";
 import { type FeedTab } from "@/hooks/useFeed";
 
@@ -10,10 +12,25 @@ const TABS: FeedTab[] = ["All", "Top Firms", "Top Lawyers", "Articles"];
 
 export default function FeedPage() {
   const { user, isLoading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<FeedTab>("All");
+
+  const selectedAccountId = searchParams.get("accountId");
 
   if (isLoading) return null;
   if (!user) return null;
+
+  if (selectedAccountId) {
+    return (
+      <main className="bg-white">
+        <LawyerProfileView
+          accountId={selectedAccountId}
+          onBack={() => router.push("/dashboard/feeds")}
+        />
+      </main>
+    );
+  }
 
   return (
     <main className="bg-white">

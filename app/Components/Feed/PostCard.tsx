@@ -1,11 +1,13 @@
 // PostCard.tsx
 "use client";
 
+import { useRouter } from "next/navigation";
 import { ThumbsUp, ThumbsDown, BadgeCheck, FileText, Calendar, BookOpen, Clock } from "lucide-react";
 import Avatar from "./Avatar";
 
 export interface Post {
   id: string;
+  authorAccountId: string;
   author: string;
   authorInitials: string;
   avatarUrl?: string;
@@ -41,24 +43,37 @@ interface Props {
 }
 
 export default function PostCard({ post, onReact }: Props) {
+  const router = useRouter();
+
+  const handleOpenProfile = () => {
+    if (!post.authorAccountId) return;
+    router.push(`/dashboard/feeds?accountId=${encodeURIComponent(post.authorAccountId)}`);
+  };
+
   return (
     <div className="border-b border-[#E6EAED] py-5 last:border-b-0 hover:bg-white/30 transition w-full">
       {/* Header */}
       <div className="flex items-center gap-3 mb-3 px-4">
-        <Avatar
-          initials={post.authorInitials}
-          avatarUrl={post.avatarUrl}
-          size={40}
-        />
+        <button
+          type="button"
+          onClick={handleOpenProfile}
+          className="flex items-center gap-3 flex-1 min-w-0 text-left"
+        >
+          <Avatar
+            initials={post.authorInitials}
+            avatarUrl={post.avatarUrl}
+            size={40}
+          />
 
-        <div className="flex-1 min-w-0 flex items-center gap-1.5">
-          <span className="font-medium text-[24px] text-gray-900 font-['Instrument_Serif']">
-            {post.author}
-          </span>
-          {post.isVerified && (
-            <BadgeCheck size={16} className="text-blue-500 shrink-0" />
-          )}
-        </div>
+          <div className="flex-1 min-w-0 flex items-center gap-1.5">
+            <span className="font-medium text-[24px] text-gray-900 font-['Instrument_Serif'] hover:text-[#1D4ED8] transition-colors">
+              {post.author}
+            </span>
+            {post.isVerified && (
+              <BadgeCheck size={16} className="text-blue-500 shrink-0" />
+            )}
+          </div>
+        </button>
 
         <span className="text-xs text-gray-400 shrink-0">{post.timeAgo}</span>
       </div>

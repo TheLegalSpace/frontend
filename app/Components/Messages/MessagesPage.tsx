@@ -10,6 +10,7 @@ import ConversationList from "./ConversationList";
 import ChatWindow from "./ChatWindow";
 import { useAuth } from "@/app/context/AuthContext";
 import { useConversationCache, useConversations } from "@/hooks/useMessages";
+import { useLeadsCache } from "@/hooks/useLeads";
 import ReviewButton from "./ReviewButton";
 import ReviewModal from "./ReviewModal";
 
@@ -34,7 +35,7 @@ function storeAnonymous(conversationId: string, role: string, value: boolean) {
 }
 
 export default function MessagesPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const isLawyer = user?.role === "LAWYER";
   const searchParams = useSearchParams();
 
@@ -46,6 +47,7 @@ export default function MessagesPage() {
     patchConversation,
     invalidateConversations,
   } = useConversationCache();
+  const { patchLeadVisibility, invalidateLeads } = useLeadsCache();
 
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -242,12 +244,22 @@ export default function MessagesPage() {
 
         refreshConversation(activeId);
       }
+
+      if (!val && user?.id) {
+        patchLeadVisibility(user.id, false);
+        invalidateLeads();
+        void refreshUser();
+      }
     },
     [
       activeConvo,
       activeId,
+      invalidateLeads,
+      patchLeadVisibility,
       refreshConversation,
+      refreshUser,
       upsertConversation,
+      user?.id,
       user?.role,
     ],
   );
