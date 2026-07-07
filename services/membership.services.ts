@@ -18,7 +18,9 @@ export const membershipService = {
   // ── 2. GET /membership/plans ────────────────────────────────────────────────
   /** Fetch the plan comparison list (community + the role's professional plan). */
   async getPlans() {
-    const { data } = await api.get<{ data: { items: PlanView[] } }>("/membership/plans");
+    const { data } = await api.get<{ data: { items: PlanView[] } }>(
+      "/membership/plans",
+    );
     return data;
   },
 
@@ -28,8 +30,11 @@ export const membershipService = {
    * On success, redirect the browser to `data.authorizationUrl`.
    * 409 → user is already an active professional member.
    */
-  async subscribe() {
-    const { data } = await api.post<{ data: SubscribeResult }>("/membership/subscribe");
+  async subscribe(payload?: { callbackUrl?: string; context?: string }) {
+    const { data } = await api.post<{ data: SubscribeResult }>(
+      "/membership/subscribe",
+      payload ?? {},
+    );
     return data;
   },
 
@@ -40,9 +45,12 @@ export const membershipService = {
    * Returns updated MembershipView on success, error on failed payment (400).
    */
   async verifyPayment(reference: string) {
-    const { data } = await api.get<{ data: MembershipView }>("/membership/verify", {
-      params: { reference },
-    });
+    const { data } = await api.get<{ data: MembershipView }>(
+      "/membership/verify",
+      {
+        params: { reference },
+      },
+    );
     return data;
   },
 
@@ -53,9 +61,12 @@ export const membershipService = {
    * 503 → subscription still linking after first payment — retry shortly.
    */
   async setAutoRenew(autoRenew: boolean) {
-    const { data } = await api.patch<{ data: MembershipView }>("/membership/auto-renew", {
-      autoRenew,
-    });
+    const { data } = await api.patch<{ data: MembershipView }>(
+      "/membership/auto-renew",
+      {
+        autoRenew,
+      },
+    );
     return data;
   },
 
@@ -66,7 +77,9 @@ export const membershipService = {
    * Returns updated MembershipView.
    */
   async cancel() {
-    const { data } = await api.post<{ data: MembershipView }>("/membership/cancel");
+    const { data } = await api.post<{ data: MembershipView }>(
+      "/membership/cancel",
+    );
     return data;
   },
 
@@ -78,7 +91,7 @@ export const membershipService = {
    */
   async getPaymentMethodUpdateLink() {
     const { data } = await api.post<{ data: PaymentMethodUpdateResult }>(
-      "/membership/payment-method/update"
+      "/membership/payment-method/update",
     );
     return data;
   },
@@ -86,9 +99,12 @@ export const membershipService = {
   // ── 8. GET /membership/invoices ─────────────────────────────────────────────
   /** Paginated billing history, newest first. */
   async getInvoices(page = 1, limit = 20) {
-    const { data } = await api.get<{ data: InvoiceList }>("/membership/invoices", {
-      params: { page, limit },
-    });
+    const { data } = await api.get<{ data: InvoiceList }>(
+      "/membership/invoices",
+      {
+        params: { page, limit },
+      },
+    );
     return data;
   },
 
@@ -99,7 +115,7 @@ export const membershipService = {
    */
   async getInvoiceDownloadUrl(invoiceId: string) {
     const { data } = await api.get<{ data: { url: string } }>(
-      `/membership/invoices/${invoiceId}/download`
+      `/membership/invoices/${invoiceId}/download`,
     );
     return data;
   },
