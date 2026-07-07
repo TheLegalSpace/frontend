@@ -51,7 +51,9 @@ export default function MembershipCallbackClient() {
         // fall through to dashboard
       }
 
-      router.replace("/dashboard/feeds");
+      // Fully onboarded — this was a plan upgrade from the dashboard, not
+      // onboarding. Send them back to see their updated membership status.
+      router.replace("/dashboard/membership");
     })();
   }, [router, searchParams]);
 

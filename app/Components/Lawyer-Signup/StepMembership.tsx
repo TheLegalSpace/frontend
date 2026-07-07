@@ -75,42 +75,71 @@ export default function StepMembership({ accountType, onCommunity }: Props) {
   const [error, setError] = useState("");
 
   const billingRole = accountType === "firm" ? "FIRM" : "LAWYER";
-  const fallback = accountType === "firm" ? FALLBACK_PRO_FIRM : FALLBACK_PRO_LAWYER;
+  const fallback =
+    accountType === "firm" ? FALLBACK_PRO_FIRM : FALLBACK_PRO_LAWYER;
 
   useEffect(() => {
-    membershipService.getPlans()
+    membershipService
+      .getPlans()
       .then((res) => {
-        const items: PlanView[] = (res as { data: { items: PlanView[] } }).data?.items ?? [];
+        const items: PlanView[] =
+          (res as { data: { items: PlanView[] } }).data?.items ?? [];
         const pro = items.find(
           (p) => p.tier === "professional" && p.forRole === billingRole,
         );
         if (pro) setPlan(pro);
       })
-      .catch(() => {/* use fallback */})
+      .catch(() => {
+        /* use fallback */
+      })
       .finally(() => setFetching(false));
   }, [billingRole]);
 
-  const activePlan = plan ?? { ...fallback, id: "", code: "", forRole: billingRole };
+  const activePlan = plan ?? {
+    ...fallback,
+    id: "",
+    code: "",
+    forRole: billingRole,
+  };
 
   const handleChooseProfessional = async () => {
     setError("");
     setLoading(true);
     try {
-      const res = await membershipService.subscribe();
+      const res = await membershipService.subscribe({
+        callbackUrl: `${window.location.origin}/membership/callback`,
+        context: "onboarding",
+      });
       if (res.data?.authorizationUrl) {
         window.location.href = res.data.authorizationUrl;
       } else {
         setError("Couldn't start checkout. Please try again.");
         setLoading(false);
       }
-    } catch {
-      setError("Couldn't start checkout. Please try again.");
+    } catch (err: unknown) {
+      // 400 here means the origin isn't in FRONTEND_ALLOWED_ORIGINS yet —
+      // surface something more useful than the generic fallback for that case.
+      const status = (err as { response?: { status?: number } })?.response
+        ?.status;
+      if (status === 400) {
+        setError(
+          "This environment isn't set up for payments yet. Please contact support.",
+        );
+      } else {
+        setError("Couldn't start checkout. Please try again.");
+      }
       setLoading(false);
     }
   };
 
-  const priceLabel = formatPrice(activePlan.priceKobo, activePlan.intervalMonths, annually);
-  const billingLabel = annually ? "Annually" : `Every ${activePlan.intervalMonths} Months`;
+  const priceLabel = formatPrice(
+    activePlan.priceKobo,
+    activePlan.intervalMonths,
+    annually,
+  );
+  const billingLabel = annually
+    ? "Annually"
+    : `Every ${activePlan.intervalMonths} Months`;
 
   return (
     <div className="w-full max-w-md">
@@ -133,7 +162,9 @@ export default function StepMembership({ accountType, onCommunity }: Props) {
                 : "border-transparent text-gray-400 hover:text-gray-600"
             }`}
           >
-            {t === "professional" ? "Professional Membership" : "Community Membership"}
+            {t === "professional"
+              ? "Professional Membership"
+              : "Community Membership"}
           </button>
         ))}
       </div>
@@ -169,7 +200,9 @@ export default function StepMembership({ accountType, onCommunity }: Props) {
             </div>
           ) : (
             <>
-              <p className="text-[36px] font-bold text-gray-900 mb-1">{priceLabel}</p>
+              <p className="text-[36px] font-bold text-gray-900 mb-1">
+                {priceLabel}
+              </p>
               <p className="text-[13px] text-gray-500 mb-5 leading-relaxed">
                 {accountType === "firm"
                   ? "Designed for law firms looking to grow their visibility, manage their team, and access premium tools."
@@ -179,11 +212,17 @@ export default function StepMembership({ accountType, onCommunity }: Props) {
                 {activePlan.features.map((f) => (
                   <div key={f} className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                    <span className={`text-[13px] text-gray-600 ${f.includes("Practice Areas") ? "font-semibold" : ""}`}>{f}</span>
+                    <span
+                      className={`text-[13px] text-gray-600 ${f.includes("Practice Areas") ? "font-semibold" : ""}`}
+                    >
+                      {f}
+                    </span>
                   </div>
                 ))}
               </div>
-              {error && <p className="text-[12px] text-red-500 mb-3">{error}</p>}
+              {error && (
+                <p className="text-[12px] text-red-500 mb-3">{error}</p>
+              )}
               <button
                 onClick={handleChooseProfessional}
                 disabled={loading}
