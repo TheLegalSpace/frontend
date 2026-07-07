@@ -325,7 +325,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
-    if (!token || !user) return;
+    const pathname = window.location.pathname;
+    const shouldUseRealtime = [
+      "/dashboard/messages",
+      "/dashboard/notifications",
+      "/dashboard/leads",
+    ].some((route) => pathname.startsWith(route));
+
+    if (!token || !user || !shouldUseRealtime) return;
 
     const socket = connectSocket(token);
 

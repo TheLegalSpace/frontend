@@ -144,8 +144,44 @@ export function useLeadsCache() {
     });
   };
 
+  const patchLeadVisibility = (accountId: string, isAnonymous: boolean) => {
+    queryClient.setQueriesData<InfiniteLeadsData>(
+      { queryKey: leadsKeys.lists() },
+      (prev) => {
+        if (!prev?.pages) return prev;
+
+        return {
+          ...prev,
+          pages: prev.pages.map((p) => {
+            const items = p?.data?.items ?? [];
+            const nextItems = items.map((lead) => {
+              const matchesCurrentAccount =
+                lead.userAccountId === accountId || lead.userAccount?.id === accountId;
+
+              if (!matchesCurrentAccount) return lead;
+
+              return {
+                ...lead,
+                userAccount: lead.userAccount
+                  ? { ...lead.userAccount, isAnonymous }
+                  : lead.userAccount,
+              };
+            });
+
+            return { ...p, data: { ...p.data, items: nextItems } };
+          }),
+        };
+      },
+    );
+  };
+
   const invalidateLeads = () =>
     queryClient.invalidateQueries({ queryKey: leadsKeys.lists() });
 
-  return { patchLeadStatus, prependPendingLead, invalidateLeads };
+  return {
+    patchLeadStatus,
+    prependPendingLead,
+    patchLeadVisibility,
+    invalidateLeads,
+  };
 }
