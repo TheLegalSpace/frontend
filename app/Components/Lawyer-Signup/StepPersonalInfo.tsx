@@ -2,13 +2,14 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Mail, User, Phone, Calendar, MapPin } from "lucide-react";
+import { Lock, Mail, User, Phone, Calendar, MapPin, Loader2 } from "lucide-react";
 import { AccountType } from "./LawyerSignup";
 
 interface Props {
   accountType: AccountType;
   email: string;
   onNext: (data: Record<string, string>) => void;
+  isLoading?: boolean;
 }
 
 const NIGERIAN_CITIES = [
@@ -43,6 +44,7 @@ export default function StepPersonalInfo({
   accountType,
   email,
   onNext,
+  isLoading = false,
 }: Props) {
   const isLawyer = accountType === "lawyer";
 
@@ -71,13 +73,26 @@ export default function StepPersonalInfo({
         setError("Please fill in all required fields.");
         return;
       }
-      onNext({ firstName, lastName, phone, callToBarYear, locationCity });
+      onNext({
+        firstName,
+        lastName,
+        phone,
+        callToBarYear,
+        locationCity,
+        officeAddress: locationCity,
+      });
     } else {
       if (!firmName || !phone || !firmEstablishmentYear || !locationCity) {
         setError("Please fill in all required fields.");
         return;
       }
-      onNext({ firmName, phone, firmEstablishmentYear, locationCity });
+      onNext({
+        firmName,
+        phone,
+        firmEstablishmentYear,
+        locationCity,
+        officeAddress: locationCity,
+      });
     }
   };
 
@@ -191,9 +206,11 @@ export default function StepPersonalInfo({
 
       <button
         onClick={handleNext}
-        className="w-full py-3.5 bg-[#1A56DB] text-white text-[14px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors font-dmSans"
+        disabled={isLoading}
+        className="w-full py-3.5 bg-[#1A56DB] text-white text-[14px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors font-dmSans disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        Save & Continue
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+        {isLoading ? "Saving..." : "Save & Continue"}
       </button>
     </div>
   );

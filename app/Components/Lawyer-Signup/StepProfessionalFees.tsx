@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { Banknote } from "lucide-react";
+import { Banknote, Loader2 } from "lucide-react";
 import { usePracticeAreas } from "@/hooks/usePracticeAreas";
 
 export interface AreaFeeEntry {
@@ -14,6 +14,7 @@ export interface AreaFeeEntry {
 interface Props {
   practiceAreaIds: string[];
   onNext: (fees: AreaFeeEntry[]) => void;
+  isLoading?: boolean;
 }
 
 type FeeState = Record<string, { min: string; max: string }>;
@@ -26,6 +27,7 @@ function koboFromNaira(s: string): number {
 export default function StepProfessionalFees({
   practiceAreaIds,
   onNext,
+  isLoading = false,
 }: Props) {
   const { data: allAreas = [] } = usePracticeAreas();
 
@@ -130,9 +132,11 @@ export default function StepProfessionalFees({
 
       <button
         onClick={handleNext}
-        className="w-full py-3.5 bg-[#1A56DB] text-white text-[14px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors font-dmSans"
+        disabled={isLoading}
+        className="w-full py-3.5 bg-[#1A56DB] text-white text-[14px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors font-dmSans disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        Save & Continue
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+        {isLoading ? "Saving..." : "Save & Continue"}
       </button>
     </div>
   );

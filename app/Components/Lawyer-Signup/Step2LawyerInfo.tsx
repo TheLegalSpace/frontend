@@ -102,7 +102,7 @@ export default function Step2LawyerInfo({
         setError("Please fill in all required fields.");
         return;
       }
-      onNext({ firstName, lastName, phone, callToBarYear, locationCity });
+      onNext({ firstName, lastName, phone, callToBarYear, locationCity, officeAddress: locationCity });
     } else if (subStep === 2) {
       if (!primaryId) {
         setError("Please select a primary practice area.");

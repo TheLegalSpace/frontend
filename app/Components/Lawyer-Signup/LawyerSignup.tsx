@@ -164,6 +164,7 @@ export default function LawyerSignup() {
           whatsappNumber: `+234${formData.phone}`,
           callToBarYear: parseInt(String(formData.callToBarYear), 10),
           locationCity: String(formData.locationCity ?? ""),
+          officeAddress: String(formData.locationCity ?? ""),
           locationCountry: "Nigeria",
           practiceAreas,
         });
@@ -172,7 +173,7 @@ export default function LawyerSignup() {
         await registerService.firmSetup({
           firmName: String(formData.firmName ?? ""),
           whatsappNumber: `+234${formData.phone}`,
-          officeAddress: String(formData.officeAddress ?? ""),
+          officeAddress: String(formData.locationCity ?? ""),
           firmEstablishmentYear: parseInt(
             String(formData.firmEstablishmentYear),
             10,
@@ -209,7 +210,7 @@ export default function LawyerSignup() {
       await registerService.firmSetup({
         firmName: String(formData.firmName ?? ""),
         whatsappNumber: `+234${formData.phone}`,
-        officeAddress: "",
+        officeAddress: String(formData.locationCity ?? ""),
         firmEstablishmentYear: parseInt(
           String(formData.firmEstablishmentYear),
           10,
@@ -306,7 +307,7 @@ export default function LawyerSignup() {
         {/* Content */}
         <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 lg:px-14 py-8">
           {step === "account_type" && (
-            <Step1AccountType onNext={handleAccountType} />
+            <Step1AccountType onNext={handleAccountType} isLoading={isLoading} />
           )}
 
           {step === "membership" && accountType && (
@@ -320,6 +321,7 @@ export default function LawyerSignup() {
             <StepPersonalInfo
               accountType={accountType}
               email={user?.email ?? ""}
+              isLoading={isLoading}
               onNext={(data) => {
                 merge(data);
                 setStep("practice_areas");
@@ -330,6 +332,7 @@ export default function LawyerSignup() {
           {step === "practice_areas" && accountType && (
             <StepPracticeAreas
               accountType={accountType}
+              isSaving={isLoading}
               onNext={(data) => {
                 merge(data);
                 setStep("fees");
@@ -340,6 +343,7 @@ export default function LawyerSignup() {
           {step === "fees" && (
             <StepProfessionalFees
               practiceAreaIds={(formData.practiceAreaIds as string[]) ?? []}
+              isLoading={isLoading}
               onNext={(fees) => {
                 merge({ fees });
                 if (accountType === "lawyer") {

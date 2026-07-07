@@ -32,6 +32,7 @@ export const registerService = {
     whatsappNumber: string;
     callToBarYear: number;
     locationCity: string;
+    officeAddress: string;
     locationCountry?: string;
     practiceAreas: AreaFeeEntry[];
   }) => api.post("/profile/me/lawyer/setup", payload),

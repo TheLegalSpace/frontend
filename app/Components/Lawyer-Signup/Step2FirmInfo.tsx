@@ -88,7 +88,7 @@ export default function Step2FirmInfo({ subStep, email, onNext }: Props) {
       onNext({
         firmName,
         phone,
-        officeAddress,
+        officeAddress: locationCity,
         firmEstablishmentYear,
         locationCity,
       });

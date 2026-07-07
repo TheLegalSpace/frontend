@@ -2,13 +2,15 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { AccountType } from "./LawyerSignup";
 
 interface Props {
   onNext: (type: AccountType) => void;
+  isLoading?: boolean;
 }
 
-export default function Step1AccountType({ onNext }: Props) {
+export default function Step1AccountType({ onNext, isLoading = false }: Props) {
   const [selected, setSelected] = useState<AccountType | "">("");
   const [error, setError] = useState("");
 
@@ -30,12 +32,13 @@ export default function Step1AccountType({ onNext }: Props) {
         {(["lawyer", "firm"] as AccountType[]).map((type) => (
           <button
             key={type}
+            disabled={isLoading}
             onClick={() => { setSelected(type); setError(""); }}
             className={`w-full text-left px-4 py-3.5 border rounded-xl text-[14px] font-dmSans transition-colors ${
               selected === type
                 ? "border-[#1A56DB] bg-blue-50 text-[#1A56DB]"
                 : "border-[#E6EAED] text-gray-700 hover:border-gray-300"
-            }`}
+            } disabled:opacity-50`}
           >
             {type === "lawyer" ? "Lawyer" : "Law Firm"}
           </button>
@@ -46,10 +49,11 @@ export default function Step1AccountType({ onNext }: Props) {
 
       <button
         onClick={handleContinue}
-        className="w-full py-3.5 bg-[#1A56DB] text-white text-[14px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors font-dmSans disabled:opacity-50"
-        disabled={!selected}
+        className="w-full py-3.5 bg-[#1A56DB] text-white text-[14px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors font-dmSans disabled:opacity-50 flex items-center justify-center gap-2"
+        disabled={!selected || isLoading}
       >
-        Continue
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+        {isLoading ? "Saving..." : "Continue"}
       </button>
     </div>
   );
