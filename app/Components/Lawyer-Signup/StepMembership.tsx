@@ -240,8 +240,8 @@ export default function StepMembership({ accountType, onCommunity }: Props) {
           <div className="px-4 py-2.5 bg-[#EEF4FF] rounded-xl mb-5 text-[13px] font-medium text-[#1A56DB]">
             Forever
           </div>
-          <p className="text-[36px] font-bold text-gray-900 mb-1 line-through decoration-gray-400">
-            ₦Free
+          <p className="text-[36px] font-bold text-gray-900 mb-1 decoration-gray-400">
+            ₦ Free
           </p>
           <p className="text-[13px] text-gray-500 mb-5">
             Establish your presence on The Legal Space.
