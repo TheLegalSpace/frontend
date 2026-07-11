@@ -1,5 +1,4 @@
 // app/Components/Admin/Analytics/AnalyticsPage.tsx
-// Figma source: Analytics.png
 "use client";
 
 import { Loader2 } from "lucide-react";
@@ -11,6 +10,57 @@ import { useAnalytics } from "@/hooks/useAdmin";
 export default function AnalyticsPage() {
   const { data, isLoading } = useAnalytics();
 
+  // If there's no data or it's loading, show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <AdminPageHeader title="Analytics" />
+        <div className="flex items-center justify-center py-24 text-gray-400 gap-2">
+          <Loader2 size={16} className="animate-spin" />
+          Loading analytics...
+        </div>
+      </div>
+    );
+  }
+
+  // Handle case where data might be undefined
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-white">
+        <AdminPageHeader title="Analytics" />
+        <div className="px-6 md:px-8 py-6">
+          <div className="text-center py-12 text-gray-500">
+            No analytics data available
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Extract data with fallbacks
+  const { 
+    dailyActiveUsers = 0, 
+    monthlyActiveUsers = 0,
+    dauTrendPct, // Daily Active Users trend percentage
+    series = [] 
+  } = data;
+
+  // Calculate growth trends from the series data if available
+  const getGrowth = (index: number) => {
+    if (!series || series.length < 2) return 0;
+    const current = series[series.length - 1]?.value || 0;
+    const previous = series[series.length - 2]?.value || 0;
+    if (previous === 0) return 0;
+    return ((current - previous) / previous) * 100;
+  };
+
+  // Get month-over-month growth for DAU
+  const dailyGrowth = dauTrendPct ?? getGrowth(0);
+  
+  // For MAU, we might need to calculate from series or use a separate metric
+  // If the API doesn't provide MAU growth, we can derive it from the series
+  const monthlyGrowth = getGrowth(0); // Adjust based on your data
+
   return (
     <div className="min-h-screen bg-white">
       <AdminPageHeader title="Analytics" />
@@ -19,98 +69,78 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <StatCard
             label="Daily Active Users"
-            value={(data?.dailyActiveUsers ?? 0).toLocaleString()}
-            sub={formatPercent(data?.dailyActiveUsersGrowth)}
-            trend="up"
+            value={dailyActiveUsers.toLocaleString()}
+            sub={formatPercent(dailyGrowth)}
+            trend={dailyGrowth > 0 ? "up" : "down"}
           />
           <StatCard
             label="Monthly Active Users"
-            value={(data?.monthlyActiveUsers ?? 0).toLocaleString()}
-            sub={formatPercent(data?.monthlyActiveUsersGrowth)}
-            trend="up"
+            value={monthlyActiveUsers.toLocaleString()}
+            sub={formatPercent(monthlyGrowth)}
+            trend={monthlyGrowth > 0 ? "up" : "down"}
           />
           <StatCard
-            label="Avg Session Duration"
-            value={data?.avgSessionDuration ?? "—"}
-            sub={data?.avgSessionDurationGrowth ? `↑ ${data.avgSessionDurationGrowth}` : undefined}
-            trend="up"
+            label="DAU Trend"
+            value={formatPercent(dauTrendPct)}
+            sub={dauTrendPct ? `Last 30 days` : undefined}
+            trend={dauTrendPct && dauTrendPct > 0 ? "up" : "down"}
           />
           <StatCard
-            label="Page Views"
-            value={(data?.pageViews ?? 0).toLocaleString()}
-            sub={formatPercent(data?.pageViewsGrowth)}
-            trend="up"
+            label="Data Points"
+            value={series.length.toLocaleString()}
+            sub="In series"
           />
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-24 text-gray-400 gap-2">
-            <Loader2 size={16} className="animate-spin" />
-            Loading analytics...
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <div className="border border-[#E5E7EB] rounded-xl p-5">
-              <h2 className="text-[14px] font-semibold text-gray-900 mb-4">Most Visited Pages</h2>
-              <div className="flex flex-col gap-3">
-                {data?.mostVisitedPages?.map((p) => (
-                  <div key={p.label} className="flex items-center justify-between text-[13px]">
-                    <span className="text-gray-500">{p.label}</span>
-                    <span className="text-gray-900 font-medium">{p.views.toLocaleString()} views</span>
+        {/* Show additional analytics data if available */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Series Data - if available */}
+          {series.length > 0 && (
+            <div className="border border-[#E5E7EB] rounded-xl p-5 lg:col-span-2">
+              <h2 className="text-[14px] font-semibold text-gray-900 mb-4">User Activity Trend</h2>
+              <div className="flex flex-col gap-2">
+                {series.slice(-7).map((point: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between text-[13px]">
+                    <span className="text-gray-500">{point.date || `Day ${index + 1}`}</span>
+                    <span className="text-gray-900 font-medium">{point.value?.toLocaleString() || 0}</span>
                   </div>
                 ))}
               </div>
+              {series.length > 7 && (
+                <p className="text-[11px] text-gray-400 mt-2">
+                  Showing last 7 of {series.length} data points
+                </p>
+              )}
             </div>
+          )}
 
-            <div className="border border-[#E5E7EB] rounded-xl p-5">
-              <h2 className="text-[14px] font-semibold text-gray-900 mb-4">Search Insights</h2>
-              <p className="text-[11px] tracking-wide text-gray-400 uppercase mb-3">
-                Top Search Queries
-              </p>
-              <div className="flex flex-col gap-3">
-                {data?.topSearchQueries?.map((q) => (
-                  <div key={q.query} className="flex items-center justify-between text-[13px]">
-                    <span className="text-blue-600">&quot;{q.query}&quot;</span>
-                    <span className="text-gray-900 font-medium">{q.count.toLocaleString()}</span>
-                  </div>
-                ))}
+          {/* Additional stats card if needed */}
+          <div className="border border-[#E5E7EB] rounded-xl p-5">
+            <h2 className="text-[14px] font-semibold text-gray-900 mb-4">Overview</h2>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-gray-500">Total Users</span>
+                <span className="text-gray-900 font-medium">
+                  {(dailyActiveUsers + 0).toLocaleString()}
+                </span>
               </div>
-            </div>
-
-            <div className="border border-[#E5E7EB] rounded-xl p-5">
-              <h2 className="text-[14px] font-semibold text-gray-900 mb-4">Platform Statistics</h2>
-              <div className="flex flex-col gap-3 mb-4">
-                <div className="flex items-center justify-between text-[13px]">
-                  <span className="text-gray-500">Desktop Users</span>
-                  <span className="text-gray-900 font-medium">{data?.platformStats?.desktopUsers ?? "—"}%</span>
-                </div>
-                <div className="flex items-center justify-between text-[13px]">
-                  <span className="text-gray-500">Mobile Users</span>
-                  <span className="text-gray-900 font-medium">{data?.platformStats?.mobileUsers ?? "—"}%</span>
-                </div>
-                <div className="flex items-center justify-between text-[13px]">
-                  <span className="text-gray-500">Tablet Users</span>
-                  <span className="text-gray-900 font-medium">{data?.platformStats?.tabletUsers ?? "—"}%</span>
-                </div>
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-gray-500">DAU/MAU Ratio</span>
+                <span className="text-gray-900 font-medium">
+                  {monthlyActiveUsers > 0 
+                    ? formatPercent((dailyActiveUsers / monthlyActiveUsers) * 100)
+                    : "—"}
+                </span>
               </div>
-              <div className="h-px bg-gray-100 mb-4" />
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between text-[13px]">
-                  <span className="text-gray-500">Avg Load Time</span>
-                  <span className="text-gray-900 font-medium">{data?.platformStats?.avgLoadTime ?? "—"}</span>
-                </div>
-                <div className="flex items-center justify-between text-[13px]">
-                  <span className="text-gray-500">Bounce Rate</span>
-                  <span className="text-gray-900 font-medium">{data?.platformStats?.bounceRate ?? "—"}%</span>
-                </div>
-                <div className="flex items-center justify-between text-[13px]">
-                  <span className="text-gray-500">Pages per Session</span>
-                  <span className="text-gray-900 font-medium">{data?.platformStats?.pagesPerSession ?? "—"}</span>
-                </div>
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-gray-500">Growth Trend</span>
+                <span className={`font-medium ${dailyGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {dailyGrowth > 0 ? '↑' : '↓'} {formatPercent(Math.abs(dailyGrowth))}
+                </span>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
