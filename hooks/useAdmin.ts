@@ -360,10 +360,25 @@ export const useUpdateSupportTicketStatus = () => {
 };
 
 // ---- Legal News Survey ----
+// hooks/useAdmin.ts - Update the useLegalNewsSurvey hook
+
+// hooks/useAdmin.ts
 export const useLegalNewsSurvey = () =>
   useQuery({
     queryKey: ["admin", "legal-news-survey"],
-    queryFn: () => adminService.getLegalNewsSurvey().then((r) => r.data.data),
+    queryFn: async () => {
+      const response = await adminService.getLegalNewsSurvey();
+      const data = response.data.data;
+      
+      // Transform topFeatureRequests to use 'label' instead of 'feature'
+      return {
+        ...data,
+        topFeatureRequests: data.topFeatureRequests?.map((req: any) => ({
+          label: req.feature || req.label || 'Unknown',
+          votes: req.votes || 0,
+        })) || [],
+      };
+    },
     staleTime: STALE,
   });
 
