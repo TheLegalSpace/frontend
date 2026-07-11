@@ -74,6 +74,7 @@ export interface UserStats {
 
 // Subscriptions
 export interface SubscriptionsMetrics {
+  stats: any;
   activeSubscribers: number;
   monthlyRevenueKobo: number;
   allTimeRevenueKobo: number;

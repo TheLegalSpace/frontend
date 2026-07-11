@@ -104,6 +104,8 @@ export const useAdminSubscriptions = () =>
     staleTime: STALE,
   });
 
+// hooks/useAdmin.ts - Update the mutation
+
 export const useUpdateSubscriptionPlan = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -112,7 +114,7 @@ export const useUpdateSubscriptionPlan = () => {
       payload,
     }: {
       planId: string;
-      payload: Partial<SubscriptionPlan>;
+      payload: Omit<Partial<SubscriptionPlan>, 'isLoading'>; // Exclude isLoading
     }) => adminService.updatePlan(planId, payload).then((r) => r.data),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin", "subscriptions"] }),

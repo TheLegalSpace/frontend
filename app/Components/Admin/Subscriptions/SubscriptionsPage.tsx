@@ -1,5 +1,4 @@
 // app/Components/Admin/Subscriptions/SubscriptionsPage.tsx
-// Figma source: Subscriptions.png
 "use client";
 
 import { Check, Loader2 } from "lucide-react";
@@ -115,8 +114,12 @@ export default function SubscriptionsPage() {
   const { data, isLoading } = useAdminSubscriptions();
   const updatePlan = useUpdateSubscriptionPlan();
   const stats = data?.stats;
+  
+  // Safely access stats with fallbacks
   const monthlyRevenue = (stats?.monthlyRevenueKobo ?? 0) / 100;
   const annualRevenue = (stats?.allTimeRevenueKobo ?? 0) / 100;
+  const churnRate = stats?.churnRate ?? 0;
+  
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [name, setName] = useState("");
   const [priceNaira, setPriceNaira] = useState("");
@@ -141,10 +144,10 @@ export default function SubscriptionsPage() {
     setPendingPayload(null);
   };
 
-  const buildPayload = (): Partial<SubscriptionPlan> => {
+  const buildPayload = (): Omit<Partial<SubscriptionPlan>, 'isLoading'> => {
     if (!selectedPlan) return {};
 
-    const payload: Partial<SubscriptionPlan> = {};
+    const payload: Omit<Partial<SubscriptionPlan>, 'isLoading'> = {};
 
     if (name !== selectedPlan.name) payload.name = name;
 
@@ -184,14 +187,17 @@ export default function SubscriptionsPage() {
       return;
     }
 
-    updatePlan.mutate({ planId: selectedPlan.id, payload }, { onSuccess: closeModal });
+    updatePlan.mutate(
+      { planId: selectedPlan.id, payload }, 
+      { onSuccess: closeModal }
+    );
   };
 
   const handleConfirmPriceChange = () => {
     if (!selectedPlan || !pendingPayload) return;
     updatePlan.mutate(
       { planId: selectedPlan.id, payload: pendingPayload },
-      { onSuccess: closeModal },
+      { onSuccess: closeModal }
     );
   };
 
@@ -204,26 +210,26 @@ export default function SubscriptionsPage() {
           <StatCard
             label="Active Subscribers"
             value={(stats?.activeSubscribers ?? 0).toLocaleString()}
-            sub={formatPercent(stats?.activeSubscribersGrowth)}
-            trend="up"
+            sub={stats?.activeSubscribersGrowth ? formatPercent(stats.activeSubscribersGrowth) : undefined}
+            trend={stats?.activeSubscribersGrowth && stats.activeSubscribersGrowth > 0 ? "up" : "down"}
           />
           <StatCard
             label="Monthly Revenue"
             value={formatNaira(monthlyRevenue)}
-            sub={formatPercent(stats?.monthlyRevenueGrowth, "from last month")}
-            trend="up"
+            sub={stats?.monthlyRevenueGrowth ? formatPercent(stats.monthlyRevenueGrowth, "from last month") : undefined}
+            trend={stats?.monthlyRevenueGrowth && stats.monthlyRevenueGrowth > 0 ? "up" : "down"}
           />
           <StatCard
             label="Annual Revenue"
             value={formatNaira(annualRevenue)}
-            sub={formatPercent(stats?.annualRevenueGrowth, "from last year")}
-            trend="up"
+            sub={stats?.annualRevenueGrowth ? formatPercent(stats.annualRevenueGrowth, "from last year") : undefined}
+            trend={stats?.annualRevenueGrowth && stats.annualRevenueGrowth > 0 ? "up" : "down"}
           />
           <StatCard
             label="Churn Rate"
-            value={`${stats?.churnRate ?? 0}%`}
-            sub={formatPercent(stats?.churnRateChange)}
-            trend="down"
+            value={`${churnRate}%`}
+            sub={stats?.churnRateChange ? formatPercent(stats.churnRateChange) : undefined}
+            trend={stats?.churnRateChange && stats.churnRateChange < 0 ? "down" : "up"}
           />
         </div>
 
@@ -301,10 +307,10 @@ export default function SubscriptionsPage() {
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={updatePlan.isLoading}
+                  disabled={updatePlan.isPending}
                   className="px-5 py-3 rounded-xl bg-blue-600 text-white text-[13px] font-semibold hover:bg-blue-700 transition disabled:opacity-60"
                 >
-                  {updatePlan.isLoading ? "Saving…" : "Save changes"}
+                  {updatePlan.isPending ? "Saving…" : "Save changes"}
                 </button>
               </div>
             </div>
@@ -315,7 +321,7 @@ export default function SubscriptionsPage() {
           <ConfirmDialog
             title="Confirm price change"
             description="Changing the plan price will create a new Paystack plan under the hood. Existing subscribers will keep their current billing until they resubscribe."
-            confirmLabel={updatePlan.isLoading ? "Saving…" : "Confirm price change"}
+            confirmLabel={updatePlan.isPending ? "Saving…" : "Confirm price change"}
             onConfirm={handleConfirmPriceChange}
             onCancel={() => setShowConfirm(false)}
             destructive

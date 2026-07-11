@@ -127,6 +127,7 @@ export interface SubscriptionPlan {
   intervalMonths: number;
   features: string[];
   isActive: boolean;
+  // isLoading: boolean;
   subscriberCount: number;
 }
 
