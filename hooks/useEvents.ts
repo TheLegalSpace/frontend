@@ -1,6 +1,10 @@
 // hooks/useEvents.ts
-import { useQuery } from "@tanstack/react-query";
-import { eventService, Event } from "../services/event.services";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  eventService,
+  Event,
+  CreateEventPayload,
+} from "../services/event.services";
 
 export const useEvents = (page = 1, limit = 20) =>
   useQuery({
@@ -15,3 +19,12 @@ export const useEvent = (id: string) =>
     queryFn: () => eventService.get(id).then((r) => r.data.data),
     enabled: !!id,
   });
+
+export const useCreateEvent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CreateEventPayload) => eventService.create(payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
+  });
+};

@@ -81,13 +81,13 @@ export default function EventDetailsPage({ eventId }: { eventId: string }) {
               Ad Information
             </h2>
             <dl className="flex flex-col gap-3.5 text-[13px]">
-              <Row label="Event Name" value={event.eventName ?? ""} />
-              {event.additionalInfoUrl && (
+              <Row label="Event Name" value={event?.payload?.title ?? ""} />
+              {(event.payload?.links?.length ?? 0) > 0 && (
                 <Row
                   label="Additional Infrmation"
                   value={
                     <a
-                      href={event.additionalInfoUrl}
+                      href={event.payload?.links?.[0] ?? "#"}
                       target="_blank"
                       rel="noreferrer"
                       className="text-blue-600 hover:underline"

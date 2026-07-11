@@ -2,7 +2,13 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "@/services/admin.services";
-import { EventStatus, TlsServiceStatus, TicketStatus, CreateEventPayload, SubscriptionPlan } from "@/app/types/admin";
+import {
+  EventStatus,
+  TlsServiceStatus,
+  TicketStatus,
+  CreateEventPayload,
+  SubscriptionPlan,
+} from "@/app/types/admin";
 // import types as needed
 
 const STALE = 1000 * 60 * 2;
@@ -52,25 +58,43 @@ export const useAdminUserActions = (accountId: string) => {
   const queryClient = useQueryClient();
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+    queryClient.invalidateQueries({
+      queryKey: ["admin", "accounts", accountId],
+    });
   };
   const approve = useMutation({
-    mutationFn: () => adminService.approveLawyer(accountId),
+    mutationFn: (reason: string) =>
+      adminService.approveLawyer(accountId, reason),
     onSuccess: invalidate,
   });
   const reject = useMutation({
-    mutationFn: (reason?: string) => adminService.rejectLawyer(accountId, reason),
+    mutationFn: (reason: string) =>
+      adminService.rejectLawyer(accountId, reason),
     onSuccess: invalidate,
   });
   const suspend = useMutation({
-    mutationFn: (reason?: string) => adminService.suspendUser(accountId, reason),
+    mutationFn: (reason: string) => adminService.suspendUser(accountId, reason),
     onSuccess: invalidate,
   });
   const reactivate = useMutation({
-    mutationFn: () => adminService.reactivateUser(accountId),
+    mutationFn: (reason: string) =>
+      adminService.reactivateUser(accountId, reason),
     onSuccess: invalidate,
   });
   return { approve, reject, suspend, reactivate };
 };
+
+export const useAdminVerificationDocuments = (
+  accountId: string,
+  enabled = true,
+) =>
+  useQuery({
+    queryKey: ["admin", "users", accountId, "verification-documents"],
+    queryFn: () =>
+      adminService.getVerificationDocuments(accountId).then((r) => r.data.data),
+    enabled: enabled && !!accountId,
+    staleTime: STALE,
+  });
 
 // ---- Subscriptions ----
 export const useAdminSubscriptions = () =>
@@ -96,7 +120,12 @@ export const useUpdateSubscriptionPlan = () => {
 };
 
 // ---- On the Docket ----
-export const useDocket = (params?: { page?: number; limit?: number; status?: string }) =>
+export const useDocket = (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  search?: string;
+}) =>
   useQuery({
     queryKey: ["admin", "docket", params],
     queryFn: () => adminService.getDocket(params).then((r) => r.data.data),
@@ -104,13 +133,28 @@ export const useDocket = (params?: { page?: number; limit?: number; status?: str
   });
 
 // alias for older name
-export const useDocketEvents = (params?: { page?: number; limit?: number; status?: string }) =>
-  useDocket(params);
+export const useDocketEvents = (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  search?: string;
+}) => useDocket(params);
 
-export const useAdminRevenue = (params?: { months?: number; page?: number; limit?: number }) =>
+export const useAdminRevenue = (params?: {
+  months?: number;
+  page?: number;
+  limit?: number;
+}) =>
   useQuery({
     queryKey: ["admin", "revenue", params],
-    queryFn: () => adminService.getRevenue(params?.months ?? 12, params?.page ?? 1, params?.limit ?? 12).then((r) => r.data.data),
+    queryFn: () =>
+      adminService
+        .getRevenue(
+          params?.months ?? 12,
+          params?.page ?? 1,
+          params?.limit ?? 12,
+        )
+        .then((r) => r.data.data),
     staleTime: STALE,
   });
 
@@ -125,7 +169,8 @@ export const useDocketStats = () => {
 export const useDocketEvent = (eventId: string, enabled = true) =>
   useQuery({
     queryKey: ["admin", "docket", eventId],
-    queryFn: () => adminService.getDocketEvent(eventId).then((r) => r.data.data),
+    queryFn: () =>
+      adminService.getDocketEvent(eventId).then((r) => r.data.data),
     enabled: enabled && !!eventId,
     staleTime: STALE,
   });
@@ -134,20 +179,30 @@ export const useApproveEvent = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (eventId: string) => adminService.approveEvent(eventId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "docket"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin", "docket"] }),
   });
 };
 
 export const useUpdateEventStatus = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ eventId, status, reason }: { eventId: string; status: "Approved" | "Rejected"; reason?: string }) => {
+    mutationFn: async ({
+      eventId,
+      status,
+      reason,
+    }: {
+      eventId: string;
+      status: "Approved" | "Rejected";
+      reason?: string;
+    }) => {
       if (status === "Approved") {
         return adminService.approveEvent(eventId);
       }
       return adminService.rejectEvent(eventId, reason);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "docket"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin", "docket"] }),
   });
 };
 
@@ -156,7 +211,8 @@ export const useRejectEvent = () => {
   return useMutation({
     mutationFn: ({ eventId, reason }: { eventId: string; reason?: string }) =>
       adminService.rejectEvent(eventId, reason),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "docket"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin", "docket"] }),
   });
 };
 
@@ -165,7 +221,8 @@ export const useCreateEvent = () => {
   return useMutation({
     mutationFn: (payload: CreateEventPayload) =>
       adminService.createEvent(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "docket"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin", "docket"] }),
   });
 };
 
@@ -178,7 +235,8 @@ export const useServiceRequests = (params?: {
 }) =>
   useQuery({
     queryKey: ["admin", "service-requests", params],
-    queryFn: () => adminService.getServiceRequests(params).then((r) => r.data.data),
+    queryFn: () =>
+      adminService.getServiceRequests(params).then((r) => r.data.data),
     staleTime: STALE,
   });
 
@@ -190,8 +248,13 @@ export const useTlsServiceStats = () => {
   if (serverStats) {
     return {
       data: {
-        totalEnquiries: serverStats.totalEnquiries ?? serverStats.totalEvents ?? (data?.pagination?.total ?? 0),
-        newEnquiries: serverStats.newEnquiries ?? serverStats.newEnquiriesThisWeek ?? 0,
+        totalEnquiries:
+          serverStats.totalEnquiries ??
+          serverStats.totalEvents ??
+          data?.pagination?.total ??
+          0,
+        newEnquiries:
+          serverStats.newEnquiries ?? serverStats.newEnquiriesThisWeek ?? 0,
         inProgress: serverStats.inProgress ?? serverStats.pending ?? 0,
         closed: serverStats.closed ?? serverStats.completed ?? 0,
       },
@@ -208,7 +271,12 @@ export const useTlsServiceStats = () => {
       if (s === "new") acc.newEnquiries++;
       return acc;
     },
-    { total: data?.pagination?.total ?? items.length, newEnquiries: 0, inProgress: 0, closed: 0 },
+    {
+      total: data?.pagination?.total ?? items.length,
+      newEnquiries: 0,
+      inProgress: 0,
+      closed: 0,
+    },
   );
 
   return {
@@ -242,7 +310,9 @@ export const useUpdateServiceRequestStatus = () => {
       note?: string;
     }) => adminService.updateServiceRequestStatus(id, status, note),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["admin", "service-requests"] }),
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "service-requests"],
+      }),
   });
 };
 
@@ -256,7 +326,8 @@ export const useSupportTickets = (params?: {
 }) =>
   useQuery({
     queryKey: ["admin", "support", params],
-    queryFn: () => adminService.getSupportTickets(params).then((r) => r.data.data),
+    queryFn: () =>
+      adminService.getSupportTickets(params).then((r) => r.data.data),
     staleTime: STALE,
   });
 
@@ -276,9 +347,15 @@ export const useSupportTicket = (id: string, enabled = true) =>
 export const useUpdateSupportTicketStatus = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ ticketId, status }: { ticketId: string; status: TicketStatus }) =>
-      adminService.updateSupportTicketStatus(ticketId, status),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "support"] }),
+    mutationFn: ({
+      ticketId,
+      status,
+    }: {
+      ticketId: string;
+      status: TicketStatus;
+    }) => adminService.updateSupportTicketStatus(ticketId, status),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin", "support"] }),
   });
 };
 
@@ -294,7 +371,8 @@ export const useLegalNewsSurvey = () =>
 export const useSearchInsights = (days = 30, limit = 10) =>
   useQuery({
     queryKey: ["admin", "analytics", "search", days, limit],
-    queryFn: () => adminService.getSearchInsights(days, limit).then((r) => r.data.data),
+    queryFn: () =>
+      adminService.getSearchInsights(days, limit).then((r) => r.data.data),
     staleTime: STALE,
   });
 
@@ -309,7 +387,8 @@ export const useAnalytics = (days = 30) =>
 export const useAnnouncements = (params?: { page?: number; limit?: number }) =>
   useQuery({
     queryKey: ["admin", "announcements", params],
-    queryFn: () => adminService.getAnnouncements(params).then((r) => r.data.data),
+    queryFn: () =>
+      adminService.getAnnouncements(params).then((r) => r.data.data),
     staleTime: STALE,
   });
 
@@ -323,7 +402,10 @@ export const useEmailTemplates = () =>
 export const usePlatformAnnouncements = () =>
   useQuery({
     queryKey: ["admin", "platform-announcements"],
-    queryFn: () => adminService.getAnnouncements({ page: 1, limit: 100 }).then((r) => r.data.data.items),
+    queryFn: () =>
+      adminService
+        .getAnnouncements({ page: 1, limit: 100 })
+        .then((r) => r.data.data.items),
     staleTime: STALE,
   });
 
@@ -337,7 +419,8 @@ export const useCreateAnnouncement = () => {
       sendNow?: boolean;
       scheduledAt?: string;
     }) => adminService.createAnnouncement(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "announcements"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin", "announcements"] }),
   });
 };
 
@@ -345,7 +428,8 @@ export const useSendAnnouncement = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => adminService.sendAnnouncement(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "announcements"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin", "announcements"] }),
   });
 };
 

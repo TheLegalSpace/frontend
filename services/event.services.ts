@@ -36,8 +36,13 @@ export interface CreateEventPayload {
   location: string;
   startAt: string;
   endAt: string;
-  registrationUrl: string;
+  status: "published" | "draft" | "cancelled";
+  registrationUrl?: string | null;
 }
+
+export type UpdateEventPayload = Partial<CreateEventPayload> & {
+  coverUrl?: string | null;
+};
 
 export const eventService = {
   list: (page = 1, limit = 20) =>
@@ -47,13 +52,18 @@ export const eventService = {
     api.get<{ error: boolean; message: string; data: Event }>(`/events/${id}`),
 
   create: (payload: CreateEventPayload) =>
-    api.post<{ error: boolean; message: string; data: Event }>("/events", payload),
+    api.post<{ error: boolean; message: string; data: Event }>(
+      "/events",
+      payload,
+    ),
 
-  update: (id: string, payload: Partial<CreateEventPayload>) =>
-    api.patch<{ error: boolean; message: string; data: Event }>(`/events/${id}`, payload),
+  update: (id: string, payload: UpdateEventPayload) =>
+    api.patch<{ error: boolean; message: string; data: Event }>(
+      `/events/${id}`,
+      payload,
+    ),
 
-  delete: (id: string) =>
-    api.delete(`/events/${id}`),
+  delete: (id: string) => api.delete(`/events/${id}`),
 
   uploadCover: (id: string, file: File) => {
     const form = new FormData();

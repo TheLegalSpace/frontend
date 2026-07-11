@@ -4,7 +4,8 @@ import { api } from "./api";
 import {
   AdminDashboardData, // will be updated
   AdminUserStats, // will be updated
-  AdminUserListItem, // will be updated (now Account)
+  AccountListItem,
+  AdminUserListItem,
   AdminUserDetail,
   SubscriptionsData, // will be updated
   SubscriptionPlan,
@@ -69,24 +70,6 @@ export interface UserStats {
   clients: number;
   verifiedLawyers: number;
   suspendedUsers: number;
-}
-
-export interface AccountListItem {
-  id: string;
-  fullName: string;
-  email: string;
-  role: "USER" | "LAWYER" | "FIRM" | "ADMIN";
-  status: "active" | "suspended" | "deleted";
-  membershipTier: "community" | "professional";
-  lawyerProfile?: {
-    verificationStatus: "pending" | "under_review" | "verified" | "rejected";
-    // ... other fields
-  } | null;
-  firmProfile?: {
-    verificationStatus: "pending" | "under_review" | "verified" | "rejected";
-    // ...
-  } | null;
-  // other fields from account
 }
 
 // Subscriptions
@@ -239,16 +222,15 @@ export const adminService = {
       };
     }>(`/admin/accounts/${accountId}/verification-documents`),
 
-  // User actions (approve, reject, suspend, reactivate) – not explicitly in reference, but likely exist.
-  // We'll keep them as previously but adjust paths if needed.
-  approveLawyer: (accountId: string) =>
-    api.patch(`/admin/accounts/${accountId}/approve`),
+  // User actions
+  approveLawyer: (accountId: string, reason?: string) =>
+    api.post(`/admin/kyc/${accountId}/approve`, { reason }),
   rejectLawyer: (accountId: string, reason?: string) =>
-    api.patch(`/admin/accounts/${accountId}/reject`, { reason }),
-  suspendUser: (accountId: string, reason?: string) =>
+    api.post(`/admin/kyc/${accountId}/reject`, { reason }),
+  suspendUser: (accountId: string, reason: string) =>
     api.patch(`/admin/accounts/${accountId}/suspend`, { reason }),
-  reactivateUser: (accountId: string) =>
-    api.patch(`/admin/accounts/${accountId}/reactivate`),
+  reactivateUser: (accountId: string, reason?: string) =>
+    api.patch(`/admin/accounts/${accountId}/unsuspend`, { reason }),
 
   // Subscriptions
   getSubscriptions: () =>
@@ -306,7 +288,9 @@ export const adminService = {
     }>("/admin/service-requests", { params }),
 
   getServiceRequest: (id: string) =>
-    api.get<{ data: import("@/app/types/admin").TlsServiceDetail }>(`/admin/service-requests/${id}`),
+    api.get<{ data: import("@/app/types/admin").TlsServiceDetail }>(
+      `/admin/service-requests/${id}`,
+    ),
 
   updateServiceRequestStatus: (
     id: string,
@@ -357,9 +341,12 @@ export const adminService = {
 
   // Revenue
   getRevenue: (months = 12, page = 1, limit = 12) =>
-    api.get<{ data: import("@/app/types/admin").RevenueData }>("/admin/metrics/revenue", {
-      params: { months, page, limit },
-    }),
+    api.get<{ data: import("@/app/types/admin").RevenueData }>(
+      "/admin/metrics/revenue",
+      {
+        params: { months, page, limit },
+      },
+    ),
 
   // Announcements
   getAnnouncements: (params?: { page?: number; limit?: number }) =>
@@ -368,7 +355,10 @@ export const adminService = {
       { params },
     ),
 
-  getEmailTemplates: () => api.get<{ data: import("@/app/types/admin").EmailTemplate[] }>("/admin/email-templates"),
+  getEmailTemplates: () =>
+    api.get<{ data: import("@/app/types/admin").EmailTemplate[] }>(
+      "/admin/email-templates",
+    ),
 
   createAnnouncement: (payload: {
     title: string;

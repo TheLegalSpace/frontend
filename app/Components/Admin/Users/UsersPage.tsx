@@ -10,7 +10,7 @@ import StatusBadge from "../shared/StatusBadge";
 import TableToolbar from "../shared/TableToolbar";
 import TablePagination from "../shared/TablePagination";
 import UserDetailModal from "./UserDetailModal";
-import { useAdminUser, useAdminUsers, useAdminUserStats } from "@/hooks/useAdmin";
+import { useAdminUsers, useAdminUserStats } from "@/hooks/useAdmin";
 
 const TYPE_OPTIONS = [
   { label: "Lawyer", value: "LAWYER" },
@@ -43,10 +43,42 @@ export default function UsersPage() {
     else statusParam = status;
   }
 
-  const { data, isLoading } = useAdminUsers({ page, limit: 8, q: search, role: roleParam, status: statusParam, verificationStatus: verificationParam });
-  const { data: selectedUser } = useAdminUser(selectedId ?? "", !!selectedId);
-
+  const { data, isLoading } = useAdminUsers({
+    page,
+    limit: 8,
+    q: search,
+    role: roleParam,
+    status: statusParam,
+    verificationStatus: verificationParam,
+  });
   const items = data?.items ?? [];
+  const statusPriority = (status: string) => {
+    switch (status) {
+      case "active":
+        return 0;
+      case "under_review":
+        return 1;
+      case "suspended":
+        return 2;
+      case "deleted":
+        return 3;
+      default:
+        return 4;
+    }
+  };
+
+  const sortedItems = [...items].sort((a, b) => {
+    const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (aDate !== bDate) {
+      return bDate - aDate;
+    }
+    return statusPriority(a.status) - statusPriority(b.status);
+  });
+
+  const selectedUser = selectedId
+    ? (sortedItems.find((u) => u.id === selectedId) ?? null)
+    : null;
   const pagination = data?.pagination;
 
   return (
@@ -56,12 +88,30 @@ export default function UsersPage() {
       <div className="px-6 md:px-8 py-6">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
-          <StatCard label="Total Users" value={(stats?.totalUsers ?? 0).toLocaleString()} />
-          <StatCard label="Lawyers" value={(stats?.lawyers ?? 0).toLocaleString()} />
-          <StatCard label="Law Firms" value={(stats?.lawFirms ?? 0).toLocaleString()} />
-          <StatCard label="Clients" value={(stats?.clients ?? 0).toLocaleString()} />
-          <StatCard label="Verified Lawyers" value={(stats?.verifiedLawyers ?? 0).toLocaleString()} />
-          <StatCard label="Suspended Users" value={(stats?.suspendedUsers ?? 0).toLocaleString()} />
+          <StatCard
+            label="Total Users"
+            value={(stats?.totalUsers ?? 0).toLocaleString()}
+          />
+          <StatCard
+            label="Lawyers"
+            value={(stats?.lawyers ?? 0).toLocaleString()}
+          />
+          <StatCard
+            label="Law Firms"
+            value={(stats?.lawFirms ?? 0).toLocaleString()}
+          />
+          <StatCard
+            label="Clients"
+            value={(stats?.clients ?? 0).toLocaleString()}
+          />
+          <StatCard
+            label="Verified Lawyers"
+            value={(stats?.verifiedLawyers ?? 0).toLocaleString()}
+          />
+          <StatCard
+            label="Suspended Users"
+            value={(stats?.suspendedUsers ?? 0).toLocaleString()}
+          />
         </div>
 
         <TableToolbar
@@ -97,16 +147,21 @@ export default function UsersPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-gray-50 border-b border-[#E5E7EB]">
-                {["Name", "Email", "User Type", "Subscription", "Status", "Action"].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      className="text-[12px] font-semibold text-gray-600 px-5 py-3"
-                    >
-                      {h}
-                    </th>
-                  ),
-                )}
+                {[
+                  "Name",
+                  "Email",
+                  "User Type",
+                  "Subscription",
+                  "Status",
+                  "Action",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="text-[12px] font-semibold text-gray-600 px-5 py-3"
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -119,17 +174,31 @@ export default function UsersPage() {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center text-gray-400 text-[13px]">
+                  <td
+                    colSpan={6}
+                    className="py-16 text-center text-gray-400 text-[13px]"
+                  >
                     No users found.
                   </td>
                 </tr>
               ) : (
-                items.map((u) => (
-                  <tr key={u.id} className="border-b border-[#F3F4F6] last:border-0">
-                    <td className="px-5 py-3.5 text-[13px] text-gray-800">{u.fullName}</td>
-                    <td className="px-5 py-3.5 text-[13px] text-gray-500">{u.email}</td>
-                    <td className="px-5 py-3.5 text-[13px] text-gray-700">{u.userType}</td>
-                    <td className="px-5 py-3.5 text-[13px] text-gray-700">{u.subscription}</td>
+                sortedItems.map((u) => (
+                  <tr
+                    key={u.id}
+                    className="border-b border-[#F3F4F6] last:border-0"
+                  >
+                    <td className="px-5 py-3.5 text-[13px] text-gray-800">
+                      {u.fullName}
+                    </td>
+                    <td className="px-5 py-3.5 text-[13px] text-gray-500">
+                      {u.email}
+                    </td>
+                    <td className="px-5 py-3.5 text-[13px] text-gray-700">
+                      {u.role}
+                    </td>
+                    <td className="px-5 py-3.5 text-[13px] text-gray-700">
+                      {u.membershipTier}
+                    </td>
                     <td className="px-5 py-3.5">
                       <StatusBadge status={u.status} />
                     </td>
@@ -156,7 +225,10 @@ export default function UsersPage() {
       </div>
 
       {selectedUser && (
-        <UserDetailModal user={selectedUser} onClose={() => setSelectedId(null)} />
+        <UserDetailModal
+          user={selectedUser}
+          onClose={() => setSelectedId(null)}
+        />
       )}
     </div>
   );

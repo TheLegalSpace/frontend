@@ -84,6 +84,26 @@ export interface AdminUserListItem {
   status: AdminUserStatus;
 }
 
+export interface AccountListItem {
+  id: string;
+  fullName: string;
+  email: string;
+  subscription: string | null;
+  role: "USER" | "LAWYER" | "FIRM" | "ADMIN";
+  status: "active" | "suspended" | "deleted" | "under_review";
+  membershipTier: "community" | "professional";
+  createdAt?: string;
+  lawyerProfile?: {
+    verificationStatus: "pending" | "under_review" | "verified" | "rejected";
+  } | null;
+  firmProfile?: {
+    verificationStatus: "pending" | "under_review" | "verified" | "rejected";
+  } | null;
+  phone?: string;
+  yearOfCall?: string;
+  jurisdiction?: string;
+}
+
 export interface AdminUserDetail extends AdminUserListItem {
   phone?: string;
   yearOfCall?: string;
