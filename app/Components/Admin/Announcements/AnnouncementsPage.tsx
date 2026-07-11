@@ -16,11 +16,19 @@ function EmailTemplatesModal({ onClose }: { onClose: () => void }) {
   const { data: templates, isLoading } = useEmailTemplates();
   return (
     <div className="fixed inset-0 z-1000000001 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
       <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-[16px] font-semibold text-gray-900">Email Templates</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700">
+          <h3 className="text-[16px] font-semibold text-gray-900">
+            Email Templates
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700"
+          >
             <X size={18} />
           </button>
         </div>
@@ -41,7 +49,9 @@ function EmailTemplatesModal({ onClose }: { onClose: () => void }) {
                 className="flex items-center justify-between border border-gray-200 rounded-lg px-4 py-3"
               >
                 <div>
-                  <p className="text-[13px] font-medium text-gray-900">{t.name}</p>
+                  <p className="text-[13px] font-medium text-gray-900">
+                    {t.name}
+                  </p>
                   <p className="text-[12px] text-gray-400">{t.subject}</p>
                 </div>
                 <span className="text-[11px] text-gray-400">
@@ -72,13 +82,19 @@ function PlatformAnnouncementsModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-1000000001 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
       <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-[16px] font-semibold text-gray-900">
             Platform Announcements
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700"
+          >
             <X size={18} />
           </button>
         </div>
@@ -139,9 +155,14 @@ function PlatformAnnouncementsModal({ onClose }: { onClose: () => void }) {
         ) : (
           <div className="flex flex-col gap-2">
             {announcements.map((a) => (
-              <div key={a.id} className="border border-gray-200 rounded-lg px-4 py-3">
+              <div
+                key={a.id}
+                className="border border-gray-200 rounded-lg px-4 py-3"
+              >
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-[13px] font-medium text-gray-900">{a.title}</p>
+                  <p className="text-[13px] font-medium text-gray-900">
+                    {a.title}
+                  </p>
                   <span
                     className={`text-[11px] px-2 py-0.5 rounded-full ${
                       a.isActive
@@ -212,9 +233,13 @@ export default function AnnouncementsPage() {
         </div>
       </div>
 
-      {showTemplates && <EmailTemplatesModal onClose={() => setShowTemplates(false)} />}
+      {showTemplates && (
+        <EmailTemplatesModal onClose={() => setShowTemplates(false)} />
+      )}
       {showAnnouncements && (
-        <PlatformAnnouncementsModal onClose={() => setShowAnnouncements(false)} />
+        <PlatformAnnouncementsModal
+          onClose={() => setShowAnnouncements(false)}
+        />
       )}
     </div>
   );

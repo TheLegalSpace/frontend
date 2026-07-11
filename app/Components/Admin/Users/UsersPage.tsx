@@ -68,12 +68,16 @@ export default function UsersPage() {
   };
 
   const sortedItems = [...items].sort((a, b) => {
+    const aGroup = statusPriority(a.status);
+    const bGroup = statusPriority(b.status);
+
+    if (aGroup !== bGroup) {
+      return aGroup - bGroup;
+    }
+
     const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
     const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    if (aDate !== bDate) {
-      return bDate - aDate;
-    }
-    return statusPriority(a.status) - statusPriority(b.status);
+    return bDate - aDate;
   });
 
   const selectedUser = selectedId
