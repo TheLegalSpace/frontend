@@ -5,7 +5,6 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "../Components/Admin/AdminSidebar";
 import { useAuth } from "../context/AuthContext";
-import { Providers } from "../providers";
 
 export const dynamic = "force-dynamic";
 
@@ -23,14 +22,30 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (isLoading) return;
-    if (!user || !hasSession()) {
+    if (!hasSession()) {
       router.replace("/");
       return;
     }
-    if (user.role !== "ADMIN") {
+    if (user && user.role !== "ADMIN") {
       router.replace("/dashboard/feeds");
     }
   }, [user, isLoading, router]);
+
+  useEffect(() => {
+    const redirectIfUnauthenticated = () => {
+      if (!hasSession()) {
+        router.replace("/");
+      }
+    };
+
+    window.addEventListener("pageshow", redirectIfUnauthenticated);
+    window.addEventListener("popstate", redirectIfUnauthenticated);
+
+    return () => {
+      window.removeEventListener("pageshow", redirectIfUnauthenticated);
+      window.removeEventListener("popstate", redirectIfUnauthenticated);
+    };
+  }, [router]);
 
   if (isLoading || !user || !hasSession() || user.role !== "ADMIN") {
     return (
@@ -42,10 +57,8 @@ export default function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-white">
-      <Providers>
-        <AdminSidebar />
-        <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
-      </Providers>
+      <AdminSidebar />
+      <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
     </div>
   );
 }

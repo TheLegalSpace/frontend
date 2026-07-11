@@ -14,6 +14,9 @@ export default function RevenuePage() {
   const [page, setPage] = useState(1);
   const { data, isLoading } = useAdminRevenue({ page, limit: 8 });
   const stats = data?.stats;
+  // Use kobo-based fields returned by the API and convert to naira for display
+  const totalRevenue = stats?.totalRevenueKobo ? stats.totalRevenueKobo / 100 : 0;
+  const revenueThisMonth = stats?.revenueThisMonthKobo ? stats.revenueThisMonthKobo / 100 : 0;
   const rows = data?.monthly ?? [];
 
   return (
@@ -24,24 +27,24 @@ export default function RevenuePage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <StatCard
             label="Total Revenue"
-            value={formatNaira(stats?.totalRevenue ?? 0)}
+            value={formatNaira(totalRevenue)}
             sub={formatPercent(stats?.totalRevenueGrowth)}
             trend="up"
           />
           <StatCard
             label="Revenue This Month"
-            value={formatNaira(stats?.revenueThisMonth ?? 0)}
+            value={formatNaira(revenueThisMonth)}
             sub={formatPercent(stats?.revenueThisMonthGrowth)}
             trend="up"
           />
           <StatCard
             label="Subscription Revenue"
-            value={formatNaira(stats?.subscriptionRevenue ?? 0)}
+            value={formatNaira((stats?.subscriptionRevenueKobo ?? 0) / 100)}
             sub="All time"
           />
           <StatCard
             label="On The Docket Revenue"
-            value={formatNaira(stats?.onTheDocketRevenue ?? 0)}
+            value={formatNaira((stats?.onTheDocketRevenueKobo ?? 0) / 100)}
             sub="All time"
           />
         </div>
@@ -83,15 +86,15 @@ export default function RevenuePage() {
                 rows.map((row, i) => (
                   <tr key={`${row.month}-${i}`} className="border-b border-[#F3F4F6] last:border-0">
                     <td className="px-5 py-3.5 text-[13px] text-gray-800">{row.month}</td>
-                    <td className="px-5 py-3.5 text-[13px] text-gray-700">
-                      {formatNairaFull(row.subscriptions)}
-                    </td>
-                    <td className="px-5 py-3.5 text-[13px] text-gray-700">
-                      {formatNairaFull(row.onTheDocket)}
-                    </td>
-                    <td className="px-5 py-3.5 text-[13px] font-medium text-gray-900">
-                      {formatNairaFull(row.total)}
-                    </td>
+                        <td className="px-5 py-3.5 text-[13px] text-gray-700">
+                          {formatNairaFull((row.subscriptionsKobo ?? 0) / 100)}
+                        </td>
+                        <td className="px-5 py-3.5 text-[13px] text-gray-700">
+                          {formatNairaFull((row.onTheDocketKobo ?? 0) / 100)}
+                        </td>
+                        <td className="px-5 py-3.5 text-[13px] font-medium text-gray-900">
+                          {formatNairaFull((row.totalKobo ?? 0) / 100)}
+                        </td>
                     <td className="px-5 py-3.5">
                       <span
                         className={`inline-flex px-2.5 py-1 rounded-full text-[12px] font-medium ${

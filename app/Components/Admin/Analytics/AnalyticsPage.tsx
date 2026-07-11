@@ -6,10 +6,10 @@ import { Loader2 } from "lucide-react";
 import AdminPageHeader from "../shared/AdminPageHeader";
 import StatCard from "../shared/StatCard";
 import { formatPercent } from "../shared/format";
-import { useAdminAnalytics } from "@/hooks/useAdmin";
+import { useAnalytics } from "@/hooks/useAdmin";
 
 export default function AnalyticsPage() {
-  const { data, isLoading } = useAdminAnalytics();
+  const { data, isLoading } = useAnalytics();
 
   return (
     <div className="min-h-screen bg-white">
@@ -82,30 +82,30 @@ export default function AnalyticsPage() {
               <div className="flex flex-col gap-3 mb-4">
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="text-gray-500">Desktop Users</span>
-                  <span className="text-gray-900 font-medium">{data?.platformStats.desktopUsers}%</span>
+                  <span className="text-gray-900 font-medium">{data?.platformStats?.desktopUsers ?? "—"}%</span>
                 </div>
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="text-gray-500">Mobile Users</span>
-                  <span className="text-gray-900 font-medium">{data?.platformStats.mobileUsers}%</span>
+                  <span className="text-gray-900 font-medium">{data?.platformStats?.mobileUsers ?? "—"}%</span>
                 </div>
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="text-gray-500">Tablet Users</span>
-                  <span className="text-gray-900 font-medium">{data?.platformStats.tabletUsers}%</span>
+                  <span className="text-gray-900 font-medium">{data?.platformStats?.tabletUsers ?? "—"}%</span>
                 </div>
               </div>
               <div className="h-px bg-gray-100 mb-4" />
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="text-gray-500">Avg Load Time</span>
-                  <span className="text-gray-900 font-medium">{data?.platformStats.avgLoadTime}</span>
+                  <span className="text-gray-900 font-medium">{data?.platformStats?.avgLoadTime ?? "—"}</span>
                 </div>
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="text-gray-500">Bounce Rate</span>
-                  <span className="text-gray-900 font-medium">{data?.platformStats.bounceRate}%</span>
+                  <span className="text-gray-900 font-medium">{data?.platformStats?.bounceRate ?? "—"}%</span>
                 </div>
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="text-gray-500">Pages per Session</span>
-                  <span className="text-gray-900 font-medium">{data?.platformStats.pagesPerSession}</span>
+                  <span className="text-gray-900 font-medium">{data?.platformStats?.pagesPerSession ?? "—"}</span>
                 </div>
               </div>
             </div>

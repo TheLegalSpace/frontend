@@ -13,16 +13,16 @@ import UserDetailModal from "./UserDetailModal";
 import { useAdminUser, useAdminUsers, useAdminUserStats } from "@/hooks/useAdmin";
 
 const TYPE_OPTIONS = [
-  { label: "Lawyer", value: "Lawyer" },
-  { label: "Law Firm", value: "Law Firm" },
-  { label: "Client", value: "Client" },
+  { label: "Lawyer", value: "LAWYER" },
+  { label: "Law Firm", value: "FIRM" },
+  { label: "Client", value: "USER" },
 ];
 
 const STATUS_OPTIONS = [
-  { label: "Active", value: "Active" },
-  { label: "Under Review", value: "Under Review" },
-  { label: "Suspended", value: "Suspended" },
-  { label: "Failed", value: "Failed" },
+  { label: "Active", value: "active" },
+  { label: "Under Review", value: "under_review" },
+  { label: "Suspended", value: "suspended" },
+  { label: "Deleted", value: "deleted" },
 ];
 
 export default function UsersPage() {
@@ -33,7 +33,17 @@ export default function UsersPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const { data: stats } = useAdminUserStats();
-  const { data, isLoading } = useAdminUsers({ page, limit: 8, search, type, status });
+
+  // Map UI filters to API params
+  const roleParam = type || undefined;
+  let statusParam: string | undefined = undefined;
+  let verificationParam: string | undefined = undefined;
+  if (status) {
+    if (status === "under_review") verificationParam = "under_review";
+    else statusParam = status;
+  }
+
+  const { data, isLoading } = useAdminUsers({ page, limit: 8, q: search, role: roleParam, status: statusParam, verificationStatus: verificationParam });
   const { data: selectedUser } = useAdminUser(selectedId ?? "", !!selectedId);
 
   const items = data?.items ?? [];

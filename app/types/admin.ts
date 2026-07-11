@@ -10,35 +10,43 @@ export interface Pagination {
   totalPages: number;
 }
 
-// ── Dashboard ───────────────────────────────────────────────────────────────
+// ── Dashboard (API revamp) ─────────────────────────────────────────────────
 
-export interface AdminDashboardStats {
-  totalRevenue: number;
-  totalRevenueGrowth: number;
+export interface DashboardCards {
+  totalRevenueKobo: number;
   totalUsers: number;
-  totalUsersGrowth: number;
   activeSubscribers: number;
-  activeSubscribersGrowth: number;
-  newEnquiries: number;
-  newEnquiriesGrowth: number;
+  newEnquiriesThisWeek: number;
   onTheDocket: number;
-  onTheDocketGrowth: number;
 }
 
-export type ActivityType =
-  | "advertisement_submitted"
-  | "lawyer_verified"
-  | "support_ticket"
-  | "subscription_payment";
+export interface PendingTasks {
+  serviceEnquiries: number;
+  lawyerVerifications: number;
+  eventsNeedReview: number;
+}
+
+export type RecentActivityKind =
+  | "service_request"
+  | "payment"
+  | "verification"
+  | "event"
+  | "other";
 
 export interface RecentActivity {
-  id: string;
-  type: ActivityType;
-  actorName: string;
+  kind: RecentActivityKind;
+  title: string;
   description: string;
-  createdAt: string;
-  amount?: number;
+  at: string; // ISO 8601
 }
+
+export interface AdminDashboardData {
+  cards: DashboardCards;
+  pendingTasks: PendingTasks;
+  recentActivities: RecentActivity[];
+}
+
+// Legacy aliases removed — prefer explicit kobo fields in dashboard types
 
 export interface PendingTask {
   id: string;
@@ -47,16 +55,14 @@ export interface PendingTask {
   href: string;
 }
 
-export interface AdminDashboardData {
-  stats: AdminDashboardStats;
-  recentActivities: RecentActivity[];
-  pendingTasks: PendingTask[];
-}
-
 // ── Users ───────────────────────────────────────────────────────────────────
 
 export type AdminUserType = "Lawyer" | "Law Firm" | "Client";
-export type AdminUserStatus = "Active" | "Under Review" | "Suspended" | "Failed";
+export type AdminUserStatus =
+  | "Active"
+  | "Under Review"
+  | "Suspended"
+  | "Failed";
 
 export interface AdminUserStats {
   totalUsers: number;
@@ -93,27 +99,23 @@ export interface AdminUserDetail extends AdminUserListItem {
 
 export interface SubscriptionPlan {
   id: string;
+  code: string;
   name: string; // e.g. "Community Membership", "Professional Membership"
-  audience: "USER" | "LAWYER" | "FIRM";
-  billingLabel: string; // "Every 6 Months"
-  priceMonthly: number;
-  priceAnnual: number;
-  isAnnual: boolean;
-  description: string;
+  tier: string;
+  forRole: "LAWYER" | "FIRM" | null;
+  priceKobo: number;
+  intervalMonths: number;
   features: string[];
-  userCount: number;
-  userCountLabel: string; // "users" | "firms"
+  isActive: boolean;
+  subscriberCount: number;
 }
 
 export interface SubscriptionsStats {
   activeSubscribers: number;
-  activeSubscribersGrowth: number;
-  monthlyRevenue: number;
-  monthlyRevenueGrowth: number;
-  annualRevenue: number;
-  annualRevenueGrowth: number;
+  monthlyRevenueKobo: number;
+  allTimeRevenueKobo: number;
   churnRate: number;
-  churnRateChange: number;
+  churnApproximate: boolean;
 }
 
 export interface SubscriptionsData {
@@ -124,19 +126,19 @@ export interface SubscriptionsData {
 // ── Revenue ──────────────────────────────────────────────────────────────────
 
 export interface RevenueStats {
-  totalRevenue: number;
+  totalRevenueKobo: number;
   totalRevenueGrowth: number;
-  revenueThisMonth: number;
+  revenueThisMonthKobo: number;
   revenueThisMonthGrowth: number;
-  subscriptionRevenue: number;
-  onTheDocketRevenue: number;
+  subscriptionRevenueKobo: number;
+  onTheDocketRevenueKobo: number;
 }
 
 export interface MonthlyRevenueRow {
   month: string;
-  subscriptions: number;
-  onTheDocket: number;
-  total: number;
+  subscriptionsKobo: number;
+  onTheDocketKobo: number;
+  totalKobo: number;
   growth: number;
 }
 
@@ -154,18 +156,70 @@ export interface DocketStats {
   totalEvents: number;
   pendingEvents: number;
   approvedEvents: number;
-  revenueGenerated: number;
+  // new API field: revenue in kobo
+  revenueGeneratedKobo?: number;
 }
 
 export interface DocketEventListItem {
   id: string;
-  eventName: string;
-  organizerEmail: string;
-  flyerUrl: string;
+  type:
+    | "event_promotion"
+    | "website"
+    | "appointment"
+    | "productivity"
+    | "consulting";
+  status: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  firmName?: string;
+  payload?: {
+    endAt: string;
+    links: string[];
+    title: string;
+    startAt: string;
+    flyerUrl: string;
+    shareOnSocial: boolean;
+  };
+  amount?: number;
+  pricing?: {
+    days: number;
+    totalKobo: number;
+    dailyRateKobo: number;
+    socialAddonKobo: number;
+  };
+  paymentStatus?: string;
+  eventId?: string;
+  createdAt: string;
+  updatedAt: string;
+  event?: {
+    id: string;
+    title: string;
+    description?: string | null;
+    coverUrl?: string;
+    location?: string | null;
+    startAt?: string;
+    endAt?: string;
+    registrationUrl?: string | null;
+    status?: string;
+    clickCount?: number;
+    createdByAdminId?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+  };
+  account?: {
+    id: string;
+    fullName?: string;
+    email?: string;
+    role?: string;
+  };
+  // Backward-compatible fields
+  eventName?: string;
+  organizerEmail?: string;
+  flyerUrl?: string;
   additionalInfoUrl?: string | null;
-  startDate: string;
-  endDate: string;
-  status: EventStatus;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface DocketEventDetail {
@@ -179,7 +233,7 @@ export interface DocketEventDetail {
   contactEmail: string;
   contactPhone?: string;
   status: EventStatus;
-  payment: {
+  payment?: {
     amountPaid: number;
     paymentDate: string;
     paymentMethod: string;
@@ -187,13 +241,51 @@ export interface DocketEventDetail {
     startDate: string;
     endDate: string;
   };
+  amount?: number;
+  pricing?: {
+    days?: number;
+    totalKobo: number;
+    dailyRateKobo: number;
+    socialAddonKobo: number;
+  };
+  payload?: {
+    endAt: string;
+    links: string[];
+    title: string;
+    startAt: string;
+    flyerUrl: string;
+    shareOnSocial: boolean;
+  };
+  event?: {
+    id: string;
+    title: string;
+    description?: string | null;
+    coverUrl?: string;
+    location?: string | null;
+    startAt?: string;
+    endAt?: string;
+    registrationUrl?: string | null;
+    status?: string;
+    clickCount?: number;
+    createdByAdminId?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+  };
+  paymentStatus?: string;
   metrics: {
+    approximate?: boolean;
     totalViews: number;
     totalClicks: number;
     ctr: number;
-    costPerClick: number;
+    costPerClick?: number;
+    costPerClickKobo?: number;
+    audience?: {
+      byDevice?: { label: string; percent: number }[];
+      byGeography?: { label: string; percent: number }[];
+      byUserType?: Record<string, { percentage: number }>;
+    };
   };
-  audience: {
+  audience?: {
     byDevice: { label: string; percent: number }[];
     byGeography: { label: string; percent: number }[];
     byUserType: { label: string; percent: number }[];
@@ -203,6 +295,15 @@ export interface DocketEventDetail {
 export interface CreateEventPayload {
   eventName: string;
   flyer: File | null;
+  startAt: string;
+  endAt: string;
+  shareOnSocial: Boolean;
+  links: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone?: string;
+  firmName?: string;
+  title: string;
   promotionStartDate: string;
   promotionEndDate: string;
   additionalLink?: string;
@@ -210,7 +311,14 @@ export interface CreateEventPayload {
 
 // ── TLS Services (enquiries / leads) ─────────────────────────────────────────
 
-export type TlsServiceStatus = "New" | "In Progress" | "Closed" | "Lead Lost";
+export type TlsServiceStatus =
+  | "new"
+  | "in_progress"
+  | "lead_lost"
+  | "closed"
+  | "pending"
+  | "active"
+  | "completed";
 
 export interface TlsServicesStats {
   totalEnquiries: number;
@@ -221,23 +329,54 @@ export interface TlsServicesStats {
 
 export interface TlsServiceListItem {
   id: string;
-  name: string;
-  email: string;
-  requestedService: string;
-  dateSubmitted: string;
+  type:
+    | "website"
+    | "appointment"
+    | "productivity"
+    | "consulting"
+    | "event_promotion";
   status: TlsServiceStatus;
+  paymentStatus?: string;
+  amount?: number;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  firmName?: string;
+  eventId?: string;
+  account?: {
+    id: string;
+    fullName?: string;
+    email?: string;
+    role?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  payload?: Record<string, unknown>;
+  pricing?: {
+    days: number;
+    totalKobo: number;
+    dailyRateKobo: number;
+    socialAddonKobo: number;
+  };
+  event?: {
+    id: string;
+    title: string;
+    description?: string | null;
+    coverUrl?: string;
+    location?: string | null;
+    startAt?: string;
+    endAt?: string;
+    registrationUrl?: string | null;
+    status?: string;
+    clickCount?: number;
+    createdByAdminId?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+  };
 }
 
-export interface TlsServiceDetail {
-  id: string;
-  lawFirmName: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  serviceNeeded: string;
-  hasWebsite: string;
-  currentWebsiteUrl?: string;
-  status: TlsServiceStatus;
+export interface TlsServiceDetail extends TlsServiceListItem {
+  note?: string;
 }
 
 // ── Legal News Survey ─────────────────────────────────────────────────────────

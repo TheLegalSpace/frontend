@@ -36,9 +36,9 @@ export default function SupportCenterPage() {
   const { data, isLoading } = useSupportTickets({
     page,
     limit: 8,
-    search,
-    type: service,
-    status,
+    q: search || undefined,
+    category: service || undefined,
+    status: status || undefined,
   });
 
   const items = data?.items ?? [];
@@ -85,7 +85,7 @@ export default function SupportCenterPage() {
         />
 
         <div className="border border-[#E5E7EB] rounded-xl overflow-x-auto">
-          <table className="w-full text-left min-w-[800px]">
+          <table className="w-full text-left min-w-200">
             <thead>
               <tr className="bg-gray-50 border-b border-[#E5E7EB]">
                 {["Ticket ID", "User", "Subject", "Date Submitted", "Status", "Action"].map(

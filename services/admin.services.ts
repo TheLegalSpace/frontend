@@ -1,225 +1,397 @@
 // services/admin.services.ts
-//
-// API methods for the Admin module (/admin/*).
-//
-// NOTE ON ENDPOINTS: the Postman collection shared for this build only
-// documented Auth + Profile in detail. The paths below follow the same
-// REST conventions used everywhere else in this codebase (see
-// profile.services.ts, leads.services.ts) and are namespaced under
-// `/admin`, matching the "Admin" folder already listed in the collection's
-// sidebar. Confirm exact paths/payloads with the backend team and adjust
-// here only — nothing else in the admin UI needs to change.
+
 import { api } from "./api";
 import {
-  AdminDashboardData,
+  AdminDashboardData, // will be updated
+  AdminUserStats, // will be updated
+  AdminUserListItem, // will be updated (now Account)
   AdminUserDetail,
-  AdminUserListItem,
-  AdminUserStats,
-  AnalyticsData,
-  CreateEventPayload,
-  DocketEventDetail,
-  DocketEventListItem,
-  DocketStats,
-  EmailTemplate,
-  EventStatus,
-  LegalNewsSurveyData,
-  Pagination,
-  PlatformAnnouncement,
-  RevenueData,
+  SubscriptionsData, // will be updated
   SubscriptionPlan,
-  SubscriptionsData,
-  SupportStats,
-  SupportTicketDetail,
-  SupportTicketListItem,
-  TicketStatus,
-  TlsServiceDetail,
+  DocketStats, // will be removed or merged
+  DocketEventListItem,
+  DocketEventDetail,
+  CreateEventPayload,
   TlsServiceListItem,
-  TlsServicesStats,
+  TlsServiceDetail,
   TlsServiceStatus,
+  SupportTicketListItem,
+  SupportTicketDetail,
+  TicketStatus,
+  LegalNewsSurveyData,
+  AnalyticsData, // will be split
+  PlatformAnnouncement,
+  EmailTemplate, // will be removed
+  Pagination,
 } from "@/app/types/admin";
 
-export interface ListResponse<T> {
-  error: boolean;
-  message: string;
-  data: {
-    items: T[];
-    pagination: Pagination;
+// ---- New response shapes ----
+
+// Dashboard
+export interface DashboardCards {
+  totalRevenueKobo: number;
+  totalUsers: number;
+  activeSubscribers: number;
+  newEnquiriesThisWeek: number;
+  onTheDocket: number;
+}
+
+export interface PendingTasks {
+  serviceEnquiries: number;
+  lawyerVerifications: number;
+  eventsNeedReview: number;
+}
+
+export interface RecentActivity {
+  kind: "service_request" | "payment" | "verification" | "event" | "other";
+  title: string;
+  description: string;
+  at: string;
+}
+
+export interface DashboardData {
+  cards: DashboardCards;
+  activeSubscribers: number;
+  newEnquiriesThisWeek: number;
+  pendingTasks: PendingTasks;
+  recentActivities: RecentActivity[];
+
+  onTheDocket: number;
+  totalRevenueKobo: number;
+  totalUsers: number;
+}
+
+// Users
+export interface UserStats {
+  totalUsers: number;
+  lawyers: number;
+  lawFirms: number;
+  clients: number;
+  verifiedLawyers: number;
+  suspendedUsers: number;
+}
+
+export interface AccountListItem {
+  id: string;
+  fullName: string;
+  email: string;
+  role: "USER" | "LAWYER" | "FIRM" | "ADMIN";
+  status: "active" | "suspended" | "deleted";
+  membershipTier: "community" | "professional";
+  lawyerProfile?: {
+    verificationStatus: "pending" | "under_review" | "verified" | "rejected";
+    // ... other fields
+  } | null;
+  firmProfile?: {
+    verificationStatus: "pending" | "under_review" | "verified" | "rejected";
+    // ...
+  } | null;
+  // other fields from account
+}
+
+// Subscriptions
+export interface SubscriptionsMetrics {
+  activeSubscribers: number;
+  monthlyRevenueKobo: number;
+  allTimeRevenueKobo: number;
+  churnRate: number;
+  churnApproximate: boolean;
+  plans: SubscriptionPlan[];
+}
+
+// Docket (Events) - combined stats and list in one response
+export interface DocketListResponse {
+  items: DocketEventListItem[];
+  stats: DocketStats; // totalEvents, pendingEvents, approvedEvents, revenueGeneratedKobo
+  pagination: Pagination;
+}
+
+// TLS Services (service-requests)
+export interface ServiceRequestListItem {
+  id: string;
+  type:
+    | "website"
+    | "appointment"
+    | "productivity"
+    | "consulting"
+    | "event_promotion";
+  status:
+    | "new"
+    | "in_progress"
+    | "lead_lost"
+    | "closed"
+    | "pending"
+    | "active"
+    | "completed";
+  paymentStatus?: string;
+  amount: number; // in kobo
+  contactEmail: string;
+  contactName?: string;
+  event?: {
+    id: string;
+    title: string;
+    status: string;
+    startAt: string;
+    endAt: string;
+    coverUrl: string;
+    registrationUrl: string;
+    clickCount: number;
   };
+  payload?: any;
+  account?: {
+    id: string;
+    fullName: string;
+    role: string;
+  };
+  createdAt: string;
 }
 
-export interface SingleResponse<T> {
-  error: boolean;
-  message: string;
-  data: T;
+export interface ServiceRequestStats {
+  totalEvents?: number;
+  pendingEvents?: number;
+  approvedEvents?: number;
+  revenueGeneratedKobo?: number;
+  // for inquiries we might have different stats, but not specified
 }
 
-type ListParams = {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: string;
-  type?: string;
-};
+// Support
+export interface SupportListResponse {
+  items: SupportTicketListItem[];
+  stats: {
+    totalTickets: number;
+    openTickets: number;
+    closedTickets: number;
+  };
+  pagination: Pagination;
+}
+
+// Legal News Survey
+export interface LegalNewsSurveyStats {
+  totalResponses: number;
+  yesResponses: number;
+  noResponses: number;
+  participationRate: number;
+  breakdownByUserType: {
+    lawyers: { count: number; percentage: number };
+    lawFirms: { count: number; percentage: number };
+    // maybe clients too?
+  };
+  topFeatureRequests: { feature: string; votes: number }[];
+  responseDistribution: {
+    answer: "yes" | "no" | "maybe";
+    count: number;
+    percentage: number;
+  }[];
+}
+
+// Announcements
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  audience: "all" | "lawyers" | "firms" | "clients";
+  status: "draft" | "scheduled" | "sent";
+  recipientCount?: number;
+  sentAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ---- Admin Service ----
 
 export const adminService = {
-  // ── Dashboard ────────────────────────────────────────────────────────────
+  // Dashboard
   getDashboard: () =>
-    api.get<SingleResponse<AdminDashboardData>>("/admin/dashboard"),
+    api.get<{ data: DashboardData }>("/admin/metrics/dashboard"),
 
-  // ── Users ────────────────────────────────────────────────────────────────
-  getUserStats: () =>
-    api.get<SingleResponse<AdminUserStats>>("/admin/users/stats"),
+  // Users
+  getUserStats: () => api.get<{ data: UserStats }>("/admin/metrics/users"),
 
-  getUsers: (params: ListParams = {}) =>
-    api.get<ListResponse<AdminUserListItem>>("/admin/users", { params }),
+  getUsers: (params: {
+    role?: string;
+    status?: string;
+    verificationStatus?: string;
+    q?: string;
+    page?: number;
+    limit?: number;
+  }) =>
+    api.get<{ data: { items: AccountListItem[]; pagination: Pagination } }>(
+      "/admin/accounts",
+      { params },
+    ),
 
+  // We may not need a separate getUserById, but keep for compatibility;
+  // if needed, we can fetch from list or add endpoint if exists.
   getUserById: (accountId: string) =>
-    api.get<SingleResponse<AdminUserDetail>>(`/admin/users/${accountId}`),
+    api.get<{ data: AccountListItem }>(`/admin/accounts/${accountId}`), // not in reference, but may exist
 
+  // Verification documents
+  getVerificationDocuments: (accountId: string) =>
+    api.get<{
+      data: {
+        items: {
+          id: string;
+          docType: string;
+          status: string;
+          url: string;
+          createdAt: string;
+        }[];
+      };
+    }>(`/admin/accounts/${accountId}/verification-documents`),
+
+  // User actions (approve, reject, suspend, reactivate) – not explicitly in reference, but likely exist.
+  // We'll keep them as previously but adjust paths if needed.
   approveLawyer: (accountId: string) =>
-    api.patch<SingleResponse<AdminUserDetail>>(
-      `/admin/users/${accountId}/approve`,
-    ),
-
+    api.patch(`/admin/accounts/${accountId}/approve`),
   rejectLawyer: (accountId: string, reason?: string) =>
-    api.patch<SingleResponse<AdminUserDetail>>(
-      `/admin/users/${accountId}/reject`,
-      { reason },
-    ),
-
+    api.patch(`/admin/accounts/${accountId}/reject`, { reason }),
   suspendUser: (accountId: string, reason?: string) =>
-    api.patch<SingleResponse<AdminUserDetail>>(
-      `/admin/users/${accountId}/suspend`,
-      { reason },
-    ),
-
+    api.patch(`/admin/accounts/${accountId}/suspend`, { reason }),
   reactivateUser: (accountId: string) =>
-    api.patch<SingleResponse<AdminUserDetail>>(
-      `/admin/users/${accountId}/reactivate`,
-    ),
+    api.patch(`/admin/accounts/${accountId}/reactivate`),
 
-  // ── Subscriptions ────────────────────────────────────────────────────────
+  // Subscriptions
   getSubscriptions: () =>
-    api.get<SingleResponse<SubscriptionsData>>("/admin/subscriptions"),
+    api.get<{ data: SubscriptionsMetrics }>("/admin/metrics/subscriptions"),
+
+  getPlans: () => api.get<{ data: SubscriptionPlan[] }>("/admin/plans"),
 
   updatePlan: (planId: string, payload: Partial<SubscriptionPlan>) =>
-    api.patch<SingleResponse<SubscriptionPlan>>(
-      `/admin/subscriptions/${planId}`,
-      payload,
-    ),
+    api.patch(`/admin/plans/${planId}`, payload),
 
-  // ── Revenue ──────────────────────────────────────────────────────────────
-  getRevenue: (params: ListParams = {}) =>
-    api.get<SingleResponse<RevenueData>>("/admin/revenue", { params }),
+  // On the Docket (Events)
+  getDocket: (params?: { page?: number; limit?: number; status?: string }) =>
+    api.get<{ data: DocketListResponse }>("/admin/docket", { params }),
 
-  // ── On the Docket (Events) ───────────────────────────────────────────────
-  getDocketStats: () =>
-    api.get<SingleResponse<DocketStats>>("/admin/events/stats"),
+  getDocketEvent: (eventId: string) =>
+    api.get<{ data: DocketEventDetail }>(`/admin/docket/${eventId}`),
 
-  getEvents: (params: ListParams = {}) =>
-    api.get<ListResponse<DocketEventListItem>>("/admin/events", { params }),
+  approveEvent: (eventId: string) =>
+    api.post(`/admin/docket/${eventId}/approve`),
 
-  getEventById: (eventId: string) =>
-    api.get<SingleResponse<DocketEventDetail>>(`/admin/events/${eventId}`),
-
-  updateEventStatus: (eventId: string, status: EventStatus) =>
-    api.patch<SingleResponse<DocketEventDetail>>(
-      `/admin/events/${eventId}/status`,
-      { status },
-    ),
+  rejectEvent: (eventId: string, reason?: string) =>
+    api.post(`/admin/docket/${eventId}/reject`, { reason }),
 
   createEvent: (payload: CreateEventPayload) => {
     const form = new FormData();
-    form.append("eventName", payload.eventName);
     if (payload.flyer) form.append("flyer", payload.flyer);
-    form.append("promotionStartDate", payload.promotionStartDate);
-    form.append("promotionEndDate", payload.promotionEndDate);
-    if (payload.additionalLink)
-      form.append("additionalLink", payload.additionalLink);
-    return api.post<SingleResponse<DocketEventDetail>>(
-      "/admin/events",
-      form,
-      { headers: { "Content-Type": "multipart/form-data" } },
-    );
+    form.append("eventName", payload.eventName);
+    form.append("startAt", payload.startAt);
+    form.append("endAt", payload.endAt);
+    form.append("shareOnSocial", payload.shareOnSocial ? "true" : "false");
+    form.append("links", payload.links || "");
+    if (payload.contactName) form.append("contactName", payload.contactName);
+    if (payload.contactEmail) form.append("contactEmail", payload.contactEmail);
+    if (payload.contactPhone) form.append("contactPhone", payload.contactPhone);
+    if (payload.firmName) form.append("firmName", payload.firmName);
+    // Note: also include address? The API reference shows address in payload but not in create form; maybe we add it.
+    return api.post("/admin/docket", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   },
 
-  // ── TLS Services (enquiries) ─────────────────────────────────────────────
-  getTlsServiceStats: () =>
-    api.get<SingleResponse<TlsServicesStats>>("/admin/tls-services/stats"),
+  // TLS Services (service-requests)
+  getServiceRequests: (params?: {
+    type?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+  }) =>
+    api.get<{
+      data: {
+        items: ServiceRequestListItem[];
+        pagination: Pagination;
+        stats?: any;
+      };
+    }>("/admin/service-requests", { params }),
 
-  getTlsServiceEnquiries: (params: ListParams = {}) =>
-    api.get<ListResponse<TlsServiceListItem>>("/admin/tls-services", {
-      params,
-    }),
+  getServiceRequest: (id: string) =>
+    api.get<{ data: import("@/app/types/admin").TlsServiceDetail }>(`/admin/service-requests/${id}`),
 
-  getTlsServiceById: (enquiryId: string) =>
-    api.get<SingleResponse<TlsServiceDetail>>(
-      `/admin/tls-services/${enquiryId}`,
-    ),
-
-  updateTlsServiceStatus: (enquiryId: string, status: TlsServiceStatus) =>
-    api.patch<SingleResponse<TlsServiceDetail>>(
-      `/admin/tls-services/${enquiryId}/status`,
-      { status },
-    ),
-
-  // ── Legal News Survey ─────────────────────────────────────────────────────
-  getLegalNewsSurvey: () =>
-    api.get<SingleResponse<LegalNewsSurveyData>>(
-      "/admin/legal-news-survey",
-    ),
-
-  // ── Support Center ────────────────────────────────────────────────────────
-  getSupportStats: () =>
-    api.get<SingleResponse<SupportStats>>("/admin/support/stats"),
-
-  getSupportTickets: (params: ListParams = {}) =>
-    api.get<ListResponse<SupportTicketListItem>>("/admin/support", {
-      params,
-    }),
-
-  getSupportTicketById: (ticketId: string) =>
-    api.get<SingleResponse<SupportTicketDetail>>(
-      `/admin/support/${ticketId}`,
-    ),
-
-  updateSupportTicketStatus: (ticketId: string, status: TicketStatus) =>
-    api.patch<SingleResponse<SupportTicketDetail>>(
-      `/admin/support/${ticketId}`,
-      { status },
-    ),
-
-  // ── Analytics ────────────────────────────────────────────────────────────
-  getAnalytics: () =>
-    api.get<SingleResponse<AnalyticsData>>("/admin/analytics"),
-
-  // ── Announcements ────────────────────────────────────────────────────────
-  getEmailTemplates: () =>
-    api.get<ListResponse<EmailTemplate>>("/admin/announcements/templates"),
-
-  updateEmailTemplate: (templateId: string, payload: Record<string, unknown>) =>
-    api.patch<SingleResponse<EmailTemplate>>(
-      `/admin/announcements/templates/${templateId}`,
-      payload,
-    ),
-
-  getPlatformAnnouncements: () =>
-    api.get<ListResponse<PlatformAnnouncement>>(
-      "/admin/announcements/platform",
-    ),
-
-  createPlatformAnnouncement: (payload: Partial<PlatformAnnouncement>) =>
-    api.post<SingleResponse<PlatformAnnouncement>>(
-      "/admin/announcements/platform",
-      payload,
-    ),
-
-  updatePlatformAnnouncement: (
+  updateServiceRequestStatus: (
     id: string,
-    payload: Partial<PlatformAnnouncement>,
-  ) =>
-    api.patch<SingleResponse<PlatformAnnouncement>>(
-      `/admin/announcements/platform/${id}`,
-      payload,
+    status: TlsServiceStatus,
+    note?: string,
+  ) => api.patch(`/admin/service-requests/${id}`, { status, note }),
+
+  // Support Center
+  getSupportTickets: (params?: {
+    status?: string;
+    category?: string;
+    q?: string;
+    page?: number;
+    limit?: number;
+  }) =>
+    api.get<{ data: SupportListResponse }>("/admin/support/tickets", {
+      params,
+    }),
+
+  getSupportTicket: (id: string) =>
+    api.get<{ data: SupportTicketDetail }>(`/admin/support/tickets/${id}`),
+
+  updateSupportTicketStatus: (id: string, status: TicketStatus) =>
+    api.patch(`/admin/support/tickets/${id}`, { status }),
+
+  // Legal News Survey
+  getLegalNewsSurvey: () =>
+    api.get<{ data: LegalNewsSurveyStats }>("/admin/surveys/legal-news/stats"),
+
+  // Analytics
+  getSearchInsights: (days = 30, limit = 10) =>
+    api.get<{
+      data: {
+        windowDays: number;
+        topQueries: { query: string; count: number }[];
+      };
+    }>("/admin/metrics/search", { params: { days, limit } }),
+
+  getAnalytics: (days = 30) =>
+    api.get<{
+      data: {
+        dailyActiveUsers: number;
+        monthlyActiveUsers: number;
+        dauTrendPct?: number;
+        series?: any[];
+      };
+    }>("/admin/metrics/analytics", { params: { days } }),
+
+  // Revenue
+  getRevenue: (months = 12, page = 1, limit = 12) =>
+    api.get<{ data: import("@/app/types/admin").RevenueData }>("/admin/metrics/revenue", {
+      params: { months, page, limit },
+    }),
+
+  // Announcements
+  getAnnouncements: (params?: { page?: number; limit?: number }) =>
+    api.get<{ data: { items: Announcement[]; pagination: Pagination } }>(
+      "/admin/announcements",
+      { params },
     ),
+
+  getEmailTemplates: () => api.get<{ data: import("@/app/types/admin").EmailTemplate[] }>("/admin/email-templates"),
+
+  createAnnouncement: (payload: {
+    title: string;
+    body: string;
+    audience: "all" | "lawyers" | "firms" | "clients";
+    sendNow?: boolean;
+    scheduledAt?: string;
+  }) => api.post("/admin/announcements", payload),
+
+  sendAnnouncement: (id: string) => api.post(`/admin/announcements/${id}/send`),
+
+  // Moderation
+  deletePost: (postId: string) => api.delete(`/admin/posts/${postId}`),
+
+  deleteReview: (reviewId: string) => api.delete(`/admin/reviews/${reviewId}`),
+
+  getAuditLog: (params?: {
+    action?: string;
+    targetType?: string;
+    adminAccountId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    page?: number;
+    limit?: number;
+  }) => api.get("/admin/audit-log", { params }),
 };

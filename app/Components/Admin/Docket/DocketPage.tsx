@@ -15,9 +15,13 @@ import { useDocketEvents, useDocketStats } from "@/hooks/useAdmin";
 import { formatDate, formatNaira } from "../shared/format";
 
 const STATUS_OPTIONS = [
-  { label: "Approved", value: "Approved" },
-  { label: "Pending", value: "Pending" },
-  { label: "Rejected", value: "Rejected" },
+  { label: "All Status", value: "" },
+  { label: "New", value: "new" },
+  { label: "Pending", value: "pending" },
+  { label: "Approved", value: "approved" },
+  { label: "Completed", value: "completed" },
+  { label: "Active", value: "active" },
+  { label: "Rejected", value: "rejected" },
 ];
 
 export default function DocketPage() {
@@ -42,7 +46,10 @@ export default function DocketPage() {
           <StatCard label="Total Events" value={(stats?.totalEvents ?? 0).toLocaleString()} />
           <StatCard label="Pending Events" value={(stats?.pendingEvents ?? 0).toLocaleString()} />
           <StatCard label="Approved Events" value={(stats?.approvedEvents ?? 0).toLocaleString()} />
-          <StatCard label="Revenue Generated" value={formatNaira(stats?.revenueGenerated ?? 0)} />
+          <StatCard
+            label="Revenue Generated"
+            value={formatNaira(((stats?.revenueGeneratedKobo ?? 0) as number) / 100)}
+          />
         </div>
 
         <TableToolbar
@@ -74,17 +81,17 @@ export default function DocketPage() {
         />
 
         <div className="border border-[#E5E7EB] rounded-xl overflow-x-auto">
-          <table className="w-full text-left min-w-[900px]">
+          <table className="w-full text-left min-w-225">
             <thead>
               <tr className="bg-gray-50 border-b border-[#E5E7EB]">
                 {[
-                  "Event Name",
-                  "Organizer",
-                  "Flyer",
-                  "Additional Info",
+                  "Title",
+                  "Firm / Organizer",
+                  "Contact",
                   "Start Date",
                   "End Date",
                   "Status",
+                  "Payment",
                   "Action",
                 ].map((h) => (
                   <th key={h} className="text-[12px] font-semibold text-gray-600 px-5 py-3 whitespace-nowrap">
@@ -108,59 +115,44 @@ export default function DocketPage() {
                   </td>
                 </tr>
               ) : (
-                items.map((ev) => (
-                  <tr key={ev.id} className="border-b border-[#F3F4F6] last:border-0">
-                    <td className="px-5 py-3.5 text-[13px] text-gray-800 whitespace-nowrap">{ev.eventName}</td>
-                    <td className="px-5 py-3.5 text-[13px] text-gray-500 whitespace-nowrap">{ev.organizerEmail}</td>
-                    <td className="px-5 py-3.5">
-                      <a
-                        href={ev.flyerUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-3 py-1.5 border border-gray-300 rounded-lg text-[12px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap inline-block"
-                      >
-                        View Flyer
-                      </a>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      {ev.additionalInfoUrl ? (
-                        <a
-                          href={ev.additionalInfoUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-3 py-1.5 border border-gray-300 rounded-lg text-[12px] font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap inline-block"
+                items.map((ev) => {
+                  const title = ev.payload?.title ?? ev.event?.title ?? ev.eventName ?? "Untitled";
+                  const organizer = ev.account?.fullName ?? ev.firmName ?? "Unknown";
+                  const contact = ev.contactEmail ?? ev.account?.email ?? "—";
+                  const startAt = ev.payload?.startAt ?? ev.startDate ?? ev.event?.startAt;
+                  const endAt = ev.payload?.endAt ?? ev.endDate ?? ev.event?.endAt;
+                  const amount = ev.amount != null ? `₦${(ev.amount / 100).toLocaleString()}` : "—";
+
+                  return (
+                    <tr key={ev.id} className="border-b border-[#F3F4F6] last:border-0">
+                      <td className="px-5 py-3.5 text-[13px] text-gray-800 whitespace-nowrap">{title}</td>
+                      <td className="px-5 py-3.5 text-[13px] text-gray-500 whitespace-nowrap">{organizer}</td>
+                      <td className="px-5 py-3.5 text-[13px] text-gray-700 whitespace-nowrap">{contact}</td>
+                      <td className="px-5 py-3.5 text-[13px] text-gray-700 whitespace-nowrap">
+                        {startAt ? formatDate(startAt) : "—"}
+                      </td>
+                      <td className="px-5 py-3.5 text-[13px] text-gray-700 whitespace-nowrap">
+                        {endAt ? formatDate(endAt) : "—"}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <StatusBadge status={ev.status} />
+                      </td>
+                      <td className="px-5 py-3.5 text-[13px] text-gray-700 whitespace-nowrap">{amount}</td>
+                      <td className="px-5 py-3.5">
+                        <button
+                          onClick={() => router.push(`/admin/docket/${ev.id}`)}
+                          className={`px-4 py-1.5 rounded-lg text-[12.5px] font-medium whitespace-nowrap transition-colors ${
+                            ev.status === "new" || ev.status === "pending"
+                              ? "bg-blue-600 text-white hover:bg-blue-700"
+                              : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                          }`}
                         >
-                          View link
-                        </a>
-                      ) : (
-                        <span className="px-3 py-1.5 border border-gray-200 rounded-lg text-[12px] text-gray-400 whitespace-nowrap inline-block">
-                          No link
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-5 py-3.5 text-[13px] text-gray-700 whitespace-nowrap">
-                      {formatDate(ev.startDate)}
-                    </td>
-                    <td className="px-5 py-3.5 text-[13px] text-gray-700 whitespace-nowrap">
-                      {formatDate(ev.endDate)}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <StatusBadge status={ev.status} />
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <button
-                        onClick={() => router.push(`/admin/docket/${ev.id}`)}
-                        className={`px-4 py-1.5 rounded-lg text-[12.5px] font-medium whitespace-nowrap transition-colors ${
-                          ev.status === "Pending"
-                            ? "bg-blue-600 text-white hover:bg-blue-700"
-                            : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        {ev.status === "Pending" ? "Take Action" : "Event Details"}
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                          {ev.status === "new" || ev.status === "pending" ? "Take Action" : "View Details"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
