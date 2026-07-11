@@ -72,11 +72,18 @@ function PlatformAnnouncementsModal({ onClose }: { onClose: () => void }) {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [audience, setAudience] = useState<"all" | "lawyers" | "firms" | "clients">("all"); // ← New state
 
   async function handleCreate() {
-    await createAnnouncement.mutateAsync({ title, body, isActive: true });
+    await createAnnouncement.mutateAsync({ 
+      title, 
+      body, 
+      audience, // ← Use the selected audience
+      isActive: true 
+    });
     setTitle("");
     setBody("");
+    setAudience("all");
     setShowForm(false);
   }
 
@@ -114,6 +121,24 @@ function PlatformAnnouncementsModal({ onClose }: { onClose: () => void }) {
               rows={3}
               className="border border-gray-200 rounded-lg px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-gray-300 resize-none"
             />
+            
+            {/* ← New audience selector */}
+            <div>
+              <label className="block text-[12px] font-medium text-gray-700 mb-1.5">
+                Audience
+              </label>
+              <select
+                value={audience}
+                onChange={(e) => setAudience(e.target.value as typeof audience)}
+                className="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-gray-300"
+              >
+                <option value="all">All Users</option>
+                <option value="lawyers">Lawyers Only</option>
+                <option value="firms">Law Firms Only</option>
+                <option value="clients">Clients Only</option>
+              </select>
+            </div>
+
             <div className="flex gap-2">
               <button
                 onClick={handleCreate}
@@ -174,6 +199,12 @@ function PlatformAnnouncementsModal({ onClose }: { onClose: () => void }) {
                   </span>
                 </div>
                 <p className="text-[12px] text-gray-500">{a.body}</p>
+                {/* Optional: Show audience if available */}
+                {(a as any).audience && (
+                  <span className="text-[11px] text-gray-400 mt-1 inline-block">
+                    Audience: {(a as any).audience}
+                  </span>
+                )}
               </div>
             ))}
           </div>

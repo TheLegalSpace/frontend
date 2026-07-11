@@ -176,6 +176,8 @@ export interface Announcement {
   status: "draft" | "scheduled" | "sent";
   recipientCount?: number;
   sentAt?: string;
+  isActive: boolean;
+
   createdAt: string;
   updatedAt: string;
 }

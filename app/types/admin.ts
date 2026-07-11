@@ -419,7 +419,7 @@ export interface LegalNewsSurveyData {
 
 // ── Support Center ────────────────────────────────────────────────────────────
 
-export type TicketStatus = "Open" | "In Progress" | "Closed";
+export type TicketStatus = "open" | "in_progress" | "closed";
 
 export interface SupportStats {
   totalTickets: number;
@@ -429,8 +429,8 @@ export interface SupportStats {
 
 export interface SupportTicketListItem {
   id: string;
-  ticketRef: string;
-  userName: string;
+  ticketNumber: string;
+  name: string;
   subject: string;
   dateSubmitted: string;
   status: TicketStatus;

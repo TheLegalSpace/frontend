@@ -7,15 +7,15 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import StatusBadge from "../shared/StatusBadge";
 import { formatDateTime } from "../shared/format";
-import { useSupportTicket, useUpdateTicketStatus } from "@/hooks/useAdmin";
+import { useSupportTicket, useUpdateSupportTicketStatus } from "@/hooks/useAdmin";
 import { TicketStatus } from "@/app/types/admin";
 
-const STATUS_OPTIONS: TicketStatus[] = ["Open", "In Progress", "Closed"];
+const STATUS_OPTIONS: TicketStatus[] = ["open", "in_progress", "closed"];
 
 export default function TicketDetailPage({ ticketId }: { ticketId: string }) {
   const router = useRouter();
   const { data: ticket, isLoading } = useSupportTicket(ticketId);
-  const updateStatus = useUpdateTicketStatus();
+  const updateStatus = useUpdateSupportTicketStatus();
   const [draftStatus, setDraftStatus] = useState<TicketStatus | null>(null);
 
   if (isLoading || !ticket) {

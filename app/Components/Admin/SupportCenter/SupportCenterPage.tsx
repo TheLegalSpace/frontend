@@ -50,9 +50,18 @@ export default function SupportCenterPage() {
 
       <div className="px-6 md:px-8 py-6">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-          <StatCard label="Total Tickets" value={(stats?.totalTickets ?? 0).toLocaleString()} />
-          <StatCard label="Open Tickets" value={(stats?.openTickets ?? 0).toLocaleString()} />
-          <StatCard label="Closed Tickets" value={(stats?.closedTickets ?? 0).toLocaleString()} />
+          <StatCard
+            label="Total Tickets"
+            value={(stats?.totalTickets ?? 0).toLocaleString()}
+          />
+          <StatCard
+            label="Open Tickets"
+            value={(stats?.openTickets ?? 0).toLocaleString()}
+          />
+          <StatCard
+            label="Closed Tickets"
+            value={(stats?.closedTickets ?? 0).toLocaleString()}
+          />
         </div>
 
         <TableToolbar
@@ -88,13 +97,21 @@ export default function SupportCenterPage() {
           <table className="w-full text-left min-w-200">
             <thead>
               <tr className="bg-gray-50 border-b border-[#E5E7EB]">
-                {["Ticket ID", "User", "Subject", "Date Submitted", "Status", "Action"].map(
-                  (h) => (
-                    <th key={h} className="text-[12px] font-semibold text-gray-600 px-5 py-3 whitespace-nowrap">
-                      {h}
-                    </th>
-                  ),
-                )}
+                {[
+                  "Ticket ID",
+                  "User",
+                  "Subject",
+                  "Date Submitted",
+                  "Status",
+                  "Action",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="text-[12px] font-semibold text-gray-600 px-5 py-3 whitespace-nowrap"
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -107,20 +124,28 @@ export default function SupportCenterPage() {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center text-gray-400 text-[13px]">
+                  <td
+                    colSpan={6}
+                    className="py-16 text-center text-gray-400 text-[13px]"
+                  >
                     No tickets found.
                   </td>
                 </tr>
               ) : (
                 items.map((ticket) => (
-                  <tr key={ticket.id} className="border-b border-[#F3F4F6] last:border-0">
+                  <tr
+                    key={ticket.id}
+                    className="border-b border-[#F3F4F6] last:border-0"
+                  >
                     <td className="px-5 py-3.5 text-[13px] text-gray-800 whitespace-nowrap">
-                      {ticket.ticketRef}
+                      {ticket.ticketNumber}
                     </td>
                     <td className="px-5 py-3.5 text-[13px] text-gray-700 whitespace-nowrap">
-                      {ticket.userName}
+                      {ticket.name}
                     </td>
-                    <td className="px-5 py-3.5 text-[13px] text-gray-700">{ticket.subject}</td>
+                    <td className="px-5 py-3.5 text-[13px] text-gray-700">
+                      {ticket.subject}
+                    </td>
                     <td className="px-5 py-3.5 text-[13px] text-gray-700 whitespace-nowrap">
                       {formatDate(ticket.dateSubmitted)}
                     </td>
@@ -129,7 +154,9 @@ export default function SupportCenterPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       <button
-                        onClick={() => router.push(`/admin/support/${ticket.id}`)}
+                        onClick={() =>
+                          router.push(`/admin/support/${ticket.id}`)
+                        }
                         className="px-4 py-1.5 border border-gray-300 rounded-lg text-[12.5px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         View

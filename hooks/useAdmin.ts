@@ -418,6 +418,7 @@ export const useCreateAnnouncement = () => {
       audience: "all" | "lawyers" | "firms" | "clients";
       sendNow?: boolean;
       scheduledAt?: string;
+      isActive: boolean;
     }) => adminService.createAnnouncement(payload),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin", "announcements"] }),
