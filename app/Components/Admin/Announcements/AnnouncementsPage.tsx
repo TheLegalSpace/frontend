@@ -16,11 +16,19 @@ function EmailTemplatesModal({ onClose }: { onClose: () => void }) {
   const { data: templates, isLoading } = useEmailTemplates();
   return (
     <div className="fixed inset-0 z-1000000001 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
       <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-[16px] font-semibold text-gray-900">Email Templates</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700">
+          <h3 className="text-[16px] font-semibold text-gray-900">
+            Email Templates
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700"
+          >
             <X size={18} />
           </button>
         </div>
@@ -41,7 +49,9 @@ function EmailTemplatesModal({ onClose }: { onClose: () => void }) {
                 className="flex items-center justify-between border border-gray-200 rounded-lg px-4 py-3"
               >
                 <div>
-                  <p className="text-[13px] font-medium text-gray-900">{t.name}</p>
+                  <p className="text-[13px] font-medium text-gray-900">
+                    {t.name}
+                  </p>
                   <p className="text-[12px] text-gray-400">{t.subject}</p>
                 </div>
                 <span className="text-[11px] text-gray-400">
@@ -62,23 +72,36 @@ function PlatformAnnouncementsModal({ onClose }: { onClose: () => void }) {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [audience, setAudience] = useState<"all" | "lawyers" | "firms" | "clients">("all"); // ← New state
 
   async function handleCreate() {
-    await createAnnouncement.mutateAsync({ title, body, isActive: true });
+    await createAnnouncement.mutateAsync({ 
+      title, 
+      body, 
+      audience, // ← Use the selected audience
+      isActive: true 
+    });
     setTitle("");
     setBody("");
+    setAudience("all");
     setShowForm(false);
   }
 
   return (
     <div className="fixed inset-0 z-1000000001 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
       <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-[16px] font-semibold text-gray-900">
             Platform Announcements
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700"
+          >
             <X size={18} />
           </button>
         </div>
@@ -98,6 +121,24 @@ function PlatformAnnouncementsModal({ onClose }: { onClose: () => void }) {
               rows={3}
               className="border border-gray-200 rounded-lg px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-gray-300 resize-none"
             />
+            
+            {/* ← New audience selector */}
+            <div>
+              <label className="block text-[12px] font-medium text-gray-700 mb-1.5">
+                Audience
+              </label>
+              <select
+                value={audience}
+                onChange={(e) => setAudience(e.target.value as typeof audience)}
+                className="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-gray-300"
+              >
+                <option value="all">All Users</option>
+                <option value="lawyers">Lawyers Only</option>
+                <option value="firms">Law Firms Only</option>
+                <option value="clients">Clients Only</option>
+              </select>
+            </div>
+
             <div className="flex gap-2">
               <button
                 onClick={handleCreate}
@@ -139,9 +180,14 @@ function PlatformAnnouncementsModal({ onClose }: { onClose: () => void }) {
         ) : (
           <div className="flex flex-col gap-2">
             {announcements.map((a) => (
-              <div key={a.id} className="border border-gray-200 rounded-lg px-4 py-3">
+              <div
+                key={a.id}
+                className="border border-gray-200 rounded-lg px-4 py-3"
+              >
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-[13px] font-medium text-gray-900">{a.title}</p>
+                  <p className="text-[13px] font-medium text-gray-900">
+                    {a.title}
+                  </p>
                   <span
                     className={`text-[11px] px-2 py-0.5 rounded-full ${
                       a.isActive
@@ -153,6 +199,12 @@ function PlatformAnnouncementsModal({ onClose }: { onClose: () => void }) {
                   </span>
                 </div>
                 <p className="text-[12px] text-gray-500">{a.body}</p>
+                {/* Optional: Show audience if available */}
+                {(a as any).audience && (
+                  <span className="text-[11px] text-gray-400 mt-1 inline-block">
+                    Audience: {(a as any).audience}
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -212,9 +264,13 @@ export default function AnnouncementsPage() {
         </div>
       </div>
 
-      {showTemplates && <EmailTemplatesModal onClose={() => setShowTemplates(false)} />}
+      {showTemplates && (
+        <EmailTemplatesModal onClose={() => setShowTemplates(false)} />
+      )}
       {showAnnouncements && (
-        <PlatformAnnouncementsModal onClose={() => setShowAnnouncements(false)} />
+        <PlatformAnnouncementsModal
+          onClose={() => setShowAnnouncements(false)}
+        />
       )}
     </div>
   );

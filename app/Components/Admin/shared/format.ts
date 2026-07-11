@@ -1,12 +1,14 @@
 // app/Components/Admin/shared/format.ts
 
-export function formatNaira(amount: number): string {
-  if (amount >= 1_000_000) return `₦${(amount / 1_000_000).toFixed(1)}M`;
-  if (amount >= 1_000) return `₦${(amount / 1_000).toFixed(1)}K`;
-  return `₦${amount.toLocaleString()}`;
+export function formatNaira(amount: number | undefined): string {
+  const value = amount ?? 0;
+  if (value >= 1_000_000) return `₦${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `₦${(value / 1_000).toFixed(1)}K`;
+  return `₦${value.toLocaleString()}`;
 }
 
-export function formatNairaFull(amount: number): string {
+export function formatNairaFull(amount: number | undefined): string {
+  if (amount === undefined || amount === null) return "—";
   return `₦${amount.toLocaleString()}`;
 }
 

@@ -10,20 +10,25 @@ import StatusBadge from "../shared/StatusBadge";
 import TableToolbar from "../shared/TableToolbar";
 import TablePagination from "../shared/TablePagination";
 import EnquiryDetailModal from "./EnquiryDetailModal";
-import { useTlsServiceEnquiries, useTlsServiceStats } from "@/hooks/useAdmin";
+import { useServiceRequests, useTlsServiceStats } from "@/hooks/useAdmin";
 import { formatDate } from "../shared/format";
 
 const SERVICE_OPTIONS = [
-  { label: "Legal Website", value: "Build Your Legal Website" },
-  { label: "Appointment System", value: "Build Appointment System" },
-  { label: "Productivity Tools", value: "Build Custom Productivity Tools" },
+  { label: "Legal Website", value: "website" },
+  { label: "Appointment System", value: "appointment" },
+  { label: "Productivity Tools", value: "productivity" },
+  { label: "Event Promotion", value: "event_promotion" },
 ];
 
 const STATUS_OPTIONS = [
-  { label: "New", value: "New" },
-  { label: "In Progress", value: "In Progress" },
-  { label: "Closed", value: "Closed" },
-  { label: "Lead Lost", value: "Lead Lost" },
+  { label: "All Statuses", value: "" },
+  { label: "New", value: "new" },
+  { label: "Lead in Progress", value: "in_progress" },
+  { label: "Lead Lost", value: "lead_lost" },
+  { label: "Closed", value: "closed" },
+  { label: "Pending", value: "pending" },
+  { label: "Active", value: "active" },
+  { label: "Completed", value: "completed" },
 ];
 
 export default function AdminTLSServicesPage() {
@@ -34,12 +39,11 @@ export default function AdminTLSServicesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const { data: stats } = useTlsServiceStats();
-  const { data, isLoading } = useTlsServiceEnquiries({
+  const { data, isLoading } = useServiceRequests({
     page,
     limit: 8,
-    search,
-    type: serviceType,
-    status,
+    type: serviceType || undefined,
+    status: status || undefined,
   });
 
   const items = data?.items ?? [];
@@ -87,7 +91,7 @@ export default function AdminTLSServicesPage() {
         />
 
         <div className="border border-[#E5E7EB] rounded-xl overflow-x-auto">
-          <table className="w-full text-left min-w-[800px]">
+          <table className="w-full text-left min-w-200">
             <thead>
               <tr className="bg-gray-50 border-b border-[#E5E7EB]">
                 {["Name", "Email", "Requested Service", "Date Submitted", "Status", "Action"].map(
@@ -114,15 +118,21 @@ export default function AdminTLSServicesPage() {
                   </td>
                 </tr>
               ) : (
-                items.map((item) => (
-                  <tr key={item.id} className="border-b border-[#F3F4F6] last:border-0">
-                    <td className="px-5 py-3.5 text-[13px] text-gray-800 whitespace-nowrap">{item.name}</td>
-                    <td className="px-5 py-3.5 text-[13px] text-gray-500 whitespace-nowrap">{item.email}</td>
+                items.map((item) => {
+                  const name = item.contactName ?? item.account?.fullName ?? "-";
+                  const email = item.contactEmail ?? "-";
+                  const serviceLabel = SERVICE_OPTIONS.find((s) => s.value === item.type)?.label ?? item.type;
+                  const dateSubmitted = item.createdAt;
+
+                  return (
+                    <tr key={item.id} className="border-b border-[#F3F4F6] last:border-0">
+                    <td className="px-5 py-3.5 text-[13px] text-gray-800 whitespace-nowrap">{name}</td>
+                    <td className="px-5 py-3.5 text-[13px] text-gray-500 whitespace-nowrap">{email}</td>
                     <td className="px-5 py-3.5 text-[13px] text-gray-700 whitespace-nowrap">
-                      {item.requestedService}
+                      {serviceLabel}
                     </td>
                     <td className="px-5 py-3.5 text-[13px] text-gray-700 whitespace-nowrap">
-                      {formatDate(item.dateSubmitted)}
+                      {formatDate(dateSubmitted)}
                     </td>
                     <td className="px-5 py-3.5">
                       <StatusBadge status={item.status} />
@@ -136,7 +146,8 @@ export default function AdminTLSServicesPage() {
                       </button>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

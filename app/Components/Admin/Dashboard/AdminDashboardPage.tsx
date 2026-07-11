@@ -19,7 +19,60 @@ const QUICK_ACTIONS = [
 
 export default function AdminDashboardPage() {
   const { data, isLoading } = useAdminDashboard();
-  const stats = data?.stats;
+
+  // Normalize the dashboard response (API shape varies between services/* types)
+  const stats = {
+    totalRevenueKobo:
+      data?.totalRevenueKobo ?? data?.cards?.totalRevenueKobo ?? 0,
+    totalUsers: data?.totalUsers ?? data?.cards?.totalUsers ?? 0,
+    activeSubscribers:
+      data?.activeSubscribers ?? data?.cards?.activeSubscribers ?? 0,
+    newEnquiries:
+      data?.newEnquiriesThisWeek ??
+      (data as any)?.newEnquiries ??
+      data?.cards?.newEnquiriesThisWeek ??
+      0,
+    onTheDocket: data?.onTheDocket ?? data?.cards?.onTheDocket ?? 0,
+    // optionally expose growth fields as unknown for formatPercent fallbacks
+    totalRevenueGrowth: (data as any)?.totalRevenueGrowth ?? 0,
+    totalUsersGrowth: (data as any)?.totalUsersGrowth ?? 0,
+    activeSubscribersGrowth: (data as any)?.activeSubscribersGrowth ?? 0,
+    newEnquiriesGrowth: (data as any)?.newEnquiriesGrowth ?? 0,
+    onTheDocketGrowth: (data as any)?.onTheDocketGrowth ?? 0,
+  };
+
+  const recentActivities = (data?.recentActivities ?? []).map(
+    (a: any, i: number) => ({
+      id: a.id ?? `${a.kind ?? "activity"}-${i}`,
+      actorName: a.title ?? a.actorName ?? "",
+      description: a.description ?? "",
+      amount: a.amount,
+      createdAt: a.at ?? a.createdAt,
+    }),
+  );
+
+  const pendingTasks = data?.pendingTasks
+    ? [
+        {
+          id: "serviceEnquiries",
+          label: "Service Enquiries",
+          count: (data.pendingTasks as any).serviceEnquiries ?? 0,
+          href: "/admin/services",
+        },
+        {
+          id: "lawyerVerifications",
+          label: "Lawyer Verifications",
+          count: (data.pendingTasks as any).lawyerVerifications ?? 0,
+          href: "/admin/users",
+        },
+        {
+          id: "eventsNeedReview",
+          label: "Events Need Review",
+          count: (data.pendingTasks as any).eventsNeedReview ?? 0,
+          href: "/admin/docket",
+        },
+      ]
+    : [];
 
   return (
     <div className="min-h-screen bg-white">
@@ -37,32 +90,32 @@ export default function AdminDashboardPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 mb-6">
               <StatCard
                 label="Total Revenue"
-                value={formatNaira(stats?.totalRevenue ?? 0)}
-                sub={formatPercent(stats?.totalRevenueGrowth, "this month")}
+                value={formatNaira((stats.totalRevenueKobo ?? 0) / 100)}
+                sub={formatPercent(stats.totalRevenueGrowth, "this month")}
                 trend="up"
               />
               <StatCard
                 label="Total Users"
-                value={(stats?.totalUsers ?? 0).toLocaleString()}
-                sub={formatPercent(stats?.totalUsersGrowth, "this month")}
+                value={(stats.totalUsers ?? 0).toLocaleString()}
+                sub={formatPercent(stats.totalUsersGrowth, "this month")}
                 trend="up"
               />
               <StatCard
                 label="Active Subscribers"
-                value={(stats?.activeSubscribers ?? 0).toLocaleString()}
-                sub={formatPercent(stats?.activeSubscribersGrowth, "this month")}
+                value={(stats.activeSubscribers ?? 0).toLocaleString()}
+                sub={formatPercent(stats.activeSubscribersGrowth, "this month")}
                 trend="up"
               />
               <StatCard
                 label="New Enquiries"
-                value={(stats?.newEnquiries ?? 0).toLocaleString()}
-                sub={formatPercent(stats?.newEnquiriesGrowth, "this week")}
+                value={(stats.newEnquiries ?? 0).toLocaleString()}
+                sub={formatPercent(stats.newEnquiriesGrowth, "this week")}
                 trend="up"
               />
               <StatCard
                 label="On the Docket"
-                value={(stats?.onTheDocket ?? 0).toLocaleString()}
-                sub={formatPercent(stats?.onTheDocketGrowth, "this month")}
+                value={(stats.onTheDocket ?? 0).toLocaleString()}
+                sub={formatPercent(stats.onTheDocketGrowth, "this month")}
                 trend="down"
               />
             </div>
@@ -76,8 +129,8 @@ export default function AdminDashboardPage() {
                   </h2>
                 </div>
                 <div>
-                  {data?.recentActivities?.length ? (
-                    data.recentActivities.map((activity) => (
+                  {recentActivities.length ? (
+                    recentActivities.map((activity) => (
                       <div
                         key={activity.id}
                         className="px-5 py-4 border-b border-[#F3F4F6] last:border-0"
@@ -116,8 +169,8 @@ export default function AdminDashboardPage() {
                     </h2>
                   </div>
                   <div>
-                    {data?.pendingTasks?.length ? (
-                      data.pendingTasks.map((task) => (
+                    {pendingTasks.length ? (
+                      pendingTasks.map((task) => (
                         <div
                           key={task.id}
                           className="px-5 py-4 border-b border-[#F3F4F6] last:border-0"

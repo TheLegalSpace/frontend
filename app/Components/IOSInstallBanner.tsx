@@ -1,23 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { X, Share2 } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { X, Share2 } from "lucide-react";
 
 export function IOSInstallBanner() {
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    const bannerDismissed = localStorage.getItem('ios-pwa-banner-dismissed');
-    
+    const isStandalone = window.matchMedia(
+      "(display-mode: standalone)",
+    ).matches;
+    const bannerDismissed = localStorage.getItem("ios-pwa-banner-dismissed");
+
     if (isIOS && !isStandalone && !bannerDismissed) {
       setShowBanner(true);
     }
   }, []);
 
   const dismiss = () => {
-    localStorage.setItem('ios-pwa-banner-dismissed', 'true');
+    localStorage.setItem("ios-pwa-banner-dismissed", "true");
     setShowBanner(false);
   };
 
@@ -35,11 +37,16 @@ export function IOSInstallBanner() {
               Install The Legal Space on your iPhone for the best experience:
             </p>
             <ol className="text-xs text-gray-600 mt-1 space-y-1 list-decimal list-inside">
-              <li>Tap the Share button <Share2 className="inline w-3 h-3" /></li>
+              <li>
+                Tap the Share button <Share2 className="inline w-3 h-3" />
+              </li>
               <li>Scroll down and tap "Add to Home Screen"</li>
             </ol>
           </div>
-          <button onClick={dismiss} className="p-1 text-gray-400 hover:text-gray-600">
+          <button
+            onClick={dismiss}
+            className="p-1 text-gray-400 hover:text-gray-600"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
