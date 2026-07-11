@@ -87,8 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // routes (landing, /signin, /register, …) there is nothing to verify.
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
-    const onDashboard = window.location.pathname.startsWith("/dashboard");
-    return onDashboard && !!localStorage.getItem("accessToken");
+    const pathname = window.location.pathname;
+    const onProtectedRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
+    return onProtectedRoute && !!localStorage.getItem("accessToken");
   });
   const router = useRouter();
   const pathname = usePathname();
@@ -113,11 +114,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const isProtectedRoute = pathname?.startsWith("/dashboard") ?? false;
+    const isProtectedRoute =
+      (pathname?.startsWith("/dashboard") ?? false) ||
+      (pathname?.startsWith("/admin") ?? false);
     if (!isProtectedRoute) return; // public route — nothing else to check
 
     // No token on a protected route → isLoading already starts false (see
-    // initializer), so the dashboard guard can redirect right away.
+    // initializer), so the dashboard/admin guard can redirect right away.
     if (!token) return;
 
     let cancelled = false;

@@ -4,7 +4,8 @@
 
 import { useState } from "react";
 import { X, ImageIcon, Loader2 } from "lucide-react";
-import { useCreateEvent } from "@/hooks/useAdmin";
+import { useCreateEvent } from "@/hooks/useEvents";
+import { eventService } from "@/services/event.services";
 
 interface Props {
   onClose: () => void;
@@ -21,13 +22,20 @@ export default function AddEventModal({ onClose }: Props) {
   const isBusy = createEvent.isPending;
 
   async function handleSubmit() {
-    await createEvent.mutateAsync({
-      eventName,
-      flyer,
-      promotionStartDate: startDate,
-      promotionEndDate: endDate,
-      additionalLink: link || undefined,
+    const response = await createEvent.mutateAsync({
+      title: eventName,
+      description: link || eventName,
+      location: "TLS Admin",
+      startAt: `${startDate}T00:00:00Z`,
+      endAt: `${endDate}T23:59:59Z`,
+      status: "published",
+      registrationUrl: link || undefined,
     });
+
+    if (flyer && response?.data?.data?.id) {
+      await eventService.uploadCover(response.data.data.id, flyer);
+    }
+
     onClose();
   }
 
@@ -42,7 +50,11 @@ export default function AddEventModal({ onClose }: Props) {
           <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-700">
             Add Event
           </span>
-          <button onClick={onClose} disabled={isBusy} className="text-gray-400 hover:text-gray-700">
+          <button
+            onClick={onClose}
+            disabled={isBusy}
+            className="text-gray-400 hover:text-gray-700"
+          >
             <X size={18} />
           </button>
         </div>
@@ -52,7 +64,9 @@ export default function AddEventModal({ onClose }: Props) {
           Promotion Assets
         </p>
 
-        <label className="block text-[12px] text-gray-500 mb-1.5">Name of event</label>
+        <label className="block text-[12px] text-gray-500 mb-1.5">
+          Name of event
+        </label>
         <input
           value={eventName}
           onChange={(e) => setEventName(e.target.value)}
@@ -67,7 +81,9 @@ export default function AddEventModal({ onClose }: Props) {
               {flyer ? flyer.name : "Click to upload flyer"}
             </span>
             <br />
-            <span className="text-gray-400 text-[11px]">PNG, JPG (max. 800x400px)</span>
+            <span className="text-gray-400 text-[11px]">
+              PNG, JPG (max. 800x400px)
+            </span>
           </span>
           <input
             type="file"

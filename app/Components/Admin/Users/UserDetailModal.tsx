@@ -4,12 +4,24 @@
 "use client";
 
 import { useState } from "react";
-import { X, User, Mail, Phone, GraduationCap, MapPin, Eye, Loader2 } from "lucide-react";
-import { AdminUserDetail } from "@/app/types/admin";
-import { useAdminUserActions } from "@/hooks/useAdmin";
+import {
+  X,
+  User,
+  Mail,
+  Phone,
+  GraduationCap,
+  MapPin,
+  Eye,
+  Loader2,
+} from "lucide-react";
+import { AdminUserDetail, AccountListItem } from "@/app/types/admin";
+import {
+  useAdminUserActions,
+  useAdminVerificationDocuments,
+} from "@/hooks/useAdmin";
 
 interface Props {
-  user: AdminUserDetail;
+  user: AdminUserDetail | AccountListItem;
   onClose: () => void;
 }
 
@@ -33,17 +45,55 @@ function Field({
 
 export default function UserDetailModal({ user, onClose }: Props) {
   const { approve, reject, suspend, reactivate } = useAdminUserActions(user.id);
+  const docsQuery = useAdminVerificationDocuments(user.id);
   const [pending, setPending] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
 
-  const isLawyerOrFirm = user.userType === "Lawyer" || user.userType === "Law Firm";
+  const hasReason = reason.trim().length > 0;
+
+  const fullName =
+    "firstName" in user ? `${user.firstName} ${user.lastName}` : user.fullName;
+  const nameParts = fullName.split(" ");
+  const firstName = nameParts[0] ?? "";
+  const lastName = nameParts.slice(1).join(" ") || "";
+
+  const userType =
+    "userType" in user
+      ? user.userType
+      : user.role === "LAWYER"
+        ? "Lawyer"
+        : user.role === "FIRM"
+          ? "Law Firm"
+          : user.role === "USER"
+            ? "Client"
+            : "Client";
+
+  const normalizedStatus = user.status
+    .toString()
+    .toLowerCase()
+    .replace(/ /g, "_");
+
+  const isLawyerOrFirm = userType === "Lawyer" || userType === "Law Firm";
+  const isClientUser = userType === "Client";
+  const isActive = normalizedStatus === "active";
+  const isSuspended = normalizedStatus === "suspended";
+  const isUnderReview = normalizedStatus === "under_review";
+
+  const phone = "phone" in user ? user.phone : undefined;
+  const yearOfCall = "yearOfCall" in user ? user.yearOfCall : undefined;
+  const jurisdiction = "jurisdiction" in user ? user.jurisdiction : undefined;
 
   async function run(action: "approve" | "reject" | "suspend" | "reactivate") {
+    if (!hasReason) {
+      return;
+    }
+
     setPending(action);
     try {
-      if (action === "approve") await approve.mutateAsync();
-      if (action === "reject") await reject.mutateAsync(undefined);
-      if (action === "suspend") await suspend.mutateAsync(undefined);
-      if (action === "reactivate") await reactivate.mutateAsync();
+      if (action === "approve") await approve.mutateAsync(reason);
+      if (action === "reject") await reject.mutateAsync(reason);
+      if (action === "suspend") await suspend.mutateAsync(reason);
+      if (action === "reactivate") await reactivate.mutateAsync(reason);
       onClose();
     } finally {
       setPending(null);
@@ -61,7 +111,7 @@ export default function UserDetailModal({ user, onClose }: Props) {
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-6 z-1000000000 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-700">
-            {user.userType}
+            {userType}
           </span>
           <button
             onClick={onClose}
@@ -73,18 +123,18 @@ export default function UserDetailModal({ user, onClose }: Props) {
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-3">
-          <Field icon={User} value={user.firstName} />
-          <Field icon={User} value={user.lastName} />
+          <Field icon={User} value={firstName} />
+          <Field icon={User} value={lastName} />
         </div>
 
         <div className="mb-3">
           <Field icon={Mail} value={user.email} locked />
         </div>
 
-        {isLawyerOrFirm && (
+        {(isLawyerOrFirm || isClientUser) && (
           <>
             <div className="mb-1.5">
-              <Field icon={Phone} value={user.phone ?? "—"} />
+              <Field icon={Phone} value={phone ?? "—"} />
             </div>
             <p className="text-[11px] text-gray-400 mb-3">
               Your number will remain confidential and will only be shared if
@@ -92,78 +142,129 @@ export default function UserDetailModal({ user, onClose }: Props) {
             </p>
 
             <div className="grid grid-cols-2 gap-3 mb-3">
-              <Field icon={GraduationCap} value={user.yearOfCall ?? "—"} />
-              <Field icon={MapPin} value={user.jurisdiction ?? "—"} />
+              {isLawyerOrFirm ? (
+                <>
+                  <Field icon={GraduationCap} value={yearOfCall ?? "—"} />
+                  <Field icon={MapPin} value={jurisdiction ?? "—"} />
+                </>
+              ) : (
+                <div className="col-span-2">
+                  <Field icon={MapPin} value={user.fullName} />
+                </div>
+              )}
             </div>
 
-            {user.callToBarDocument && (
-              <div className="flex items-center justify-between border border-gray-200 rounded-lg px-3.5 py-2.5 mb-5">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="w-8 h-8 rounded bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                    PDF
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[13px] text-gray-800 truncate">
-                      {user.callToBarDocument.name}
-                    </p>
-                    <p className="text-[11px] text-gray-400">
-                      {user.callToBarDocument.sizeKb} KB
-                    </p>
+            {docsQuery.data?.items?.length ? (
+              <>
+                <div className="flex items-center justify-between border border-gray-200 rounded-lg px-3.5 py-2.5 mb-5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-8 h-8 rounded bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                      PDF
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[13px] text-gray-800 truncate">
+                        {docsQuery.data.items[0].docType === "call_to_bar_cert"
+                          ? "Call to Bar Certificate"
+                          : docsQuery.data.items[0].docType}
+                      </p>
+                      <p className="text-[11px] text-gray-400">
+                        {new Date(
+                          docsQuery.data.items[0].createdAt,
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
+                  <a
+                    href={docsQuery.data.items[0].url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-gray-400 hover:text-gray-700"
+                  >
+                    <Eye size={16} />
+                  </a>
                 </div>
-                <a
-                  href={user.callToBarDocument.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-gray-400 hover:text-gray-700"
-                >
-                  <Eye size={16} />
-                </a>
-              </div>
-            )}
+                <div className="mb-5 overflow-hidden rounded-2xl border border-gray-200">
+                  <iframe
+                    src={docsQuery.data.items[0].url}
+                    title="Verification document preview"
+                    className="w-full h-64"
+                  />
+                </div>
+              </>
+            ) : null}
           </>
         )}
 
         <div className={isLawyerOrFirm ? "" : "mt-5"}>
-          {user.status === "Under Review" && isLawyerOrFirm && (
+          <div className="mb-4">
+            <label
+              className="block text-[12px] font-semibold text-gray-700 mb-2"
+              htmlFor="admin-action-reason"
+            >
+              Action reason
+            </label>
+            <textarea
+              id="admin-action-reason"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              rows={4}
+              placeholder="Enter a reason for this action"
+              className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[13px] text-gray-700 placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-200 focus:outline-none focus:ring"
+            />
+            {!hasReason && (
+              <p className="mt-2 text-[12px] text-red-600">
+                A reason is required before taking any action.
+              </p>
+            )}
+          </div>
+
+          {isUnderReview && isLawyerOrFirm && (
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => run("approve")}
-                disabled={isBusy}
+                disabled={isBusy || !hasReason}
                 className="py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                {pending === "approve" && <Loader2 size={14} className="animate-spin" />}
+                {pending === "approve" && (
+                  <Loader2 size={14} className="animate-spin" />
+                )}
                 Approve Lawyer
               </button>
               <button
                 onClick={() => run("reject")}
-                disabled={isBusy}
+                disabled={isBusy || !hasReason}
                 className="py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[13px] font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                {pending === "reject" && <Loader2 size={14} className="animate-spin" />}
+                {pending === "reject" && (
+                  <Loader2 size={14} className="animate-spin" />
+                )}
                 Reject Lawyer
               </button>
             </div>
           )}
 
-          {user.status === "Active" && (
+          {isActive && (
             <button
               onClick={() => run("suspend")}
-              disabled={isBusy}
+              disabled={isBusy || !hasReason}
               className="w-full py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[13px] font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              {pending === "suspend" && <Loader2 size={14} className="animate-spin" />}
+              {pending === "suspend" && (
+                <Loader2 size={14} className="animate-spin" />
+              )}
               Suspend {isLawyerOrFirm ? "Lawyer" : "Client"}
             </button>
           )}
 
-          {user.status === "Suspended" && (
+          {isSuspended && (
             <button
               onClick={() => run("reactivate")}
-              disabled={isBusy}
+              disabled={isBusy || !hasReason}
               className="w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-[13px] font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              {pending === "reactivate" && <Loader2 size={14} className="animate-spin" />}
+              {pending === "reactivate" && (
+                <Loader2 size={14} className="animate-spin" />
+              )}
               Re-activate {isLawyerOrFirm ? "Lawyer" : "Client"}
             </button>
           )}

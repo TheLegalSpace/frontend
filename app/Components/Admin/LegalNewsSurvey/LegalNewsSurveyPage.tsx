@@ -1,11 +1,9 @@
 // app/Components/Admin/LegalNewsSurvey/LegalNewsSurveyPage.tsx
-// Figma source: Legal News Survey.png
 "use client";
 
 import { Loader2 } from "lucide-react";
 import AdminPageHeader from "../shared/AdminPageHeader";
 import StatCard from "../shared/StatCard";
-import { formatPercent } from "../shared/format";
 import { useLegalNewsSurvey } from "@/hooks/useAdmin";
 
 function DonutChart({
@@ -49,6 +47,35 @@ function DonutChart({
 export default function LegalNewsSurveyPage() {
   const { data, isLoading } = useLegalNewsSurvey();
 
+  const participationRate = data?.participationRate ?? 0;
+
+  // Transform feature requests to handle both 'label' and 'feature' fields
+  const featureRequests = data?.topFeatureRequests?.map((req: any) => ({
+    label: req.label || req.feature || 'Unknown',
+    votes: req.votes || 0,
+  })) || [];
+
+  // Transform breakdownByUserType to the format expected by the component
+  const byUserType = data?.breakdownByUserType ? [
+    { 
+      label: 'Lawyers', 
+      count: data.breakdownByUserType.lawyers?.count || 0, 
+      percent: data.breakdownByUserType.lawyers?.percentage || 0 
+    },
+    { 
+      label: 'Law Firms', 
+      count: data.breakdownByUserType.lawFirms?.count || 0, 
+      percent: data.breakdownByUserType.lawFirms?.percentage || 0 
+    },
+  ] : [];
+
+  // Transform responseDistribution to the format expected by the component
+  const distribution = data?.responseDistribution?.map((item: any) => ({
+    label: item.label || item.name || 'Unknown',
+    percent: item.percent || item.percentage || 0,
+    color: item.color || '#3B82F6', // Default blue color
+  })) || [];
+
   return (
     <div className="min-h-screen bg-white">
       <AdminPageHeader title="Legal News Survey" />
@@ -80,9 +107,8 @@ export default function LegalNewsSurveyPage() {
           />
           <StatCard
             label="Participation Rate"
-            value={`${data?.participationRate ?? 0}%`}
-            sub={formatPercent(data?.participationRateGrowth)}
-            trend="up"
+            value={`${participationRate}%`}
+            sub={data ? `${data.yesResponses + data.noResponses} total responses` : undefined}
           />
         </div>
 
@@ -98,7 +124,7 @@ export default function LegalNewsSurveyPage() {
                 Breakdown by User Type
               </h2>
               <div className="flex flex-col gap-3 mb-5">
-                {data?.byUserType?.map((row) => (
+                {byUserType.map((row) => (
                   <div key={row.label} className="flex items-center justify-between text-[13px]">
                     <span className="text-gray-500">{row.label}</span>
                     <span className="text-gray-900 font-medium">
@@ -112,7 +138,7 @@ export default function LegalNewsSurveyPage() {
                 Top Feature Requests
               </p>
               <div className="flex flex-col gap-3">
-                {data?.topFeatureRequests?.map((req) => (
+                {featureRequests.map((req) => (
                   <div key={req.label} className="flex items-center justify-between text-[13px]">
                     <span className="text-gray-600">{req.label}</span>
                     <span className="text-gray-900 font-medium">
@@ -128,9 +154,9 @@ export default function LegalNewsSurveyPage() {
                 Response Distribution
               </h2>
               <div className="flex flex-col items-center gap-5">
-                <DonutChart segments={data?.distribution ?? []} />
+                <DonutChart segments={distribution} />
                 <div className="flex flex-wrap items-center justify-center gap-4">
-                  {data?.distribution?.map((seg) => (
+                  {distribution.map((seg) => (
                     <div key={seg.label} className="flex items-center gap-1.5 text-[12px] text-gray-600">
                       <span
                         className="w-2.5 h-2.5 rounded-full"

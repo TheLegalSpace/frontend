@@ -2,22 +2,43 @@
 "use client";
 
 const STATUS_STYLES: Record<string, string> = {
-  Active: "bg-green-50 text-green-700",
-  Approved: "bg-green-50 text-green-700",
-  Closed: "bg-green-50 text-green-700",
-  "Under Review": "bg-amber-50 text-amber-700",
-  Pending: "bg-amber-50 text-amber-700",
-  "In Progress": "bg-amber-50 text-amber-700",
-  New: "bg-blue-50 text-blue-700",
-  Open: "bg-red-50 text-red-600",
-  Suspended: "bg-red-50 text-red-600",
-  Rejected: "bg-red-50 text-red-600",
-  Failed: "bg-red-50 text-red-600",
-  "Lead Lost": "bg-red-50 text-red-600",
+  active: "bg-green-50 text-green-700",
+  approved: "bg-green-50 text-green-700",
+  closed: "bg-green-50 text-green-700",
+  completed: "bg-green-50 text-green-700",
+  "under review": "bg-amber-50 text-amber-700",
+  pending: "bg-amber-50 text-amber-700",
+  "in progress": "bg-amber-50 text-amber-700",
+  in_progress: "bg-amber-50 text-amber-700",
+  new: "bg-blue-50 text-blue-700",
+  open: "bg-red-50 text-red-600",
+  suspended: "bg-red-50 text-red-600",
+  rejected: "bg-red-50 text-red-600",
+  failed: "bg-red-50 text-red-600",
+  "lead lost": "bg-red-50 text-red-600",
+  lead_lost: "bg-red-50 text-red-600",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  active: "Active",
+  approved: "Approved",
+  closed: "Closed",
+  completed: "Completed",
+  pending: "Pending",
+  new: "New",
+  open: "Open",
+  suspended: "Suspended",
+  rejected: "Rejected",
+  failed: "Failed",
+  in_progress: "In Progress",
+  lead_lost: "Lead Lost",
 };
 
 export default function StatusBadge({ status }: { status: string }) {
-  const style = STATUS_STYLES[status] ?? "bg-gray-100 text-gray-600";
+  const normalized = String(status).trim();
+  const lower = normalized.toLowerCase();
+  const style = STATUS_STYLES[normalized] ?? STATUS_STYLES[lower] ?? "bg-gray-100 text-gray-600";
+  const displayStatus = STATUS_LABELS[normalized] ?? STATUS_LABELS[lower] ?? normalized;
   const dotColor = style.includes("green")
     ? "bg-green-500"
     : style.includes("amber")
@@ -33,7 +54,7 @@ export default function StatusBadge({ status }: { status: string }) {
       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-medium ${style}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
-      {status}
+      {displayStatus}
     </span>
   );
 }
