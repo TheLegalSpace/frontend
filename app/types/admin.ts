@@ -174,7 +174,7 @@ export interface RevenueData {
 
 // ── On the Docket (Events) ───────────────────────────────────────────────────
 
-export type EventStatus = "Approved" | "Pending" | "Rejected";
+export type EventStatus = "Approved" | "pending" | "Rejected";
 
 export interface DocketStats {
   totalEvents: number;
