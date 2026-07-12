@@ -158,15 +158,18 @@ export interface RevenueStats {
 export interface MonthlyRevenueRow {
   month: string;
   subscriptionsKobo: number;
-  onTheDocketKobo: number;
+  docketKobo: number;
   totalKobo: number;
-  growth: number;
+  growthPct: number | null;
 }
 
 export interface RevenueData {
-  stats: RevenueStats;
-  monthly: MonthlyRevenueRow[];
-  pagination: Pagination;
+  totalRevenueKobo: number;
+  revenueThisMonthKobo: number;
+  subscriptionRevenueKobo: number;
+  onTheDocketRevenueKobo: number;
+  growthThisMonthPct: number | null;
+  breakdown: MonthlyRevenueRow[];
 }
 
 // ── On the Docket (Events) ───────────────────────────────────────────────────

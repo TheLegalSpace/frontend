@@ -83,14 +83,11 @@ export default function LawyerSignup() {
         }
 
         if (account.role === "LAWYER" || account.role === "FIRM") {
-          const type: AccountType =
-            account.role === "FIRM" ? "firm" : "lawyer";
+          const type: AccountType = account.role === "FIRM" ? "firm" : "lawyer";
           setAccountType(type);
 
           const hasProfile =
-            type === "lawyer"
-              ? !!account.lawyerProfile
-              : !!account.firmProfile;
+            type === "lawyer" ? !!account.lawyerProfile : !!account.firmProfile;
 
           if (hasProfile) {
             router.replace("/dashboard/feeds"); // fully onboarded, shouldn't be here
@@ -132,8 +129,8 @@ export default function LawyerSignup() {
       setStep("membership");
     } catch (err: unknown) {
       const message =
-        (err as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message ?? "Couldn't save your selection. Please try again.";
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Couldn't save your selection. Please try again.";
       showError(message);
     } finally {
       setIsLoading(false);
@@ -147,7 +144,8 @@ export default function LawyerSignup() {
   };
   // Derives visibility from prevStep itself, so a locked user resumed on
   // personal_info (whose filtered flow starts there) correctly gets no button.
-  const canGoBack = step !== "success" && prevStep(step, accountType, locked) !== null;
+  const canGoBack =
+    step !== "success" && prevStep(step, accountType, locked) !== null;
 
   // ─── Submit (last step, lawyers — with cert upload) ─────────────────────
   const handleFinish = async (file: File) => {
@@ -188,8 +186,8 @@ export default function LawyerSignup() {
       setStep("success");
     } catch (err: unknown) {
       const message =
-        (err as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message ?? "Setup failed. Please try again.";
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Setup failed. Please try again.";
       showError(message);
     } finally {
       setIsLoading(false);
@@ -223,8 +221,8 @@ export default function LawyerSignup() {
       setStep("success");
     } catch (err: unknown) {
       const message =
-        (err as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message ?? "Setup failed. Please try again.";
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Setup failed. Please try again.";
       showError(message);
     } finally {
       setIsLoading(false);
@@ -284,86 +282,92 @@ export default function LawyerSignup() {
 
       {/* Right panel */}
       <div className="flex-1 flex flex-col min-h-screen lg:min-h-0 overflow-y-auto">
-        {/* Top bar */}
-        <div className="flex items-center justify-between px-4 sm:px-8 py-5 shrink-0">
-          {canGoBack ? (
-            <button
-              onClick={handleBack}
-              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-700" />
-            </button>
-          ) : (
-            <div />
-          )}
-          {accountType && step !== "account_type" && (
-            <span className="px-3 py-1.5 bg-[#F9FAFB] border border-[#D1D5DB] text-[#060B13] text-[12px] font-medium rounded-full shadow-sm font-dmSans">
-              {accountType === "lawyer" ? "Lawyer" : "Law Firm"}
-            </span>
-          )}
-        </div>
-
         {/* Content */}
         <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 lg:px-14 py-8">
-          {step === "account_type" && (
-            <Step1AccountType onNext={handleAccountType} isLoading={isLoading} />
-          )}
+          <div className="w-full max-w-md">
+            {(canGoBack || (accountType && step !== "account_type")) && (
+              <div className="flex items-center justify-between mb-6 sm:mb-9">
+                {canGoBack ? (
+                  <button
+                    onClick={handleBack}
+                    className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                    aria-label="Go back"
+                  >
+                    <ArrowLeft className="w-5 h-5 text-gray-700" />
+                  </button>
+                ) : (
+                  <div />
+                )}
+                {accountType && step !== "account_type" && (
+                  <span className="px-3 py-1.5 bg-[#FFFFFF] border border-[#D1D5DB] text-[#060B13] text-[12px] font-medium rounded-full font-dmSans">
+                    {accountType === "lawyer" ? "Lawyer" : "Law Firm"}
+                  </span>
+                )}
+              </div>
+            )}
 
-          {step === "membership" && accountType && (
-            <StepMembership
-              accountType={accountType}
-              onCommunity={() => setStep("personal_info")}
-            />
-          )}
+            {step === "account_type" && (
+              <Step1AccountType
+                onNext={handleAccountType}
+                isLoading={isLoading}
+              />
+            )}
 
-          {step === "personal_info" && accountType && (
-            <StepPersonalInfo
-              accountType={accountType}
-              email={user?.email ?? ""}
-              isLoading={isLoading}
-              onNext={(data) => {
-                merge(data);
-                setStep("practice_areas");
-              }}
-            />
-          )}
+            {step === "membership" && accountType && (
+              <StepMembership
+                accountType={accountType}
+                onCommunity={() => setStep("personal_info")}
+              />
+            )}
 
-          {step === "practice_areas" && accountType && (
-            <StepPracticeAreas
-              accountType={accountType}
-              isSaving={isLoading}
-              onNext={(data) => {
-                merge(data);
-                setStep("fees");
-              }}
-            />
-          )}
+            {step === "personal_info" && accountType && (
+              <StepPersonalInfo
+                accountType={accountType}
+                email={user?.email ?? ""}
+                isLoading={isLoading}
+                onNext={(data) => {
+                  merge(data);
+                  setStep("practice_areas");
+                }}
+              />
+            )}
 
-          {step === "fees" && (
-            <StepProfessionalFees
-              practiceAreaIds={(formData.practiceAreaIds as string[]) ?? []}
-              isLoading={isLoading}
-              onNext={(fees) => {
-                merge({ fees });
-                if (accountType === "lawyer") {
-                  setStep("verification");
-                } else {
-                  // Firms: no cert upload — submit directly. Pass fees straight
-                  // through instead of relying on the just-merged state.
-                  handleFirmFinish(fees);
-                }
-              }}
-            />
-          )}
+            {step === "practice_areas" && accountType && (
+              <StepPracticeAreas
+                accountType={accountType}
+                isSaving={isLoading}
+                onNext={(data) => {
+                  merge(data);
+                  setStep("fees");
+                }}
+              />
+            )}
 
-          {step === "verification" && accountType === "lawyer" && (
-            <StepVerification
-              accountType={accountType}
-              onFinish={handleFinish}
-              isLoading={isLoading}
-            />
-          )}
+            {step === "fees" && (
+              <StepProfessionalFees
+                practiceAreaIds={(formData.practiceAreaIds as string[]) ?? []}
+                isLoading={isLoading}
+                onNext={(fees) => {
+                  merge({ fees });
+                  if (accountType === "lawyer") {
+                    setStep("verification");
+                  } else {
+                    // Firms: no cert upload — submit directly. Pass fees straight
+                    // through instead of relying on the just-merged state.
+                    handleFirmFinish(fees);
+                  }
+                }}
+              />
+            )}
+
+            {step === "verification" && accountType === "lawyer" && (
+              <StepVerification
+                accountType={accountType}
+                onFinish={handleFinish}
+                isLoading={isLoading}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

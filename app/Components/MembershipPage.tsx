@@ -639,7 +639,7 @@ function CommunityView({
               <span className="text-[13px] font-medium text-blue-700">Forever</span>
             </div>
             <div className="mb-1">
-              <span className="text-[32px] font-bold text-gray-900">₦Free</span>
+              <span className="text-[32px] font-bold text-gray-900">₦ Free</span>
             </div>
             <p className="text-[13px] text-gray-500 mb-5">
               Establish your presence on The Legal Space.

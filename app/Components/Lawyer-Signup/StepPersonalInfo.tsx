@@ -12,33 +12,45 @@ interface Props {
   isLoading?: boolean;
 }
 
-const NIGERIAN_CITIES = [
-  "Lagos",
-  "Abuja",
-  "Port Harcourt",
-  "Kano",
-  "Ibadan",
+const NIGERIAN_STATES = [
+  "Abia",
+  "Adamawa",
+  "Akwa Ibom",
+  "Anambra",
+  "Bauchi",
+  "Bayelsa",
+  "Benue",
+  "Borno",
+  "Cross River",
+  "Delta",
+  "Ebonyi",
+  "Edo",
+  "Ekiti",
   "Enugu",
-  "Benin City",
+  "Federal Capital Territory (Abuja)",
+  "Gombe",
+  "Imo",
+  "Jigawa",
   "Kaduna",
-  "Uyo",
-  "Warri",
+  "Kano",
+  "Katsina",
+  "Kebbi",
+  "Kogi",
+  "Kwara",
+  "Lagos",
+  "Nasarawa",
+  "Niger",
+  "Ogun",
+  "Ondo",
+  "Osun",
+  "Oyo",
+  "Plateau",
+  "Rivers",
+  "Sokoto",
+  "Taraba",
+  "Yobe",
+  "Zamfara",
 ];
-
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-0">
-      {children}
-      {label && <span className="sr-only">{label}</span>}
-    </div>
-  );
-}
 
 export default function StepPersonalInfo({
   accountType,
@@ -57,8 +69,10 @@ export default function StepPersonalInfo({
   const [locationCity, setLocationCity] = useState("");
   const [error, setError] = useState("");
 
+  const boxCls =
+    "border border-gray-200 rounded-xl overflow-hidden bg-white";
   const inputCls =
-    "w-full px-3 py-3 border-b border-gray-200 text-[14px] outline-none focus:border-[#1A56DB] transition-colors bg-transparent placeholder:text-gray-400 font-dmSans";
+    "w-full px-3 py-3 text-[14px] outline-none focus:border-[#1A56DB] transition-colors bg-transparent placeholder:text-gray-400 font-dmSans";
 
   const handleNext = () => {
     setError("");
@@ -108,32 +122,31 @@ export default function StepPersonalInfo({
 
       {error && <p className="text-[12px] text-red-500 mb-4">{error}</p>}
 
-      <div className="flex flex-col gap-0 border border-gray-200 rounded-xl overflow-hidden mb-5">
+      <div className="flex flex-col gap-3 mb-5">
+        {/* Name / Firm name */}
         {isLawyer ? (
-          <>
-            <div className="grid grid-cols-2">
-              <div className="relative border-r border-gray-200">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                <input
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Enter firstname"
-                  className={`${inputCls} pl-9`}
-                />
-              </div>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                <input
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Enter lastname"
-                  className={`${inputCls} pl-9`}
-                />
-              </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className={`relative ${boxCls}`}>
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Enter firstname"
+                className={`${inputCls} pl-9`}
+              />
             </div>
-          </>
+            <div className={`relative ${boxCls}`}>
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Enter lastname"
+                className={`${inputCls} pl-9`}
+              />
+            </div>
+          </div>
         ) : (
-          <div className="relative">
+          <div className={`relative ${boxCls}`}>
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <input
               value={firmName}
@@ -145,7 +158,7 @@ export default function StepPersonalInfo({
         )}
 
         {/* Email (locked) */}
-        <div className="relative border-t border-gray-200">
+        <div className={`relative ${boxCls}`}>
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <input
             value={email}
@@ -156,51 +169,54 @@ export default function StepPersonalInfo({
         </div>
 
         {/* WhatsApp */}
-        <div className="relative border-t border-gray-200">
-          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="WhatsApp Number"
-            className={`${inputCls} pl-9`}
-          />
-        </div>
-        <p className="text-[11px] text-gray-400 px-3 pb-2">
-          Your number will remain confidential and will only be shared if you
-          choose to do so.
-        </p>
-
-        {/* Call to bar / Year established */}
-        <div className="relative border-t border-gray-200">
-          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          <input
-            type="number"
-            value={isLawyer ? callToBarYear : firmEstablishmentYear}
-            onChange={(e) =>
-              isLawyer
-                ? setCallToBarYear(e.target.value)
-                : setFirmEstablishmentYear(e.target.value)
-            }
-            placeholder={isLawyer ? "Call to bar year" : "Year Established"}
-            className={`${inputCls} pl-9`}
-          />
+        <div>
+          <div className={`relative ${boxCls}`}>
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="WhatsApp Number"
+              className={`${inputCls} pl-9`}
+            />
+          </div>
+          <p className="text-[11px] text-gray-400 pt-1.5 px-1">
+            Your number will remain confidential and will only be shared if
+            you choose to do so.
+          </p>
         </div>
 
-        {/* Location */}
-        <div className="relative border-t border-gray-200">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          <select
-            value={locationCity}
-            onChange={(e) => setLocationCity(e.target.value)}
-            className={`${inputCls} pl-9 pr-8 bg-white appearance-none`}
-          >
-            <option value="">Select location</option>
-            {NIGERIAN_CITIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+        {/* Year established/Call to bar + Location, side by side */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className={`relative ${boxCls}`}>
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              type="number"
+              value={isLawyer ? callToBarYear : firmEstablishmentYear}
+              onChange={(e) =>
+                isLawyer
+                  ? setCallToBarYear(e.target.value)
+                  : setFirmEstablishmentYear(e.target.value)
+              }
+              placeholder={isLawyer ? "Call to bar year" : "Year Established"}
+              className={`${inputCls} pl-9`}
+            />
+          </div>
+
+          <div className={`relative ${boxCls}`}>
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <select
+              value={locationCity}
+              onChange={(e) => setLocationCity(e.target.value)}
+              className={`${inputCls} pl-9 pr-8 bg-white appearance-none`}
+            >
+              <option value="">Select location</option>
+              {NIGERIAN_STATES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
