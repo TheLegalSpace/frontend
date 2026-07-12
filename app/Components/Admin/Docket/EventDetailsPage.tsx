@@ -42,7 +42,7 @@ export default function EventDetailsPage({ eventId }: { eventId: string }) {
           </h1>
         </div>
 
-        {event.status === "Pending" ? (
+        {event.status === "pending" ? (
           <div className="flex items-center gap-2">
             <button
               onClick={() => setStatus("Approved")}
