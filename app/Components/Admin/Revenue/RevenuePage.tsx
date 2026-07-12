@@ -6,18 +6,25 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import AdminPageHeader from "../shared/AdminPageHeader";
 import StatCard from "../shared/StatCard";
-import TablePagination from "../shared/TablePagination";
 import { formatNaira, formatNairaFull, formatPercent } from "../shared/format";
 import { useAdminRevenue } from "@/hooks/useAdmin";
 
 export default function RevenuePage() {
   const [page, setPage] = useState(1);
   const { data, isLoading } = useAdminRevenue({ page, limit: 8 });
-  const stats = data?.stats;
-  // Use kobo-based fields returned by the API and convert to naira for display
-  const totalRevenue = stats?.totalRevenueKobo ? stats.totalRevenueKobo / 100 : 0;
-  const revenueThisMonth = stats?.revenueThisMonthKobo ? stats.revenueThisMonthKobo / 100 : 0;
-  const rows = data?.monthly ?? [];
+
+  // The API returns these fields flat on `data`, not nested under `data.stats`.
+  const totalRevenue = (data?.totalRevenueKobo ?? 0) / 100;
+  const revenueThisMonth = (data?.revenueThisMonthKobo ?? 0) / 100;
+  const subscriptionRevenue = (data?.subscriptionRevenueKobo ?? 0) / 100;
+  const onTheDocketRevenue = (data?.onTheDocketRevenueKobo ?? 0) / 100;
+
+  // Only one growth figure is returned (for the current month) — there's no
+  // separate all-time growth number for Total Revenue.
+  const growthThisMonth = data?.growthThisMonthPct ?? null;
+
+  // The monthly table lives at `data.breakdown`, not `data.monthly`.
+  const rows = data?.breakdown ?? [];
 
   return (
     <div className="min-h-screen bg-white">
@@ -28,23 +35,28 @@ export default function RevenuePage() {
           <StatCard
             label="Total Revenue"
             value={formatNaira(totalRevenue)}
-            sub={formatPercent(stats?.totalRevenueGrowth)}
-            trend="up"
+            sub="All time"
           />
           <StatCard
             label="Revenue This Month"
             value={formatNaira(revenueThisMonth)}
-            sub={formatPercent(stats?.revenueThisMonthGrowth)}
-            trend="up"
+            sub={formatPercent(growthThisMonth ?? undefined)}
+            trend={
+              growthThisMonth === null
+                ? undefined
+                : growthThisMonth >= 0
+                  ? "up"
+                  : "down"
+            }
           />
           <StatCard
             label="Subscription Revenue"
-            value={formatNaira((stats?.subscriptionRevenueKobo ?? 0) / 100)}
+            value={formatNaira(subscriptionRevenue)}
             sub="All time"
           />
           <StatCard
             label="On The Docket Revenue"
-            value={formatNaira((stats?.onTheDocketRevenueKobo ?? 0) / 100)}
+            value={formatNaira(onTheDocketRevenue)}
             sub="All time"
           />
         </div>
@@ -86,38 +98,36 @@ export default function RevenuePage() {
                 rows.map((row, i) => (
                   <tr key={`${row.month}-${i}`} className="border-b border-[#F3F4F6] last:border-0">
                     <td className="px-5 py-3.5 text-[13px] text-gray-800">{row.month}</td>
-                        <td className="px-5 py-3.5 text-[13px] text-gray-700">
-                          {formatNairaFull((row.subscriptionsKobo ?? 0) / 100)}
-                        </td>
-                        <td className="px-5 py-3.5 text-[13px] text-gray-700">
-                          {formatNairaFull((row.onTheDocketKobo ?? 0) / 100)}
-                        </td>
-                        <td className="px-5 py-3.5 text-[13px] font-medium text-gray-900">
-                          {formatNairaFull((row.totalKobo ?? 0) / 100)}
-                        </td>
+                    <td className="px-5 py-3.5 text-[13px] text-gray-700">
+                      {formatNairaFull((row.subscriptionsKobo ?? 0) / 100)}
+                    </td>
+                    <td className="px-5 py-3.5 text-[13px] text-gray-700">
+                      {formatNairaFull((row.docketKobo ?? 0) / 100)}
+                    </td>
+                    <td className="px-5 py-3.5 text-[13px] font-medium text-gray-900">
+                      {formatNairaFull((row.totalKobo ?? 0) / 100)}
+                    </td>
                     <td className="px-5 py-3.5">
-                      <span
-                        className={`inline-flex px-2.5 py-1 rounded-full text-[12px] font-medium ${
-                          row.growth >= 0
-                            ? "bg-green-50 text-green-700"
-                            : "bg-red-50 text-red-600"
-                        }`}
-                      >
-                        {row.growth >= 0 ? "+" : ""}
-                        {row.growth}%
-                      </span>
+                      {row.growthPct === null || row.growthPct === undefined ? (
+                        <span className="text-[13px] text-gray-400">—</span>
+                      ) : (
+                        <span
+                          className={`inline-flex px-2.5 py-1 rounded-full text-[12px] font-medium ${
+                            row.growthPct >= 0
+                              ? "bg-green-50 text-green-700"
+                              : "bg-red-50 text-red-600"
+                          }`}
+                        >
+                          {row.growthPct >= 0 ? "+" : ""}
+                          {row.growthPct}%
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
-
-          <TablePagination
-            page={data?.pagination?.page ?? 1}
-            totalPages={data?.pagination?.totalPages ?? 1}
-            onChange={setPage}
-          />
         </div>
       </div>
     </div>
