@@ -5,6 +5,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from "react";
@@ -21,10 +22,9 @@ import {
   refreshSocketAuth,
   connectSocket,
 } from "@/services/socket.services";
-
-
-import { urlBase64ToUint8Array } from "../utils/web-push";
+import { urlBase64ToUint8Array } from "@/app/utils/web-push";
 import { notificationsService } from "@/services/notifications.services";
+
 export type AuthErrorCode =
   | "INVALID_CREDENTIALS"
   | "ACCOUNT_NOT_FOUND"
@@ -56,7 +56,7 @@ interface AuthContextType {
     avatarUrl?: string,
   ) => Promise<void>;
   logout: () => Promise<void>;
-  saveSession: (data: AuthResponse["data"]) => void; // ✅ exposed for register flow
+  saveSession: (data: AuthResponse["data"]) => void;
   refreshUser: () => Promise<AuthResponse["data"]["account"] | null>;
 }
 
@@ -91,11 +91,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     const pathname = window.location.pathname;
-    const onProtectedRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
+    const onProtectedRoute =
+      pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
     return onProtectedRoute && !!localStorage.getItem("accessToken");
   });
   const router = useRouter();
   const pathname = usePathname();
+  const pushSubscribed = useRef(false);
 
   // ── Session check ──────────────────────────────────────────────────────────
   // Hydrate the user from localStorage on any route if present. The network
@@ -162,61 +164,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener("auth:logout", handleAuthLogout);
     return () => window.removeEventListener("auth:logout", handleAuthLogout);
   }, [router]);
-// Auto-subscribe to push notifications after login
-useEffect(() => {
-  if (!user) return;
 
-  const autoSubscribe = async () => {
-    try {
-      // Check if browser supports push
-      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        return;
-      }
+  // ── Auto-subscribe to push notifications after login ────────────────────
+  // Runs once per session when a user is authenticated. Silently subscribes
+  // on protected routes (dashboard) if the user has already granted permission.
+  // Never blocks the login flow — all errors are swallowed.
+  useEffect(() => {
+    if (!user) return;
+    if (pushSubscribed.current) return;
+    if (typeof window === "undefined") return;
 
-      // Check if already subscribed
-      const registration = await navigator.serviceWorker.ready;
-      const existingSub = await registration.pushManager.getSubscription();
-      if (existingSub) {
-        // Already subscribed, but we can sync it with backend if needed
-        return;
-      }
+    const isProtectedRoute =
+      (pathname?.startsWith("/dashboard") ?? false) ||
+      (pathname?.startsWith("/admin") ?? false);
+    if (!isProtectedRoute) return;
 
-      // Only ask for permission if not denied
-      if (Notification.permission === "denied") {
-        console.log("[Push] Permission denied, skipping auto-subscribe.");
-        return;
-      }
+    pushSubscribed.current = true;
 
-      // If default, request permission (user will see prompt)
-      if (Notification.permission === "default") {
-        const result = await Notification.requestPermission();
-        if (result !== "granted") {
-          console.log("[Push] Permission not granted, skipping.");
+    const autoSubscribe = async () => {
+      try {
+        if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
           return;
         }
+
+        const registration = await navigator.serviceWorker.ready;
+        const existingSub = await registration.pushManager.getSubscription();
+        if (existingSub) {
+          console.log("[push] already subscribed — skipping auto-subscribe");
+          return;
+        }
+
+        // Only auto-subscribe if the user has already granted permission.
+        // We don't want to show the permission prompt on every login.
+        if (Notification.permission !== "granted") return;
+
+        const sub = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "",
+          ),
+        });
+
+        const serializedSub = JSON.parse(JSON.stringify(sub));
+        await notificationsService.savePushSubscription(serializedSub);
+        console.log("[push] auto-subscribed after login");
+      } catch (err) {
+        // Silently fail — never break the user experience for push
+        console.warn("[push] auto-subscribe skipped:", err);
       }
+    };
 
-      // Now subscribe
-      const sub = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-        ),
-      });
+    autoSubscribe();
+  }, [user?.id, pathname]);
 
-      const serializedSub = JSON.parse(JSON.stringify(sub));
-      await notificationsService.savePushSubscription(
-        serializedSub,
-        "desktop" // you can detect device type if needed
-      );
-      console.log("[Push] Auto-subscribed successfully.");
-    } catch (error) {
-      console.error("[Push] Auto-subscribe failed:", error);
-    }
-  };
-
-  autoSubscribe();
-}, [user]);
   // ✅ Exposed so RegisterFlow can call it after OTP verify
   const saveSession = (data: AuthResponse["data"]) => {
     const { account, session } = data;
@@ -368,7 +368,9 @@ useEffect(() => {
     }
   };
 
-  const refreshUser = async (): Promise<AuthResponse["data"]["account"] | null> => {
+  const refreshUser = async (): Promise<
+    AuthResponse["data"]["account"] | null
+  > => {
     const token = localStorage.getItem("accessToken");
     if (!token) return null;
     try {

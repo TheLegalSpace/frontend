@@ -54,6 +54,9 @@ const pwaConfig = withPWA({
     document: "/offline",
     // image: "/offline-image.svg", // optional
   },
+  // Inject push event handlers into the generated service worker so that
+  // push notifications work when the PWA is installed (production builds).
+  customWorkerSrc: "public/sw-push-handler",
   // Customize the service worker
   workboxOptions: {
     // This will help with the "skipWaiting" behavior

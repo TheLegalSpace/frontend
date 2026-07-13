@@ -1,9 +1,10 @@
-// public/sw.js — Service Worker for The Legal Space
+// sw-push-handler.js
 //
-// ⚠️ This file is used in DEVELOPMENT mode (PWA plugin disabled).
-// In PRODUCTION, the @ducanh2912/next-pwa plugin generates its own SW and
-// the push event handlers from sw-push-handler.js are injected via the
-// customWorkerSrc option in next.config.ts.
+// Push event handlers injected into the production service worker generated
+// by @ducanh2912/next-pwa (via customWorkerSrc in next.config.ts).
+//
+// This handles incoming push notifications and notification clicks when
+// the PWA is installed and running as a standalone app.
 
 self.addEventListener("push", function (event) {
   if (!event.data) {
@@ -27,7 +28,6 @@ self.addEventListener("push", function (event) {
   };
 
   try {
-    // Try JSON (backend sends this)
     const data = event.data.json();
     title = data.title || title;
     options.body = data.body || options.body;
@@ -35,7 +35,6 @@ self.addEventListener("push", function (event) {
     options.data = data.data || {};
     options.tag = data.tag || options.tag;
   } catch (e) {
-    // Plain text (DevTools test, etc.)
     const text = event.data.text();
     options.body = text || options.body;
   }
