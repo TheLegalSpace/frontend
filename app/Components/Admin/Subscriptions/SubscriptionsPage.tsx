@@ -5,8 +5,11 @@ import { Check, Loader2 } from "lucide-react";
 import { useState } from "react";
 import AdminPageHeader from "../shared/AdminPageHeader";
 import StatCard from "../shared/StatCard";
-import { formatNaira, formatPercent } from "../shared/format";
-import { useAdminSubscriptions, useUpdateSubscriptionPlan } from "@/hooks/useAdmin";
+import { formatNaira } from "../shared/format";
+import {
+  useAdminSubscriptions,
+  useUpdateSubscriptionPlan,
+} from "@/hooks/useAdmin";
 import { SubscriptionPlan } from "@/app/types/admin";
 
 function ConfirmDialog({
@@ -27,8 +30,12 @@ function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
-        <h3 className="text-[16px] font-semibold text-gray-900 mb-2">{title}</h3>
-        <p className="text-[13px] text-gray-500 leading-relaxed mb-6">{description}</p>
+        <h3 className="text-[16px] font-semibold text-gray-900 mb-2">
+          {title}
+        </h3>
+        <p className="text-[13px] text-gray-500 leading-relaxed mb-6">
+          {description}
+        </p>
         <div className="flex gap-3 justify-end">
           <button
             onClick={onCancel}
@@ -39,7 +46,9 @@ function ConfirmDialog({
           <button
             onClick={onConfirm}
             className={`px-4 py-2 rounded-lg text-[13px] font-medium text-white transition ${
-              destructive ? "bg-red-500 hover:bg-red-600" : "bg-blue-600 hover:bg-blue-700"
+              destructive
+                ? "bg-red-500 hover:bg-red-600"
+                : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
             {confirmLabel}
@@ -63,13 +72,15 @@ function PlanCard({
     plan.forRole === "LAWYER"
       ? "lawyers"
       : plan.forRole === "FIRM"
-      ? "firms"
-      : "subscribers";
+        ? "firms"
+        : "subscribers";
 
   return (
     <div className="border border-blue-200 rounded-xl overflow-hidden flex-1 min-w-0">
       <div className="bg-blue-50 px-6 py-3.5 flex items-center justify-between">
-        <span className="text-[13px] font-medium text-blue-700">{billingLabel}</span>
+        <span className="text-[13px] font-medium text-blue-700">
+          {billingLabel}
+        </span>
       </div>
 
       <div className="p-6">
@@ -113,20 +124,23 @@ function PlanCard({
 export default function SubscriptionsPage() {
   const { data, isLoading } = useAdminSubscriptions();
   const updatePlan = useUpdateSubscriptionPlan();
-  const stats = data?.stats;
-  
+  const stats = data;
+
   // Safely access stats with fallbacks
   const monthlyRevenue = (stats?.monthlyRevenueKobo ?? 0) / 100;
   const annualRevenue = (stats?.allTimeRevenueKobo ?? 0) / 100;
   const churnRate = stats?.churnRate ?? 0;
-  
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(
+    null,
+  );
   const [name, setName] = useState("");
   const [priceNaira, setPriceNaira] = useState("");
   const [features, setFeatures] = useState("");
   const [isActive, setIsActive] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [pendingPayload, setPendingPayload] = useState<Partial<SubscriptionPlan> | null>(null);
+  const [pendingPayload, setPendingPayload] =
+    useState<Partial<SubscriptionPlan> | null>(null);
 
   const openEditModal = (plan: SubscriptionPlan) => {
     setSelectedPlan(plan);
@@ -144,10 +158,10 @@ export default function SubscriptionsPage() {
     setPendingPayload(null);
   };
 
-  const buildPayload = (): Omit<Partial<SubscriptionPlan>, 'isLoading'> => {
+  const buildPayload = (): Omit<Partial<SubscriptionPlan>, "isLoading"> => {
     if (!selectedPlan) return {};
 
-    const payload: Omit<Partial<SubscriptionPlan>, 'isLoading'> = {};
+    const payload: Omit<Partial<SubscriptionPlan>, "isLoading"> = {};
 
     if (name !== selectedPlan.name) payload.name = name;
 
@@ -180,7 +194,8 @@ export default function SubscriptionsPage() {
     }
 
     const priceChanged =
-      payload.priceKobo !== undefined && payload.priceKobo !== selectedPlan.priceKobo;
+      payload.priceKobo !== undefined &&
+      payload.priceKobo !== selectedPlan.priceKobo;
     if (priceChanged) {
       setPendingPayload(payload);
       setShowConfirm(true);
@@ -188,8 +203,8 @@ export default function SubscriptionsPage() {
     }
 
     updatePlan.mutate(
-      { planId: selectedPlan.id, payload }, 
-      { onSuccess: closeModal }
+      { planId: selectedPlan.id, payload },
+      { onSuccess: closeModal },
     );
   };
 
@@ -197,7 +212,7 @@ export default function SubscriptionsPage() {
     if (!selectedPlan || !pendingPayload) return;
     updatePlan.mutate(
       { planId: selectedPlan.id, payload: pendingPayload },
-      { onSuccess: closeModal }
+      { onSuccess: closeModal },
     );
   };
 
@@ -210,27 +225,13 @@ export default function SubscriptionsPage() {
           <StatCard
             label="Active Subscribers"
             value={(stats?.activeSubscribers ?? 0).toLocaleString()}
-            sub={stats?.activeSubscribersGrowth ? formatPercent(stats.activeSubscribersGrowth) : undefined}
-            trend={stats?.activeSubscribersGrowth && stats.activeSubscribersGrowth > 0 ? "up" : "down"}
           />
           <StatCard
             label="Monthly Revenue"
             value={formatNaira(monthlyRevenue)}
-            sub={stats?.monthlyRevenueGrowth ? formatPercent(stats.monthlyRevenueGrowth, "from last month") : undefined}
-            trend={stats?.monthlyRevenueGrowth && stats.monthlyRevenueGrowth > 0 ? "up" : "down"}
           />
-          <StatCard
-            label="Annual Revenue"
-            value={formatNaira(annualRevenue)}
-            sub={stats?.annualRevenueGrowth ? formatPercent(stats.annualRevenueGrowth, "from last year") : undefined}
-            trend={stats?.annualRevenueGrowth && stats.annualRevenueGrowth > 0 ? "up" : "down"}
-          />
-          <StatCard
-            label="Churn Rate"
-            value={`${churnRate}%`}
-            sub={stats?.churnRateChange ? formatPercent(stats.churnRateChange) : undefined}
-            trend={stats?.churnRateChange && stats.churnRateChange < 0 ? "down" : "up"}
-          />
+          <StatCard label="Annual Revenue" value={formatNaira(annualRevenue)} />
+          <StatCard label="Churn Rate" value={`${churnRate}%`} />
         </div>
 
         {isLoading ? (
@@ -256,7 +257,9 @@ export default function SubscriptionsPage() {
               >
                 ✕
               </button>
-              <h2 className="text-[20px] font-semibold text-gray-900 mb-4">Edit Plan</h2>
+              <h2 className="text-[20px] font-semibold text-gray-900 mb-4">
+                Edit Plan
+              </h2>
               <div className="grid gap-4">
                 <label className="block">
                   <span className="text-[13px] text-gray-500">Name</span>
@@ -285,7 +288,9 @@ export default function SubscriptionsPage() {
                     onChange={(e) => setFeatures(e.target.value)}
                     className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
                   />
-                  <p className="text-[11px] text-gray-400 mt-2">One feature per line.</p>
+                  <p className="text-[11px] text-gray-400 mt-2">
+                    One feature per line.
+                  </p>
                 </label>
                 <label className="flex items-center gap-3">
                   <input
@@ -294,7 +299,9 @@ export default function SubscriptionsPage() {
                     onChange={(e) => setIsActive(e.target.checked)}
                     className="h-4 w-4 text-blue-600 rounded border-gray-300"
                   />
-                  <span className="text-[13px] text-gray-700">Plan is active</span>
+                  <span className="text-[13px] text-gray-700">
+                    Plan is active
+                  </span>
                 </label>
               </div>
 
@@ -321,7 +328,9 @@ export default function SubscriptionsPage() {
           <ConfirmDialog
             title="Confirm price change"
             description="Changing the plan price will create a new Paystack plan under the hood. Existing subscribers will keep their current billing until they resubscribe."
-            confirmLabel={updatePlan.isPending ? "Saving…" : "Confirm price change"}
+            confirmLabel={
+              updatePlan.isPending ? "Saving…" : "Confirm price change"
+            }
             onConfirm={handleConfirmPriceChange}
             onCancel={() => setShowConfirm(false)}
             destructive

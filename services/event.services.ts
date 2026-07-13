@@ -10,7 +10,13 @@ export interface Event {
   startAt: string;
   endAt: string;
   registrationUrl: string;
-  status: "published" | "draft" | "cancelled";
+  status:
+    | "draft"
+    | "pending_payment"
+    | "pending_review"
+    | "published"
+    | "rejected"
+    | "past";
   createdByAdminId: string;
   createdAt: string;
   updatedAt: string;
@@ -36,7 +42,13 @@ export interface CreateEventPayload {
   location: string;
   startAt: string;
   endAt: string;
-  status: "published" | "draft" | "cancelled";
+  status:
+    | "draft"
+    | "pending_payment"
+    | "pending_review"
+    | "published"
+    | "rejected"
+    | "past";
   registrationUrl?: string | null;
 }
 

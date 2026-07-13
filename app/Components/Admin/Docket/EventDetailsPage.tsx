@@ -42,7 +42,8 @@ export default function EventDetailsPage({ eventId }: { eventId: string }) {
           </h1>
         </div>
 
-        {event.status === "pending" ? (
+        {event.event?.status === "pending_review" &&
+        event.status !== "pending_payment" ? (
           <div className="flex items-center gap-2">
             <button
               onClick={() => setStatus("Approved")}
@@ -60,7 +61,7 @@ export default function EventDetailsPage({ eventId }: { eventId: string }) {
             </button>
           </div>
         ) : (
-          <StatusBadge status={event.status} />
+          <StatusBadge status={event.event?.status ?? event.status} />
         )}
       </div>
 
@@ -111,7 +112,9 @@ export default function EventDetailsPage({ eventId }: { eventId: string }) {
               )}
               <Row
                 label="Status"
-                value={<StatusBadge status={event.status} />}
+                value={
+                  <StatusBadge status={event.event?.status ?? event.status} />
+                }
               />
             </dl>
           </div>
