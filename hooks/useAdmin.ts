@@ -142,6 +142,50 @@ export const useDocketEvents = (params?: {
   search?: string;
 }) => useDocket(params);
 
+// New — all events (any status, editorial + promotion), keyed by event.id.
+// Use this for the main Docket table so non-promotion events show up too.
+// GET /admin/docket (useDocket/useDocketEvents above) is promotion-only and
+// still used by anything keyed off serviceRequest.id.
+export const useAdminEvents = (params?: {
+  status?: string;
+  q?: string;
+  page?: number;
+  limit?: number;
+}) =>
+  useQuery({
+    queryKey: ["admin", "events", params],
+    queryFn: () => adminService.getEvents(params).then((r) => r.data.data),
+    staleTime: STALE,
+  });
+
+// PATCH /events/:id — direct event edit (title, dates, status, etc.).
+// Works for any event, including plain editorial ones with no serviceRequest.
+// Also used to reactivate an event by PATCHing status back to "published".
+export const useUpdateEvent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      eventId,
+      payload,
+    }: {
+      eventId: string;
+      payload: Partial<{
+        title: string;
+        description: string;
+        location: string;
+        startAt: string;
+        endAt: string;
+        registrationUrl: string;
+        status: "draft" | "published" | "past";
+      }>;
+    }) => adminService.updateEvent(eventId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "events"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "docket"] });
+    },
+  });
+};
+
 export const useAdminRevenue = (params?: {
   months?: number;
   page?: number;

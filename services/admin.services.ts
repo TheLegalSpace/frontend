@@ -90,6 +90,59 @@ export interface DocketListResponse {
   pagination: Pagination;
 }
 
+// ---- All-events list (GET /admin/events) ----
+// Unlike GET /admin/docket (promotion-only, keyed by serviceRequest.id), this
+// lists the Event table directly — every event, any status, keyed by
+// event.id. `serviceRequest` is present only when the event is a promotion
+// (organizer + payment live there); it's null/undefined for a plain
+// editorial event.
+export type AdminEventStatus =
+  | "draft"
+  | "pending_payment"
+  | "pending_review"
+  | "published"
+  | "rejected"
+  | "past";
+
+export interface AdminEventServiceRequest {
+  id: string;
+  paymentStatus: string;
+  amount: number; // kobo
+  contactName?: string;
+  contactEmail?: string;
+  payload?: {
+    payment?: {
+      reference?: string;
+      paidAt?: string;
+    };
+    [key: string]: any;
+  };
+  account?: {
+    id: string;
+    fullName: string;
+    role: string;
+  };
+}
+
+export interface AdminEventListItem {
+  id: string;
+  title: string;
+  status: AdminEventStatus;
+  coverUrl?: string;
+  startAt: string;
+  endAt: string;
+  registrationUrl?: string;
+  clickCount: number;
+  createdAt: string;
+  serviceRequest?: AdminEventServiceRequest | null;
+}
+
+export interface AdminEventsListResponse {
+  items: AdminEventListItem[];
+  stats: DocketStats; // same four cards as the docket endpoint, but counting all events
+  pagination: Pagination;
+}
+
 // TLS Services (service-requests)
 export interface ServiceRequestListItem {
   id: string;
@@ -244,9 +297,49 @@ export const adminService = {
   updatePlan: (planId: string, payload: Partial<SubscriptionPlan>) =>
     api.patch(`/admin/plans/${planId}`, payload),
 
-  // On the Docket (Events)
+  // On the Docket (Events) — promotion-only list, kept for existing consumers
+  // (detail page, approve/reject — all keyed by serviceRequest.id).
   getDocket: (params?: { page?: number; limit?: number; status?: string }) =>
     api.get<{ data: DocketListResponse }>("/admin/docket", { params }),
+
+  // All events (any status, editorial + promotion) — keyed by event.id.
+  // Used for the main Docket table so non-promotion events show up too.
+  getEvents: (params?: {
+    status?: string;
+    q?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    // Backend validates `status` against a fixed enum and 400s on status=""
+    // (Fastify treats an empty string as an invalid value, not "no filter").
+    // Same caution applied to `q`. Only send params that actually have a value.
+    const cleaned: Record<string, string | number> = {};
+    if (params?.status) cleaned.status = params.status;
+    if (params?.q) cleaned.q = params.q;
+    if (params?.page != null) cleaned.page = params.page;
+    if (params?.limit != null) cleaned.limit = params.limit;
+
+    return api.get<{ data: AdminEventsListResponse }>("/admin/events", {
+      params: cleaned,
+    });
+  },
+
+  // Direct event edit (admin) — PATCH /events/:id, note: different base path
+  // than /admin/events. Works for any event, including plain editorial ones
+  // that have no serviceRequest. Also used to reactivate an event by
+  // PATCHing status back to "published".
+  updateEvent: (
+    eventId: string,
+    payload: Partial<{
+      title: string;
+      description: string;
+      location: string;
+      startAt: string;
+      endAt: string;
+      registrationUrl: string;
+      status: "draft" | "published" | "past";
+    }>,
+  ) => api.patch(`/events/${eventId}`, payload),
 
   getDocketEvent: (eventId: string) =>
     api.get<{ data: DocketEventDetail }>(`/admin/docket/${eventId}`),
