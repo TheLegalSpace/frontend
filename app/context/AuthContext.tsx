@@ -22,6 +22,9 @@ import {
   connectSocket,
 } from "@/services/socket.services";
 
+
+import { urlBase64ToUint8Array } from "../utils/web-push";
+import { notificationsService } from "@/services/notifications.services";
 export type AuthErrorCode =
   | "INVALID_CREDENTIALS"
   | "ACCOUNT_NOT_FOUND"
@@ -159,7 +162,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener("auth:logout", handleAuthLogout);
     return () => window.removeEventListener("auth:logout", handleAuthLogout);
   }, [router]);
+// Auto-subscribe to push notifications after login
+useEffect(() => {
+  if (!user) return;
 
+  const autoSubscribe = async () => {
+    try {
+      // Check if browser supports push
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        return;
+      }
+
+      // Check if already subscribed
+      const registration = await navigator.serviceWorker.ready;
+      const existingSub = await registration.pushManager.getSubscription();
+      if (existingSub) {
+        // Already subscribed, but we can sync it with backend if needed
+        return;
+      }
+
+      // Only ask for permission if not denied
+      if (Notification.permission === "denied") {
+        console.log("[Push] Permission denied, skipping auto-subscribe.");
+        return;
+      }
+
+      // If default, request permission (user will see prompt)
+      if (Notification.permission === "default") {
+        const result = await Notification.requestPermission();
+        if (result !== "granted") {
+          console.log("[Push] Permission not granted, skipping.");
+          return;
+        }
+      }
+
+      // Now subscribe
+      const sub = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
+        ),
+      });
+
+      const serializedSub = JSON.parse(JSON.stringify(sub));
+      await notificationsService.savePushSubscription(
+        serializedSub,
+        "desktop" // you can detect device type if needed
+      );
+      console.log("[Push] Auto-subscribed successfully.");
+    } catch (error) {
+      console.error("[Push] Auto-subscribe failed:", error);
+    }
+  };
+
+  autoSubscribe();
+}, [user]);
   // ✅ Exposed so RegisterFlow can call it after OTP verify
   const saveSession = (data: AuthResponse["data"]) => {
     const { account, session } = data;
