@@ -7,6 +7,8 @@ import { Instrument_Serif } from "next/font/google";
 import { Providers } from "./providers";
 import Script from "next/script";
 
+
+import { ServiceWorkerRegistration } from "./Components/ServiceWorkerRegistration";
 // ✅ Metadata export - only non-viewport metadata
 export const metadata: Metadata = {
   title: {
@@ -76,7 +78,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>
-
+<ServiceWorkerRegistration />
         {/* ✅ Inside body, afterInteractive loads after page is ready */}
         <Script
           src="https://accounts.google.com/gsi/client"
