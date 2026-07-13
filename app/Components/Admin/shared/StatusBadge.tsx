@@ -17,6 +17,12 @@ const STATUS_STYLES: Record<string, string> = {
   failed: "bg-red-50 text-red-600",
   "lead lost": "bg-red-50 text-red-600",
   lead_lost: "bg-red-50 text-red-600",
+  // Event-specific statuses
+  draft: "bg-gray-50 text-gray-600",
+  pending_payment: "bg-amber-50 text-amber-700",
+  pending_review: "bg-blue-50 text-blue-700",
+  published: "bg-green-50 text-green-700",
+  past: "bg-gray-50 text-gray-500",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -32,13 +38,23 @@ const STATUS_LABELS: Record<string, string> = {
   failed: "Failed",
   in_progress: "In Progress",
   lead_lost: "Lead Lost",
+  // Event-specific labels
+  draft: "Draft",
+  pending_payment: "Pending Payment",
+  pending_review: "Pending Review",
+  published: "Published",
+  past: "Past",
 };
 
 export default function StatusBadge({ status }: { status: string }) {
   const normalized = String(status).trim();
   const lower = normalized.toLowerCase();
-  const style = STATUS_STYLES[normalized] ?? STATUS_STYLES[lower] ?? "bg-gray-100 text-gray-600";
-  const displayStatus = STATUS_LABELS[normalized] ?? STATUS_LABELS[lower] ?? normalized;
+  const style =
+    STATUS_STYLES[normalized] ??
+    STATUS_STYLES[lower] ??
+    "bg-gray-100 text-gray-600";
+  const displayStatus =
+    STATUS_LABELS[normalized] ?? STATUS_LABELS[lower] ?? normalized;
   const dotColor = style.includes("green")
     ? "bg-green-500"
     : style.includes("amber")
