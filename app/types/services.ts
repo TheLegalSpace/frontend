@@ -141,6 +141,9 @@ export interface EventPromotionResponseData {
     startAt: string;
     endAt: string;
   };
+  authorizationUrl: string;
+  reference: string;
+  accessCode: string;
 }
 
 export interface ServiceRequestListItem extends ServiceRequest {

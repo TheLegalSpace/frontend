@@ -85,7 +85,7 @@ export default function EventPromotionForm() {
 
     setLoading(true);
     try {
-      await submitEventPromotion({
+      const res = await submitEventPromotion({
         flyer,
         title: title.trim(),
         location: location || undefined,
@@ -98,14 +98,26 @@ export default function EventPromotionForm() {
         contactPhone: contactPhone || undefined,
         firmName: firmName || undefined,
       });
-      setSubmitted(true);
+
+      const authorizationUrl = res?.data?.authorizationUrl;
+
+      if (!authorizationUrl) {
+        setError("Payment could not be initialized. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Redirect to Paystack's hosted checkout page.
+      // Paystack will redirect back to your configured callback URL
+      // after payment, where you should verify the transaction
+      // (using the `reference`) and show the success state there.
+      window.location.href = authorizationUrl;
     } catch (err: any) {
       setError(
         err?.response?.data?.message ??
         err?.message ??
         "Something went wrong. Please try again."
       );
-    } finally {
       setLoading(false);
     }
   }
