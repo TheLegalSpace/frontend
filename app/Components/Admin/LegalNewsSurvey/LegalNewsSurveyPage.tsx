@@ -83,7 +83,7 @@ export default function LegalNewsSurveyPage() {
   // Transform responseDistribution to the format expected by the component
   const distribution =
     data?.responseDistribution?.map((item: any) => ({
-      label: item.label || item.name || "Unknown",
+      label: item.label || item.answer || "Unknown",
       percent: item.percent || item.percentage || 0,
       color: item.color || "#3B82F6", // Default blue color
     })) || [];

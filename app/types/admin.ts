@@ -139,8 +139,7 @@ export interface SubscriptionsStats {
   churnApproximate: boolean;
 }
 
-export interface SubscriptionsData {
-  stats: SubscriptionsStats;
+export interface SubscriptionsData extends SubscriptionsStats {
   plans: SubscriptionPlan[];
 }
 
@@ -174,7 +173,13 @@ export interface RevenueData {
 
 // ── On the Docket (Events) ───────────────────────────────────────────────────
 
-export type EventStatus = "Approved" | "pending" | "Rejected";
+export type EventStatus =
+  | "draft"
+  | "pending_payment"
+  | "pending_review"
+  | "published"
+  | "rejected"
+  | "past";
 
 export interface DocketStats {
   totalEvents: number;
@@ -411,14 +416,22 @@ export interface SurveyFeatureRequest {
 }
 
 export interface LegalNewsSurveyData {
+  question: string;
   totalResponses: number;
   yesResponses: number;
   noResponses: number;
   participationRate: number;
-  participationRateGrowth: number;
-  byUserType: { label: string; count: number; percent: number }[];
+  participationRateGrowth?: number;
+  breakdownByUserType: {
+    lawyers: { count: number; percentage: number };
+    lawFirms: { count: number; percentage: number };
+  };
   topFeatureRequests: SurveyFeatureRequest[];
-  distribution: { label: string; percent: number; color: string }[];
+  responseDistribution: {
+    answer: string;
+    count: number;
+    percentage: number;
+  }[];
 }
 
 // ── Support Center ────────────────────────────────────────────────────────────
