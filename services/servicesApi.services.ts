@@ -33,6 +33,19 @@ export async function submitEventPromotion(
   return res.data;
 }
 
+// Confirms an event-promotion payment against Paystack and returns the
+// updated ServiceRequest (paymentStatus: "paid", status: "active" on
+// success). Safe to call even if the webhook already processed the same
+// reference — activatePromotionFromCharge is idempotent on the backend.
+export async function verifyEventPromotionPayment(
+  reference: string
+): Promise<ApiEnvelope<ServiceRequest>> {
+  const res = await api.get("/services/event-promotion/verify", {
+    params: { reference },
+  });
+  return res.data;
+}
+
 export async function getMyServiceRequests(
   page = 1,
   limit = 20
