@@ -23,7 +23,7 @@ export default function HeroCTA() {
         backgroundRepeat: "no-repeat",
       }}
     >
-      <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-end min-h-[480px]">
+      <div className="max-w-360 mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-end min-h-120">
         {/* Left text */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}

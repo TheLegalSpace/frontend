@@ -23,7 +23,7 @@ export default function LawyerProfileView({ accountId, onBack }: Props) {
   return (
     <div className="w-full bg-white min-h-screen">
       {/* Breadcrumb header — Search Results › Lawyer Profile */}
-      <div className="h-[75px] flex items-center border-b border-[#E5E7EB] px-4">
+      <div className="h-18.75 flex items-center border-b border-[#E5E7EB] px-4">
         <nav className="flex items-center gap-1.5 text-[14px]">
           <button
             type="button"

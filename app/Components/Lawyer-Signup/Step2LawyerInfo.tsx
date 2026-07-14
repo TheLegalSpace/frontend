@@ -302,7 +302,7 @@ export default function Step2LawyerInfo({
               <label className="block text-[11px] text-gray-500 mb-1.5">
                 Primary Area <span className="text-red-400">*</span>
               </label>
-              <div className="min-h-[38px] px-2.5 py-1.5 border border-[#E5E7EB] rounded-lg bg-white flex items-center">
+              <div className="min-h-9.5 px-2.5 py-1.5 border border-[#E5E7EB] rounded-lg bg-white flex items-center">
                 {primaryId ? (
                   <button
                     onClick={() => handleAreaClick(primaryId)}
@@ -324,7 +324,7 @@ export default function Step2LawyerInfo({
                 Secondary Area{" "}
                 <span className="text-gray-300 text-[10px]">(optional)</span>
               </label>
-              <div className="min-h-[38px] px-2.5 py-1.5 border border-[#E5E7EB] rounded-lg bg-white flex items-center">
+              <div className="min-h-9.5 px-2.5 py-1.5 border border-[#E5E7EB] rounded-lg bg-white flex items-center">
                 {secondaryId ? (
                   <button
                     onClick={() => handleAreaClick(secondaryId)}

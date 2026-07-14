@@ -36,7 +36,7 @@ export default function FeedPage() {
     <main className="bg-white">
       {/* Tabs */}
       <div className="fixed bg-white w-full ">
-        <div className="flex gap-2 px-4 pt-4 pb-3  bg-white w-full h-[74px]">
+        <div className="flex gap-2 px-4 pt-4 pb-3  bg-white w-full h-18.5">
           {TABS.map((tab) => (
             <button
               key={tab}

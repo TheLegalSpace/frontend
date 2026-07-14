@@ -62,7 +62,7 @@ export default function StepVerification({ accountType, onFinish, isLoading }: P
           <div className="flex items-center justify-center gap-3">
             <FileText className="w-8 h-8 text-green-500" />
             <div className="text-left">
-              <p className="text-[13px] font-medium text-gray-700 truncate max-w-[180px]">{file.name}</p>
+              <p className="text-[13px] font-medium text-gray-700 truncate max-w-45">{file.name}</p>
               <p className="text-[11px] text-gray-400">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
             </div>
             <button

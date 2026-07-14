@@ -294,7 +294,7 @@ export default function RequestsPage() {
     <div className="min-h-screen bg-white">
       <div className="w-full px-4 py-6">
         {/* Page title */}
-        <h1 className="font-[Instrument_Serif] text-[22px] font-regulal text-gray-900 mb-[17px] font-[Instrument_Serif] ">
+        <h1 className="text-[22px] font-regulal text-gray-900 mb-4.25 font-[Instrument_Serif] ">
           Requests
         </h1>
         <span className="block h-px bg-[#E5E7EB] my-4 -mx-4" />

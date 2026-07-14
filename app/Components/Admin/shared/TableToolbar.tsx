@@ -20,7 +20,7 @@ function FilterDropdown({ label, value, options, onChange }: FilterDropdownProps
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="appearance-none bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-2 text-[13px] text-gray-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-gray-300 bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%239CA3AF%22><path d=%22M5.5 7.5l4.5 4.5 4.5-4.5%22 stroke=%22%239CA3AF%22 stroke-width=%221.5%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>')] bg-no-repeat bg-[right_0.6rem_center]"
+      className="appearance-none bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-2 text-[13px] text-gray-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-gray-300 bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%239CA3AF%22><path d=%22M5.5 7.5l4.5 4.5 4.5-4.5%22 stroke=%22%239CA3AF%22 stroke-width=%221.5%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>')] bg-no-repeat bg-position-[right_0.6rem_center]"
     >
       <option value="">{label}</option>
       {options.map((opt) => (

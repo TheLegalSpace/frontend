@@ -162,7 +162,7 @@ export default function EventPromotionForm() {
             className="w-full rounded-xl border border-gray-200 px-4 py-4 flex items-center gap-3 text-left hover:border-blue-300 transition"
           >
             <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
               style={{ background: "#eff6ff" }}
             >
               <svg

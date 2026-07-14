@@ -37,7 +37,7 @@ function ToastItem({
 
   return (
     <div
-      className={`relative flex items-start gap-3 px-4 py-3.5 rounded-2xl shadow-xl border text-[13px] font-medium min-w-[280px] max-w-sm overflow-hidden transition-all duration-500 ease-out ${
+      className={`relative flex items-start gap-3 px-4 py-3.5 rounded-2xl shadow-xl border text-[13px] font-medium min-w-70 max-w-sm overflow-hidden transition-all duration-500 ease-out ${
         toast.visible
           ? "opacity-100 translate-y-0 scale-100"
           : "opacity-0 -translate-y-3 scale-95"
@@ -56,7 +56,7 @@ function ToastItem({
 
       {/* Icon */}
       <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
           isSuccess ? "bg-green-50" : "bg-red-50"
         }`}
       >
@@ -80,14 +80,14 @@ function ToastItem({
       {/* Dismiss */}
       <button
         onClick={() => onDismiss(toast.id)}
-        className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors mt-0.5"
+        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors mt-0.5"
       >
         <X className="w-3 h-3 text-gray-400" />
       </button>
 
       {/* ✅ Progress bar */}
       <div
-        className={`absolute bottom-0 left-0 right-0 h-[2px] ${
+        className={`absolute bottom-0 left-0 right-0 h-0.5 ${
           isSuccess ? "bg-green-100" : "bg-red-100"
         }`}
       >
@@ -152,7 +152,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
       {/* Toast container */}
       {toasts.length > 0 && (
-        <div className="fixed top-5 right-5 z-[9999] flex flex-col gap-2.5 pointer-events-none">
+        <div className="fixed top-5 right-5 z-9999 flex flex-col gap-2.5 pointer-events-none">
           {toasts.map((toast) => (
             <div key={toast.id} className="pointer-events-auto">
               <ToastItem toast={toast} onDismiss={dismiss} />

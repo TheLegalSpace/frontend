@@ -216,7 +216,7 @@ function MessageBubble({ msg }: { msg: ResearchMessage }) {
               className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl mb-2 text-[12px] text-blue-700"
             >
               <span>📄</span>
-              <span className="truncate max-w-[200px]">{a.filename}</span>
+              <span className="truncate max-w-50">{a.filename}</span>
               <span className="text-blue-400 shrink-0">
                 {(a.sizeBytes / 1024).toFixed(0)} KB
               </span>

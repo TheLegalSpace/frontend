@@ -4,7 +4,7 @@ import { ReactNode } from "react";
 export function SectionBadge({ children }: { children: ReactNode }) {
   return (
     <span
-      className="inline-block text-[11px] font-medium text-white px-3 py-2 rounded-[4px] mb-4"
+      className="inline-block text-[11px] font-medium text-white px-3 py-2 rounded-sm mb-4"
       style={{ background: "#1A56DB" }}
     >
       {children}
