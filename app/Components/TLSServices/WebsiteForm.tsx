@@ -15,6 +15,7 @@ import {
 } from "./FormKit";
 import { submitServiceRequest } from "../../../services/servicesApi.services";
 import type { WebsitePayload } from "../../types/services";
+import { useAuth } from "@/app/context/AuthContext";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -33,6 +34,7 @@ export default function WebsiteForm() {
   const [need, setNeed] = useState<WebsitePayload["need"]>("new");
   const [hasWebsite, setHasWebsite] = useState<"yes" | "no">("yes");
   const [currentWebsiteUrl, setCurrentWebsiteUrl] = useState("");
+  const { user } = useAuth();
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -67,8 +69,8 @@ export default function WebsiteForm() {
     } catch (err: any) {
       setError(
         err?.response?.data?.message ??
-        err?.message ??
-        "Something went wrong. Please try again."
+          err?.message ??
+          "Something went wrong. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -88,16 +90,25 @@ export default function WebsiteForm() {
 
   return (
     <div className={geist.className}>
-
-      <form onSubmit={handleSubmit} className="px-6 py-6 flex flex-col max-w-full">
+      <form
+        onSubmit={handleSubmit}
+        className="px-6 py-6 flex flex-col max-w-full"
+      >
         <div>
           <SectionBadge>Contact Information</SectionBadge>
           <FieldRow>
             <div>
-              <FieldLabel>Law Firm Name</FieldLabel>
+              <FieldLabel>
+                {user?.role === "FIRM"
+                  ? "Your Firm's Name"
+                  : user?.role === "LAWYER"
+                    ? "Your Name"
+                    : "Name"}{" "}
+              </FieldLabel>
+
               <TextInput
                 placeholder="What is your firm's name? Leave blank if not."
-                value={firmName}
+                value={firmName }
                 onChange={(e) => setFirmName(e.target.value)}
               />
             </div>
@@ -143,7 +154,9 @@ export default function WebsiteForm() {
               <FieldLabel>What do you need?</FieldLabel>
               <Select
                 value={need}
-                onChange={(e) => setNeed(e.target.value as WebsitePayload["need"])}
+                onChange={(e) =>
+                  setNeed(e.target.value as WebsitePayload["need"])
+                }
               >
                 {NEED_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>

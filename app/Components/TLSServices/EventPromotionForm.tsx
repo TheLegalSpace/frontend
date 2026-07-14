@@ -82,6 +82,10 @@ export default function EventPromotionForm() {
       setError("End date must be on or after the start date.");
       return;
     }
+    if (!contactEmail.trim()) {
+      setError("Email address is required for payment confirmation.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -115,8 +119,8 @@ export default function EventPromotionForm() {
     } catch (err: any) {
       setError(
         err?.response?.data?.message ??
-        err?.message ??
-        "Something went wrong. Please try again."
+          err?.message ??
+          "Something went wrong. Please try again.",
       );
       setLoading(false);
     }
@@ -137,7 +141,10 @@ export default function EventPromotionForm() {
 
   return (
     <div className={geist.className}>
-      <form onSubmit={handleSubmit} className="px-6 py-6 flex flex-col max-w-full">
+      <form
+        onSubmit={handleSubmit}
+        className="px-6 py-6 flex flex-col max-w-full"
+      >
         <div>
           <SectionBadge>Promotion Assets</SectionBadge>
 
@@ -174,10 +181,15 @@ export default function EventPromotionForm() {
               </svg>
             </div>
             <div>
-              <p className="text-[13px] font-medium" style={{ color: "#2563eb" }}>
+              <p
+                className="text-[13px] font-medium"
+                style={{ color: "#2563eb" }}
+              >
                 {flyer ? flyer.name : "Click to upload flyer"}
               </p>
-              <p className="text-[11px] text-gray-400">PNG, JPG (max. 800x400px)</p>
+              <p className="text-[11px] text-gray-400">
+                PNG, JPG (max. 800x400px)
+              </p>
             </div>
           </button>
 
@@ -259,9 +271,15 @@ export default function EventPromotionForm() {
             </div>
           </div>
 
-          <FieldLabel>Where would you like your event to be promoted?</FieldLabel>
+          <FieldLabel>
+            Where would you like your event to be promoted?
+          </FieldLabel>
           <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
-            <Checkbox label="TLS Platform Listing (Included)" checked onChange={() => { }} />
+            <Checkbox
+              label="TLS Platform Listing (Included)"
+              checked
+              onChange={() => {}}
+            />
             <Checkbox
               label="Share on TLS Social Media (+₦5,000)"
               checked={shareOnSocial}
@@ -273,7 +291,7 @@ export default function EventPromotionForm() {
         <Divider />
 
         <div>
-          <SectionBadge>Contact Information (Optional)</SectionBadge>
+          <SectionBadge>Contact Information</SectionBadge>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <FieldLabel>Law Firm Name</FieldLabel>
@@ -295,9 +313,12 @@ export default function EventPromotionForm() {
           <div className="h-4" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <FieldLabel>Email Address</FieldLabel>
+              <FieldLabel>
+                Email Address <span className="text-red-500">*</span>
+              </FieldLabel>
               <TextInput
                 type="email"
+                required
                 placeholder="What is your email?"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
@@ -320,11 +341,19 @@ export default function EventPromotionForm() {
         <div>
           <SectionBadge>Payment Summary</SectionBadge>
           <div className="rounded-xl border border-gray-100 overflow-hidden">
-            <SummaryRow label="Promotion Period" value={`${pricing.days} Days`} />
-            <SummaryRow label="Promotion Fee" value={formatNaira(pricing.promotionFee)} />
+            <SummaryRow
+              label="Promotion Period"
+              value={`${pricing.days} Days`}
+            />
+            <SummaryRow
+              label="Promotion Fee"
+              value={formatNaira(pricing.promotionFee)}
+            />
             <SummaryRow
               label="Social Media Promotion"
-              value={shareOnSocial ? formatNaira(pricing.socialFee) : "Not Included"}
+              value={
+                shareOnSocial ? formatNaira(pricing.socialFee) : "Not Included"
+              }
             />
             <SummaryRow
               label="Total"
@@ -356,13 +385,18 @@ function SummaryRow({
 }) {
   return (
     <div
-      className={`flex items-center justify-between px-4 py-3 text-[13px] ${!last ? "border-b border-gray-100" : ""
-        } ${bold ? "bg-white" : "bg-white"}`}
+      className={`flex items-center justify-between px-4 py-3 text-[13px] ${
+        !last ? "border-b border-gray-100" : ""
+      } ${bold ? "bg-white" : "bg-white"}`}
     >
       <span className={bold ? "text-gray-900 font-medium" : "text-gray-400"}>
         {label}
       </span>
-      <span className={bold ? "text-gray-900 font-semibold" : "text-gray-900 font-medium"}>
+      <span
+        className={
+          bold ? "text-gray-900 font-semibold" : "text-gray-900 font-medium"
+        }
+      >
         {value}
       </span>
     </div>

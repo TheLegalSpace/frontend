@@ -1,16 +1,22 @@
-import { ApiEnvelope, EventPromotionFormValues, EventPromotionResponseData, ServiceRequest, ServiceRequestListResponse, ServiceRequestPayload } from "@/app/types/services";
+import {
+  ApiEnvelope,
+  EventPromotionFormValues,
+  EventPromotionResponseData,
+  ServiceRequest,
+  ServiceRequestListResponse,
+  ServiceRequestPayload,
+} from "@/app/types/services";
 import { api } from "./api";
 
- 
 export async function submitServiceRequest(
-  body: ServiceRequestPayload
+  body: ServiceRequestPayload,
 ): Promise<ApiEnvelope<ServiceRequest>> {
   const res = await api.post("/services/requests", body);
   return res.data;
 }
 
 export async function submitEventPromotion(
-  values: EventPromotionFormValues
+  values: EventPromotionFormValues,
 ): Promise<ApiEnvelope<EventPromotionResponseData>> {
   const fd = new FormData();
 
@@ -22,7 +28,7 @@ export async function submitEventPromotion(
   fd.append("links", values.links);
 
   if (values.contactName) fd.append("contactName", values.contactName);
-  if (values.contactEmail) fd.append("contactEmail", values.contactEmail);
+  fd.append("contactEmail", values.contactEmail ?? "");
   if (values.contactPhone) fd.append("contactPhone", values.contactPhone);
   if (values.firmName) fd.append("firmName", values.firmName);
   if (values.location) fd.append("address", values.location);
@@ -38,7 +44,7 @@ export async function submitEventPromotion(
 // success). Safe to call even if the webhook already processed the same
 // reference — activatePromotionFromCharge is idempotent on the backend.
 export async function verifyEventPromotionPayment(
-  reference: string
+  reference: string,
 ): Promise<ApiEnvelope<ServiceRequest>> {
   const res = await api.get("/services/event-promotion/verify", {
     params: { reference },
@@ -48,14 +54,14 @@ export async function verifyEventPromotionPayment(
 
 export async function getMyServiceRequests(
   page = 1,
-  limit = 20
+  limit = 20,
 ): Promise<ApiEnvelope<ServiceRequestListResponse>> {
   const res = await api.get("/services/me", { params: { page, limit } });
   return res.data;
 }
 
 export async function getServiceRequest(
-  id: string
+  id: string,
 ): Promise<ApiEnvelope<ServiceRequest>> {
   const res = await api.get(`/services/${id}`);
   return res.data;
@@ -64,7 +70,7 @@ export async function getServiceRequest(
 export function computeEventPromotionPricing(
   startAt: string,
   endAt: string,
-  shareOnSocial: boolean
+  shareOnSocial: boolean,
 ) {
   const DAILY_RATE = 1000;
   const SOCIAL_ADDON = 5000;
@@ -80,7 +86,7 @@ export function computeEventPromotionPricing(
   const diff = Math.floor(
     (Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()) -
       Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())) /
-      msPerDay
+      msPerDay,
   );
 
   const days = Math.max(diff + 1, 0);
