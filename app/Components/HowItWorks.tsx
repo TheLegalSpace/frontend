@@ -62,7 +62,7 @@ export default function HowItWorks() {
   };
   return (
     <section id="how-it-works" className="py-24 bg-white px-4 sm:px-8 lg:px-16">
-      <div className="max-w-[1440px] mx-auto" ref={ref}>
+      <div className="max-w-360 mx-auto" ref={ref}>
         {/* Tabs — centered */}
         <div className="flex items-center w-full justify-center">
           <div

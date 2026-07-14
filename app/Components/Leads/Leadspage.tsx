@@ -86,7 +86,7 @@ export default function LeadsPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className=" ">
-        <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937] ps-4 pt-6 pb-[14px]">
+        <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937] ps-4 pt-6 pb-3.5">
           Leads
         </h1>
         <div className="w-full h-px bg-[#E6EAED] my-4"></div>

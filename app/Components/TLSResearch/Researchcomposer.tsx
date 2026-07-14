@@ -60,7 +60,7 @@ export default function ResearchComposer({
       {pdf && (
         <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-xl w-fit text-[12px] text-blue-700">
           <span>📄</span>
-          <span className="max-w-[220px] truncate">{pdf.name}</span>
+          <span className="max-w-55 truncate">{pdf.name}</span>
           <span className="text-blue-400">
             {(pdf.size / 1024).toFixed(0)} KB
           </span>

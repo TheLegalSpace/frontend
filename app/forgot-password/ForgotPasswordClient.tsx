@@ -53,7 +53,7 @@ export default function ForgotPasswordClient() {
 
       {/* Card */}
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-[400px] bg-[#111111]/50 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-14">
+        <div className="w-full max-w-100 bg-[#111111]/50 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-14">
           {/* Back link */}
           <Link
             href="/signin"

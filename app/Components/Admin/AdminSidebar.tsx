@@ -136,7 +136,7 @@ export default function AdminSidebar() {
     <aside className="w-60 h-screen fixed top-0 left-0 border-r border-[#E5E7EB] flex flex-col bg-white">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-[#E5E7EB] flex items-center justify-between">
-        <img src="/logo.png" alt="The Legal Space" className="w-full h-[34px] object-contain" />
+        <img src="/logo.png" alt="The Legal Space" className="w-full h-8.5 object-contain" />
         <button
           onClick={() => setMobileOpen(false)}
           className="md:hidden p-1 text-gray-400 hover:text-gray-600"
@@ -153,7 +153,7 @@ export default function AdminSidebar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-2.5 px-3 py-[10px] rounded-lg text-[14px] mb-1 transition-colors ${
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[14px] mb-1 transition-colors ${
                 isActive
                   ? "bg-blue-50 text-blue-700 font-medium"
                   : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"

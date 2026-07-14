@@ -314,7 +314,7 @@ function LawyerCard({
             </div>
 
             {account.bio && (
-              <p className="text-[12px] text-[#374151] mt-1 line-clamp-2 leading-[24px] font-['Geist'] font-light tracking-[0%]">
+              <p className="text-[12px] text-[#374151] mt-1 line-clamp-2 leading-6 font-['Geist'] font-light tracking-[0%]">
                 {account.bio}
               </p>
             )}

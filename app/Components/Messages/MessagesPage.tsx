@@ -299,8 +299,8 @@ export default function MessagesPage() {
             </span>
           </div>
 
-          <div className="hidden md:flex md:gap-2 pe-4 h-[74px] w-full md:items-center justify-between border-l-0 border-b border-[#E6EAED]">
-            <div className="flex items-center mx-[15px] gap-2 h-full">
+          <div className="hidden md:flex md:gap-2 pe-4 h-18.5 w-full md:items-center justify-between border-l-0 border-b border-[#E6EAED]">
+            <div className="flex items-center mx-3.75 gap-2 h-full">
               {activeConvo && (
                 <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
                   {getParticipantName(activeConvo)}

@@ -65,7 +65,7 @@ export default function LegalInsights() {
   };
   return (
     <section id="resources" className="py-24 bg-white px-4 sm:px-8 lg:px-16">
-      <div className="max-w-[1440px] mx-auto">
+      <div className="max-w-360 mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}

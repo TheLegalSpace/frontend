@@ -33,7 +33,7 @@ export default function Features() {
   return (
     <section
       id="about"
-      className="py-24   px-4 lg:px-12 xl:p max-w-[1440px] mx-auto "
+      className="py-24   px-4 lg:px-12 xl:p max-w-360 mx-auto "
     >
       {/* [2fr_3fr] gives image ~40% and text ~60%, matching the screenshot */}
       <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-12 lg:gap-16 items-center">

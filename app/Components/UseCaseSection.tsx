@@ -62,15 +62,15 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
     <div
       className={`
         bg-white
-        rounded-[32px]
+        rounded-4xl
         border border-[#E9EBF1]
         p-8
         transition-all
         duration-300 font-dmSans flex flex-col justify-between
         ${
           testimonial.featured
-            ? "min-h-[340px] shadow-[0_20px_80px_rgba(0,0,0,0.08)]"
-            : "min-h-[254px] shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
+            ? "min-h-85 shadow-[0_20px_80px_rgba(0,0,0,0.08)]"
+            : "min-h-63.5 shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
         }
       `}
     >
@@ -138,7 +138,7 @@ function TestimonialShowcase({
         className="
           hidden
           md:block
-          w-[286px]
+          w-71.5
           shrink-0
           translate-y-8
         "
@@ -152,7 +152,7 @@ function TestimonialShowcase({
           relative
           z-20
           w-full
-          max-w-[360px]
+          max-w-90
           mx-4
         "
       >
@@ -169,7 +169,7 @@ function TestimonialShowcase({
         className="
           hidden
           md:block
-          w-[286px]
+          w-71.5
           shrink-0
           translate-y-8
         "
@@ -210,7 +210,7 @@ export default function TestimonialsSection() {
         backgroundPosition: "center",
       }}
     >
-      <div className="max-w-[1440px] mx-auto">
+      <div className="max-w-360 mx-auto">
         {/* HEADER */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -302,7 +302,7 @@ export default function TestimonialsSection() {
               absolute
               inset-x-0
               bottom-0
-              h-[400px]
+              h-100
               // bg-linear-to-b
               // from-transparent
               // via-white/10
@@ -316,7 +316,7 @@ export default function TestimonialsSection() {
             className="
               absolute
               left-1/2
-              bottom-[90px]
+              bottom-22.5
               -translate-x-1/2
              "
           >

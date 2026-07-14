@@ -38,7 +38,7 @@ export default function InfoSection() {
 
   return (
     <section id="stats" className="py-20 bg-white border-b-0 border-[#E5E7EB] px-4 sm:px-8 lg:px-16">
-      <div className="max-w-[1440px] mx-auto">
+      <div className="max-w-360 mx-auto">
         {/* Label */}
         <motion.div
           ref={ref}

@@ -44,7 +44,7 @@ export default function StepIndicator({
                   <div className="flex items-center w-full">
                     {index > 0 && (
                       <div
-                        className={`flex-1 h-[2px] ${isCompleted ? "bg-[#1A56DB]" : "bg-gray-200"}`}
+                        className={`flex-1 h-0.5 ${isCompleted ? "bg-[#1A56DB]" : "bg-gray-200"}`}
                       />
                     )}
                     <div
@@ -69,7 +69,7 @@ export default function StepIndicator({
                     </div>
                     {index < STEPS.length - 1 && (
                       <div
-                        className={`flex-1 h-[2px] ${currentStep > stepNum ? "bg-[#1A56DB]" : "bg-gray-200"}`}
+                        className={`flex-1 h-0.5 ${currentStep > stepNum ? "bg-[#1A56DB]" : "bg-gray-200"}`}
                       />
                     )}
                   </div>
@@ -121,7 +121,7 @@ export default function StepIndicator({
                   </div>
                   {!isLast && (
                     <div
-                      className={`w-[2px] flex-1 min-h-[20px] mt-1 ${isCompleted ? "bg-[#1A56DB]" : "bg-gray-200"}`}
+                      className={`w-0.5 flex-1 min-h-5 mt-1 ${isCompleted ? "bg-[#1A56DB]" : "bg-gray-200"}`}
                     />
                   )}
                 </div>

@@ -29,7 +29,7 @@ export function IOSInstallBanner() {
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-lg border-t border-gray-200 p-4">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 bg-primary-100 rounded-full flex-shrink-0 flex items-center justify-center">
+          <div className="w-10 h-10 bg-primary-100 rounded-full shrink-0 flex items-center justify-center">
             <Share2 className="w-5 h-5 text-primary-600" />
           </div>
           <div className="flex-1">

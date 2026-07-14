@@ -87,7 +87,7 @@ export default function SettingsPage() {
     <div className="flex flex-col h-full bg-white">
       {/* Sticky header */}
       <div className="z-10 bg-white ">
-        <h1 className="fixed w-full top-0 bg-white border-b border-[#E5E7EB]  font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937] pb-6 pt-[30px] ps-4">
+        <h1 className="fixed w-full top-0 bg-white border-b border-[#E5E7EB]  font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937] pb-6 pt-7.5 ps-4">
           Settings
         </h1>
       </div>

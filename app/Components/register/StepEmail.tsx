@@ -178,7 +178,7 @@ export default function StepEmail({
             </div>
 
             {/* Form */}
-            <div className="w-full flex flex-col justify-center py-8 lg:py-0 max-w-[640px] mx-auto mt-30 lg:pr-10 lg:mt-0 lg:mx-0">
+            <div className="w-full flex flex-col justify-center py-8 lg:py-0 max-w-160 mx-auto mt-30 lg:pr-10 lg:mt-0 lg:mx-0">
               <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight">
                 Join as a legal professional
               </h1>
@@ -196,7 +196,7 @@ export default function StepEmail({
               <div className="w-full flex flex-col gap-4">
                 {/* Email */}
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400 pointer-events-none" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 pointer-events-none" />
                   <input
                     type="email"
                     placeholder="Enter your email"
@@ -210,7 +210,7 @@ export default function StepEmail({
 
                 {/* Password */}
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400 pointer-events-none" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 pointer-events-none" />
                   <input
                     type={showPw ? "text" : "password"}
                     placeholder="Enter your password"
@@ -272,7 +272,7 @@ export default function StepEmail({
 
                 {/* Confirm Password */}
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-gray-400 pointer-events-none" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 pointer-events-none" />
                   <input
                     type={showConfirm ? "text" : "password"}
                     value={confirmPassword}

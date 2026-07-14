@@ -88,7 +88,7 @@ export default function AnonymousSection({ isAnonymous: initialValue }: Props) {
               }`}
             >
               <span
-                className={`absolute top-[3px] w-[18px] h-[18px] bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                className={`absolute top-0.75 w-4.5 h-4.5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
                   isAnonymous ? "right-1" : "left-1"
                 }`}
               />
