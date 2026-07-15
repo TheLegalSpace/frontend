@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { BookOpen, Check } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BookOpen, Check, Loader2 } from "lucide-react";
+import { surveyService } from "../../services/survey.services";
 
 const PREVIEW_ARTICLES = [
   {
@@ -22,7 +23,13 @@ const PREVIEW_ARTICLES = [
   },
 ];
 
-const USE_OPTIONS = ["Not really", "Yes, I would use it"];
+// Fallback labels for known option values returned by the API.
+// Anything not in this map just gets capitalized.
+const OPTION_LABELS: Record<string, string> = {
+  yes: "Yes, I would use it",
+  no: "Not really",
+  maybe: "Maybe, depends on coverage",
+};
 
 const NEWS_TYPES = [
   "Supreme Court decisions",
@@ -37,9 +44,55 @@ const NEWS_TYPES = [
 
 export default function LegalNewsPage() {
   const [showPreview, setShowPreview] = useState(false);
+
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const [options, setOptions] = useState<string[]>([]);
   const [useChoice, setUseChoice] = useState<string | null>(null);
   const [newsChoices, setNewsChoices] = useState<string[]>([]);
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchSurvey() {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const res = await surveyService.getLegalNewsSurvey();
+        if (cancelled) return;
+
+        const { options: apiOptions, myResponse } = res.data.data;
+        setOptions(apiOptions);
+
+        if (myResponse) {
+          setUseChoice(myResponse.answer);
+          setNewsChoices(myResponse.featureVotes ?? []);
+          setSubmitted(true);
+        }
+      } catch (err: any) {
+        if (cancelled) return;
+        if (err?.response?.status === 403) {
+          setLoadError(
+            "This survey is only available to lawyer and firm accounts.",
+          );
+        } else {
+          setLoadError("Couldn't load the survey. Please try again.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchSurvey();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function toggleNews(item: string) {
     setNewsChoices((prev) =>
@@ -47,23 +100,40 @@ export default function LegalNewsPage() {
     );
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!useChoice) return;
-    setSubmitted(true);
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      await surveyService.submitLegalNewsResponse({
+        answer: useChoice,
+        featureVotes: newsChoices,
+      });
+      setSubmitted(true);
+    } catch (err: any) {
+      if (err?.response?.status === 403) {
+        setSubmitError(
+          "This survey is only available to lawyer and firm accounts.",
+        );
+      } else {
+        setSubmitError("Couldn't submit your response. Please try again.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <div className="min-h-screen bg-white font-['Geist']">
       <div className="max-w-3xl mx-auto px-6 py-0">
-
-       {/* Coming soon banner */}
-          <div className="flex items-center gap-2 mb-5">
-            <BookOpen size={14} className="text-amber-500" />
-            <span className="text-[11px] font-semibold tracking-widest text-amber-500 uppercase">
-              Coming Soon
-            </span>
-            <div className="flex-1 h-px bg-amber-100" />
-          </div>
+        {/* Coming soon banner */}
+        <div className="flex items-center gap-2 mb-5">
+          <BookOpen size={14} className="text-amber-500" />
+          <span className="text-[11px] font-semibold tracking-widest text-amber-500 uppercase">
+            Coming Soon
+          </span>
+          <div className="flex-1 h-px bg-amber-100" />
+        </div>
 
         {/* Intro copy */}
         <p className="text-[14px] text-gray-600 leading-relaxed mb-1">
@@ -76,20 +146,14 @@ export default function LegalNewsPage() {
 
         {/* Wrapper — relative so overlay can sit exactly over the card */}
         <div className="relative mb-6">
-
-          {/* Blur overlay — sibling to card, not inside it */}
           {!showPreview && (
-            <div
-              className="absolute inset-0 flex flex-col items-center justify-center backdrop-blur-xl bg-white/40 rounded-xl"
-            >
+            <div className="absolute inset-0 flex flex-col items-center justify-center backdrop-blur-xl bg-white/40 rounded-xl">
               <button
                 onClick={() => setShowPreview(true)}
                 className="bg-white border border-gray-200 shadow-lg rounded-2xl px-5 py-3 flex items-center gap-2 hover:bg-white transition"
               >
                 <BookOpen size={15} className="text-gray-500" />
-                <span className="text-[13px] font-medium text-gray-700">
-                  Preview
-                </span>
+                <span className="text-[13px] font-medium text-gray-700">Preview</span>
               </button>
               <p className="text-[12px] text-gray-500 mt-2">
                 Help shape what TLS News becomes…
@@ -97,7 +161,6 @@ export default function LegalNewsPage() {
             </div>
           )}
 
-          {/* Card — plain scrollable div, no relative/overflow conflict */}
           <div
             className="rounded-xl border border-gray-200 overflow-y-auto"
             style={{ height: "360px" }}
@@ -152,7 +215,16 @@ export default function LegalNewsPage() {
           </div>
         </div>
 
-        {submitted ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12 text-gray-400">
+            <Loader2 size={18} className="animate-spin mr-2" />
+            <span className="text-[13px]">Loading survey…</span>
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-[13px] text-red-500">{loadError}</p>
+          </div>
+        ) : submitted ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4">
               <Check size={22} className="text-blue-600" />
@@ -176,7 +248,7 @@ export default function LegalNewsPage() {
                 in determining which coverage areas to prioritise.
               </p>
               <div className="flex flex-wrap gap-2">
-                {USE_OPTIONS.map((opt) => (
+                {options.map((opt) => (
                   <button
                     key={opt}
                     onClick={() => setUseChoice(opt)}
@@ -186,7 +258,7 @@ export default function LegalNewsPage() {
                         : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-white"
                     }`}
                   >
-                    {opt}
+                    {OPTION_LABELS[opt] ?? opt.charAt(0).toUpperCase() + opt.slice(1)}
                   </button>
                 ))}
               </div>
@@ -218,19 +290,27 @@ export default function LegalNewsPage() {
               </div>
             </div>
 
+            {submitError && (
+              <p className="text-[12px] text-red-500 mb-3 text-right">{submitError}</p>
+            )}
+
             {/* Submit */}
             <div className="flex justify-end">
               <button
                 onClick={handleSubmit}
-                disabled={!useChoice}
+                disabled={!useChoice || submitting}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[13px] font-medium transition ${
-                  useChoice
+                  useChoice && !submitting
                     ? "bg-blue-700 text-white hover:bg-blue-800"
                     : "bg-gray-100 text-gray-400 cursor-not-allowed"
                 }`}
               >
-                <Check size={14} />
-                Submit preferences
+                {submitting ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Check size={14} />
+                )}
+                {submitting ? "Submitting…" : "Submit preferences"}
               </button>
             </div>
           </>
