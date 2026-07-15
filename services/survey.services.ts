@@ -39,8 +39,8 @@ export interface SubmitSurveyResponse {
 
 export const surveyService = {
   getLegalNewsSurvey: () =>
-    api.get<GetSurveyResponse>("/survey/legal-news"),
+    api.get<GetSurveyResponse>("/surveys/legal-news"),
 
   submitLegalNewsResponse: (payload: SubmitSurveyPayload) =>
-    api.post<SubmitSurveyResponse>("/survey/legal-news/responses", payload),
+    api.post<SubmitSurveyResponse>("/surveys/legal-news/responses", payload),
 };
