@@ -13,6 +13,16 @@ export const useEvents = (page = 1, limit = 20) =>
     staleTime: 1000 * 60 * 5,
   });
 
+// Returns all published events regardless of date — no startAt/endAt filter.
+// Used as a fallback while the deployed server still runs startAt >= now.
+export const usePublishedEvents = (page = 1, limit = 20) =>
+  useQuery({
+    queryKey: ["publishedEvents", page, limit],
+    queryFn: () =>
+      eventService.listPublished(page, limit).then((r) => r.data.data),
+    staleTime: 1000 * 60 * 5,
+  });
+
 export const useEvent = (id: string) =>
   useQuery({
     queryKey: ["events", id],

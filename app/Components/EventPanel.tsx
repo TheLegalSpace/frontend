@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEvents } from "@/hooks/useEvents";
+import { usePublishedEvents } from "@/hooks/useEvents";
 import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 
@@ -29,7 +29,7 @@ function formatTime(dateStr: string) {
 }
 
 export default function EventsPanel() {
-  const { data, isLoading } = useEvents();
+  const { data, isLoading } = usePublishedEvents();
   const events = data?.items || [];
   const [current, setCurrent] = useState(0);
   const { user } = useAuth();
@@ -61,7 +61,7 @@ export default function EventsPanel() {
           </h2>
           <p className="text-[12px] text-blue-100 font-[Geist]">
             Want to feature your event with The Legal Space? Request coverage,
-            promotion, or partnership through {" "}
+            promotion, or partnership through{" "}
             <Link
               href="dashboard/Tls-services"
               className="text-white underline"

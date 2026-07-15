@@ -60,6 +60,23 @@ export const eventService = {
   list: (page = 1, limit = 20) =>
     api.get<EventsResponse>("/events", { params: { page, limit } }),
 
+  // Tries admin endpoint first (no date filter, ADMIN role required).
+  // Falls back to public /events if caller lacks ADMIN role (403).
+  listPublished: async (page = 1, limit = 20) => {
+    try {
+      const res = await api.get<EventsResponse>("/admin/events", {
+        params: { status: "published", page, limit },
+      });
+      return res;
+    } catch (err: any) {
+      // 403 = not an admin — fall back to public upcoming endpoint
+      if (err?.response?.status === 403) {
+        return api.get<EventsResponse>("/events", { params: { page, limit } });
+      }
+      throw err;
+    }
+  },
+
   get: (id: string) =>
     api.get<{ error: boolean; message: string; data: Event }>(`/events/${id}`),
 
