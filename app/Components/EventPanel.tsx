@@ -29,10 +29,11 @@ function formatTime(dateStr: string) {
 }
 
 export default function EventsPanel() {
-  const { data, isLoading } = usePublishedEvents();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
+  const { data, isLoading } = usePublishedEvents(1, 20, isAdmin);
   const events = data?.items || [];
   const [current, setCurrent] = useState(0);
-  const { user } = useAuth();
 
   const nextSlide = () => {
     if (!events.length) return;

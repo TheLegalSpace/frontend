@@ -14,12 +14,13 @@ export const useEvents = (page = 1, limit = 20) =>
   });
 
 // Returns all published events regardless of date — no startAt/endAt filter.
-// Used as a fallback while the deployed server still runs startAt >= now.
-export const usePublishedEvents = (page = 1, limit = 20) =>
+// When isAdmin is true, uses the admin endpoint (returns ALL published events).
+// Otherwise, uses the public endpoint (safe for any role — avoids 403 errors).
+export const usePublishedEvents = (page = 1, limit = 20, isAdmin = false) =>
   useQuery({
-    queryKey: ["publishedEvents", page, limit],
+    queryKey: ["publishedEvents", page, limit, isAdmin],
     queryFn: () =>
-      eventService.listPublished(page, limit).then((r) => r.data.data),
+      eventService.listPublished(page, limit, isAdmin).then((r) => r.data.data),
     staleTime: 1000 * 60 * 5,
   });
 
