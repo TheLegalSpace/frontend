@@ -136,7 +136,7 @@ export default function Footer({ visible = true }: FooterProps) {
                 height={32}
                 className="h-8 w-auto mb-4"
               />
-              <p className="text-[14px] text-gray-400 leading-relaxed max-w-[200px] mb-2">
+              <p className="text-[14px] text-gray-400 leading-relaxed max-w-50 mb-2">
                 Connecting legal professionals, legal knowledge, and opportunity
                 through one trusted network.
               </p>
@@ -183,7 +183,7 @@ export default function Footer({ visible = true }: FooterProps) {
                 ].map((item) => (
                   <li key={item}>
                     <Link
-                      href="#"
+                      href={item === "Contact Support" ? "/contact" : "#"}
                       className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
                     >
                       {item}

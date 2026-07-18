@@ -1,19 +1,19 @@
 // app/actions/match-actions.ts
-'use server';
+"use server";
 
-import { sendNotificationToUser } from './notification-actions';
+import { sendNotificationToUser } from "./notification-actions";
 
 export async function notifyMatchFound(
   userId: string,
   lawyerName: string,
-  caseType: string
+  caseType: string,
 ) {
   return await sendNotificationToUser(userId, {
-    title: '🎯 Match Found!',
+    title: "🎯 Match Found!",
     body: `${lawyerName} is available for your ${caseType} case`,
-    icon: '/icons/icon-192.png',
+    icon: "/pwa-192x192.png",
     data: {
-      url: '/dashboard/matches',
+      url: "/dashboard/matches",
     },
   });
 }

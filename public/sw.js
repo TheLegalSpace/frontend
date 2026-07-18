@@ -1,11 +1,14 @@
+const PWA_ICON = "/pwa-192x192.png";
+const PWA_BADGE = "/pwa-64x64.png";
+
 self.addEventListener("push", function (event) {
   if (!event.data) {
     event.waitUntil(
       self.registration.showNotification("The Legal Space", {
         body: "You have a new update",
-        icon: "/icons/icon-192.png",
-        badge: "/icons/badge.png",
-      })
+        icon: PWA_ICON,
+        badge: PWA_BADGE,
+      }),
     );
     return;
   }
@@ -13,8 +16,8 @@ self.addEventListener("push", function (event) {
   let title = "The Legal Space";
   let options = {
     body: "You have a new update",
-    icon: "/icons/icon-192.png",
-    badge: "/icons/badge.png",
+    icon: PWA_ICON,
+    badge: PWA_BADGE,
     vibrate: [100, 50, 100],
     data: {},
     tag: "default",
@@ -22,7 +25,7 @@ self.addEventListener("push", function (event) {
   };
 
   try {
-    // Try JSON (backend sends this)
+    // Try JSON (backend sends this via webPush.ts buildPushPayload)
     const data = event.data.json();
     title = data.title || title;
     options.body = data.body || options.body;
@@ -45,7 +48,8 @@ self.addEventListener("notificationclick", function (event) {
   const origin = self.location.origin;
 
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true })
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
       .then(function (clientList) {
         for (let i = 0; i < clientList.length; i++) {
           const client = clientList[i];
@@ -56,6 +60,6 @@ self.addEventListener("notificationclick", function (event) {
         if (clients.openWindow) {
           return clients.openWindow(origin + url);
         }
-      })
+      }),
   );
 });
