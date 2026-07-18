@@ -25,10 +25,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/pwa-192x192.png", sizes: "192x192", type: "image/png" },
-      { url: "/pwa-512x512.png", sizes: "512x512", type: "image/png" },
+      { url: "/pwa-192x192.png?v=2", sizes: "192x192", type: "image/png" },
+      { url: "/pwa-512x512.png?v=2", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/pwa-192x192.png", sizes: "192x192" }],
+    apple: [{ url: "/pwa-192x192.png?v=2", sizes: "192x192" }],
     shortcut: [{ url: "/favicon.ico" }],
   },
 };

@@ -1,5 +1,6 @@
-const PWA_ICON = "/pwa-192x192.png";
-const PWA_BADGE = "/pwa-64x64.png";
+const SW_VERSION = "2";
+const PWA_ICON = "/pwa-192x192.png?v=" + SW_VERSION;
+const PWA_BADGE = "/pwa-64x64.png?v=" + SW_VERSION;
 
 self.addEventListener("push", function (event) {
   if (!event.data) {
