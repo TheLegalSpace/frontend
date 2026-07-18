@@ -7,13 +7,12 @@ import { Instrument_Serif } from "next/font/google";
 import { Providers } from "./providers";
 import Script from "next/script";
 
-
 import { ServiceWorkerRegistration } from "./Components/ServiceWorkerRegistration";
 // ✅ Metadata export - only non-viewport metadata
 export const metadata: Metadata = {
   title: {
     default: "The Legal Space",
-    template: "%s | The Legal Space"
+    template: "%s | The Legal Space",
   },
   description: "Connecting Nigerians to verified lawyers and legal firms",
   keywords: ["Legal", "Lawyers", "Nigeria", "Legal Services"],
@@ -22,18 +21,16 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "The Legal Space"
+    title: "The Legal Space",
   },
   icons: {
     icon: [
-      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }
+      { url: "/pwa-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/pwa-512x512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [
-      { url: "/icons/icon-192.png", sizes: "192x192" }
-    ],
-    shortcut: [{ url: "/icons/favicon.ico" }]
-  }
+    apple: [{ url: "/pwa-192x192.png", sizes: "192x192" }],
+    shortcut: [{ url: "/favicon.ico" }],
+  },
 };
 
 // ✅ Separate viewport export
@@ -78,7 +75,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>
-<ServiceWorkerRegistration />
+        <ServiceWorkerRegistration />
         {/* ✅ Inside body, afterInteractive loads after page is ready */}
         <Script
           src="https://accounts.google.com/gsi/client"

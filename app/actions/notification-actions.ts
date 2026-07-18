@@ -1,14 +1,14 @@
 // app/actions/notification-actions.ts
-'use server';
+"use server";
 
-import webpush from 'web-push';
-import type { PushSubscription } from 'web-push';
+import webpush from "web-push";
+import type { PushSubscription } from "web-push";
 
 // Configure VAPID
 webpush.setVapidDetails(
-  'mailto:notifications@thelegalspace.com',
+  "mailto:notifications@thelegalspace.com",
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
+  process.env.VAPID_PRIVATE_KEY!,
 );
 
 // In production, store this in your database
@@ -31,7 +31,7 @@ export async function subscribeUser(subscription: PushSubscription) {
     // Generate a unique ID for this subscription
     const subscriptionId = subscription.endpoint;
     subscriptions.set(subscriptionId, subscription);
-    
+
     // In production, save to database:
     // await db.notificationSubscriptions.create({
     //   data: {
@@ -40,11 +40,11 @@ export async function subscribeUser(subscription: PushSubscription) {
     //     userId: currentUserId, // Associate with user
     //   }
     // });
-    
+
     return { success: true };
   } catch (error) {
-    console.error('Error saving subscription:', error);
-    return { success: false, error: 'Failed to save subscription' };
+    console.error("Error saving subscription:", error);
+    return { success: false, error: "Failed to save subscription" };
   }
 }
 
@@ -54,22 +54,22 @@ export async function unsubscribeUser() {
     // This is a simplified version
     return { success: true };
   } catch (error) {
-    console.error('Error unsubscribing:', error);
-    return { success: false, error: 'Failed to unsubscribe' };
+    console.error("Error unsubscribing:", error);
+    return { success: false, error: "Failed to unsubscribe" };
   }
 }
 
 // Send notification to specific user
 export async function sendNotificationToUser(
   userId: string,
-  payload: NotificationPayload
+  payload: NotificationPayload,
 ) {
   try {
     // In production, get subscription from database by userId
     // const subscriptions = await db.notificationSubscriptions.findMany({
     //   where: { userId }
     // });
-    
+
     // For demo, we'll send to all subscriptions
     const results = [];
     for (const [, subscription] of subscriptions) {
@@ -79,23 +79,23 @@ export async function sendNotificationToUser(
           JSON.stringify({
             title: payload.title,
             body: payload.body,
-            icon: payload.icon || '/icons/icon-192.png',
-            badge: payload.badge || '/icons/badge.png',
+            icon: payload.icon || "/pwa-192x192.png",
+            badge: payload.badge || "/pwa-64x64.png",
             data: payload.data || {},
             vibrate: [100, 50, 100],
-          })
+          }),
         );
         results.push({ success: true });
       } catch (error) {
-        console.error('Error sending notification:', error);
+        console.error("Error sending notification:", error);
         results.push({ success: false, error: String(error) });
       }
     }
-    
+
     return { success: true, results };
   } catch (error) {
-    console.error('Error sending notifications:', error);
-    return { success: false, error: 'Failed to send notifications' };
+    console.error("Error sending notifications:", error);
+    return { success: false, error: "Failed to send notifications" };
   }
 }
 
@@ -106,7 +106,7 @@ export async function sendBulkNotification(payload: NotificationPayload) {
     // const subscriptions = await db.notificationSubscriptions.findMany({
     //   where: { active: true }
     // });
-    
+
     const results = [];
     for (const [, subscription] of subscriptions) {
       try {
@@ -115,21 +115,21 @@ export async function sendBulkNotification(payload: NotificationPayload) {
           JSON.stringify({
             title: payload.title,
             body: payload.body,
-            icon: payload.icon || '/icons/icon-192.png',
-            badge: payload.badge || '/icons/badge.png',
+            icon: payload.icon || "/pwa-192x192.png",
+            badge: payload.badge || "/pwa-64x64.png",
             data: payload.data || {},
-          })
+          }),
         );
         results.push({ success: true });
       } catch (error) {
-        console.error('Error sending notification:', error);
+        console.error("Error sending notification:", error);
         results.push({ success: false, error: String(error) });
       }
     }
-    
+
     return { success: true, results };
   } catch (error) {
-    console.error('Error sending bulk notifications:', error);
-    return { success: false, error: 'Failed to send notifications' };
+    console.error("Error sending bulk notifications:", error);
+    return { success: false, error: "Failed to send notifications" };
   }
 }
