@@ -21,7 +21,6 @@ self.addEventListener("push", function (event) {
     badge: PWA_BADGE,
     vibrate: [100, 50, 100],
     data: {},
-    tag: "default",
     requireInteraction: true,
   };
 
@@ -33,11 +32,15 @@ self.addEventListener("push", function (event) {
     options.icon = data.icon || options.icon;
     options.badge = data.badge || options.badge;
     options.data = data.data || {};
-    options.tag = data.tag || options.tag;
+    // Use a backend-supplied tag (for intentional grouping/replacement),
+    // otherwise generate a unique one so every notification is displayed.
+    options.tag = data.tag || "notif-" + Date.now();
   } catch (e) {
     // Plain text (DevTools test, etc.)
     const text = event.data.text();
     options.body = text || options.body;
+    // Unique fallback tag for plain-text pushes too
+    options.tag = "notif-" + Date.now();
   }
 
   event.waitUntil(self.registration.showNotification(title, options));
