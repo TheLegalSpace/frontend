@@ -2,6 +2,16 @@ const SW_VERSION = "2";
 const PWA_ICON = "/pwa-192x192.png?v=" + SW_VERSION;
 const PWA_BADGE = "/pwa-64x64.png?v=" + SW_VERSION;
 
+// Activate new service worker immediately so installed PWA users get updates
+// right after deployment, without having to close all windows first.
+self.addEventListener("install", () => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(clients.claim());
+});
+
 self.addEventListener("push", function (event) {
   if (!event.data) {
     event.waitUntil(
