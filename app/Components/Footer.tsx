@@ -189,7 +189,7 @@ export default function Footer({ visible = true }: FooterProps) {
                           : item === "Privacy Policy"
                             ? "/privacy-policy"
                             : item === "Terms of Services"
-                              ? "/terms-of-services"
+                              ? "/terms-of-use"
                               : item === "Membership Terms"
                                 ? "/membership-terms"
                                 : item === "Verification Policy"
