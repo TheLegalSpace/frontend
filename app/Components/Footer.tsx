@@ -183,7 +183,19 @@ export default function Footer({ visible = true }: FooterProps) {
                 ].map((item) => (
                   <li key={item.label}>
                     <Link
-                      href={item.href}
+                      href={
+                        item === "Contact Support"
+                          ? "/contact"
+                          : item === "Privacy Policy"
+                            ? "/privacy-policy"
+                            : item === "Terms of Services"
+                              ? "/terms-of-services"
+                              : item === "Membership Terms"
+                                ? "/membership-terms"
+                                : item === "Verification Policy"
+                                  ? "/verification-policy"
+                                  : "#"
+                      }
                       className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
                     >
                       {item.label}
