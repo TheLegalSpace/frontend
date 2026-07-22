@@ -175,24 +175,23 @@ export default function Footer({ visible = true }: FooterProps) {
               </h5>
               <ul className="space-y-3">
                 {[
-                  "Privacy Policy",
-                  "Terms of Services",
-                  "Membership Terms",
-                  "Verification Policy",
-                  "Contact Support",
+                  { label: "Privacy Policy",      href: "/privacy-policy" },
+                  { label: "Terms of Services",   href: "/terms" },
+                  { label: "Membership Terms",    href: "#" },
+                  { label: "Verification Policy", href: "#" },
+                  { label: "Contact Support",     href: "/contact" },
                 ].map((item) => (
-                  <li key={item}>
+                  <li key={item.label}>
                     <Link
-                      href={item === "Contact Support" ? "/contact" : "#"}
+                      href={item.href}
                       className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
                     >
-                      {item}
+                      {item.label}
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
-
             {/* Socials */}
             <div>
               <h5 className="text-[13px] font-semibold text-gray-900 mb-4">
