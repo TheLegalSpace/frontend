@@ -22,7 +22,6 @@ import {
   connectSocket,
 } from "@/services/socket.services";
 
-
 import { urlBase64ToUint8Array } from "../utils/web-push";
 import { notificationsService } from "@/services/notifications.services";
 export type AuthErrorCode =
@@ -91,7 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     const pathname = window.location.pathname;
-    const onProtectedRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
+    const onProtectedRoute =
+      pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
     return onProtectedRoute && !!localStorage.getItem("accessToken");
   });
   const router = useRouter();
@@ -162,61 +162,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener("auth:logout", handleAuthLogout);
     return () => window.removeEventListener("auth:logout", handleAuthLogout);
   }, [router]);
-// Auto-subscribe to push notifications after login
-useEffect(() => {
-  if (!user) return;
+  // Auto-subscribe to push notifications after login
+  useEffect(() => {
+    if (!user) return;
 
-  const autoSubscribe = async () => {
-    try {
-      // Check if browser supports push
-      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        return;
-      }
-
-      // Check if already subscribed
-      const registration = await navigator.serviceWorker.ready;
-      const existingSub = await registration.pushManager.getSubscription();
-      if (existingSub) {
-        // Already subscribed, but we can sync it with backend if needed
-        return;
-      }
-
-      // Only ask for permission if not denied
-      if (Notification.permission === "denied") {
-        console.log("[Push] Permission denied, skipping auto-subscribe.");
-        return;
-      }
-
-      // If default, request permission (user will see prompt)
-      if (Notification.permission === "default") {
-        const result = await Notification.requestPermission();
-        if (result !== "granted") {
-          console.log("[Push] Permission not granted, skipping.");
+    const autoSubscribe = async () => {
+      try {
+        // Check if browser supports push
+        if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
           return;
         }
+
+        // Check if already subscribed
+        const registration = await navigator.serviceWorker.ready;
+        const existingSub = await registration.pushManager.getSubscription();
+        if (existingSub) {
+          // Already subscribed, but we can sync it with backend if needed
+          return;
+        }
+
+        // Only ask for permission if not denied
+        if (Notification.permission === "denied") {
+          console.log("[Push] Permission denied, skipping auto-subscribe.");
+          return;
+        }
+
+        // If default, request permission (user will see prompt)
+        if (Notification.permission === "default") {
+          const result = await Notification.requestPermission();
+          if (result !== "granted") {
+            console.log("[Push] Permission not granted, skipping.");
+            return;
+          }
+        }
+
+        // Now subscribe
+        const sub = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+          ),
+        });
+
+        const serializedSub = JSON.parse(JSON.stringify(sub));
+        await notificationsService.savePushSubscription(
+          serializedSub,
+          "desktop", // you can detect device type if needed
+        );
+        console.log("[Push] Auto-subscribed successfully.");
+      } catch (error) {
+        console.error("[Push] Auto-subscribe failed:", error);
       }
+    };
 
-      // Now subscribe
-      const sub = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-        ),
-      });
-
-      const serializedSub = JSON.parse(JSON.stringify(sub));
-      await notificationsService.savePushSubscription(
-        serializedSub,
-        "desktop" // you can detect device type if needed
-      );
-      console.log("[Push] Auto-subscribed successfully.");
-    } catch (error) {
-      console.error("[Push] Auto-subscribe failed:", error);
-    }
-  };
-
-  autoSubscribe();
-}, [user]);
+    autoSubscribe();
+  }, [user]);
   // ✅ Exposed so RegisterFlow can call it after OTP verify
   const saveSession = (data: AuthResponse["data"]) => {
     const { account, session } = data;
@@ -280,6 +280,16 @@ useEffect(() => {
     }
   };
 
+  /** Read `?redirect=` from the current URL and return it if it's an internal path. */
+  function resolveRedirect(fallback: string): string {
+    if (typeof window === "undefined") return fallback;
+    const redirect = new URLSearchParams(window.location.search).get(
+      "redirect",
+    );
+    if (redirect && redirect.startsWith("/")) return redirect;
+    return fallback;
+  }
+
   const login = async (payload: LoginPayload): Promise<void> => {
     try {
       const response = await authService.login(payload);
@@ -289,8 +299,8 @@ useEffect(() => {
       const data = response.data.data;
       saveSession(data);
 
-      // ✅ Route based on profile completion — handles incomplete setup
-      const route = getPostAuthRoute(data.account);
+      // ✅ Route based on profile completion unless a ?redirect= param was given
+      const route = resolveRedirect(getPostAuthRoute(data.account));
       router.replace(route);
     } catch (err: unknown) {
       if (typeof err === "object" && err !== null && "code" in err) throw err;
@@ -314,8 +324,8 @@ useEffect(() => {
       if (googleAvatarUrl && !data.account.avatarUrl) {
         await syncGoogleAvatar(googleAvatarUrl);
       }
-      // ✅ Route based on profile completion
-      const route = getPostAuthRoute(data.account);
+      // ✅ Route based on profile completion unless a ?redirect= param was given
+      const route = resolveRedirect(getPostAuthRoute(data.account));
       router.replace(route);
     };
 
@@ -323,7 +333,7 @@ useEffect(() => {
       const response = await attemptLogin();
       // check if the user role is "PENDING_PROFESSIONAL"
       if (response.data.data.account.role === "PENDING_PROFESSIONAL") {
-        router.replace("/register/lawyer-setup");
+        router.replace(resolveRedirect("/register/lawyer-setup"));
         return;
       } else {
         await handlePostLogin(response.data.data, avatarUrl);
@@ -341,7 +351,7 @@ useEffect(() => {
           const response = await attemptLogin();
           // check if the user role is "PENDING_PROFESSIONAL"
           if (response.data.data.account.role === "PENDING_PROFESSIONAL") {
-            router.replace("/register/lawyer-setup");
+            router.replace(resolveRedirect("/register/lawyer-setup"));
             return;
           }
           await handlePostLogin(response.data.data, avatarUrl);
@@ -368,7 +378,9 @@ useEffect(() => {
     }
   };
 
-  const refreshUser = async (): Promise<AuthResponse["data"]["account"] | null> => {
+  const refreshUser = async (): Promise<
+    AuthResponse["data"]["account"] | null
+  > => {
     const token = localStorage.getItem("accessToken");
     if (!token) return null;
     try {

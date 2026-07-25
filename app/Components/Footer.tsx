@@ -60,7 +60,7 @@ export default function Footer({ visible = true }: FooterProps) {
       {visible && (
         <section
           id="faqs"
-          className="max-w-[1440px]  mx-auto py-24 bg-white px-4 sm:px-8 lg:px-16 xl:px-0 section-alignment"
+          className="max-w-360  mx-auto py-24 bg-white px-4 sm:px-8 lg:px-16 xl:px-0 section-alignment"
         >
           <p className="text-[12px] font-semibold tracking-[2px] uppercase text-[#1A56DB] ">
             SUPPORT
@@ -185,7 +185,7 @@ export default function Footer({ visible = true }: FooterProps) {
                     <Link
                       href={
                         item === "Contact Support"
-                          ? "/contact"
+                          ? "/support"
                           : item === "Privacy Policy"
                             ? "/privacy-policy"
                             : item === "Terms of Services"

@@ -428,7 +428,7 @@ export default function PrivacyPolicyPage() {
               thelegalspace01@gmail.com
             </a><br />
             General Support:{" "}
-            <a href="/contact" className="text-blue-600 hover:underline">
+            <a href="/support" className="text-blue-600 hover:underline">
               Contact Support
             </a>
           </p>

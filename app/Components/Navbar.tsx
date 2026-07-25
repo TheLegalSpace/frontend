@@ -33,7 +33,15 @@ function scrollToSection(href: string) {
   window.scrollTo({ top, behavior: "smooth" });
 }
 
-export default function Navbar() {
+type NavbarProps = {
+  /**
+   * Stronger blur/opacity treatment for placement over a photo (e.g. the
+   * support-ticket hero image). Default styling everywhere else is untouched.
+   */
+  strongBlur?: boolean;
+};
+
+export default function Navbar({ strongBlur = false }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -64,9 +72,11 @@ export default function Navbar() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
           className={`flex items-center justify-between px-5 py-3 rounded-[999px] z-5000 border border-[#E5E7EB] transition-all duration-300 ${
-            scrolled
-              ? "bg-white/95 backdrop-blur-md shadow-lg shadow-black/5 nav-glass"
-              : "bg-white/90 backdrop-blur-sm shadow-md shadow-black/4"
+            strongBlur
+              ? "bg-white/70 backdrop-blur-xl shadow-lg shadow-black/10 nav-glass"
+              : scrolled
+                ? "bg-white/95 backdrop-blur-md shadow-lg shadow-black/5 nav-glass"
+                : "bg-white/90 backdrop-blur-sm shadow-md shadow-black/4"
           }`}
         >
           {/* Logo */}
