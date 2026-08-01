@@ -83,7 +83,8 @@ interface ProfileCardProps {
 function getInitials(name: string): string {
   if (!name) return "?";
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .toUpperCase()
@@ -251,7 +252,7 @@ function ReviewCard({ review }: { review: Review }) {
       <div className="flex items-start justify-between gap-4 mb-2">
         <div className="flex items-center gap-3 ps-2">
           <div
-            className={`h-9 w-9 overflow-hidden rounded-full border-[3px] border-white transition-all duration-300 ${
+            className={`h-9 w-9 overflow-hidden rounded-full border-[3px] border-white bg-[#D1D5DB] transition-all duration-300 ${
               review.reviewer.isAnonymous ? "blur-sm" : ""
             }`}
           >
@@ -399,7 +400,7 @@ export default function ProfileCard({
     <div className="w-full">
       <div className="overflow-hidden rounded-2xl  bg-white">
         {/* Cover */}
-        {isFirm && (
+        {/* {isFirm && (
           <div className="relative h-44 w-full overflow-hidden bg-[#E5E7EB]">
             {profile.coverUrl ? (
               <img
@@ -413,7 +414,7 @@ export default function ProfileCard({
               </div>
             )}
           </div>
-        )}
+        )} */}
 
         {/* Profile header */}
         <div className="px-4 pt-4 pb-5 border-b border-[#E5E7EB]">
@@ -421,7 +422,7 @@ export default function ProfileCard({
             {/* Avatar */}
             <div className="mt-1 shrink-0">
               <div
-                className={`h-20 w-20 overflow-hidden rounded-full border-[3px] border-white  transition-all duration-300 ${
+                className={`h-20 w-20 overflow-hidden rounded-full border-[3px] border-white bg-[#374151] transition-all duration-300 ${
                   isAnonymous ? "blur-sm" : ""
                 }`}
               >
@@ -520,7 +521,8 @@ export default function ProfileCard({
                           <div className="absolute right-0 top-7 z-20 w-52 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-md">
                             <div className="absolute -top-1 right-4 h-2 w-2 rotate-45 border-l border-t border-gray-100 bg-white" />
                             <p className="text-[12px] text-[#4b5563] text-center leading-normal">
-                              You&apos;ll be seeing more of this account&apos;s content!
+                              You&apos;ll be seeing more of this account&apos;s
+                              content!
                             </p>
                           </div>
                         )}
@@ -578,7 +580,7 @@ export default function ProfileCard({
         {isFirm && profile.firmProfile && (
           <div className="px-4 py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center justify-between">
-              <span className="text-[14px] font-semibold text-[#000000]">
+              <span className="text-[13px] font-medium text-[#1F2937]">
                 Firm Establishment
               </span>
               <span className="text-[11px] text-[#000000] font-['Geist']">

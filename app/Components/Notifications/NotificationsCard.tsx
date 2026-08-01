@@ -13,6 +13,14 @@ import {
   BookOpen,
   Calendar,
   Clock,
+  Heart,
+  ShieldCheck,
+  BadgeCheck,
+  RefreshCw,
+  CreditCard,
+  Megaphone,
+  CalendarCheck,
+  ClipboardCheck,
 } from "lucide-react";
 import { Notification, NotificationType } from "@/app/types/notification";
 
@@ -36,13 +44,37 @@ function formatDate(dateStr: string) {
   });
 }
 
-function getNotificationMeta(type: NotificationType): {
+function getNotificationMeta(notif: Notification): {
   icon: React.ReactNode;
   label: string;
 } {
+  const type = notif.type;
+  const kind = notif.payload.kind;
+  // System notifications are distinguished by payload.kind, not type.
+  switch (kind) {
+    case "support_ticket_received":
+      return { icon: <BookOpen size={15} />, label: "Support Ticket Received" };
+    case "support_ticket_updated":
+      return {
+        icon: <CheckCircle size={15} />,
+        label: "Support Ticket Updated",
+      };
+    case "event_promotion_approved":
+      return {
+        icon: <CalendarCheck size={15} />,
+        label: "Event Promotion Approved",
+      };
+    case "event_promotion_rejected":
+      return { icon: <XCircle size={15} />, label: "Event Promotion Rejected" };
+    case "announcement":
+      return { icon: <Megaphone size={15} />, label: "Announcement" };
+  }
   switch (type) {
     case "new_article":
+    case "article_published":
       return { icon: <FileText size={15} />, label: "New Article" };
+    case "post_liked":
+      return { icon: <Heart size={15} />, label: "Post Liked" };
     case "new_message":
       return { icon: <MessageSquare size={15} />, label: "New Message" };
     case "chat_expiry_warning":
@@ -59,10 +91,14 @@ function getNotificationMeta(type: NotificationType): {
       return { icon: <UserPlus size={15} />, label: "New Follower" };
     case "new_review":
       return { icon: <Star size={15} />, label: "New Review" };
+    case "new_request":
+      return { icon: <UserPlus size={15} />, label: "New Request" };
     case "request_accepted":
       return { icon: <CheckCircle size={15} />, label: "Request Accepted" };
     case "request_declined":
       return { icon: <XCircle size={15} />, label: "Request Declined" };
+    case "request_expired":
+      return { icon: <XCircle size={15} />, label: "Request Expired" };
     case "chat_expiring":
       return { icon: <Clock size={15} />, label: "Chat Expiring Soon" };
     case "request_expiring":
@@ -73,6 +109,36 @@ function getNotificationMeta(type: NotificationType): {
       return {
         icon: <AlertTriangle size={15} />,
         label: "Unread Client Message",
+      };
+    case "review_request":
+      return { icon: <Star size={15} />, label: "Review Request" };
+    case "verification_update":
+      return {
+        icon: <ShieldCheck size={15} />,
+        label: "Verification Update",
+      };
+    case "service_request_received":
+      return {
+        icon: <ClipboardCheck size={15} />,
+        label: "Service Request Received",
+      };
+    case "subscription_activated":
+      return { icon: <BadgeCheck size={15} />, label: "Membership Activated" };
+    case "subscription_renewed":
+      return { icon: <RefreshCw size={15} />, label: "Membership Renewed" };
+    case "subscription_expiring_soon":
+      return {
+        icon: <Clock size={15} />,
+        label: "Membership Expiring Soon",
+      };
+    case "subscription_expired":
+      return { icon: <XCircle size={15} />, label: "Membership Expired" };
+    case "payment_failed":
+      return { icon: <XCircle size={15} />, label: "Payment Failed" };
+    case "payment_method_updated":
+      return {
+        icon: <CreditCard size={15} />,
+        label: "Payment Method Updated",
       };
     default:
       return { icon: <Bell size={15} />, label: "Notification" };
@@ -125,15 +191,23 @@ function getBodyText(notif: Notification): {
 
   switch (notif.type) {
     case "new_article":
+    case "article_published":
       return {
         primary: (
           <>
-            <span className="text-blue-600 font-medium">{actor}</span> has
+            <span className="text-blue-600 font-medium">
+              {actor || "A lawyer you follow"}
+            </span>{" "}
             published a new article.
           </>
         ),
         secondary:
           "Stay informed with insights that may be relevant to your situation.",
+      };
+    case "post_liked":
+      return {
+        primary: "Someone liked your post.",
+        secondary: "Open your post to see who reacted.",
       };
     case "new_message":
       return {
@@ -175,6 +249,15 @@ function getBodyText(notif: Notification): {
           </>
         ),
       };
+    case "new_request": {
+      const matter = notif.payload.matter as string | undefined;
+      return {
+        primary: "You have a new client request.",
+        secondary: matter
+          ? `Matter: ${matter}`
+          : "A client wants to connect with you.",
+      };
+    }
     case "request_accepted":
       return {
         primary: (
@@ -185,7 +268,8 @@ function getBodyText(notif: Notification): {
         ),
         secondary: "You can now start a conversation with them.",
       };
-    case "request_declined":
+    case "request_declined": {
+      const reason = notif.payload.reason as string | undefined;
       return {
         primary: (
           <>
@@ -193,6 +277,13 @@ function getBodyText(notif: Notification): {
             your request.
           </>
         ),
+        secondary: reason ? `Reason: ${reason}` : undefined,
+      };
+    }
+    case "request_expired":
+      return {
+        primary: "Your request expired without a response.",
+        secondary: "You can create a new request to find another lawyer.",
       };
     case "chat_expiring": {
       const when = notif.payload.expiresAt;
@@ -223,10 +314,132 @@ function getBodyText(notif: Notification): {
         secondary:
           "You have an unread client message — reply to keep the conversation moving.",
       };
-    default:
+    case "review_request":
+      return {
+        primary: "How was your experience?",
+        secondary: "Leave a review for your recent conversation.",
+      };
+    case "verification_update": {
+      const status = notif.payload.status as string | undefined;
+      const reason = notif.payload.reason as string | undefined;
+      if (status === "verified") {
+        return {
+          primary: "Your account has been verified.",
+          secondary: "You can now enjoy the full TLS experience.",
+        };
+      }
+      return {
+        primary: "Your verification status has changed.",
+        secondary: reason ? `Reason: ${reason}` : "Please review your details.",
+      };
+    }
+    case "service_request_received": {
+      const serviceType = notif.payload.serviceType as string | undefined;
+      return {
+        primary: "We've received your service request.",
+        secondary: serviceType
+          ? `Service: ${serviceType.replace(/_/g, " ")}`
+          : "Our team will be in touch shortly.",
+      };
+    }
+    case "subscription_activated": {
+      const planName = notif.payload.planName as string | undefined;
+      return {
+        primary: "Your membership is now active.",
+        secondary: planName ? `Plan: ${planName}` : "Welcome aboard!",
+      };
+    }
+    case "subscription_renewed": {
+      const planName = notif.payload.planName as string | undefined;
+      return {
+        primary: "Your membership has been renewed.",
+        secondary: planName
+          ? `Plan: ${planName}`
+          : "Thanks for staying with us.",
+      };
+    }
+    case "subscription_expiring_soon": {
+      const when = notif.payload.currentPeriodEnd as string | undefined;
+      return {
+        primary: "Your membership expires soon.",
+        secondary: when
+          ? `Renew before ${formatDate(when)} to keep your benefits.`
+          : "Renew to keep your benefits.",
+      };
+    }
+    case "subscription_expired":
+      return {
+        primary: "Your membership has expired.",
+        secondary: "Renew your membership to regain access.",
+      };
+    case "payment_failed":
+      return {
+        primary: "A payment for your membership failed.",
+        secondary: "Please update your payment method to avoid interruption.",
+      };
+    case "payment_method_updated":
+      return {
+        primary: "Your payment method has been updated.",
+        secondary: "Future charges will use your new payment details.",
+      };
+    default: {
+      // System notifications are distinguished by payload.kind.
+      const kind = notif.payload.kind;
+      const ticketNumber = notif.payload.ticketNumber as number | undefined;
+      if (kind === "support_ticket_received") {
+        const subject = notif.payload.subject as string | undefined;
+        return {
+          primary: `Your support ticket${
+            ticketNumber ? ` #${ticketNumber}` : ""
+          } has been received.`,
+          secondary: subject
+            ? `Subject: ${subject}`
+            : "Our team will get back to you shortly.",
+        };
+      }
+      if (kind === "support_ticket_updated") {
+        const status = notif.payload.status as string | undefined;
+        return {
+          primary: `Your support ticket${
+            ticketNumber ? ` #${ticketNumber}` : ""
+          } has been updated.`,
+          secondary: status
+            ? `Status: ${status.replace(/_/g, " ")}`
+            : "Check your support ticket for the latest update.",
+        };
+      }
+      if (kind === "event_promotion_approved") {
+        const title = notif.payload.title as string | undefined;
+        return {
+          primary: "Your event promotion was approved.",
+          secondary: title ? `Event: ${title}` : "Your event is now published.",
+        };
+      }
+      if (kind === "event_promotion_rejected") {
+        const title = notif.payload.title as string | undefined;
+        const reason = notif.payload.reason as string | undefined;
+        return {
+          primary: "Your event promotion was rejected.",
+          secondary: [
+            title ? `Event: ${title}` : undefined,
+            reason ? `Reason: ${reason}` : undefined,
+          ]
+            .filter(Boolean)
+            .join(" · "),
+        };
+      }
+      if (kind === "announcement") {
+        const title = notif.payload.title as string | undefined;
+        const body = notif.payload.body as string | undefined;
+        return {
+          primary: title || "New announcement from The Legal Space.",
+          secondary: body,
+        };
+      }
       return {
         primary: notif.payload.message ?? "You have a new notification.",
       };
+    }
   }
 }
 
@@ -236,7 +449,7 @@ interface Props {
 }
 
 export default function NotificationCard({ notification, onMarkRead }: Props) {
-  const { icon, label } = getNotificationMeta(notification.type);
+  const { icon, label } = getNotificationMeta(notification);
   const { primary, secondary } = getBodyText(notification);
   const isUnread = !notification.readAt;
 

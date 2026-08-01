@@ -7,7 +7,8 @@ import { Conversation } from "@/app/types/message";
 function getInitials(name: string) {
   if (!name) return "??";
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
@@ -144,7 +145,9 @@ const ConversationList = memo(function ConversationList({
                     </span>
                   </div>
                   <p className="text-[12px] text-gray-500 truncate mt-0.5">
-                    {convo.matterName?.trim() || convo.lastMessagePreview || "No messages yet"}
+                    {convo.matterName?.trim() ||
+                      convo.lastMessagePreview ||
+                      "No messages yet"}
                   </p>
                 </div>
               </button>

@@ -3,13 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Clock,
-  Loader2,
-  AlertTriangle,
-  X,
-  XCircle,
-} from "lucide-react";
+import { Clock, Loader2, AlertTriangle, X, XCircle } from "lucide-react";
 import {
   useRequests,
   useRequestStats,
@@ -31,7 +25,8 @@ function timeAgo(dateStr: string): string {
 
 function getInitials(name: string): string {
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .toUpperCase()

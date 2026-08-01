@@ -9,7 +9,7 @@ import {
   Loader2,
   FileText,
   X,
-  BookOpen
+  BookOpen,
 } from "lucide-react";
 import { MyPost } from "@/app/types/posts";
 import { postsService } from "@/services/posts.services";
@@ -18,7 +18,8 @@ import Image from "next/image";
 function getInitials(name: string) {
   if (!name) return "??";
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
@@ -215,7 +216,6 @@ export default function MyPostCard({
             </div>
           </div>
         )}
-
 
         {/* Actions */}
         <div className="flex items-center gap-3 mt-1">

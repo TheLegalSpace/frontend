@@ -65,7 +65,8 @@ export function setCachedReaction(
 function getInitials(name: string) {
   if (!name) return "??";
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
@@ -118,7 +119,9 @@ function getConnectionCount(author: RawPost["author"] | undefined): number {
     (author as RawPost["author"] & Record<string, unknown>).follower_count ??
     0;
 
-  return typeof numericValue === "number" ? numericValue : Number(numericValue) || 0;
+  return typeof numericValue === "number"
+    ? numericValue
+    : Number(numericValue) || 0;
 }
 
 function shapeFeedItems(items: RawPost[], tab: FeedTab): RawPost[] {
@@ -126,7 +129,8 @@ function shapeFeedItems(items: RawPost[], tab: FeedTab): RawPost[] {
 
   if (tab === "Articles") {
     return normalized.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }
 
@@ -165,7 +169,9 @@ async function fetchFeed(tab: FeedTab): Promise<Post[]> {
   });
   const items = (data?.data?.items ?? []) as RawPost[];
   const cachedReactions = getCachedReactions();
-  return shapeFeedItems(items, tab).map((raw) => normalizePost(raw, cachedReactions));
+  return shapeFeedItems(items, tab).map((raw) =>
+    normalizePost(raw, cachedReactions),
+  );
 }
 
 export function useFeed(tab: FeedTab) {
