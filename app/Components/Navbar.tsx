@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
@@ -80,7 +79,17 @@ export default function Navbar({ strongBlur = false }: NavbarProps) {
           }`}
         >
           {/* Logo */}
-          <Link href="/" className="shrink-0">
+          <button
+            onClick={() => {
+              if (usePathName === "/") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              } else {
+                router.push("/");
+              }
+            }}
+            className="shrink-0"
+            aria-label="Go to top"
+          >
             <Image
               src="/logo.png"
               alt="The Legal Space"
@@ -88,7 +97,7 @@ export default function Navbar({ strongBlur = false }: NavbarProps) {
               height={32}
               className="h-8 w-auto"
             />
-          </Link>
+          </button>
 
           {/* Desktop links */}
           <ul className="hidden md:flex items-center gap-1 navLink">

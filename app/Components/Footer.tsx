@@ -253,7 +253,7 @@ export default function Footer({ visible = true }: FooterProps) {
           </div>
 
           {/* Bottom bar */}
-          <div className="border-t border-[#E5E7EB] py-5 flex items-center justify-between">
+          <div id="footer-socials" className="border-t border-[#E5E7EB] py-5 flex items-center justify-between">
             <p className="text-[13px] text-gray-400">
               © 2026 The Legal Space. All rights reserved.
             </p>

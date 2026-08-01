@@ -86,7 +86,7 @@ function UnauthenticatedPlaceholder() {
               <ShieldAlert className="h-8 w-8 text-[#8A887E]" />
             </div>
 
-            <h1 className="text-[28px] font-bold leading-tight text-[#14140F] sm:text-[34px] lg:text-[38px]">
+            <h1 className="font-dmSans text-[20px] font-semibold leading-tight text-[#14140F] sm:text-[22px] lg:text-[24px]">
               Sign in to contact support
             </h1>
 

@@ -12,7 +12,7 @@ const resources = [
     desc: "Explore expert perspectives, practical guidance, and thought leadership from legal professionals across a wide range of practice areas.",
     cta: "Explore Articles",
     preview: "article",
-    action: "lawyer",
+    action: "user",
   },
   {
     num: "02",

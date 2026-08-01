@@ -8,11 +8,17 @@ import { useProfileById } from "@/hooks/useProfile";
 
 interface Props {
   accountId: string;
-  /** Return to the (preserved) search results. */
+  /** Return to the previous view. */
   onBack: () => void;
+  /** Label for back navigation button/breadcrumb. Defaults to "Search Results". */
+  backLabel?: string;
 }
 
-export default function LawyerProfileView({ accountId, onBack }: Props) {
+export default function LawyerProfileView({
+  accountId,
+  onBack,
+  backLabel = "Search Results",
+}: Props) {
   const { data: profile, isLoading, error } = useProfileById(accountId);
 
   const account = profile?.data;
@@ -22,7 +28,7 @@ export default function LawyerProfileView({ accountId, onBack }: Props) {
 
   return (
     <div className="w-full bg-white min-h-screen">
-      {/* Breadcrumb header — Search Results › Lawyer Profile */}
+      {/* Breadcrumb header */}
       <div className="h-18.75 flex items-center border-b border-[#E5E7EB] px-4">
         <nav className="flex items-center gap-1.5 text-[14px]">
           <button
@@ -30,7 +36,7 @@ export default function LawyerProfileView({ accountId, onBack }: Props) {
             onClick={onBack}
             className="text-[#6B7280] hover:text-[#1F2937] hover:underline transition-colors"
           >
-            Search Results
+            {backLabel}
           </button>
           <ChevronRight className="w-4 h-4 text-[#9CA3AF]" />
           <span className="font-[Instrument_Serif] text-[18px] font-light text-[#1F2937]">
@@ -51,7 +57,7 @@ export default function LawyerProfileView({ accountId, onBack }: Props) {
             onClick={onBack}
             className="text-[13px] font-medium text-[#2563EB] hover:underline"
           >
-            Back to search results
+            Back to {backLabel}
           </button>
         </div>
       ) : (

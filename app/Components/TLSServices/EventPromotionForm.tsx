@@ -48,18 +48,36 @@ export default function EventPromotionForm() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
-      setError("Flyer must be a PNG or JPG file.");
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      setError("Invalid image format. Please upload a standard image file (PNG, JPG, or WEBP).");
+      setFlyer(null);
+      setFlyerPreview(null);
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      setError("Flyer must be 10MB or smaller.");
+      setError("Image file size is too large. Flyer image must be 10MB or smaller.");
+      setFlyer(null);
+      setFlyerPreview(null);
       return;
     }
 
-    setError(null);
-    setFlyer(file);
-    setFlyerPreview(URL.createObjectURL(file));
+    const objectUrl = URL.createObjectURL(file);
+    const img = new window.Image();
+    img.src = objectUrl;
+
+    img.onload = () => {
+      setError(null);
+      setFlyer(file);
+      setFlyerPreview(objectUrl);
+    };
+
+    img.onerror = () => {
+      setError("The uploaded file is not a valid standard image or is corrupted. Please upload a clean PNG or JPG image.");
+      setFlyer(null);
+      setFlyerPreview(null);
+      URL.revokeObjectURL(objectUrl);
+    };
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -202,6 +220,8 @@ export default function EventPromotionForm() {
               />
             </div>
           )}
+
+          {error && <div className="mt-2"><ErrorMessage message={error} /></div>}
 
           <div className="mt-4">
             <FieldLabel>Event Title</FieldLabel>

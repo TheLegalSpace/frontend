@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
         </p>
 
         {/* Title */}
-        <h1 className="text-[36px] font-['Instrument_Serif'] text-center text-gray-900 mb-10">
+        <h1 className="text-[36px] font-dmSans font-bold text-center text-gray-900 mb-10">
           Privacy Policy
         </h1>
 

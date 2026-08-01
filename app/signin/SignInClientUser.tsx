@@ -160,24 +160,25 @@ export default function SignInClient() {
 
       {/* Main content area — vertically centered */}
       <main className="flex-1 w-full flex items-center">
-        <div className="w-full h-[90vh]">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            {/* Illustration — desktop only */}
-            <div className="hidden lg:block">
-              <Image
-                src={signinIllustration}
-                alt="The Legal Space community illustration"
-                className="w-full h-auto  object-cover"
-                priority
-              />
-            </div>
+        <div className="w-full min-h-[90vh] grid grid-cols-1 lg:grid-cols-2">
+          {/* Illustration — desktop only, fills full height */}
+          <div className="hidden lg:block relative">
+            <Image
+              src={signinIllustration}
+              alt="The Legal Space community illustration"
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
 
-            {/* Sign-in content */}
-            <div className="w-full px-4 lg:mx-0 text-left">
-              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
+          {/* Sign-in content — consistent 16px gap on left (from image) and right */}
+          <div className="w-full flex items-center justify-center px-4 py-16">
+            <div className="w-full max-w-lg">
+              <h1 className="text-3xl sm:text-3xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
                 Welcome to The Legal Space
               </h1>
-              <p className="text-base sm:text-lg text-gray-500 mb-8 leading-relaxed font-dmSans">
+              <p className="text-base sm:text-md text-gray-500 mb-8 leading-relaxed font-dmSans">
                 Access legal support, professional insights, and trusted
                 connections all in one place.
               </p>

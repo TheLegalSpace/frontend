@@ -321,6 +321,10 @@ export default function TestimonialsSection() {
              "
           >
             <button
+              onClick={() => {
+                const el = document.getElementById("footer-socials");
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+              }}
               className="
                 bg-[#1A56DB]
                 text-white

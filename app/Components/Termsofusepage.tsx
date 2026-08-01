@@ -12,14 +12,14 @@ export default function TermsOfUsePage() {
 
         {/* Title */}
         <h1 className="text-[36px] font-['Instrument_Serif'] text-center text-gray-900 mb-10">
-          Terms Of Use
+          Terms Of Services
         </h1>
 
         {/* ── 1. Introduction ── */}
         <section className="mb-7">
           <h2 className="text-[15px] font-bold text-gray-900 mb-3">1. Introduction</h2>
           <p className="text-[14px] text-gray-700 leading-7 mb-3">
-            These Terms of Use ("Terms") govern your access to and use of The Legal Space platform ("TLS", "we", "us", or "our"), including our website at thelegalspace.com and our mobile application (collectively, the "Platform"). By creating an account, accessing, or using the Platform in any way, you agree to be bound by these Terms in full. If you do not agree with any part of these Terms, you must not use the Platform.
+            These Terms of Services ("Terms") govern your access to and use of The Legal Space platform ("TLS", "we", "us", or "our"), including our website at thelegalspace.com and our mobile application (collectively, the "Platform"). By creating an account, accessing, or using the Platform in any way, you agree to be bound by these Terms in full. If you do not agree with any part of these Terms, you must not use the Platform.
           </p>
           <p className="text-[14px] text-gray-700 leading-7 mb-3">
             TLS is a Nigerian legal technology platform designed to connect lawyers, law firms, and clients within a structured professional community. We provide tools for professional visibility, community engagement, lawyer–client matching, messaging, and related legal technology services.
