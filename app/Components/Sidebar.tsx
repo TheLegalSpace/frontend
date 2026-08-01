@@ -279,7 +279,8 @@ export default function Sidebar() {
 
   const initials =
     user?.fullName
-      ?.split(" ")
+      ?.split(/\s+/)
+      .filter((part: string) => /[A-Za-z]/.test(part))
       .map((n: string) => n[0])
       .join("")
       .toUpperCase()

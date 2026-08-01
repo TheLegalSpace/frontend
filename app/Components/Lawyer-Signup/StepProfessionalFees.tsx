@@ -24,6 +24,14 @@ function koboFromNaira(s: string): number {
   return Math.round(n * 100);
 }
 
+/** Format digits with thousands separators as the user types (e.g. 1000000 -> 1,000,000). */
+function formatNairaInput(s: string): string {
+  const cleaned = s.replace(/[^0-9.]/g, "");
+  const [intPart, decPart] = cleaned.split(".");
+  const formattedInt = intPart ? Number(intPart).toLocaleString("en-US") : "";
+  return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt;
+}
+
 export default function StepProfessionalFees({
   practiceAreaIds,
   onNext,
@@ -35,11 +43,28 @@ export default function StepProfessionalFees({
     Object.fromEntries(practiceAreaIds.map((id) => [id, { min: "", max: "" }])),
   );
   const [error, setError] = useState("");
+  const [rangeErrors, setRangeErrors] = useState<Record<string, string>>({});
 
   const getName = (id: string) => allAreas.find((a) => a.id === id)?.name ?? id;
 
   const setField = (id: string, field: "min" | "max", val: string) => {
-    setFees((prev) => ({ ...prev, [id]: { ...prev[id], [field]: val } }));
+    const current = fees[id] ?? { min: "", max: "" };
+    const next = { ...current, [field]: formatNairaInput(val) };
+    setFees((prev) => ({ ...prev, [id]: next }));
+    // Live validation: error immediately if max < min after this input.
+    const { min, max } = next;
+    if (min.trim() && max.trim() && koboFromNaira(min) >= koboFromNaira(max)) {
+      setRangeErrors((prevErr) => ({
+        ...prevErr,
+        [id]: `Maximum fee can't be lower or equal to minimum fee for ${getName(id)}.`,
+      }));
+    } else {
+      setRangeErrors((prevErr) => {
+        const nextErr = { ...prevErr };
+        delete nextErr[id];
+        return nextErr;
+      });
+    }
     setError("");
   };
 
@@ -92,8 +117,7 @@ export default function StepProfessionalFees({
               <div className="relative">
                 <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 <input
-                  type="number"
-                  min={0}
+                  type="text"
                   inputMode="numeric"
                   value={fees[id]?.min ?? ""}
                   onChange={(e) => setField(id, "min", e.target.value)}
@@ -104,8 +128,7 @@ export default function StepProfessionalFees({
               <div className="relative">
                 <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 <input
-                  type="number"
-                  min={0}
+                  type="text"
                   inputMode="numeric"
                   value={fees[id]?.max ?? ""}
                   onChange={(e) => setField(id, "max", e.target.value)}
@@ -114,6 +137,9 @@ export default function StepProfessionalFees({
                 />
               </div>
             </div>
+            {rangeErrors[id] && (
+              <p className="text-[12px] text-red-500 mt-2">{rangeErrors[id]}</p>
+            )}
           </div>
         ))}
       </div>

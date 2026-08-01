@@ -138,7 +138,7 @@ export default function StepMembership({ accountType, onCommunity }: Props) {
     annually,
   );
   const billingLabel = annually
-    ? "Annually"
+    ? "Every 12 Months"
     : `Every ${activePlan.intervalMonths} Months`;
 
   return (
@@ -174,10 +174,10 @@ export default function StepMembership({ accountType, onCommunity }: Props) {
           {/* Billing toggle */}
           <div className="flex items-center justify-between px-4 py-2.5 bg-[#EEF4FF] rounded-xl mb-5">
             <span className="text-[13px] font-medium text-[#1A56DB]">
-              {`Every ${activePlan.intervalMonths} Months`}
+              {billingLabel}
             </span>
             <div className="flex items-center gap-2">
-              <span className="text-[12px] text-gray-500">Annually</span>
+              <span className="text-[12px] text-gray-500">Every 12 months</span>
               <button
                 type="button"
                 onClick={() => setAnnually(!annually)}
