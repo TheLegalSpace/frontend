@@ -10,7 +10,8 @@ import Image from "next/image";
 function getInitials(name: string) {
   if (!name) return "??";
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
@@ -120,7 +121,9 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
           onClick={() => {
             const accountId = userAccount?.id ?? lead.userAccountId;
             if (accountId) {
-              router.push(`/dashboard/leads?accountId=${encodeURIComponent(accountId)}`);
+              router.push(
+                `/dashboard/leads?accountId=${encodeURIComponent(accountId)}`,
+              );
             }
           }}
           className="flex items-center gap-2.5 text-left"
@@ -183,7 +186,15 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
             <Clock size={11} />
             {timeAgo(createdAt)}
           </span>
-          <span className="text-[11px] text-green-400 font-medium">
+          <span
+            className={`text-[11px] font-medium ${
+              relevanceScore >= 80
+                ? "text-[#159947]"
+                : relevanceScore > 40
+                  ? "text-[#C48529]"
+                  : "text-[#C42929]"
+            }`}
+          >
             {relevanceScore}% match
           </span>
         </div>

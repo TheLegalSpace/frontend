@@ -30,13 +30,54 @@ function koboToNaira(kobo: number): string {
   return kobo > 0 ? String(kobo / 100) : "";
 }
 
+/** Format digits with thousands separators as the user types (e.g. 1000000 -> 1,000,000). */
+function formatNairaInput(s: string): string {
+  const cleaned = s.replace(/[^0-9.]/g, "");
+  const [intPart, decPart] = cleaned.split(".");
+  const formattedInt = intPart ? Number(intPart).toLocaleString("en-US") : "";
+  return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt;
+}
+
 export default function ServicesModal({ area, allAreas, onClose }: Props) {
   const { showSuccess, showError } = useToast();
   const updateAreas = useUpdatePracticeAreas();
 
-  const [minNaira, setMinNaira] = useState(koboToNaira(area.minFee));
-  const [maxNaira, setMaxNaira] = useState(koboToNaira(area.maxFee));
+  const [minNaira, setMinNaira] = useState(
+    formatNairaInput(koboToNaira(area.minFee)),
+  );
+  const [maxNaira, setMaxNaira] = useState(
+    formatNairaInput(koboToNaira(area.maxFee)),
+  );
   const [error, setError] = useState("");
+  const [rangeError, setRangeError] = useState("");
+
+  const handleMinChange = (val: string) => {
+    const formatted = formatNairaInput(val);
+    setMinNaira(formatted);
+    if (
+      formatted.trim() &&
+      maxNaira.trim() &&
+      nairaToKobo(formatted) >= nairaToKobo(maxNaira)
+    ) {
+      setRangeError("Maximum fee can't be lower than the minimum fee.");
+    } else {
+      setRangeError("");
+    }
+  };
+
+  const handleMaxChange = (val: string) => {
+    const formatted = formatNairaInput(val);
+    setMaxNaira(formatted);
+    if (
+      minNaira.trim() &&
+      formatted.trim() &&
+      nairaToKobo(formatted) <= nairaToKobo(minNaira)
+    ) {
+      setRangeError("Maximum fee can't be lower than the minimum fee.");
+    } else {
+      setRangeError("");
+    }
+  };
 
   const handleSave = async () => {
     setError("");
@@ -52,7 +93,8 @@ export default function ServicesModal({ area, allAreas, onClose }: Props) {
       setError("Fees can't be negative.");
       return;
     }
-    if (minFee > maxFee) {
+    if (minFee >= maxFee) {
+      setRangeError("Maximum fee can't be lower than the minimum fee.");
       setError("Minimum fee can't be greater than the maximum fee.");
       return;
     }
@@ -118,11 +160,10 @@ export default function ServicesModal({ area, allAreas, onClose }: Props) {
           <div className="relative">
             <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <input
-              type="number"
-              min={0}
+              type="text"
               inputMode="numeric"
               value={minNaira}
-              onChange={(e) => setMinNaira(e.target.value)}
+              onChange={(e) => handleMinChange(e.target.value)}
               placeholder="Minimum Fee"
               className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#1A56DB] transition-colors"
             />
@@ -130,16 +171,19 @@ export default function ServicesModal({ area, allAreas, onClose }: Props) {
           <div className="relative">
             <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <input
-              type="number"
-              min={0}
+              type="text"
               inputMode="numeric"
               value={maxNaira}
-              onChange={(e) => setMaxNaira(e.target.value)}
+              onChange={(e) => handleMaxChange(e.target.value)}
               placeholder="Maximum Fee"
               className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#1A56DB] transition-colors"
             />
           </div>
         </div>
+
+        {rangeError && (
+          <p className="text-[12px] text-red-600 mb-3 -mt-2">{rangeError}</p>
+        )}
 
         {/* Note */}
         <div className="rounded-xl bg-[#FBFAF5] border border-[#EFEBDD] px-4 py-3.5 mb-5">
@@ -160,7 +204,9 @@ export default function ServicesModal({ area, allAreas, onClose }: Props) {
           disabled={updateAreas.isPending}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A56DB] py-3.5 text-[14px] font-semibold text-white transition hover:bg-[#1648b8] disabled:opacity-60"
         >
-          {updateAreas.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+          {updateAreas.isPending && (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          )}
           {updateAreas.isPending ? "Saving..." : "Save and Continue"}
         </button>
       </div>
