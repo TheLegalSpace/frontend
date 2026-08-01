@@ -416,7 +416,7 @@ export default function ProfileCard({
         )}
 
         {/* Profile header */}
-        <div className="px-4 pt-4 pb-5">
+        <div className="px-4 pt-4 pb-5 border-b border-[#E5E7EB]">
           <div className="flex gap-4">
             {/* Avatar */}
             <div className="mt-1 shrink-0">
@@ -446,8 +446,13 @@ export default function ProfileCard({
                   <h1 className="text-[20px] font-semibold text-[#1F2937] leading-tight truncate">
                     {displayName}
                   </h1>
+                  {displayEmail && (
+                    <p className="text-[12px] text-[#6B7280] mt-0.5 truncate">
+                      {displayEmail}
+                    </p>
+                  )}
                   {profile.bio && (
-                    <p className="text-[13px] text-[#6B7280] mt-0.5 line-clamp-2">
+                    <p className="text-[13px] text-[#6B7280] mt-1 line-clamp-2">
                       {profile.bio}
                     </p>
                   )}

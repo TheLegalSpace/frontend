@@ -78,6 +78,7 @@ export default function LeadsPage() {
         <LawyerProfileView
           accountId={selectedAccountId}
           onBack={() => router.push("/dashboard/leads")}
+          backLabel="Leads"
         />
       </div>
     );

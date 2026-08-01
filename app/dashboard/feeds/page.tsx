@@ -27,6 +27,7 @@ export default function FeedPage() {
         <LawyerProfileView
           accountId={selectedAccountId}
           onBack={() => router.push("/dashboard/feeds")}
+          backLabel="Feeds"
         />
       </main>
     );

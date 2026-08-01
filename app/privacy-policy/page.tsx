@@ -502,7 +502,7 @@ export default function PrivacyPolicyPage() {
             />
             Version {VERSION}
           </span>
-          <h1 className="mx-auto mt-4 max-w-2xl font-serif text-[32px] leading-tight text-[#14140F] sm:text-[42px] lg:text-[48px]">
+          <h1 className="mx-auto mt-4 max-w-2xl font-dmSans font-bold text-[32px] leading-tight text-[#14140F] sm:text-[42px] lg:text-[48px]">
             Privacy Policy
           </h1>
         </div>
@@ -643,10 +643,10 @@ export default function PrivacyPolicyPage() {
             <p className="mt-4 text-[13px] text-[#8A887E]">
               Questions about this policy? Reach us at{" "}
               <a
-                href="mailto:privacy@thelegalspace.com"
+                href="mailto:thelegalspace01@gmail.com"
                 className="text-[#2547D0] underline-offset-2 hover:underline"
               >
-                privacy@thelegalspace.com
+                thelegalspace01@gmail.com
               </a>
               .
             </p>

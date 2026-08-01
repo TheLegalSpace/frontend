@@ -18,25 +18,74 @@ export default function AddEventModal({ onClose }: Props) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [link, setLink] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const isBusy = createEvent.isPending;
 
-  async function handleSubmit() {
-    const response = await createEvent.mutateAsync({
-      title: eventName,
-      description: link || eventName,
-      location: "TLS Admin",
-      startAt: `${startDate}T00:00:00Z`,
-      endAt: `${endDate}T23:59:59Z`,
-      status: "published",
-      registrationUrl: link || undefined,
-    });
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (flyer && response?.data?.data?.id) {
-      await eventService.uploadCover(response.data.data.id, flyer);
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      setError("Invalid image format. Please upload a standard image file (PNG, JPG, or WEBP).");
+      setFlyer(null);
+      return;
     }
 
-    onClose();
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Image file size is too large. Flyer image must be 10MB or smaller.");
+      setFlyer(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    const img = new window.Image();
+    img.src = objectUrl;
+
+    img.onload = () => {
+      setError(null);
+      setFlyer(file);
+      URL.revokeObjectURL(objectUrl);
+    };
+
+    img.onerror = () => {
+      setError("The uploaded file is not a valid standard image or is corrupted. Please upload a clean PNG or JPG image.");
+      setFlyer(null);
+      URL.revokeObjectURL(objectUrl);
+    };
+  }
+
+  async function handleSubmit() {
+    setError(null);
+    if (!flyer) {
+      setError("Please upload a standard flyer image for your event.");
+      return;
+    }
+
+    try {
+      const response = await createEvent.mutateAsync({
+        title: eventName,
+        description: link || eventName,
+        location: "TLS Admin",
+        startAt: `${startDate}T00:00:00Z`,
+        endAt: `${endDate}T23:59:59Z`,
+        status: "published",
+        registrationUrl: link || undefined,
+      });
+
+      if (flyer && response?.data?.data?.id) {
+        await eventService.uploadCover(response.data.data.id, flyer);
+      }
+
+      onClose();
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ??
+          err?.message ??
+          "Failed to upload event. Please try again.",
+      );
+    }
   }
 
   return (
@@ -74,7 +123,7 @@ export default function AddEventModal({ onClose }: Props) {
           className="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-[13px] mb-4 focus:outline-none focus:ring-1 focus:ring-gray-300"
         />
 
-        <label className="flex items-center gap-3 border border-gray-200 rounded-lg px-3.5 py-3 mb-5 cursor-pointer hover:bg-gray-50 transition-colors">
+        <label className="flex items-center gap-3 border border-gray-200 rounded-lg px-3.5 py-3 mb-2 cursor-pointer hover:bg-gray-50 transition-colors">
           <ImageIcon size={18} className="text-gray-400 shrink-0" />
           <span className="text-[13px]">
             <span className="text-blue-600 font-medium">
@@ -87,11 +136,13 @@ export default function AddEventModal({ onClose }: Props) {
           </span>
           <input
             type="file"
-            accept="image/png,image/jpeg"
+            accept="image/png,image/jpeg,image/webp"
             className="hidden"
-            onChange={(e) => setFlyer(e.target.files?.[0] ?? null)}
+            onChange={handleFileChange}
           />
         </label>
+
+        {error && <p className="text-[12px] text-red-500 mb-4">{error}</p>}
 
         <p className="text-[12px] font-semibold text-white bg-blue-600 inline-block px-2.5 py-1 rounded mb-3">
           Promotion Options

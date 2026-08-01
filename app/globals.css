@@ -1,9 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-inter), var(--font-geist), sans-serif;
+  --font-sans: var(--font-dmSans), var(--font-inter), var(--font-geist), sans-serif;
   --font-dmSans: var(--font-dmSans), sans-serif;
   --font-instrument: var(--font-instrument), serif;
+}
+
+body {
+  font-family: var(--font-dmSans), sans-serif;
 }
 
 .signinbg {

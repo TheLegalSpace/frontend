@@ -189,10 +189,10 @@ export default function PersonalInfoSection({
           </div>
         </div>
 
-        {/* WhatsApp */}
+        {/* Phone */}
         <div>
           <label className="block text-[12px] text-gray-500 mb-1.5">
-            WhatsApp Number
+            Phone Number
           </label>
           <div
             className={`flex items-center border rounded-lg overflow-hidden transition-colors ${
