@@ -1,7 +1,6 @@
 "use client";
 
 import { FileText, Search } from "lucide-react";
-import CreditsBar from "./CreditsBar";
 
 const SUGGESTIONS = [
   "Find cases on wrongful termination",
@@ -248,11 +247,6 @@ export default function ResearchLanding({
           TLS Research
         </h1>
         <div className="w-full h-px bg-[#E6EAED]" />
-      </div>
-
-      {/* Credits bar */}
-      <div className="w-full px-4 pt-6">
-        <CreditsBar />
       </div>
 
       {/* Composer section */}

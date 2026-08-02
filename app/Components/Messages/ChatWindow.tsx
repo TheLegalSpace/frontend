@@ -8,7 +8,6 @@ import { messagesService } from "@/services/messages.services";
 import { connectSocket, refreshSocketAuth } from "@/services/socket.services";
 import AnonymousBanner from "./AnonymousBanner";
 import ReviewModal from "./ReviewModal";
-import EngagementModal from "./EngagementModal";
 import { useAuth } from "@/app/context/AuthContext";
 import { messageKeys, useMessageCache, useMessages } from "@/hooks/useMessages";
 import { useQueryClient } from "@tanstack/react-query";
@@ -100,8 +99,6 @@ interface Props {
   onHasReviewedChange: (val: boolean) => void;
   conversationId: string;
   participantName: string;
-  participantPhone?: string | null;
-  participantEmail?: string | null;
   currentAccountId: string;
   conversationStatus: "open" | "closed";
   onConversationClosed: () => void;
@@ -116,8 +113,6 @@ export default function ChatWindow({
   onHasReviewedChange,
   conversationId,
   participantName,
-  participantPhone,
-  participantEmail,
   currentAccountId,
   conversationStatus,
   onConversationClosed,
@@ -127,8 +122,10 @@ export default function ChatWindow({
   showBackButton = false,
 }: Props) {
   const { user } = useAuth();
-  const isLawyer = user?.role === "LAWYER";
-  const reviewerRole: "client" | "lawyer" = isLawyer ? "lawyer" : "client";
+  const isProfessional = user?.role === "LAWYER" || user?.role === "FIRM";
+  const reviewerRole: "client" | "lawyer" = isProfessional
+    ? "lawyer"
+    : "client";
   const isClosed = conversationStatus === "closed";
 
   const isMountedRef = useRef(true);
@@ -165,7 +162,6 @@ export default function ChatWindow({
   const [closing, setClosing] = useState(false);
   const [input, setInput] = useState("");
   const [showReview, setShowReview] = useState(false);
-  const [showEngagementModal, setShowEngagementModal] = useState(false);
   const [showEngagePopover, setShowEngagePopover] = useState(false);
   const [hasReviewed, setHasReviewedState] = useState(() =>
     getHasReviewed(conversationId),
@@ -198,16 +194,6 @@ export default function ChatWindow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
 
-  const engageBannerKey = `engage-banner:${conversationId}`;
-  const [showEngageBanner, setShowEngageBanner] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return localStorage.getItem(engageBannerKey) === "true";
-    } catch {
-      return false;
-    }
-  });
-
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // ── Scroll: show first message on initial load, scroll on new messages ────
@@ -232,39 +218,11 @@ export default function ChatWindow({
     prevMessageLengthRef.current = messages.length;
   }, [messages]);
 
-  // ── Show engage banner when conversation is closed (client only) ──────────
-  useEffect(() => {
-    if (!isLawyer && isClosed) {
-      const alreadyDismissed =
-        localStorage.getItem(`engage-dismissed:${conversationId}`) === "true";
-      if (!alreadyDismissed) {
-        setShowEngageBanner(true);
-        try {
-          localStorage.setItem(engageBannerKey, "true");
-        } catch {}
-      }
-    }
-  }, [isClosed, isLawyer, conversationId, engageBannerKey]);
-
   // ── Sync per-conversation state when conversationId changes ──────────────
   useEffect(() => {
     setHasReviewedState(getHasReviewed(conversationId));
     setShowEngagePopover(false);
-    if (!isLawyer) {
-      const alreadyDismissed =
-        localStorage.getItem(`engage-dismissed:${conversationId}`) === "true";
-      const stored = localStorage.getItem(engageBannerKey) === "true";
-      setShowEngageBanner(!alreadyDismissed && stored);
-    }
-  }, [conversationId, isLawyer, engageBannerKey]);
-
-  function dismissEngageBanner() {
-    setShowEngageBanner(false);
-    try {
-      localStorage.removeItem(engageBannerKey);
-      localStorage.setItem(`engage-dismissed:${conversationId}`, "true");
-    } catch {}
-  }
+  }, [conversationId]);
 
   // ── Socket setup ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -397,49 +355,57 @@ export default function ChatWindow({
   const markedReadRef = useRef<Set<string>>(new Set());
 
   // Mark a single message as read
-  const markSingleMessageAsRead = useCallback(async (messageId: string) => {
-    if (markedReadRef.current.has(messageId)) return;
-    
-    try {
-      await messagesService.markRead(conversationId, messageId);
-      markedReadRef.current.add(messageId);
-      markMessageRead(messageId);
-    } catch (error) {
-      console.error("Failed to mark message as read:", error);
-    }
-  }, [conversationId, markMessageRead]);
+  const markSingleMessageAsRead = useCallback(
+    async (messageId: string) => {
+      if (markedReadRef.current.has(messageId)) return;
+
+      try {
+        await messagesService.markRead(conversationId, messageId);
+        markedReadRef.current.add(messageId);
+        markMessageRead(messageId);
+      } catch (error) {
+        console.error("Failed to mark message as read:", error);
+      }
+    },
+    [conversationId, markMessageRead],
+  );
 
   // Mark multiple messages as read in batch
-  const markMultipleMessagesAsRead = useCallback(async (messageIds: string[]) => {
-    const unmarkedIds = messageIds.filter(id => !markedReadRef.current.has(id));
-    if (unmarkedIds.length === 0) return;
-
-    try {
-      await Promise.all(
-        unmarkedIds.map(messageId => 
-          messagesService.markRead(conversationId, messageId)
-        )
+  const markMultipleMessagesAsRead = useCallback(
+    async (messageIds: string[]) => {
+      const unmarkedIds = messageIds.filter(
+        (id) => !markedReadRef.current.has(id),
       );
-      
-      unmarkedIds.forEach(id => {
-        markedReadRef.current.add(id);
-        markMessageRead(id);
-      });
-    } catch (error) {
-      console.error("Failed to mark messages as read:", error);
-    }
-  }, [conversationId, markMessageRead]);
+      if (unmarkedIds.length === 0) return;
+
+      try {
+        await Promise.all(
+          unmarkedIds.map((messageId) =>
+            messagesService.markRead(conversationId, messageId),
+          ),
+        );
+
+        unmarkedIds.forEach((id) => {
+          markedReadRef.current.add(id);
+          markMessageRead(id);
+        });
+      } catch (error) {
+        console.error("Failed to mark messages as read:", error);
+      }
+    },
+    [conversationId, markMessageRead],
+  );
 
   // Effect to mark unread messages as read when they appear in the chat
   useEffect(() => {
     const unreadMessageIds = messages
       .filter(
-        msg => 
-          !msg.readAt && 
+        (msg) =>
+          !msg.readAt &&
           msg.senderAccountId !== currentAccountId &&
-          !markedReadRef.current.has(msg.id)
+          !markedReadRef.current.has(msg.id),
       )
-      .map(msg => msg.id);
+      .map((msg) => msg.id);
 
     if (unreadMessageIds.length > 0) {
       // Add a small delay to ensure the UI has rendered
@@ -495,7 +461,7 @@ export default function ChatWindow({
         )}
 
         {/* Anonymous banner — client only, only renders when isAnonymous === true */}
-        {!isLawyer && (
+        {!isProfessional && (
           <AnonymousBanner
             isAnonymous={isAnonymous}
             onToggle={onAnonymousToggle}
@@ -503,7 +469,7 @@ export default function ChatWindow({
         )}
 
         {/* Identity revealed notice — fades out after 4s */}
-        {!isLawyer && showRevealedNotice && (
+        {!isProfessional && showRevealedNotice && (
           <div className="px-5 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2 text-blue-700 text-[12px] animate-fade-in">
             <span>🔓</span>
             <span>
@@ -562,9 +528,8 @@ export default function ChatWindow({
               {grouped.map((group) => {
                 // Check if there are any unread messages from the other party in this group
                 const hasUnreadFromOther = group.messages.some(
-                  msg => 
-                    !msg.readAt && 
-                    msg.senderAccountId !== currentAccountId
+                  (msg) =>
+                    !msg.readAt && msg.senderAccountId !== currentAccountId,
                 );
 
                 return (
@@ -576,7 +541,7 @@ export default function ChatWindow({
                       const isSent = msg.senderAccountId === currentAccountId;
                       const isTemp = msg.id.startsWith("temp-");
                       const isUnread = !msg.readAt && !isSent;
-                      
+
                       return (
                         <div
                           key={msg.id}
@@ -601,7 +566,9 @@ export default function ChatWindow({
                                 isSent ? "text-blue-200" : "text-gray-400"
                               }`}
                             >
-                              {isTemp ? "Sending..." : formatTime(msg.createdAt)}
+                              {isTemp
+                                ? "Sending..."
+                                : formatTime(msg.createdAt)}
                               {isUnread && (
                                 <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                               )}
@@ -621,31 +588,10 @@ export default function ChatWindow({
           <div ref={bottomRef} />
         </div>
 
-        {/* ── Client: engage outside TLS banner — matches design exactly ── */}
-        {!isLawyer && showEngageBanner && (
-          <div className="border-t border-gray-200 bg-white px-4 py-3 flex items-center justify-between gap-3">
-            <p className="text-[13px] text-gray-700 leading-snug">
-              <span className="font-bold text-gray-900">
-                {participantName.toUpperCase()}
-              </span>{" "}
-              would like to proceed with your matter formally.
-            </p>
-            <button
-              onClick={() => {
-                dismissEngageBanner();
-                setShowEngagementModal(true);
-              }}
-              className="shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-medium rounded-lg transition whitespace-nowrap"
-            >
-              Engage outside TLS
-            </button>
-          </div>
-        )}
-
         {/* Input area */}
         <div className="relative px-4 py-3 border-t border-gray-200 bg-white">
-          {/* Lawyer engage-outside-TLS popover */}
-          {isLawyer && showEngagePopover && !isClosed && (
+          {/* Professional (lawyer/firm) engage-outside-TLS popover */}
+          {isProfessional && showEngagePopover && !isClosed && (
             <div className="absolute bottom-full left-4 right-4 mb-2 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-10">
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div>
@@ -686,8 +632,8 @@ export default function ChatWindow({
           )}
 
           <div className="flex items-center gap-3">
-            {/* Lawyer: + button */}
-            {isLawyer && !isClosed && (
+            {/* Professional (lawyer/firm): + button */}
+            {isProfessional && !isClosed && (
               <button
                 onClick={() => setShowEngagePopover((v) => !v)}
                 title="Propose engagement outside TLS"
@@ -703,7 +649,7 @@ export default function ChatWindow({
             )}
 
             {/* Client: mobile review star */}
-            {!isLawyer && (
+            {!isProfessional && (
               <button
                 onClick={() => !reviewDisabled && setShowReview(true)}
                 disabled={reviewDisabled}
@@ -756,17 +702,6 @@ export default function ChatWindow({
           reviewerRole={reviewerRole}
           onClose={() => setShowReview(false)}
           onSubmitted={handleReviewSubmitted}
-        />
-      )}
-
-      {/* Engagement modal — client only */}
-      {!isLawyer && showEngagementModal && (
-        <EngagementModal
-          lawyerName={participantName}
-          lawyerPhone={participantPhone}
-          lawyerEmail={participantEmail}
-          onClose={() => setShowEngagementModal(false)}
-          onContinueOnTLS={() => setShowEngagementModal(false)}
         />
       )}
     </>

@@ -358,8 +358,6 @@ export default function MessagesPage() {
                 onHasReviewedChange={setHasReviewed}
                 conversationId={activeId}
                 participantName={getParticipantName(activeConvo)}
-                participantPhone={activeConvo.otherParty?.phone ?? null}
-                participantEmail={activeConvo.otherParty?.email ?? null}
                 currentAccountId={user?.id ?? ""}
                 conversationStatus={activeConvo.status}
                 onConversationClosed={handleConversationClosed}
