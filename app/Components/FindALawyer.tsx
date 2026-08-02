@@ -437,7 +437,7 @@ function LawyerCard({
 function GradientPill({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="inline-flex items-center rounded-full bg-white px-5 py-2.5 text-[12px] font-medium text-[#202020] shadow-sm"
+      className="w-fit py-2 px-6 rounded-2xl text-[13px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
       style={{
         border: "2px solid transparent",
         backgroundImage:
@@ -776,12 +776,12 @@ export default function FindALawyer() {
       )}
 
       <div
-        className={`grid grid-cols-[55%_45%] h-[calc(100vh-64px)] bg-[#FAFAFA] overflow-hidden ${
+        className={`grid grid-cols-[55%_45%] h-full bg-[#FAFAFA] overflow-hidden ${
           selectedAccountId ? "hidden" : ""
         }`}
       >
         {/* LEFT PANEL */}
-        <div className="bg-white border-r border-[#ECECEC] flex flex-col overflow-hidden">
+        <div className="bg-white border-r border-[#ECECEC] flex flex-col overflow-hidden h-full">
           {/* HEADER */}
           <div className="h-18 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0">
             <div>
@@ -802,7 +802,7 @@ export default function FindALawyer() {
           </div>
 
           {/* CONVERSATION */}
-          <div className="flex-1 overflow-y-auto px-8 py-8">
+          <div className="flex-1 overflow-y-auto px-8 py-8 h-full">
             {!hasSearched && (
               <div className="max-w-2xl">
                 <div className="pb-8 border-b border-[#EFEFEF]">
@@ -968,11 +968,11 @@ export default function FindALawyer() {
               </button>
             </div>
 
-            <p className="text-center text-[11px] text-[#B0B0B0] mt-3">
+            {/* <p className="text-center text-[11px] text-[#B0B0B0] mt-3">
               {clarifyState
                 ? "Press Enter to continue"
                 : "Press Enter to search"}
-            </p>
+            </p> */}
           </div>
         </div>
 
