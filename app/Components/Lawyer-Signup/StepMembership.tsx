@@ -109,6 +109,7 @@ export default function StepMembership({ accountType, onCommunity }: Props) {
       const res = await membershipService.subscribe({
         callbackUrl: `${window.location.origin}/membership/callback`,
         context: "onboarding",
+        annual: annually,
       });
       if (res.data?.authorizationUrl) {
         window.location.href = res.data.authorizationUrl;

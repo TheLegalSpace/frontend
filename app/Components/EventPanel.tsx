@@ -64,7 +64,7 @@ export default function EventsPanel() {
             Want to feature your event with The Legal Space? Request coverage,
             promotion, or partnership through{" "}
             <Link
-              href="dashboard/Tls-services"
+              href="/dashboard/TLS-Services"
               className="text-white underline"
             >
               TLS Services
@@ -175,3 +175,4 @@ export default function EventsPanel() {
     </div>
   );
 }
+

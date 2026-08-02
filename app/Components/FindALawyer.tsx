@@ -579,6 +579,62 @@ export default function FindALawyer() {
     });
   };
 
+  // Handles a free-typed answer for the current clarify step (e.g. a city
+  // not in the preset list, or a custom budget amount). The value is folded
+  // into `extracted` and the whole combined text is re-submitted to the same
+  // /matchmaking/search-by-text NLP endpoint, so arbitrary locations/budgets
+  // are re-parsed by the LLM rather than requiring a structured backend call.
+  const handleClarifyTextAnswer = (key: ClarifyKey, text: string) => {
+    if (!clarifyState || searchByText.isPending) return;
+
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    const nextExtracted: ExtractedIntake = {
+      ...clarifyState.extracted,
+    };
+
+    if (key === "matter") {
+      // Prefer an exact known practice area so we keep a real id; otherwise
+      // store the typed name and let the LLM re-resolve it on resubmit.
+      const known = clarifySteps
+        .find((s) => s.key === "matter")
+        ?.options.find((o) => o.label.toLowerCase() === trimmed.toLowerCase());
+      nextExtracted.matter = known
+        ? { id: known.value, name: known.label }
+        : { id: "", name: trimmed };
+    } else if (key === "budget") {
+      const known = BUDGET_OPTIONS.find(
+        (o) =>
+          o.value === trimmed ||
+          o.label.toLowerCase() === trimmed.toLowerCase(),
+      );
+      nextExtracted.budget = known ? known.value : trimmed;
+    } else {
+      // location — free-form city/state, accepted as-is by the backend.
+      nextExtracted.location = trimmed;
+    }
+
+    const nextMissing = clarifyState.missing.filter((k) => k !== key);
+
+    if (nextMissing.length === 0) {
+      // All required fields answered — submit immediately.
+      setClarifyState({
+        ...clarifyState,
+        extracted: nextExtracted,
+        missing: nextMissing,
+      });
+      runClarifiedSearch(nextExtracted, clarifyState.originalText);
+      return;
+    }
+
+    setClarifyState({
+      ...clarifyState,
+      extracted: nextExtracted,
+      missing: nextMissing,
+    });
+  };
+
   const handleSearch = async (text: string) => {
     if (text.length < 10) {
       setValidationError(
@@ -626,6 +682,15 @@ export default function FindALawyer() {
 
     if (!text || searchByText.isPending) return;
 
+    // While the clarify step is asking for a missing field, the existing
+    // input box + send button answer the current step instead of starting
+    // a brand-new search.
+    if (clarifyState && clarifyState.missing.length > 0) {
+      handleClarifyTextAnswer(clarifyState.missing[0], text);
+      setInputValue("");
+      return;
+    }
+
     handleSearch(text);
   };
 
@@ -645,6 +710,17 @@ export default function FindALawyer() {
   const extracted = searchState?.extracted;
 
   const isSearching = searchByText.isPending;
+
+  // During clarify mode the bottom input box is reused to answer the
+  // current missing-field step, so its placeholder reflects that step.
+  const activeClarifyKey = clarifyState?.missing[0];
+  const inputPlaceholder = activeClarifyKey
+    ? activeClarifyKey === "matter"
+      ? "Type your legal matter (e.g. Property Law) and press Enter..."
+      : activeClarifyKey === "budget"
+        ? "Type your budget (e.g. 250,000) and press Enter..."
+        : "Type your location (e.g. Enugu) and press Enter..."
+    : "Describe your legal situation...";
 
   const classifyAccountType = (account: MatchResult["account"]) => {
     const role = (account.role ?? "").toUpperCase();
@@ -860,7 +936,7 @@ export default function FindALawyer() {
                 rows={1}
                 value={inputValue}
                 disabled={isSearching}
-                placeholder="Describe your legal situation..."
+                placeholder={inputPlaceholder}
                 onChange={(e) => {
                   setInputValue(e.target.value);
 
@@ -893,7 +969,9 @@ export default function FindALawyer() {
             </div>
 
             <p className="text-center text-[11px] text-[#B0B0B0] mt-3">
-              Press Enter to search
+              {clarifyState
+                ? "Press Enter to continue"
+                : "Press Enter to search"}
             </p>
           </div>
         </div>
