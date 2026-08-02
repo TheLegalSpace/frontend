@@ -188,21 +188,10 @@ export function useFeedCache() {
   const updatePostReaction = (
     tab: FeedTab,
     id: string,
-    updater: (post: Post) => Post | null,
+    updater: (post: Post) => Post,
   ) => {
     queryClient.setQueryData<Post[]>(feedKeys.tab(tab), (prev = []) =>
-      prev.reduce<Post[]>((acc, post) => {
-        if (post.id !== id) {
-          acc.push(post);
-          return acc;
-        }
-
-        const updated = updater(post);
-        if (updated) {
-          acc.push(updated);
-        }
-        return acc;
-      }, []),
+      prev.map((post) => (post.id === id ? updater(post) : post)),
     );
   };
 

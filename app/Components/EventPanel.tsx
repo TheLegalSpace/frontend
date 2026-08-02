@@ -2,8 +2,9 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { usePublishedEvents } from "@/hooks/useEvents";
+import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 
 function formatDateRange(startAt: string, endAt: string) {
@@ -46,9 +47,9 @@ export default function EventsPanel() {
   const activeEvent = events[current];
 
   return (
-    <div className="flex flex-col gap-3 xl:fixed mt-17 lg:top-2 font-[Instrument_Serif] p-4 min-h-screen border-l border-[#ECECEC] w-full max-w-108 xl:mr-2">
+    <div className="flex flex-col gap-3 xl:fixed mt-17 lg:top-2 font-[Instrument_Serif] p-4 min-h-screen border-l border-[#ECECEC]">
       {/* Banner */}
-      <div className="relative overflow-hidden rounded-xl bg-[#1D4ED8] px-4 py-4 w-full">
+      <div className="relative overflow-hidden rounded-xl bg-[#1D4ED8] px-4 py-4">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute right-6 top-2 text-5xl text-white">✦</div>
           <div className="absolute right-16 bottom-1 text-4xl text-white">
@@ -56,33 +57,34 @@ export default function EventsPanel() {
           </div>
         </div>
         <div className="relative z-10 font-['Geist']">
-          <h2 className="text-[16px] font-[Instrument_Serif] font-medium text-white mb-1">
+          <h2 className="text-[16px] font-[Instrument_Serif] font-medium text-white mb-1 ">
             On The Docket
           </h2>
           <p className="text-[12px] text-blue-100 font-[Geist]">
-<<<<<<< HEAD
-            Want to feature your event? Reach us at{" "}
-            <a
-              href="mailto:events@thelegalspace.com"
-              className="text-white underline underline-offset-2"
-=======
             Want to feature your event with The Legal Space? Request coverage,
             promotion, or partnership through{" "}
             <Link
               href="/dashboard/TLS-Services"
               className="text-white underline"
->>>>>>> 8b84b68dae5cb5ca3a4bb5ba473e6adb2458b556
             >
-              events@thelegalspace.com
-            </a>
+              TLS Services
+            </Link>
+            .{" "}
           </p>
+          {/* <a
+            href="mailto:events@thelegalspace.com"
+            className="text-[12px] text-white underline underline-offset-2"
+          >
+            event@thelegalspace.com
+          </a> */}
         </div>
       </div>
+      {/* <div className="bg-[#E6EAED] h-px w-full"></div> */}
 
       {/* Event Card */}
-      <div className="rounded-xl font-[Instrument_Serif] flex flex-col gap-3 items-center w-full">
+      <div className=" rounded-xl  font-[Instrument_Serif] flex flex-col gap-2 items-center ">
         {isLoading && (
-          <div className="font-['Geist'] h-48 rounded-xl bg-white flex items-center justify-center text-base text-gray-400 w-full">
+          <div className="font-['Geist'] h-48 rounded-xl bg-white flex items-center justify-center text-base text-gray-400">
             Loading events...
           </div>
         )}
@@ -90,53 +92,61 @@ export default function EventsPanel() {
         {!isLoading && activeEvent && (
           <>
             {/* Poster */}
-            <div className="group relative overflow-hidden cursor-pointer w-full">
+            <div className="relative overflow-hidden rounded-xl bg-white">
               {activeEvent.coverUrl && (
-                <div className="w-full aspect-4/5 max-h-120 overflow-hidden rounded-[1.25rem] bg-[#F3F4F6]">
-                  <img
-                    src={activeEvent.coverUrl}
-                    alt={activeEvent.title}
-                    className="h-full w-full object-contain object-center block rounded-[1.25rem]"
-                  />
-                </div>
+                <img
+                  src={activeEvent.coverUrl}
+                  alt={activeEvent.title}
+                  className="w-full h-[63vh] object-cover"
+                />
               )}
-
-              {/* Darkened overlay on hover */}
-              <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-              {/* Name + location, slides up on hover */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 font-['Geist'] translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                <h3 className="text-white text-[14px] font-medium leading-snug mb-1.5 line-clamp-2">
-                  {activeEvent.title}
-                </h3>
-                <div className="flex items-center gap-1 text-white/85 text-[11px]">
-                  <MapPin className="w-3 h-3 shrink-0" />
-                  <span className="line-clamp-1">{activeEvent.location}</span>
-                </div>
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-3">
+                {/* <div className="w-9 h-9 rounded-full border-2 border-white overflow-hidden">
+                  <img
+                    src="https://randomuser.me/api/portraits/men/32.jpg"
+                    alt="host"
+                    className="w-full h-full object-cover"
+                  />
+                </div> */}
               </div>
             </div>
 
             {/* CTA */}
-            <button className="font-['Geist'] w-full h-9 rounded-lg bg-[#ECECEC] hover:bg-[#1D4ED8] hover:text-white transition-all duration-300 text-[12px] font-medium text-[#2A2B2D] flex items-center justify-center gap-1.5">
-              Register for Event
+            <button className="font-['Geist'] w-full  h-9 rounded-lg bg-[#ECECEC] hover:bg-[#1D4ED8] hover:text-white transition-all duration-300 text-[12px] font-medium text-[#2A2B2D] flex items-center justify-center gap-1.5">
+              Additional Information
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
 
+            {/* Info */}
+            {/* <div className="mt-3 px-1 font-['Geist']">
+              span className="inline-flex px-2 py-0.5 rounded-full bg-[#E1F5EE] text-[#0F6E56] border border-[#5DCAA5] text-[10px] mb-2">
+                {activeEvent.status}
+              </span> 
+              <h3 className="text-[13px] font-medium leading-snug text-[#111827] mb-1.5">
+                {activeEvent.title}
+              </h3>
+              <div className="flex flex-col gap-1 text-[11px] text-gray-500">
+                <p>{activeEvent.location}</p>
+                <p>{formatDateRange(activeEvent.startAt, activeEvent.endAt)}</p>
+                <p>{formatTime(activeEvent.startAt)}</p>
+              </div>
+            </div> */}
+
             {/* Pagination */}
             {events.length > 1 && (
-              <div className="flex items-center justify-between w-full px-2">
+              <div className="flex items-center justify-center gap-5 ">
                 <button
                   onClick={prevSlide}
-                  className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-gray-100 transition shrink-0"
+                  className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200 transition"
                 >
-                  <ChevronLeft className="w-4 h-4 text-gray-500" />
+                  <ChevronLeft className="w-3.5 h-3.5 text-gray-700" />
                 </button>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   {events.map((_, index) => (
                     <div
                       key={index}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                      className={`h-1.5 rounded-full transition-all ${
                         current === index
                           ? "bg-[#1D4ED8] w-4"
                           : "bg-[#D1D5DB] w-1.5"
@@ -147,9 +157,9 @@ export default function EventsPanel() {
 
                 <button
                   onClick={nextSlide}
-                  className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-gray-100 transition shrink-0"
+                  className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-200 transition"
                 >
-                  <ChevronRight className="w-4 h-4 text-gray-500" />
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-700" />
                 </button>
               </div>
             )}
@@ -157,16 +167,12 @@ export default function EventsPanel() {
         )}
 
         {!isLoading && !events.length && (
-          <div className="h-36 rounded-xl bg-white flex items-center justify-center text-xs text-gray-400 w-full">
+          <div className="h-36 rounded-xl bg-white flex items-center justify-center text-xs text-gray-400">
             No upcoming events
           </div>
         )}
       </div>
     </div>
   );
-<<<<<<< HEAD
-}
-=======
 }
 
->>>>>>> 8b84b68dae5cb5ca3a4bb5ba473e6adb2458b556
