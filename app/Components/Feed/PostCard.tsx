@@ -1,9 +1,18 @@
 // PostCard.tsx
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ThumbsUp, ThumbsDown, BadgeCheck, FileText, Calendar, BookOpen, Clock } from "lucide-react";
+import {
+  ThumbsUp,
+  ThumbsDown,
+  BadgeCheck,
+  BookOpen,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
 import Avatar from "./Avatar";
+import ReportPostModal from "./ReportPostModal";
 
 export interface Post {
   id: string;
@@ -22,6 +31,7 @@ export interface Post {
   dislikes: number;
   userReaction: "like" | "dislike" | null;
   createdAt?: string;
+  moderationStatus?: "under_review" | null;
 }
 
 function formatArticleDate(dateStr: string): string {
@@ -36,14 +46,15 @@ function formatArticleDate(dateStr: string): string {
   }
 }
 
-
 interface Props {
   post: Post;
   onReact: (id: string, reaction: "like" | "dislike") => void;
+  onReported: (id: string, alreadyReported: boolean, message: string) => void;
 }
 
-export default function PostCard({ post, onReact }: Props) {
+export default function PostCard({ post, onReact, onReported }: Props) {
   const router = useRouter();
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const handleOpenProfile = () => {
     if (!post.authorAccountId) return;
@@ -51,13 +62,13 @@ export default function PostCard({ post, onReact }: Props) {
   };
 
   return (
-    <div className="border-b border-[#E6EAED] py-5 last:border-b-0 hover:bg-white/30 transition w-full">
+    <div className="border-b border-[#E6EAED] py-5 last:border-b-0 hover:bg-white/30 transition w-full relative">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-3 px-4">
+      <div className="flex items-start justify-between gap-3 mb-3 px-4">
         <button
           type="button"
           onClick={handleOpenProfile}
-          className="flex items-center gap-3 flex-1 min-w-0 text-left"
+          className="flex items-start gap-3 flex-1 min-w-0 text-left"
         >
           <Avatar
             initials={post.authorInitials}
@@ -65,18 +76,39 @@ export default function PostCard({ post, onReact }: Props) {
             size={40}
           />
 
-          <div className="flex-1 min-w-0 flex items-center gap-1.5">
-            <span className="font-medium text-[24px] text-gray-900 font-['Instrument_Serif'] hover:text-[#1D4ED8] transition-colors">
-              {post.author}
-            </span>
-            {post.isVerified && (
-              <BadgeCheck size={16} className="text-blue-500 shrink-0" />
-            )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="font-medium text-[24px] text-gray-900 font-['Instrument_Serif'] hover:text-[#1D4ED8] transition-colors">
+                {post.author}
+              </span>
+              {post.isVerified && (
+                <BadgeCheck size={16} className="text-blue-500 shrink-0" />
+              )}
+            </div>
+            <div className="flex items-center gap-1 mt-0.5">
+              <Clock size={12} className="text-gray-400" />
+              <span className="text-xs text-gray-400">{post.timeAgo}</span>
+            </div>
           </div>
         </button>
 
-        <span className="text-xs text-gray-400 shrink-0">{post.timeAgo}</span>
+        <button
+          type="button"
+          onClick={() => setShowReportModal(true)}
+          className="text-red-500 hover:text-red-600 transition shrink-0"
+          aria-label="Report post"
+          title="Report post"
+        >
+          <AlertCircle size={18} />
+        </button>
       </div>
+
+      {/* Under-review badge — only ever present for the author's own auto-hidden post */}
+      {post.moderationStatus === "under_review" && (
+        <div className="mx-4 mb-3 inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs text-amber-700">
+          Under review, temporarily hidden from others
+        </div>
+      )}
 
       {/* Body */}
       <p className="px-4 text-[15px] text-gray-800 leading-6 whitespace-pre-line mb-3 font-['Geist']">
@@ -120,7 +152,6 @@ export default function PostCard({ post, onReact }: Props) {
         </div>
       )}
 
-
       {/* Reactions */}
       <div className="px-4 flex items-center gap-5">
         <button
@@ -155,6 +186,17 @@ export default function PostCard({ post, onReact }: Props) {
           )}
         </button>
       </div>
+
+      {showReportModal && (
+        <ReportPostModal
+          postId={post.id}
+          onClose={() => setShowReportModal(false)}
+          onReported={(alreadyReported, message) => {
+            setShowReportModal(false);
+            onReported(post.id, alreadyReported, message);
+          }}
+        />
+      )}
     </div>
   );
 }

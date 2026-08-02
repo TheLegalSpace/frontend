@@ -18,4 +18,5 @@ export interface MyPost {
   title?: string | null;
   pdfName?: string | null;
   pdfSizeBytes?: number | null;
+  moderationStatus?: "under_review" | null;
 }

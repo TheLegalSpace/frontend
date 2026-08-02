@@ -30,7 +30,12 @@ export const membershipService = {
    * On success, redirect the browser to `data.authorizationUrl`.
    * 409 → user is already an active professional member.
    */
-  async subscribe(payload?: { callbackUrl?: string; context?: string }) {
+  async subscribe(payload?: {
+    callbackUrl?: string;
+    context?: string;
+    /** true → charge the 12-month (annual) price; false/absent → 6-month price. */
+    annual?: boolean;
+  }) {
     const { data } = await api.post<{ data: SubscribeResult }>(
       "/membership/subscribe",
       payload ?? {},
