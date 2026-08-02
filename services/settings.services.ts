@@ -10,7 +10,7 @@ export interface UpdateProfilePayload {
 }
 export interface UpdatePersonalInfoPayload {
   fullName: string; // ✅ not firstName/lastName
-  phone: string;
+  phone?: string;
   role: string;
   bio?: string;
   locationCity?: string;

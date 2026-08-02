@@ -28,6 +28,7 @@ export interface ResearchThread {
     attachments: ResearchAttachment[] | null;
     sources: ResearchSource[] | null;
     confident: boolean | null;
+    creditsRemaining?: number | null;
     createdAt: string;
     // Only present on POST response — not persisted, not on reload
     grounded?: boolean;

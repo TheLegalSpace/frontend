@@ -24,7 +24,7 @@ export default function Page() {
       {/* Spacer for fixed header */}
       <div className="h-18.75" />
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] items-start">
         <AppointmentForm />
         <div className="min-w-0">
           <EventsPanel />
