@@ -9,14 +9,12 @@ import { useToast } from "@/app/context/ToastContext";
 interface Props {
   fullName: string;
   email: string;
-  phone: string | null;
   role: string;
 }
 
 export default function PersonalInfoSection({
   fullName: initialFullName,
   email,
-  phone: initialPhone,
   role,
 }: Props) {
   const [editing, setEditing] = useState(false);
@@ -32,16 +30,12 @@ export default function PersonalInfoSection({
     };
   };
 
-  const cleanPhone = (raw: string | null) =>
-    raw?.replace("+234", "").trim() ?? "";
-
   const [firstName, setFirstName] = useState(
     () => splitName(initialFullName).first,
   );
   const [lastName, setLastName] = useState(
     () => splitName(initialFullName).last,
   );
-  const [phone, setPhone] = useState(() => cleanPhone(initialPhone));
 
   // ✅ Sync local state when props update
   // This fires when the parent re-renders with fresh data from useMe()
@@ -51,9 +45,8 @@ export default function PersonalInfoSection({
       const { first, last } = splitName(initialFullName);
       setFirstName(first);
       setLastName(last);
-      setPhone(cleanPhone(initialPhone));
     }
-  }, [initialFullName, initialPhone, editing]);
+  }, [initialFullName, editing]);
 
   const handleSave = async () => {
     setError("");
@@ -65,7 +58,6 @@ export default function PersonalInfoSection({
     try {
       await updateInfo.mutateAsync({
         fullName: combined,
-        phone: phone ? `+234${phone}` : "",
         role,
       });
       setEditing(false);
@@ -81,7 +73,6 @@ export default function PersonalInfoSection({
     const { first, last } = splitName(initialFullName);
     setFirstName(first);
     setLastName(last);
-    setPhone(cleanPhone(initialPhone));
     setError("");
     setEditing(false);
   };
@@ -189,31 +180,6 @@ export default function PersonalInfoSection({
           </div>
         </div>
 
-        {/* Phone */}
-        <div>
-          <label className="block text-[12px] text-gray-500 mb-1.5">
-            Phone Number
-          </label>
-          <div
-            className={`flex items-center border rounded-lg overflow-hidden transition-colors ${
-              editing
-                ? "border-gray-200 focus-within:border-[#2563EB]"
-                : "border-gray-200 bg-white"
-            }`}
-          >
-            <span className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-gray-500 border-r border-gray-200 bg-white shrink-0">
-              +234
-            </span>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              disabled={!editing}
-              placeholder="704 2321 221"
-              className="flex-1 px-3 py-2.5 text-[13px] text-gray-800 bg-transparent outline-none disabled:text-gray-600"
-            />
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-5 items-start">
+        <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] items-start">
           {/* Left */}
           <div className="min-w-0 mt-23.75">
             <ProfileCard
