@@ -26,11 +26,23 @@ function signalResearchThread(active: boolean) {
   );
 }
 
+/** True if this error came from an AbortController cancel, not a real failure. */
+function isCancelError(err: any): boolean {
+  return (
+    err?.code === "ERR_CANCELED" ||
+    err?.name === "CanceledError" ||
+    err?.name === "AbortError"
+  );
+}
+
 export default function TLSResearchPage() {
   const [threads, setThreads] = useState<ResearchThread[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const activeIdRef = useRef<string | null>(null);
   const isMountedRef = useRef(true);
+
+  // Tracks the in-flight ask() request so it can be cancelled.
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -95,8 +107,6 @@ export default function TLSResearchPage() {
   }, []);
 
   // ── New thread (DRAFT ONLY) ───────────────────────────────────────────────
-  // Creates the thread *visually* only. It is NOT registered on the backend
-  // until the first message is actually sent (see persistAndSend).
   function startDraft() {
     const now = new Date().toISOString();
     const draft: ResearchThreadDetail = {
@@ -117,15 +127,65 @@ export default function TLSResearchPage() {
     setMobileView("chat");
   }
 
+  // ── Cancel the in-flight request ──────────────────────────────────────────
+  function handleCancel() {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+
+    if (isMountedRef.current) {
+      // Drop the temp/optimistic user message — the user said they might
+      // want to change it, so don't leave a half-sent bubble behind.
+      setMessages((prev) => prev.filter((m) => !m.id.startsWith("temp-")));
+      setThinking(false);
+      setPendingPdf(null);
+      setError(null);
+    }
+  }
+
   // ── Persist the draft on the FIRST message, then send it ──────────────────
   async function persistAndSend(text: string, pdf?: File) {
     setError(null);
+
+    const optimisticUser: ResearchMessage = {
+      id: `temp-${Date.now()}`,
+      threadId: DRAFT_ID,
+      role: "user",
+      content: text,
+      attachments: pdf
+        ? [{ kind: "pdf", url: "", filename: pdf.name, sizeBytes: pdf.size }]
+        : null,
+      sources: null,
+      confident: null,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Show it instantly — before createThread() has even started.
+    setActiveId(DRAFT_ID);
+    activeIdRef.current = DRAFT_ID;
+    setActiveThread({
+      id: DRAFT_ID,
+      accountId: "",
+      title: "New research",
+      pinned: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      deletedAt: null,
+      messages: [],
+    });
+    setMessages([optimisticUser]);
+    setMobileView("chat");
+    setThinking(true);
+    setPendingPdf(pdf ?? null);
+
     let thread: ResearchThread;
     try {
       thread = await researchService.createThread();
     } catch (err) {
       console.error("Failed to create thread:", err);
       if (isMountedRef.current) {
+        setThinking(false);
+        setPendingPdf(null);
+        setMessages([]);
         setError({
           message: "Couldn't start a new research thread. Please try again.",
           onRetry: () => persistAndSend(text, pdf),
@@ -134,23 +194,88 @@ export default function TLSResearchPage() {
       return;
     }
     if (!isMountedRef.current) return;
-    // Promote the visual draft into a real, registered thread.
+
     setThreads((prev) => [thread, ...prev]);
     setActiveId(thread.id);
     activeIdRef.current = thread.id;
     setActiveThread({ ...thread, messages: [] });
-    setMessages([]);
-    setMobileView("chat");
-    await doSend(thread.id, text, pdf);
+    setMessages([{ ...optimisticUser, threadId: thread.id }]);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      const assistant = await researchService.ask(
+        thread.id,
+        text,
+        pdf,
+        controller.signal,
+      );
+
+      if (activeIdRef.current !== thread.id) {
+        await loadThreads();
+        return;
+      }
+
+      if (isMountedRef.current) {
+        setMessages((prev) => {
+          const withoutTemp = prev.filter((m) => m.id !== optimisticUser.id);
+          return [
+            ...withoutTemp,
+            {
+              ...optimisticUser,
+              id: `user-${Date.now()}`,
+              threadId: thread.id,
+            },
+            assistant,
+          ];
+        });
+        await loadThreads();
+      }
+    } catch (err: any) {
+      if (isCancelError(err)) {
+        // Cancelled deliberately — handleCancel() already cleaned up state.
+        return;
+      }
+      if (activeIdRef.current === thread.id && isMountedRef.current) {
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticUser.id));
+
+        if (err?.status === 402) {
+          // Out of credits — wire setShowBuyModal(true) here if this page
+          // owns that state.
+        } else if (err?.status === 503) {
+          setError({
+            message:
+              err.message || "Legal-source search is temporarily unavailable.",
+            onRetry: () => doSend(thread.id, text, pdf),
+          });
+        } else if (err?.status === 429) {
+          setError({
+            message: "You're sending questions too fast — wait a moment.",
+            onRetry: () => doSend(thread.id, text, pdf),
+          });
+        } else {
+          setError({
+            message: err?.message || "Something went wrong.",
+            onRetry: () => doSend(thread.id, text, pdf),
+          });
+        }
+      }
+    } finally {
+      abortControllerRef.current = null;
+      if (activeIdRef.current === thread.id && isMountedRef.current) {
+        setThinking(false);
+        setPendingPdf(null);
+      }
+    }
   }
 
-  // ── Core send ─────────────────────────────────────────────────────────────
+  // ── Core send (existing, already-registered threads) ──────────────────────
   async function doSend(threadId: string, text: string, pdf?: File) {
     setError(null);
     setThinking(true);
     setPendingPdf(pdf ?? null);
 
-    // Optimistic user message
     const optimisticUser: ResearchMessage = {
       id: `temp-${Date.now()}`,
       threadId,
@@ -165,12 +290,18 @@ export default function TLSResearchPage() {
     };
     setMessages((prev) => [...prev, optimisticUser]);
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
-      const assistant = await researchService.ask(threadId, text, pdf);
+      const assistant = await researchService.ask(
+        threadId,
+        text,
+        pdf,
+        controller.signal,
+      );
 
       if (activeIdRef.current !== threadId) {
-        // Active thread changed, do not leak this query response to the new thread's UI messages state.
-        // But refresh sidebar if needed (e.g. name of new thread created)
         const currentThread = threads.find((t) => t.id === threadId);
         if (!currentThread || currentThread.title === "New research") {
           await loadThreads();
@@ -188,16 +319,23 @@ export default function TLSResearchPage() {
           ];
         });
 
-        // Refresh sidebar title if this was the first message
         const currentThread = threads.find((t) => t.id === threadId);
         if (!currentThread || currentThread.title === "New research") {
           await loadThreads();
         }
       }
     } catch (err: any) {
+      if (isCancelError(err)) {
+        // Cancelled deliberately — handleCancel() already cleaned up state.
+        return;
+      }
       if (activeIdRef.current === threadId && isMountedRef.current) {
         setMessages((prev) => prev.filter((m) => m.id !== optimisticUser.id));
-        if (err?.status === 503) {
+
+        if (err?.status === 402) {
+          // Out of credits — wire setShowBuyModal(true) here if this page
+          // owns that state.
+        } else if (err?.status === 503) {
           setError({
             message:
               err.message || "Legal-source search is temporarily unavailable.",
@@ -216,6 +354,7 @@ export default function TLSResearchPage() {
         }
       }
     } finally {
+      abortControllerRef.current = null;
       if (activeIdRef.current === threadId && isMountedRef.current) {
         setThinking(false);
         setPendingPdf(null);
@@ -245,10 +384,16 @@ export default function TLSResearchPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, thinking]);
 
+  // ── Cancel any in-flight request when unmounting or switching threads ────
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
   // ── Sidebar actions ───────────────────────────────────────────────────────
   async function handleDelete(id: string) {
     if (id === DRAFT_ID) {
-      // Draft was never registered — just discard it locally.
       if (activeIdRef.current === DRAFT_ID) {
         setActiveId(null);
         activeIdRef.current = null;
@@ -271,7 +416,7 @@ export default function TLSResearchPage() {
   }
 
   async function handleRename(id: string, title: string) {
-    if (id === DRAFT_ID) return; // not registered yet — nothing to rename
+    if (id === DRAFT_ID) return;
     const updated = await researchService.patchThread(id, { title });
     if (!isMountedRef.current) return;
     setThreads((prev) => prev.map((t) => (t.id === id ? updated : t)));
@@ -281,7 +426,7 @@ export default function TLSResearchPage() {
   }
 
   async function handlePin(id: string, pinned: boolean) {
-    if (id === DRAFT_ID) return; // not registered yet — nothing to pin
+    if (id === DRAFT_ID) return;
     const updated = await researchService.patchThread(id, { pinned });
     if (!isMountedRef.current) return;
     setThreads((prev) =>
@@ -297,6 +442,8 @@ export default function TLSResearchPage() {
 
   // ── Back to the research landing (exit the current chat) ─────────────────
   function handleBackToLanding() {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
     setActiveId(null);
     activeIdRef.current = null;
     setActiveThread(null);
@@ -307,7 +454,6 @@ export default function TLSResearchPage() {
 
   // ── Landing suggestion ────────────────────────────────────────────────────
   function handleSuggestion(text: string) {
-    // A suggestion IS the first message → register the thread as we send.
     persistAndSend(text);
   }
 
@@ -439,7 +585,11 @@ export default function TLSResearchPage() {
         </div>
 
         {/* Composer */}
-        <ResearchComposer onSend={handleSend} disabled={thinking} />
+        <ResearchComposer
+          onSend={handleSend}
+          onCancel={handleCancel}
+          disabled={thinking}
+        />
       </div>
     </div>
   );

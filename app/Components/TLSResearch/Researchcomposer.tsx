@@ -1,10 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Send, Paperclip, X, Loader2 } from "lucide-react";
+import { Send, Paperclip, X, Loader2, Square } from "lucide-react";
 
 interface Props {
   onSend: (text: string, pdf?: File) => void;
+  onCancel?: () => void;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -13,6 +14,7 @@ const MAX_PDF_BYTES = 25 * 1024 * 1024; // 25 MB
 
 export default function ResearchComposer({
   onSend,
+  onCancel,
   disabled,
   placeholder,
 }: Props) {
@@ -127,19 +129,30 @@ export default function ResearchComposer({
           )}
         </div>
 
-        {/* Send button */}
-        <button
-          onClick={handleSend}
-          disabled={!text.trim() || disabled || overLimit}
-          className="w-16 h-12 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition disabled:opacity-40 shrink-0 mb-0.5"
-          aria-label="Send"
-        >
-          {disabled ? (
-            <Loader2 size={15} className="text-white animate-spin" />
-          ) : (
-            <Send size={15} className="text-white" />
-          )}
-        </button>
+        {/* Send / Stop button */}
+        {disabled && onCancel ? (
+          <button
+            onClick={onCancel}
+            className="w-16 h-12 rounded-full bg-gray-900 hover:bg-gray-800 flex items-center justify-center transition shrink-0 mb-0.5"
+            aria-label="Stop generating"
+            title="Cancel this request"
+          >
+            <Square size={13} className="text-white fill-white" />
+          </button>
+        ) : (
+          <button
+            onClick={handleSend}
+            disabled={!text.trim() || disabled || overLimit}
+            className="w-16 h-12 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition disabled:opacity-40 shrink-0 mb-0.5"
+            aria-label="Send"
+          >
+            {disabled ? (
+              <Loader2 size={15} className="text-white animate-spin" />
+            ) : (
+              <Send size={15} className="text-white" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Disclaimer */}
