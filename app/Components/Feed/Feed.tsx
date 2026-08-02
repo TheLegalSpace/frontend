@@ -1,6 +1,5 @@
 ﻿"use client";
 
-import { useState } from "react";
 import PostCard from "./PostCard";
 import { api } from "@/services/api";
 import {
@@ -17,12 +16,6 @@ interface FeedProps {
 export default function Feed({ activeTab }: FeedProps) {
   const { data: posts = [], isLoading } = useFeed(activeTab);
   const { updatePostReaction, invalidateFeed } = useFeedCache();
-  const [toast, setToast] = useState<string | null>(null);
-
-  function showToast(message: string) {
-    setToast(message);
-    window.setTimeout(() => setToast(null), 3000);
-  }
 
   async function handleReact(id: string, reaction: "like" | "dislike") {
     const post = posts.find((p) => p.id === id);
@@ -73,15 +66,6 @@ export default function Feed({ activeTab }: FeedProps) {
     }
   }
 
-  // postHidden is always true on a successful report (new or repeat) —
-  // pull it out of the current tab optimistically. The server already
-  // excludes it on the next real fetch either way.
-  function handleReported(id: string, alreadyReported: boolean, message: string) {
-    updatePostReaction(activeTab, id, () => null);
-    invalidateFeed(activeTab);
-    showToast(message);
-  }
-
   return (
     <div className="w-full bg-white mt-18">
       {isLoading ? (
@@ -89,21 +73,10 @@ export default function Feed({ activeTab }: FeedProps) {
       ) : posts.length === 0 ? (
         <div className="text-center py-10 text-gray-400">Nothing here yet.</div>
       ) : (
-        <div className="flex flex-col items-center w-full">
+        <div className="flex flex-col items-center w-full" >
           {posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              onReact={handleReact}
-              onReported={handleReported}
-            />
+            <PostCard key={post.id} post={post} onReact={handleReact} />
           ))}
-        </div>
-      )}
-
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 rounded-lg bg-gray-900 text-white text-sm px-4 py-2.5 shadow-lg">
-          {toast}
         </div>
       )}
     </div>

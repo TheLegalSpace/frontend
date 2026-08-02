@@ -12,14 +12,14 @@ import ResearchSidebar from "./Researchsidebar";
 import MessageList from "./Messagelist";
 import ResearchComposer from "./Researchcomposer";
 import ResearchLanding from "./Researchlanding";
-import CreditsBar from "./CreditsBar";
-import BuyCreditsModal from "./BuyCreditsModal";
-import { useCreditsCache } from "@/hooks/useCredits";
 
 type ErrorState = { message: string; onRetry: () => void } | null;
 
+/** Sentinel id for a thread that exists only in the UI and has NOT been
+ *  registered on the backend yet. It becomes a real thread on first send. */
 const DRAFT_ID = "__draft__";
 
+/** Tell the dashboard Sidebar whether the research thread view is active */
 function signalResearchThread(active: boolean) {
   window.dispatchEvent(
     new CustomEvent("research:thread", { detail: { active } }),
@@ -31,8 +31,6 @@ export default function TLSResearchPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const activeIdRef = useRef<string | null>(null);
   const isMountedRef = useRef(true);
-
-  const { setBalance, invalidateCredits } = useCreditsCache();
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -51,7 +49,6 @@ export default function TLSResearchPage() {
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [mobileView, setMobileView] = useState<"sidebar" | "chat">("sidebar");
-  const [showBuyModal, setShowBuyModal] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // ── Load sidebar ──────────────────────────────────────────────────────────
@@ -98,6 +95,8 @@ export default function TLSResearchPage() {
   }, []);
 
   // ── New thread (DRAFT ONLY) ───────────────────────────────────────────────
+  // Creates the thread *visually* only. It is NOT registered on the backend
+  // until the first message is actually sent (see persistAndSend).
   function startDraft() {
     const now = new Date().toISOString();
     const draft: ResearchThreadDetail = {
@@ -135,6 +134,7 @@ export default function TLSResearchPage() {
       return;
     }
     if (!isMountedRef.current) return;
+    // Promote the visual draft into a real, registered thread.
     setThreads((prev) => [thread, ...prev]);
     setActiveId(thread.id);
     activeIdRef.current = thread.id;
@@ -150,6 +150,7 @@ export default function TLSResearchPage() {
     setThinking(true);
     setPendingPdf(pdf ?? null);
 
+    // Optimistic user message
     const optimisticUser: ResearchMessage = {
       id: `temp-${Date.now()}`,
       threadId,
@@ -167,16 +168,9 @@ export default function TLSResearchPage() {
     try {
       const assistant = await researchService.ask(threadId, text, pdf);
 
-      // Update credits balance from the response — the single source of truth
-      // per message. Only substantive (confident) answers cost a credit; if
-      // creditsRemaining came back null, refetch instead of guessing.
-      if (assistant.creditsRemaining !== null && assistant.creditsRemaining !== undefined) {
-        setBalance(assistant.creditsRemaining);
-      } else if (assistant.confident) {
-        invalidateCredits();
-      }
-
       if (activeIdRef.current !== threadId) {
+        // Active thread changed, do not leak this query response to the new thread's UI messages state.
+        // But refresh sidebar if needed (e.g. name of new thread created)
         const currentThread = threads.find((t) => t.id === threadId);
         if (!currentThread || currentThread.title === "New research") {
           await loadThreads();
@@ -194,6 +188,7 @@ export default function TLSResearchPage() {
           ];
         });
 
+        // Refresh sidebar title if this was the first message
         const currentThread = threads.find((t) => t.id === threadId);
         if (!currentThread || currentThread.title === "New research") {
           await loadThreads();
@@ -202,12 +197,7 @@ export default function TLSResearchPage() {
     } catch (err: any) {
       if (activeIdRef.current === threadId && isMountedRef.current) {
         setMessages((prev) => prev.filter((m) => m.id !== optimisticUser.id));
-
-        if (err?.status === 402) {
-          // Out of credits — this is not an error state, it's a top-up prompt.
-          // Don't populate the error banner; open the buy sheet instead.
-          setShowBuyModal(true);
-        } else if (err?.status === 503) {
+        if (err?.status === 503) {
           setError({
             message:
               err.message || "Legal-source search is temporarily unavailable.",
@@ -234,6 +224,8 @@ export default function TLSResearchPage() {
   }
 
   function handleSend(text: string, pdf?: File) {
+    // No active thread, or an unsaved draft → register on the backend now,
+    // as part of sending the first message.
     if (!activeId || activeId === DRAFT_ID) {
       persistAndSend(text, pdf);
       return;
@@ -242,12 +234,13 @@ export default function TLSResearchPage() {
   }
 
   const isThreadActive = !!activeId && !!activeThread;
-
+  // ── Signal sidebar hide/show based on thread active state ───────────────
   useEffect(() => {
     signalResearchThread(isThreadActive);
-    return () => signalResearchThread(false);
+    return () => signalResearchThread(false); // cleanup on unmount
   }, [isThreadActive]);
 
+  // ── Scroll to bottom ──────────────────────────────────────────────────────
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, thinking]);
@@ -255,6 +248,7 @@ export default function TLSResearchPage() {
   // ── Sidebar actions ───────────────────────────────────────────────────────
   async function handleDelete(id: string) {
     if (id === DRAFT_ID) {
+      // Draft was never registered — just discard it locally.
       if (activeIdRef.current === DRAFT_ID) {
         setActiveId(null);
         activeIdRef.current = null;
@@ -277,7 +271,7 @@ export default function TLSResearchPage() {
   }
 
   async function handleRename(id: string, title: string) {
-    if (id === DRAFT_ID) return;
+    if (id === DRAFT_ID) return; // not registered yet — nothing to rename
     const updated = await researchService.patchThread(id, { title });
     if (!isMountedRef.current) return;
     setThreads((prev) => prev.map((t) => (t.id === id ? updated : t)));
@@ -287,7 +281,7 @@ export default function TLSResearchPage() {
   }
 
   async function handlePin(id: string, pinned: boolean) {
-    if (id === DRAFT_ID) return;
+    if (id === DRAFT_ID) return; // not registered yet — nothing to pin
     const updated = await researchService.patchThread(id, { pinned });
     if (!isMountedRef.current) return;
     setThreads((prev) =>
@@ -301,6 +295,7 @@ export default function TLSResearchPage() {
     );
   }
 
+  // ── Back to the research landing (exit the current chat) ─────────────────
   function handleBackToLanding() {
     setActiveId(null);
     activeIdRef.current = null;
@@ -310,7 +305,9 @@ export default function TLSResearchPage() {
     setMobileView("sidebar");
   }
 
+  // ── Landing suggestion ────────────────────────────────────────────────────
   function handleSuggestion(text: string) {
+    // A suggestion IS the first message → register the thread as we send.
     persistAndSend(text);
   }
 
@@ -323,9 +320,6 @@ export default function TLSResearchPage() {
           onNewThread={startDraft}
           onUploadAndNew={startDraft}
         />
-        {showBuyModal && (
-          <BuyCreditsModal onClose={() => setShowBuyModal(false)} />
-        )}
       </div>
     );
   }
@@ -333,6 +327,7 @@ export default function TLSResearchPage() {
   // ── Thread view: sidebar + chat ───────────────────────────────────────────
   return (
     <div className="flex h-screen bg-white overflow-hidden font-['Geist']">
+      {/* Sidebar — hidden on mobile when viewing chat */}
       <div
         className={`${
           mobileView === "chat" ? "hidden" : "flex"
@@ -351,6 +346,7 @@ export default function TLSResearchPage() {
         />
       </div>
 
+      {/* Chat area */}
       <div
         className={`${
           mobileView === "sidebar" ? "hidden" : "flex"
@@ -358,7 +354,8 @@ export default function TLSResearchPage() {
       >
         {/* Thread header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-[#E5E7EB] bg-white shrink-0">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2">
+            {/* Mobile back to sidebar */}
             <button
               onClick={() => setMobileView("sidebar")}
               className="md:hidden w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition mr-1"
@@ -381,7 +378,7 @@ export default function TLSResearchPage() {
               {activeThread?.title ?? "Research"}
             </span>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2">
             <button
               onClick={() =>
                 activeId && handlePin(activeId, !activeThread?.pinned)
@@ -403,11 +400,6 @@ export default function TLSResearchPage() {
               Delete Research
             </button>
           </div>
-        </div>
-
-        {/* Credits bar — always visible on the research screen, per spec */}
-        <div className="px-5 pt-4">
-          <CreditsBar />
         </div>
 
         {/* Messages */}
@@ -449,10 +441,6 @@ export default function TLSResearchPage() {
         {/* Composer */}
         <ResearchComposer onSend={handleSend} disabled={thinking} />
       </div>
-
-      {showBuyModal && (
-        <BuyCreditsModal onClose={() => setShowBuyModal(false)} />
-      )}
     </div>
   );
 }
