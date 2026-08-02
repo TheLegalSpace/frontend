@@ -60,18 +60,11 @@ export default function EventsPanel() {
             On The Docket
           </h2>
           <p className="text-[12px] text-blue-100 font-[Geist]">
-<<<<<<< HEAD
-            Want to feature your event? Reach us at{" "}
-            <a
-              href="mailto:events@thelegalspace.com"
-              className="text-white underline underline-offset-2"
-=======
             Want to feature your event with The Legal Space? Request coverage,
             promotion, or partnership through{" "}
-            <Link
+            <a
               href="/dashboard/TLS-Services"
               className="text-white underline"
->>>>>>> 8b84b68dae5cb5ca3a4bb5ba473e6adb2458b556
             >
               events@thelegalspace.com
             </a>
@@ -164,9 +157,5 @@ export default function EventsPanel() {
       </div>
     </div>
   );
-<<<<<<< HEAD
-}
-=======
 }
 
->>>>>>> 8b84b68dae5cb5ca3a4bb5ba473e6adb2458b556
