@@ -251,9 +251,9 @@ export default function ResearchLanding({
       </div>
 
       {/* Credits bar */}
-      <div className="w-full px-4 pt-6">
+      {/* <div className="w-full px-4 pt-6">
         <CreditsBar />
-      </div>
+      </div> */}
 
       {/* Composer section */}
       <div className="w-full px-6 pt-8 pb-4 flex flex-col items-center bg-white sticky top-17.5">
