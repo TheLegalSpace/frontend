@@ -46,7 +46,7 @@ export default function EventsPanel() {
   const activeEvent = events[current];
 
   return (
-    <div className="flex flex-col gap-3 xl:fixed mt-17 lg:top-2 font-[Instrument_Serif] p-4 min-h-screen border-l border-[#ECECEC] w-full max-w-108 xl:mr-2">
+    <div className="flex flex-col gap-3 xl:sticky top-20 font-[Instrument_Serif] p-4 min-h-screen border-l border-[#ECECEC] w-full mt-18">
       {/* Banner */}
       <div className="relative overflow-hidden rounded-xl bg-[#1D4ED8] px-4 py-4 w-full">
         <div className="absolute inset-0 opacity-10">
@@ -62,11 +62,8 @@ export default function EventsPanel() {
           <p className="text-[12px] text-blue-100 font-[Geist]">
             Want to feature your event with The Legal Space? Request coverage,
             promotion, or partnership through{" "}
-            <a
-              href="/dashboard/TLS-Services"
-              className="text-white underline"
-            >
-              events@thelegalspace.com
+            <a href="/dashboard/TLS-Services" className="text-white underline">
+              TLS Services
             </a>
           </p>
         </div>
@@ -89,13 +86,13 @@ export default function EventsPanel() {
                   <img
                     src={activeEvent.coverUrl}
                     alt={activeEvent.title}
-                    className="h-full w-full object-contain object-center block rounded-[1.25rem]"
+                    className="h-full w-full object-cover object-center block rounded-[1.25rem]"
                   />
                 </div>
               )}
 
               {/* Darkened overlay on hover */}
-              <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-[1.25rem]" />
 
               {/* Name + location, slides up on hover */}
               <div className="absolute bottom-0 left-0 right-0 p-4 font-['Geist'] translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
@@ -158,4 +155,3 @@ export default function EventsPanel() {
     </div>
   );
 }
-
