@@ -59,7 +59,7 @@ export default function CreditsCallbackContent() {
               Your wallet has been topped up.
             </p>
             <button
-              onClick={() => router.push("/dashboard/research")}
+              onClick={() => router.push("/dashboard/TLS-Research")}
               className="w-full py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-medium hover:bg-blue-700 transition"
             >
               Back to Research
@@ -74,7 +74,7 @@ export default function CreditsCallbackContent() {
             </h2>
             <p className="text-[13px] text-gray-500 mb-6">{message}</p>
             <button
-              onClick={() => router.push("/dashboard/research")}
+              onClick={() => router.push("/dashboard/TLS-Research")}
               className="w-full py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-medium hover:bg-blue-700 transition"
             >
               Back to Research
