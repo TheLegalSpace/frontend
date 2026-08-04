@@ -21,6 +21,7 @@ import {
   X,
   AlertTriangle,
   Loader2,
+  Flag,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -42,6 +43,7 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     href: "/admin/legal-news-survey",
     icon: BookOpenText,
   },
+  { label: "Reported Posts", href: "/admin/reports", icon: Flag },
   { label: "Support Center", href: "/admin/support", icon: LifeBuoy },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "Announcements", href: "/admin/announcements", icon: Megaphone },
@@ -113,7 +115,8 @@ export default function AdminSidebar() {
   }, [pathname]);
 
   useEffect(() => {
-    document.body.style.overflow = mobileOpen || showLogoutModal ? "hidden" : "";
+    document.body.style.overflow =
+      mobileOpen || showLogoutModal ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
@@ -136,7 +139,11 @@ export default function AdminSidebar() {
     <aside className="w-60 h-screen fixed top-0 left-0 border-r border-[#E5E7EB] flex flex-col bg-white">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-[#E5E7EB] flex items-center justify-between">
-        <img src="/logo.png" alt="The Legal Space" className="w-full h-8.5 object-contain" />
+        <img
+          src="/logo.png"
+          alt="The Legal Space"
+          className="w-full h-8.5 object-contain"
+        />
         <button
           onClick={() => setMobileOpen(false)}
           className="md:hidden p-1 text-gray-400 hover:text-gray-600"

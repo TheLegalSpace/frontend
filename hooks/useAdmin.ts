@@ -114,7 +114,7 @@ export const useUpdateSubscriptionPlan = () => {
       payload,
     }: {
       planId: string;
-      payload: Omit<Partial<SubscriptionPlan>, 'isLoading'>; // Exclude isLoading
+      payload: Omit<Partial<SubscriptionPlan>, "isLoading">; // Exclude isLoading
     }) => adminService.updatePlan(planId, payload).then((r) => r.data),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin", "subscriptions"] }),
@@ -415,14 +415,15 @@ export const useLegalNewsSurvey = () =>
     queryFn: async () => {
       const response = await adminService.getLegalNewsSurvey();
       const data = response.data.data;
-      
+
       // Transform topFeatureRequests to use 'label' instead of 'feature'
       return {
         ...data,
-        topFeatureRequests: data.topFeatureRequests?.map((req: any) => ({
-          label: req.feature || req.label || 'Unknown',
-          votes: req.votes || 0,
-        })) || [],
+        topFeatureRequests:
+          data.topFeatureRequests?.map((req: any) => ({
+            label: req.feature || req.label || "Unknown",
+            votes: req.votes || 0,
+          })) || [],
       };
     },
     staleTime: STALE,
@@ -532,3 +533,43 @@ export const useAuditLog = (params?: {
     queryFn: () => adminService.getAuditLog(params).then((r) => r.data),
     staleTime: STALE,
   });
+
+// ── Post Reports (Admin Moderation) ──
+
+export const useReportQueue = (params?: {
+  status?: "pending" | "actioned" | "dismissed";
+  reason?: string;
+  autoHiddenOnly?: boolean;
+  page?: number;
+  limit?: number;
+}) =>
+  useQuery({
+    queryKey: ["admin", "reports", params],
+    queryFn: () => adminService.getReportQueue(params).then((r) => r.data.data),
+    staleTime: STALE,
+  });
+
+export const useReportedPost = (postId: string, enabled = true) =>
+  useQuery({
+    queryKey: ["admin", "reports", postId],
+    queryFn: () =>
+      adminService.getReportedPost(postId).then((r) => r.data.data),
+    enabled: enabled && !!postId,
+    staleTime: STALE,
+  });
+
+export const useTakeReportAction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      postId,
+      payload,
+    }: {
+      postId: string;
+      payload: import("@/app/types/admin").ReportActionPayload;
+    }) => adminService.takeReportAction(postId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "reports"] });
+    },
+  });
+};

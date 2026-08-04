@@ -471,6 +471,29 @@ export const adminService = {
 
   deleteReview: (reviewId: string) => api.delete(`/admin/reviews/${reviewId}`),
 
+  // ── Post Reports Queue ──
+
+  getReportQueue: (params?: {
+    status?: "pending" | "actioned" | "dismissed";
+    reason?: string;
+    autoHiddenOnly?: boolean;
+    page?: number;
+    limit?: number;
+  }) =>
+    api.get<{
+      data: import("@/app/types/admin").ReportQueueResponse;
+    }>("/admin/reports/posts", { params }),
+
+  getReportedPost: (postId: string) =>
+    api.get<{
+      data: import("@/app/types/admin").ReportedPostDetail;
+    }>(`/admin/reports/posts/${postId}`),
+
+  takeReportAction: (
+    postId: string,
+    payload: import("@/app/types/admin").ReportActionPayload,
+  ) => api.post(`/admin/reports/posts/${postId}/action`, payload),
+
   getAuditLog: (params?: {
     action?: string;
     targetType?: string;

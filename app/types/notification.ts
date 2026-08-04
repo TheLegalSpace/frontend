@@ -24,6 +24,8 @@ export type NotificationType =
   | "subscription_expired"
   | "payment_failed"
   | "payment_method_updated"
+  | "post_removed"
+  | "report_reviewed"
   | "system"
   | string;
 
