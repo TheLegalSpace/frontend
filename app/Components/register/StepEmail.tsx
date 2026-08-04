@@ -90,12 +90,12 @@ export default function StepEmail({
       setLocalError("Please fill in all fields.");
       return false;
     }
-    if (!email.toLowerCase().endsWith(NIGERIAN_BAR_DOMAIN)) {
-      setLocalError(
-        "Legal professionals must register with a valid Nigerian Bar email address (username@nigerianbar.ng).",
-      );
-      return false;
-    }
+    // if (!email.toLowerCase().endsWith(NIGERIAN_BAR_DOMAIN)) {
+    //   setLocalError(
+    //     "Legal professionals must register with a valid Nigerian Bar email address (username@nigerianbar.ng).",
+    //   );
+    //   return false;
+    // }
     if (!hasMinLength) {
       setLocalError("Password must be at least 8 characters.");
       return false;
