@@ -209,7 +209,7 @@ export default function StepOtp({
                           }}
                           type="text"
                           inputMode="numeric"
-                          maxLength={6}
+                          maxLength={OTP_LENGTH}
                           value={digit}
                           onChange={(e) => handleChange(i, e.target.value)}
                           onKeyDown={(e) => handleKeyDown(i, e)}
