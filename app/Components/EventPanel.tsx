@@ -46,7 +46,7 @@ export default function EventsPanel() {
   const activeEvent = events[current];
 
   return (
-    <div className="flex flex-col gap-3 xl:sticky top-20 font-[Instrument_Serif] p-4 min-h-screen border-l border-[#ECECEC] w-full mt-18">
+    <div className="flex flex-col gap-3 xl:sticky xl:top-20 xl:self-start font-[Instrument_Serif] py-4 w-full">
       {/* Banner */}
       <div className="relative overflow-hidden rounded-xl bg-[#1D4ED8] px-4 py-4 w-full">
         <div className="absolute inset-0 opacity-10">
@@ -70,7 +70,7 @@ export default function EventsPanel() {
       </div>
 
       {/* Event Card */}
-      <div className="rounded-xl font-[Instrument_Serif] flex flex-col gap-3 items-center w-full">
+      <div className="rounded-xl font-[Instrument_Serif] flex flex-col gap-3 items-center w-full px-4">
         {isLoading && (
           <div className="font-['Geist'] h-48 rounded-xl bg-white flex items-center justify-center text-base text-gray-400 w-full">
             Loading events...

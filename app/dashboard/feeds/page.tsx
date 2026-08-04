@@ -55,10 +55,13 @@ export default function FeedPage() {
         <div className="border-t border-[#E6EAED] " />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr]  items-start ">
+      {/* Spacer for fixed header */}
+      <div className="h-18.5" />
+
+      <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] items-start">
         <Feed activeTab={activeTab} />
         {/* Right */}
-        <div className="min-w-0">
+        <div className="min-w-0 border-l border-[#ECECEC] xl:min-h-screen">
           <EventsPanel />
         </div>
       </div>
