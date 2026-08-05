@@ -776,342 +776,351 @@ export default function FindALawyer() {
       )}
 
       <div
-        className={`grid grid-cols-[55%_45%] h-full bg-[#FAFAFA] overflow-hidden ${
+        className={`flex flex-col h-full bg-[#FAFAFA] overflow-hidden ${
           selectedAccountId ? "hidden" : ""
         }`}
       >
-        {/* LEFT PANEL */}
-        <div className="bg-white border-r border-[#ECECEC] flex flex-col overflow-hidden h-full">
-          {/* HEADER */}
-          <div className="h-18 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0">
-            <div>
-              <h1 className="text-[20px] font-serif text-[#202020]">
-                Find a Lawyer
-              </h1>
-            </div>
-
-            {hasSearched && (
-              <button
-                onClick={handleRestart}
-                className="rounded-full bg-[#F7F7F7] px-4 py-2 text-[12px] text-[#555] hover:bg-[#EFEFEF] transition-colors flex items-center gap-2"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Restart search
-              </button>
-            )}
+        {/* SHARED HEADER — spans full width across both panels */}
+        <div className="h-18.5 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0 bg-white">
+          <div>
+            <h1 className="text-[20px] font-['Instrument_serif'] text-[#202020]">
+              Find a Lawyer
+            </h1>
           </div>
 
-          {/* CONVERSATION */}
-          <div className="flex-1 overflow-y-auto px-8 py-8 h-full">
-            {!hasSearched && (
-              <div className="max-w-2xl">
-                <div className="pb-8 border-b border-[#EFEFEF]">
-                  <GradientPill>The Legal Space AI</GradientPill>
+          {hasSearched && (
+            <button
+              onClick={handleRestart}
+              className="rounded-full bg-[#F7F7F7] px-4 py-2 text-[12px] text-[#555] hover:bg-[#EFEFEF] transition-colors flex items-center gap-2"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Restart search
+            </button>
+          )}
+        </div>
 
-                  <p className="mt-6 text-[14px] leading-8 text-[#374151] font-['Geist'] max-w-xl">
-                    Tell me your situation in plain language. I will read your
-                    intent, tag it to the right area of law, and match you with
-                    verified professionals.
-                  </p>
+        {/* TWO-PANEL GRID */}
+        <div className="grid grid-cols-[55%_45%] flex-1 overflow-hidden">
+          {/* LEFT PANEL */}
+          <div className="bg-white border-r border-[#ECECEC] flex flex-col overflow-hidden">
+            {/* CONVERSATION */}
+            <div className="flex-1 overflow-y-auto px-8 py-8 h-full">
+              {!hasSearched && (
+                <div className="max-w-2xl">
+                  <div className="pb-8 border-b border-[#EFEFEF]">
+                    <GradientPill>The Legal Space AI</GradientPill>
 
-                  <p className="mt-2 text-[14px] leading-8 font-bold text-[#3A3A3A] max-w-xl">
-                    Note: Only send a request if you&apos;re ready to speak with
-                    a lawyer.
-                  </p>
-                </div>
-
-                <div className="pt-8">
-                  <GradientPill>What is your legal matter about?</GradientPill>
-                </div>
-              </div>
-            )}
-
-            {isSearching && (
-              <div className="h-full flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                  <Loader2 className="w-8 h-8 text-[#1D4ED8] animate-spin" />
-
-                  <div className="text-center">
-                    <p className="text-[16px] font-medium text-[#202020]">
-                      Analysing your request
+                    <p className="mt-6 text-[14px] leading-8 text-[#374151] font-['Geist'] max-w-xl">
+                      Tell me your situation in plain language. I will read your
+                      intent, tag it to the right area of law, and match you
+                      with verified professionals.
                     </p>
 
-                    <p className="text-[14px] text-[#777] mt-1">
-                      Finding the best legal matches for you...
+                    <p className="mt-2 text-[14px] leading-8 font-bold text-[#3A3A3A] max-w-xl">
+                      Note: Only send a request if you&apos;re ready to speak
+                      with a lawyer.
                     </p>
                   </div>
+
+                  <div className="pt-8">
+                    <GradientPill>
+                      What is your legal matter about?
+                    </GradientPill>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {!isSearching && clarifyState && (
-              <div className="max-w-2xl">
-                <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
-                  <p className="text-[13px] leading-6 text-amber-800">
-                    {clarifyState.message}
-                  </p>
+              {isSearching && (
+                <div className="h-full flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-8 h-8 text-[#1D4ED8] animate-spin" />
+
+                    <div className="text-center">
+                      <p className="text-[16px] font-medium text-[#202020]">
+                        Analysing your request
+                      </p>
+
+                      <p className="text-[14px] text-[#777] mt-1">
+                        Finding the best legal matches for you...
+                      </p>
+                    </div>
+                  </div>
                 </div>
+              )}
 
-                <div className="space-y-8">
-                  {/* Already-known fields, shown as resolved bubbles */}
-                  {clarifySteps
-                    .filter(
-                      (step) =>
-                        !clarifyState.missing.includes(step.key as ClarifyKey),
-                    )
-                    .map((step) => {
-                      const key = step.key as ClarifyKey;
-                      const answer =
-                        key === "matter"
-                          ? clarifyState.extracted.matter?.name
-                          : clarifyState.extracted[key];
-                      return (
-                        <QuestionBlock
-                          key={step.key}
-                          question={step.question}
-                          answer={answer || "—"}
-                        />
-                      );
-                    })}
+              {!isSearching && clarifyState && (
+                <div className="max-w-2xl">
+                  <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+                    <p className="text-[13px] leading-6 text-amber-800">
+                      {clarifyState.message}
+                    </p>
+                  </div>
 
-                  {/* The field we're currently asking about */}
-                  {clarifyState.missing.length > 0 &&
-                    (() => {
-                      const currentKey = clarifyState.missing[0];
-                      const step = clarifySteps.find(
-                        (s) => s.key === currentKey,
-                      );
-                      if (!step) return null;
-                      return (
-                        <ClarifyQuestion
-                          question={step.question}
-                          options={step.options}
-                          disabled={searchByText.isPending}
-                          onSelect={(option) =>
-                            handleClarifyAnswer(currentKey, option)
-                          }
-                        />
-                      );
-                    })()}
+                  <div className="space-y-8">
+                    {/* Already-known fields, shown as resolved bubbles */}
+                    {clarifySteps
+                      .filter(
+                        (step) =>
+                          !clarifyState.missing.includes(
+                            step.key as ClarifyKey,
+                          ),
+                      )
+                      .map((step) => {
+                        const key = step.key as ClarifyKey;
+                        const answer =
+                          key === "matter"
+                            ? clarifyState.extracted.matter?.name
+                            : clarifyState.extracted[key];
+                        return (
+                          <QuestionBlock
+                            key={step.key}
+                            question={step.question}
+                            answer={answer || "—"}
+                          />
+                        );
+                      })}
+
+                    {/* The field we're currently asking about */}
+                    {clarifyState.missing.length > 0 &&
+                      (() => {
+                        const currentKey = clarifyState.missing[0];
+                        const step = clarifySteps.find(
+                          (s) => s.key === currentKey,
+                        );
+                        if (!step) return null;
+                        return (
+                          <ClarifyQuestion
+                            question={step.question}
+                            options={step.options}
+                            disabled={searchByText.isPending}
+                            onSelect={(option) =>
+                              handleClarifyAnswer(currentKey, option)
+                            }
+                          />
+                        );
+                      })()}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {!isSearching && !clarifyState && searchState && extracted && (
-              <div className="max-w-2xl space-y-8">
-                <QuestionBlock
-                  question="What is your legal matter about?"
-                  answer={extracted.matter?.name || "General Legal Matter"}
-                />
+              {!isSearching && !clarifyState && searchState && extracted && (
+                <div className="max-w-2xl space-y-8">
+                  <QuestionBlock
+                    question="What is your legal matter about?"
+                    answer={extracted.matter?.name || "General Legal Matter"}
+                  />
 
-                <QuestionBlock
-                  question="What is your budget?"
-                  answer={formatBudgetLabel(extracted.budget) || "Flexible"}
-                />
+                  <QuestionBlock
+                    question="What is your budget?"
+                    answer={formatBudgetLabel(extracted.budget) || "Flexible"}
+                  />
 
-                <QuestionBlock
-                  question="Where do you need legal help?"
-                  answer={extracted.location || "Anywhere"}
-                />
+                  <QuestionBlock
+                    question="Where do you need legal help?"
+                    answer={extracted.location || "Anywhere"}
+                  />
 
-                <QuestionBlock
-                  question="Who would you prefer?"
-                  answer={extracted.preference || "Either"}
-                />
-              </div>
-            )}
+                  <QuestionBlock
+                    question="Who would you prefer?"
+                    answer={extracted.preference || "Either"}
+                  />
+                </div>
+              )}
 
-            <div ref={bottomRef} />
-          </div>
-
-          {/* INPUT */}
-          <div className="border-t border-[#ECECEC] bg-white px-6 py-5 shrink-0">
-            {validationError && (
-              <p className="text-[12px] text-red-500 mb-3">{validationError}</p>
-            )}
-
-            <div className="flex items-center gap-3  bg-white  py-4 ">
-              <textarea
-                ref={inputRef}
-                rows={1}
-                value={inputValue}
-                disabled={isSearching}
-                placeholder={inputPlaceholder}
-                onChange={(e) => {
-                  setInputValue(e.target.value);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit();
-                  }
-                }}
-                className="flex-1 resize-none bg-transparent outline-none text-[15px] leading-7 text-[#202020] placeholder:text-[#999]  rounded-lg border border-[#EAEAEA] px-2.5 py-1 h-9.5 "
-              />
-
-              <button
-                onClick={handleSubmit}
-                disabled={!inputValue.trim() || isSearching}
-                className="w-9.5 h-9.5 rounded-lg bg-[#1D4ED8] flex items-center justify-center hover:bg-[#1947C6] transition-colors disabled:opacity-40 shrink-0"
-              >
-                {isSearching ? (
-                  <Loader2 className="w-5 h-5 text-white animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5 text-white" />
-                )}
-              </button>
+              <div ref={bottomRef} />
             </div>
 
-            {/* <p className="text-center text-[11px] text-[#B0B0B0] mt-3">
+            {/* INPUT */}
+            <div className="border-t border-[#ECECEC] bg-white px-6 py-5 shrink-0">
+              {validationError && (
+                <p className="text-[12px] text-red-500 mb-3">
+                  {validationError}
+                </p>
+              )}
+
+              <div className="flex items-center gap-3  bg-white  py-4 ">
+                <textarea
+                  ref={inputRef}
+                  rows={1}
+                  value={inputValue}
+                  disabled={isSearching}
+                  placeholder={inputPlaceholder}
+                  onChange={(e) => {
+                    setInputValue(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
+                  className="flex-1 resize-none bg-transparent outline-none text-[15px] leading-7 text-[#202020] placeholder:text-[#999]  rounded-lg border border-[#EAEAEA] px-2.5 py-1 h-9.5 "
+                />
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={!inputValue.trim() || isSearching}
+                  className="w-9.5 h-9.5 rounded-lg bg-[#1D4ED8] flex items-center justify-center hover:bg-[#1947C6] transition-colors disabled:opacity-40 shrink-0"
+                >
+                  {isSearching ? (
+                    <Loader2 className="w-5 h-5 text-white animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5 text-white" />
+                  )}
+                </button>
+              </div>
+
+              {/* <p className="text-center text-[11px] text-[#B0B0B0] mt-3">
               {clarifyState
                 ? "Press Enter to continue"
                 : "Press Enter to search"}
             </p> */}
-          </div>
-        </div>
-
-        {/* RIGHT PANEL */}
-        <div className="bg-[#FCFCFC] overflow-y-auto">
-          <div className="px-8 py-8 max-w-3xl">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-[30px] font-serif text-[#202020] leading-none">
-                  Search Result
-                </h2>
-
-                {searchState && (
-                  <p className="text-[14px] text-[#777] mt-3">
-                    {resultsSummaryText}
-                  </p>
-                )}
-              </div>
             </div>
+          </div>
 
-            {searchState && (
-              <div className="flex gap-2 mb-8">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("firms")}
-                  className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
-                    activeTab === "firms"
-                      ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
-                      : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
-                  }`}
-                >
-                  Firms
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("lawyers")}
-                  className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
-                    activeTab === "lawyers"
-                      ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
-                      : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
-                  }`}
-                >
-                  Lawyers
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("all")}
-                  className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
-                    activeTab === "all"
-                      ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
-                      : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
-                  }`}
-                >
-                  All
-                </button>
-              </div>
-            )}
+          {/* RIGHT PANEL */}
+          <div className="bg-[#FCFCFC] overflow-y-auto">
+            <div className="px-8 py-8 max-w-3xl">
+              {searchState && (
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-[30px] font-[Instrument_serif] text-[#202020] leading-none">
+                      Search Result
+                    </h2>
 
-            {!hasSearched && (
-              <div className="h-[70vh] flex items-center justify-center">
-                <div className="text-center max-w-sm">
-                  <div className="w-16 h-16 rounded-3xl bg-white border border-[#EFEFEF] shadow-sm mx-auto flex items-center justify-center mb-6">
-                    <Users className="w-7 h-7 text-[#999]" />
-                  </div>
-
-                  <h3 className="text-[20px] font-semibold text-[#202020]">
-                    Firm and lawyer matches will appear here
-                  </h3>
-
-                  <p className="text-[15px] leading-7 text-[#777] mt-4">
-                    Once you describe your legal situation, we will find the
-                    best legal matches (law firms and independent lawyers) based
-                    on expertise, budget, and location.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {!isSearching && searchState && (
-              <div className="space-y-5">
-                {orderedResults.length > 0 ? (
-                  orderedResults.map((match) => (
-                    <LawyerCard
-                      key={match.account.id}
-                      match={match}
-                      extracted={searchState.extracted}
-                      onViewProfile={setSelectedAccountId}
-                    />
-                  ))
-                ) : (
-                  <div className="rounded-3xl border border-[#ECECEC] bg-white p-10 text-center">
-                    <h3 className="text-[18px] font-semibold text-[#202020]">
-                      {emptyStateTitle}
-                    </h3>
-                    <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
-                      Try adjusting your legal description, budget, or preferred
-                      location to broaden the search.
+                    <p className="text-[14px] text-[#777] mt-3">
+                      {resultsSummaryText}
                     </p>
-                    {activeTab === "firms" && (
-                      <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
-                        Check out the{" "}
-                        <button
-                          onClick={() => setActiveTab("lawyers")}
-                          className="text-[#1D4ED8] hover:text-[#1947C6]"
-                        >
-                          lawyers
-                        </button>{" "}
-                        instead.
-                      </p>
-                    )}
-                    {activeTab === "lawyers" && (
-                      <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
-                        Check out the{" "}
-                        <button
-                          onClick={() => setActiveTab("firms")}
-                          className="text-[#1D4ED8] hover:text-[#1947C6]"
-                        >
-                          firms
-                        </button>{" "}
-                        instead.
-                      </p>
-                    )}
-                    {activeTab === "all" && (
-                      <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
-                        Check out the{" "}
-                        <button
-                          onClick={() => setActiveTab("firms")}
-                          className="text-[#1D4ED8] hover:text-[#1947C6]"
-                        >
-                          firms
-                        </button>{" "}
-                        or{" "}
-                        <button
-                          onClick={() => setActiveTab("lawyers")}
-                          className="text-[#1D4ED8] hover:text-[#1947C6]"
-                        >
-                          lawyers
-                        </button>{" "}
-                        instead.
-                      </p>
-                    )}
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+
+              {searchState && (
+                <div className="flex gap-2 mb-8">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("firms")}
+                    className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                      activeTab === "firms"
+                        ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
+                        : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
+                    }`}
+                  >
+                    Firms
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("lawyers")}
+                    className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                      activeTab === "lawyers"
+                        ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
+                        : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
+                    }`}
+                  >
+                    Lawyers
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("all")}
+                    className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                      activeTab === "all"
+                        ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
+                        : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
+                    }`}
+                  >
+                    All
+                  </button>
+                </div>
+              )}
+
+              {!hasSearched && (
+                <div className="h-[70vh] flex items-center justify-center">
+                  <div className="text-center max-w-sm">
+                    <div className="w-16 h-16 rounded-3xl bg-white border border-[#EFEFEF] shadow-sm mx-auto flex items-center justify-center mb-6">
+                      <Users className="w-7 h-7 text-[#999]" />
+                    </div>
+
+                    <h3 className="text-[20px] font-semibold text-[#202020]">
+                      Firm and lawyer matches will appear here
+                    </h3>
+
+                    <p className="text-[15px] leading-7 text-[#777] mt-4">
+                      Once you describe your legal situation, we will find the
+                      best legal matches (law firms and independent lawyers)
+                      based on expertise, budget, and location.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {!isSearching && searchState && (
+                <div className="space-y-5">
+                  {orderedResults.length > 0 ? (
+                    orderedResults.map((match) => (
+                      <LawyerCard
+                        key={match.account.id}
+                        match={match}
+                        extracted={searchState.extracted}
+                        onViewProfile={setSelectedAccountId}
+                      />
+                    ))
+                  ) : (
+                    <div className="rounded-3xl border border-[#ECECEC] bg-white p-10 text-center">
+                      <h3 className="text-[18px] font-semibold text-[#202020]">
+                        {emptyStateTitle}
+                      </h3>
+                      <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
+                        Try adjusting your legal description, budget, or
+                        preferred location to broaden the search.
+                      </p>
+                      {activeTab === "firms" && (
+                        <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
+                          Check out the{" "}
+                          <button
+                            onClick={() => setActiveTab("lawyers")}
+                            className="text-[#1D4ED8] hover:text-[#1947C6]"
+                          >
+                            lawyers
+                          </button>{" "}
+                          instead.
+                        </p>
+                      )}
+                      {activeTab === "lawyers" && (
+                        <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
+                          Check out the{" "}
+                          <button
+                            onClick={() => setActiveTab("firms")}
+                            className="text-[#1D4ED8] hover:text-[#1947C6]"
+                          >
+                            firms
+                          </button>{" "}
+                          instead.
+                        </p>
+                      )}
+                      {activeTab === "all" && (
+                        <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
+                          Check out the{" "}
+                          <button
+                            onClick={() => setActiveTab("firms")}
+                            className="text-[#1D4ED8] hover:text-[#1947C6]"
+                          >
+                            firms
+                          </button>{" "}
+                          or{" "}
+                          <button
+                            onClick={() => setActiveTab("lawyers")}
+                            className="text-[#1D4ED8] hover:text-[#1947C6]"
+                          >
+                            lawyers
+                          </button>{" "}
+                          instead.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
