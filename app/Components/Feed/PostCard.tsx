@@ -17,6 +17,8 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import Avatar from "./Avatar";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { postsService } from "@/services/posts.services";
 import { useToast } from "@/app/context/ToastContext";
 import type { ReportReason } from "@/app/types/posts";
@@ -174,60 +176,39 @@ export default function PostCard({ post, onReact, onReported }: Props) {
               size={40}
             />
 
-            <div className="flex-1 min-w-0 flex gap-1 flex-col">
-              <span className="font-medium text-[14px] text-gray-900 font-['Geist'] hover:text-[#1D4ED8] transition-colors">
+            <div className="flex-1 min-w-0 flex items-center gap-1.5">
+              <span className="font-medium text-[24px] text-gray-900 font-['Instrument_Serif'] hover:text-[#1D4ED8] transition-colors">
                 {post.author}
               </span>
-              <span className="text-xs text-gray-400 shrink-0 flex gap-1 items-center">
-                <Clock size={16} /> {post.timeAgo}
-              </span>
+              {post.isVerified && (
+                <BadgeCheck size={16} className="text-blue-500 shrink-0" />
+              )}
             </div>
           </button>
 
-          {!reported && (
-            <button
-              type="button"
-              onClick={openReportModal}
-              title="Report this post"
-              aria-label="Report this post"
-            >
-              <Flag
-                size={16}
-                className="text-[#CA0808] shrink-0 cursor-pointer hover:text-red-600 transition-colors"
-              />
-            </button>
-          )}
-          {reported && (
-            <span className="text-[11px] text-gray-400 shrink-0 flex items-center gap-1">
-              <Flag size={12} className="text-gray-300" />
-              Reported
-            </span>
-          )}
+          <span className="text-xs text-gray-400 shrink-0">{post.timeAgo}</span>
         </div>
 
-        {/* Moderation badge — author only, when auto-hidden */}
-        {post.moderationStatus === "under_review" && (
-          <div className="mx-4 mb-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
-            <ShieldAlert size={14} className="text-amber-600 shrink-0" />
-            <span className="text-[12px] text-amber-700 font-medium">
-              Under review — temporarily hidden from others
-            </span>
-          </div>
-        )}
-
         {/* Body */}
-        <p className="px-4 text-[15px] text-gray-800 leading-6 whitespace-pre-line mb-3 font-['Geist']">
-          {post.body}
-        </p>
+        <div className="px-4 mb-3">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              p: ({ node, ...props }) => (
+                <p className="text-[15px] text-gray-800 leading-6 whitespace-pre-line mb-3 font-['Geist']" {...props} />
+              ),
+            }}
+          >
+            {post.body}
+          </ReactMarkdown>
+        </div>
 
         {/* Article preview — matches profile style */}
         {post.pdfUrl && (
           <div className="mx-4 border border-[#E5E7EB] rounded-xl overflow-hidden mb-3">
             <div className="flex items-center gap-3 p-3">
               <div className="w-12 h-12 bg-[#1F2937] rounded-lg flex items-center justify-center shrink-0">
-                <span className="text-white text-[9px] font-bold tracking-wide">
-                  ARTICLE
-                </span>
+                <span className="text-white text-[9px] font-bold tracking-wide">ARTICLE</span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[12px] font-medium text-[#1F2937] leading-tight line-clamp-2">
@@ -257,7 +238,7 @@ export default function PostCard({ post, onReact, onReported }: Props) {
           </div>
         )}
 
-        {/* Reactions */}
+        {/* Reactions + report */}
         <div className="px-4 flex items-center gap-5">
           <button
             onClick={() => onReact(post.id, "like")}
@@ -271,9 +252,7 @@ export default function PostCard({ post, onReact, onReported }: Props) {
               size={16}
               className={post.userReaction === "like" ? "border-blue-600" : ""}
             />
-            {post.likes > 0 && (
-              <span className="font-medium">{post.likes}</span>
-            )}
+            {post.likes > 0 && <span className="font-medium">{post.likes}</span>}
           </button>
 
           <button
@@ -286,15 +265,40 @@ export default function PostCard({ post, onReact, onReported }: Props) {
           >
             <ThumbsDown
               size={16}
-              className={
-                post.userReaction === "dislike" ? "border-red-600" : ""
-              }
+              className={post.userReaction === "dislike" ? "border-red-600" : ""}
             />
-            {post.dislikes > 0 && (
-              <span className="font-medium">{post.dislikes}</span>
-            )}
+            {post.dislikes > 0 && <span className="font-medium">{post.dislikes}</span>}
           </button>
+
+          <div className="ml-auto flex items-center gap-3">
+            {!reported && (
+              <button
+                type="button"
+                onClick={openReportModal}
+                title="Report this post"
+                aria-label="Report this post"
+                className="flex items-center"
+              >
+                <Flag size={16} className="text-[#CA0808] shrink-0 cursor-pointer hover:text-red-600 transition-colors" />
+              </button>
+            )}
+            {reported && (
+              <span className="text-[11px] text-gray-400 shrink-0 flex items-center gap-1">
+                <Flag size={12} className="text-gray-300" />
+                Reported
+              </span>
+            )}
+          </div>
+
         </div>
+
+        {/* Moderation badge — author only, when auto-hidden */}
+        {post.moderationStatus === "under_review" && (
+          <div className="mx-4 mb-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
+            <ShieldAlert size={14} className="text-amber-600 shrink-0" />
+            <span className="text-[12px] text-amber-700 font-medium">Under review — temporarily hidden from others</span>
+          </div>
+        )}
       </div>
 
       {/* ── Report Modal ── */}
@@ -407,3 +411,4 @@ export default function PostCard({ post, onReact, onReported }: Props) {
     </>
   );
 }
+

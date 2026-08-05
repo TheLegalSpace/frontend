@@ -14,6 +14,8 @@ import {
 import { MyPost } from "@/app/types/posts";
 import { postsService } from "@/services/posts.services";
 import Image from "next/image";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 function getInitials(name: string) {
   if (!name) return "??";
@@ -178,9 +180,18 @@ export default function MyPostCard({
         </div>
 
         {/* Body */}
-        <p className="text-[14px] text-gray-700 leading-relaxed mb-3 font-[Geist]">
-          {post.body}
-        </p>
+        <div className="mb-3">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              p: ({ node, ...props }) => (
+                <p className="text-[15px] text-gray-800 leading-6 whitespace-pre-line mb-3 font-['Geist']" {...props} />
+              ),
+            }}
+          >
+            {post.body}
+          </ReactMarkdown>
+        </div>
 
         {/* Article pill */}
         {post.pdfUrl && (

@@ -15,6 +15,9 @@ import {
   Eye,
 } from "lucide-react";
 import { postsService } from "@/services/posts.services";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import clsx from "clsx";
 import { useAuth } from "@/app/context/AuthContext";
 
 type Tab = "caption" | "article";
@@ -53,6 +56,37 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [pdfDragOver, setPdfDragOver] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
+
+  function wrapSelection(wrapper: string, placeholder?: string) {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart ?? 0;
+    const end = ta.selectionEnd ?? 0;
+    const selected = body.slice(start, end);
+    let newText: string;
+    let selStart = start;
+    let selEnd = end;
+
+    if (selected.length > 0) {
+      newText = body.slice(0, start) + wrapper + selected + wrapper + body.slice(end);
+      selStart = start + wrapper.length;
+      selEnd = end + wrapper.length;
+    } else {
+      const ph = placeholder ?? (wrapper === "**" ? "bold text" : "italic text");
+      newText = body.slice(0, start) + wrapper + ph + wrapper + body.slice(end);
+      selStart = start + wrapper.length;
+      selEnd = selStart + ph.length;
+    }
+
+    setBody(newText);
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(selStart, selEnd);
+      ta.style.height = "auto";
+      ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`;
+    });
+  }
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -321,22 +355,83 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
           </div>
 
           {/* Caption textarea */}
-          <textarea
-            ref={textareaRef}
-            value={body}
-            onChange={(e) => {
-              setBody(e.target.value);
-              e.target.style.height = "auto";
-              e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
-            }}
-            placeholder={
-              tab === "article"
-                ? "Write a caption for your article…"
-                : "What do you wanna talk about?"
-            }
-            rows={3}
-            className="w-full resize-none outline-none text-[13px] text-gray-800 leading-relaxed placeholder:text-gray-400 mb-3"
-          />
+          <div className="mb-2 flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPreviewMode(false)}
+                className={clsx(
+                  "px-3 py-1 rounded-full text-[12px] transition",
+                  !previewMode ? "bg-gray-900 text-white" : "text-gray-500 hover:text-gray-700",
+                )}
+              >
+                Write
+              </button>
+              <button
+                onClick={() => setPreviewMode(true)}
+                className={clsx(
+                  "px-3 py-1 rounded-full text-[12px] transition",
+                  previewMode ? "bg-gray-900 text-white" : "text-gray-500 hover:text-gray-700",
+                )}
+              >
+                Preview
+              </button>
+            </div>
+
+            {/* Formatting toolbar */}
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => wrapSelection("**", "bold text")}
+                title="Bold (Ctrl/Cmd+B)"
+                className="px-2 py-1 rounded-md text-[13px] font-semibold border border-gray-200 bg-white hover:bg-gray-50"
+              >
+                B
+              </button>
+              <button
+                type="button"
+                onClick={() => wrapSelection("*", "italic text")}
+                title="Italic (Ctrl/Cmd+I)"
+                className="px-2 py-1 rounded-md text-[13px] italic border border-gray-200 bg-white hover:bg-gray-50"
+              >
+                I
+              </button>
+            </div>
+          </div>
+
+          {!previewMode ? (
+            <textarea
+              ref={textareaRef}
+              value={body}
+              onChange={(e) => {
+                setBody(e.target.value);
+                e.target.style.height = "auto";
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+              }}
+              onKeyDown={(e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+                  e.preventDefault();
+                  wrapSelection("**", "bold text");
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "i") {
+                  e.preventDefault();
+                  wrapSelection("*", "italic text");
+                }
+              }}
+              placeholder={
+                tab === "article"
+                  ? "Write a caption for your article…"
+                  : "What do you wanna talk about?"
+              }
+              rows={3}
+              className="w-full resize-none outline-none text-[13px] text-gray-800 leading-relaxed placeholder:text-gray-400 mb-3"
+            />
+          ) : (
+            <div className="w-full mb-3">
+              <div className="prose max-w-full">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{body || "*Nothing to preview*"}</ReactMarkdown>
+              </div>
+            </div>
+          )}
 
           {/* Article tab */}
           {tab === "article" && (
