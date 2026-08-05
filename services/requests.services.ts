@@ -83,11 +83,10 @@ export interface CreateRequestPayload {
 // Map budget string to display format
 export function formatBudget(budget: string): string {
   const map: Record<string, string> = {
-    under_50k: "Under ₦50k",
-    "50k_to_100k": "₦50k–₦100k",
+    under_100k: "Under ₦100k",
     "100k_to_500k": "₦100k–₦500k",
-    "500k_to_1m": "₦500k–₦1M",
-    "1m+": "Above ₦1M",
+    "500k_to_2m": "₦500k–₦2M",
+    above_2m: "Above ₦2M",
   };
   return map[budget] ?? budget;
 }

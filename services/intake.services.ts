@@ -126,11 +126,10 @@ export interface SearchPayload {
 }
 
 export const BUDGET_OPTIONS = [
-  { label: "Under ₦50k", value: "under_50k" },
-  { label: "₦50k–₦100k", value: "50k_to_100k" },
+  { label: "Under ₦100k", value: "under_100k" },
   { label: "₦100k–₦500k", value: "100k_to_500k" },
-  { label: "₦500k–₦1M", value: "500k_to_1m" },
-  { label: "Above ₦1M", value: "1m+" },
+  { label: "₦500k–₦2M", value: "500k_to_2m" },
+  { label: "Above ₦2M", value: "above_2m" },
 ];
 
 export const LOCATION_OPTIONS = [
