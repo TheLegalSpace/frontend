@@ -313,10 +313,11 @@ export default function Sidebar() {
   }, [pathname]);
 
   useEffect(() => {
+    const prev = document.body.style.overflow;
     document.body.style.overflow =
-      mobileOpen || showLogoutModal ? "hidden" : "";
+      mobileOpen || showLogoutModal ? "hidden" : prev || "";
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = prev;
     };
   }, [mobileOpen, showLogoutModal]);
 

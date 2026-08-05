@@ -73,7 +73,7 @@ export default function Feed({ activeTab }: FeedProps) {
   }
 
   return (
-    <div className="w-full bg-white mt-18">
+    <div className="w-full bg-white ">
       {isLoading ? (
         <div className="text-center py-10 text-gray-400">Loading feed...</div>
       ) : posts.length === 0 ? (
