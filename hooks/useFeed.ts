@@ -31,6 +31,7 @@ interface RawPost {
   pdfName?: string | null;
   title?: string | null;
   pdfSizeBytes?: number | null;
+  moderationStatus?: "under_review" | null;
 }
 
 export const feedKeys = {
@@ -104,6 +105,7 @@ function normalizePost(
     dislikes: raw.dislikeCount,
     userReaction: cachedReactions[raw.id] ?? null,
     createdAt: raw.createdAt,
+    moderationStatus: raw.moderationStatus ?? null,
   };
 }
 
@@ -195,9 +197,15 @@ export function useFeedCache() {
     );
   };
 
+  const removePostFromFeed = (tab: FeedTab, id: string) => {
+    queryClient.setQueryData<Post[]>(feedKeys.tab(tab), (prev = []) =>
+      prev.filter((post) => post.id !== id),
+    );
+  };
+
   const invalidateFeed = (tab: FeedTab) => {
     queryClient.invalidateQueries({ queryKey: feedKeys.tab(tab) });
   };
 
-  return { updatePostReaction, invalidateFeed };
+  return { updatePostReaction, removePostFromFeed, invalidateFeed };
 }

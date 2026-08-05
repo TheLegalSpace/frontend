@@ -83,11 +83,19 @@ export default function StepEmail({
   const hasMinLength = password.length >= 8;
   const hasSpecialChar = /[^a-zA-Z0-9]/.test(password);
 
+  const NIGERIAN_BAR_DOMAIN = "@nigerianbar.ng";
+
   const validate = () => {
     if (!email || !password || !confirmPassword) {
       setLocalError("Please fill in all fields.");
       return false;
     }
+    // if (!email.toLowerCase().endsWith(NIGERIAN_BAR_DOMAIN)) {
+    //   setLocalError(
+    //     "Legal professionals must register with a valid Nigerian Bar email address (username@nigerianbar.ng).",
+    //   );
+    //   return false;
+    // }
     if (!hasMinLength) {
       setLocalError("Password must be at least 8 characters.");
       return false;
@@ -159,7 +167,7 @@ export default function StepEmail({
 
     return () => clearInterval(interval);
   }, [loginWithGoogle]);
-  
+
   return (
     <div className="min-h-screen w-full flex flex-col bg-white text-black">
       <Navbar />
@@ -199,7 +207,7 @@ export default function StepEmail({
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 pointer-events-none" />
                   <input
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="Enter your Nigerian Bar email (username@nigerianbar.ng)"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required

@@ -24,9 +24,23 @@ export default function Page() {
         <div className="min-w-0">
           <NotificationsPage />
         </div>
-        <div className="min-w-0">
+        {/* Right column spacer — keeps grid space on xl, renders EventsPanel on mobile */}
+        <div className="min-w-0 xl:invisible">
           <EventsPanel />
         </div>
+      </div>
+
+      {/* Fixed EventsPanel on desktop — immune to ancestor overflow changes */}
+      <div
+        className="hidden xl:block fixed top-18.75 bg-white"
+        style={{
+          right: 0,
+          width: "calc((100vw - 220px) * 0.4)",
+          height: "calc(100vh - 75px)",
+          overflowY: "auto",
+        }}
+      >
+        <EventsPanel />
       </div>
     </div>
   );

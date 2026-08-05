@@ -1,4 +1,8 @@
 import { api } from "./api";
+import type {
+  ReportReasonsResponse,
+  ReportSubmitResponse,
+} from "@/app/types/posts";
 
 export const postsService = {
   async createPost(body: string) {
@@ -34,6 +38,25 @@ export const postsService = {
 
   async unreactToPost(id: string) {
     const { data } = await api.delete(`/posts/${id}/reactions`);
+    return data;
+  },
+
+  // ── Post Reporting ──
+
+  async getReportReasons(): Promise<ReportReasonsResponse> {
+    const { data } = await api.get("/posts/report-reasons");
+    return data;
+  },
+
+  async reportPost(
+    postId: string,
+    reason: string,
+    details?: string,
+  ): Promise<ReportSubmitResponse> {
+    const { data } = await api.post(`/posts/${postId}/reports`, {
+      reason,
+      ...(details ? { details } : {}),
+    });
     return data;
   },
 };

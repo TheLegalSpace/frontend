@@ -21,6 +21,9 @@ import {
   Megaphone,
   CalendarCheck,
   ClipboardCheck,
+  Flag,
+  ThumbsUp,
+  RotateCcw,
 } from "lucide-react";
 import { Notification, NotificationType } from "@/app/types/notification";
 
@@ -68,6 +71,8 @@ function getNotificationMeta(notif: Notification): {
       return { icon: <XCircle size={15} />, label: "Event Promotion Rejected" };
     case "announcement":
       return { icon: <Megaphone size={15} />, label: "Announcement" };
+    case "post_restored":
+      return { icon: <RotateCcw size={15} />, label: "Post Restored" };
   }
   switch (type) {
     case "new_article":
@@ -140,6 +145,10 @@ function getNotificationMeta(notif: Notification): {
         icon: <CreditCard size={15} />,
         label: "Payment Method Updated",
       };
+    case "post_removed":
+      return { icon: <XCircle size={15} />, label: "Post Removed" };
+    case "report_reviewed":
+      return { icon: <Flag size={15} />, label: "Report Reviewed" };
     default:
       return { icon: <Bell size={15} />, label: "Notification" };
   }
@@ -382,6 +391,21 @@ function getBodyText(notif: Notification): {
         primary: "Your payment method has been updated.",
         secondary: "Future charges will use your new payment details.",
       };
+    case "post_removed": {
+      const reason = notif.payload.reason as string | undefined;
+      return {
+        primary: "Your post was removed after a review.",
+        secondary: reason
+          ? `Reason: ${reason}`
+          : "One of your posts was taken down.",
+      };
+    }
+    case "report_reviewed": {
+      return {
+        primary: "A post you reported has been reviewed.",
+        secondary: "Thanks for helping keep The Legal Space professional.",
+      };
+    }
     default: {
       // System notifications are distinguished by payload.kind.
       const kind = notif.payload.kind;
@@ -426,6 +450,15 @@ function getBodyText(notif: Notification): {
           ]
             .filter(Boolean)
             .join(" · "),
+        };
+      }
+      if (kind === "post_restored") {
+        const snippet = notif.payload.snippet as string | undefined;
+        return {
+          primary: "Your post is back.",
+          secondary: snippet
+            ? `"${snippet}" was reviewed and is visible again.`
+            : "Your post was reviewed and is visible again — no action needed.",
         };
       }
       if (kind === "announcement") {

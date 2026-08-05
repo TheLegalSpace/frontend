@@ -55,12 +55,28 @@ export default function FeedPage() {
         <div className="border-t border-[#E6EAED] " />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr]  items-start ">
+      {/* Spacer for fixed header */}
+      <div className="h-18.5" />
+
+      <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] items-start">
         <Feed activeTab={activeTab} />
-        {/* Right */}
-        <div className="min-w-0">
+        {/* Right column spacer — keeps grid space on xl, renders EventsPanel on mobile */}
+        <div className="min-w-0 border-l border-[#ECECEC] min-h-screen xl:invisible">
           <EventsPanel />
         </div>
+      </div>
+
+      {/* Fixed EventsPanel on desktop — immune to ancestor overflow changes */}
+      <div
+        className="hidden xl:block fixed top-18.5 border-l border-[#ECECEC] bg-white"
+        style={{
+          right: 0,
+          width: "calc((100vw - 220px) * 0.4)",
+          height: "calc(100vh - 74px)",
+          overflowY: "auto",
+        }}
+      >
+        <EventsPanel />
       </div>
     </main>
   );

@@ -18,4 +18,32 @@ export interface MyPost {
   title?: string | null;
   pdfName?: string | null;
   pdfSizeBytes?: number | null;
+  moderationStatus?: "under_review" | null;
+}
+
+// ── Post Reporting ──
+
+export interface ReportReason {
+  value: string;
+  label: string;
+  description: string;
+  requiresDetails: boolean;
+}
+
+export interface ReportReasonsResponse {
+  error: boolean;
+  message: string;
+  data: { items: ReportReason[] };
+}
+
+export interface ReportSubmitResponse {
+  error: boolean;
+  message: string;
+  data: {
+    report: { id: string; createdAt: string; reason: string; status: string };
+    alreadyReported: boolean;
+    postHidden: boolean;
+    autoHidden?: boolean;
+    autoHideThreshold?: number;
+  };
 }

@@ -504,3 +504,89 @@ export interface PlatformAnnouncement {
   scheduledFor?: string | null;
   createdAt: string;
 }
+
+// ── Post Reports (Admin Moderation) ────────────────────────────────────────────
+
+export type ReportStatus = "pending" | "actioned" | "dismissed";
+
+export interface ReportReasonsBreakdown {
+  misinformation?: number;
+  impersonation?: number;
+  confidentiality?: number;
+  harassment?: number;
+  inappropriate?: number;
+  spam?: number;
+  other?: number;
+  [key: string]: number | undefined;
+}
+
+export interface ReportRow {
+  id: string;
+  reason: string;
+  details?: string | null;
+  reporter?: {
+    id: string;
+    fullName: string;
+    avatarUrl?: string | null;
+  };
+  createdAt: string;
+}
+
+export interface ReportedPostItem {
+  post: {
+    id: string;
+    body: string;
+    title?: string | null;
+    pdfUrl?: string | null;
+    authorAccountId: string;
+    author: {
+      id: string;
+      fullName: string;
+      avatarUrl?: string | null;
+    };
+    likeCount: number;
+    dislikeCount: number;
+    createdAt: string;
+    moderationStatus?: "under_review" | null;
+  };
+  openReportCount: number;
+  autoHidden: boolean;
+  autoHiddenAt?: string | null;
+  reasons: ReportReasonsBreakdown;
+  topReason: string;
+  topReasonLabel: string;
+  firstReportedAt: string;
+  lastReportedAt: string;
+  reports: ReportRow[];
+}
+
+export interface ReportedPostDetail extends ReportedPostItem {
+  totalReportCount: number;
+  resolvedReports?: (ReportRow & {
+    reviewedByAdmin?: string;
+    resolutionNote?: string;
+  })[];
+  authorPriorRemovals: number;
+}
+
+export interface ReportQueueStats {
+  pendingPosts: number;
+  autoHiddenPosts: number;
+  pendingReports: number;
+  actionedReports: number;
+  dismissedReports: number;
+  autoHideThreshold: number;
+}
+
+export interface ReportQueueResponse {
+  items: ReportedPostItem[];
+  stats: ReportQueueStats;
+  pagination: Pagination;
+}
+
+export type ReportAction = "remove" | "dismiss";
+
+export interface ReportActionPayload {
+  action: ReportAction;
+  reason: string;
+}
