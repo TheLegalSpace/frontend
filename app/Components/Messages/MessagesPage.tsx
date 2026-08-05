@@ -273,6 +273,10 @@ export default function MessagesPage() {
 
   function getParticipantName(convo: Conversation): string {
     if (!convo.otherParty) return "Anonymous User";
+    // Lawyers and firms are never anonymous
+    if (convo.otherParty.role && convo.otherParty.role !== "USER") {
+      return convo.otherParty.fullName || "Unknown";
+    }
     if (convo.otherParty.isAnonymous !== false) return "Anonymous User";
     return convo.otherParty.fullName || "Anonymous User";
   }
