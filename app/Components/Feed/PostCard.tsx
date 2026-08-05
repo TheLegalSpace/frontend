@@ -164,11 +164,11 @@ export default function PostCard({ post, onReact, onReported }: Props) {
     <>
       <div className="border-b border-[#E6EAED] py-5 last:border-b-0 hover:bg-white/30 transition w-full">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-3 px-4">
+        <div className="flex items-start gap-3 mb-3 px-4">
           <button
             type="button"
             onClick={handleOpenProfile}
-            className="flex items-center gap-3 flex-1 min-w-0 text-left"
+            className="flex items-start gap-3 flex-1 min-w-0 text-left"
           >
             <Avatar
               initials={post.authorInitials}
@@ -176,17 +176,41 @@ export default function PostCard({ post, onReact, onReported }: Props) {
               size={40}
             />
 
-            <div className="flex-1 min-w-0 flex items-center gap-1.5">
-              <span className="font-medium text-[24px] text-gray-900 font-['Instrument_Serif'] hover:text-[#1D4ED8] transition-colors">
-                {post.author}
-              </span>
-              {post.isVerified && (
-                <BadgeCheck size={16} className="text-blue-500 shrink-0" />
-              )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium text-[24px] text-gray-900 font-['Instrument_Serif'] hover:text-[#1D4ED8] transition-colors">
+                  {post.author}
+                </span>
+                {post.isVerified && (
+                  <BadgeCheck size={16} className="text-blue-500 shrink-0" />
+                )}
+              </div>
+              <div className="mt-1 flex items-center gap-1 text-xs text-gray-400">
+                <Clock className="w-3.5 h-3.5 text-gray-400" />
+                <span>{post.timeAgo}</span>
+              </div>
             </div>
           </button>
 
-          <span className="text-xs text-gray-400 shrink-0">{post.timeAgo}</span>
+          <div className="ml-auto flex items-center gap-3">
+            {!reported && (
+              <button
+                type="button"
+                onClick={openReportModal}
+                title="Report this post"
+                aria-label="Report this post"
+                className="flex items-center"
+              >
+                <Flag size={16} className="text-[#CA0808] shrink-0 cursor-pointer hover:text-red-600 transition-colors" />
+              </button>
+            )}
+            {reported && (
+              <span className="text-[11px] text-gray-400 shrink-0 flex items-center gap-1">
+                <Flag size={12} className="text-gray-300" />
+                Reported
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Body */}
@@ -238,7 +262,7 @@ export default function PostCard({ post, onReact, onReported }: Props) {
           </div>
         )}
 
-        {/* Reactions + report */}
+        {/* Reactions */}
         <div className="px-4 flex items-center gap-5">
           <button
             onClick={() => onReact(post.id, "like")}
@@ -269,27 +293,6 @@ export default function PostCard({ post, onReact, onReported }: Props) {
             />
             {post.dislikes > 0 && <span className="font-medium">{post.dislikes}</span>}
           </button>
-
-          <div className="ml-auto flex items-center gap-3">
-            {!reported && (
-              <button
-                type="button"
-                onClick={openReportModal}
-                title="Report this post"
-                aria-label="Report this post"
-                className="flex items-center"
-              >
-                <Flag size={16} className="text-[#CA0808] shrink-0 cursor-pointer hover:text-red-600 transition-colors" />
-              </button>
-            )}
-            {reported && (
-              <span className="text-[11px] text-gray-400 shrink-0 flex items-center gap-1">
-                <Flag size={12} className="text-gray-300" />
-                Reported
-              </span>
-            )}
-          </div>
-
         </div>
 
         {/* Moderation badge — author only, when auto-hidden */}
