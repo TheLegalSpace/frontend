@@ -437,7 +437,7 @@ function LawyerCard({
 function GradientPill({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="w-fit py-2 px-6 rounded-2xl text-[13px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+      className="w-fit py-2 px-6 rounded-4xl text-[13px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity font-['Geist']"
       style={{
         border: "2px solid transparent",
         backgroundImage:
@@ -808,7 +808,7 @@ export default function FindALawyer() {
                 <div className="pb-8 border-b border-[#EFEFEF]">
                   <GradientPill>The Legal Space AI</GradientPill>
 
-                  <p className="mt-6 text-[14px] leading-8 text-[#6B6B6B] max-w-xl">
+                  <p className="mt-6 text-[14px] leading-8 text-[#374151] font-['Geist'] max-w-xl">
                     Tell me your situation in plain language. I will read your
                     intent, tag it to the right area of law, and match you with
                     verified professionals.
@@ -930,7 +930,7 @@ export default function FindALawyer() {
               <p className="text-[12px] text-red-500 mb-3">{validationError}</p>
             )}
 
-            <div className="flex items-end gap-3 rounded-3xl border border-[#EAEAEA] bg-white px-5 py-4 shadow-sm">
+            <div className="flex items-center gap-3  bg-white  py-4 ">
               <textarea
                 ref={inputRef}
                 rows={1}
@@ -939,12 +939,6 @@ export default function FindALawyer() {
                 placeholder={inputPlaceholder}
                 onChange={(e) => {
                   setInputValue(e.target.value);
-
-                  e.target.style.height = "auto";
-                  e.target.style.height = `${Math.min(
-                    e.target.scrollHeight,
-                    140,
-                  )}px`;
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -952,18 +946,18 @@ export default function FindALawyer() {
                     handleSubmit();
                   }
                 }}
-                className="flex-1 resize-none bg-transparent outline-none text-[15px] leading-7 text-[#202020] placeholder:text-[#999] max-h-35"
+                className="flex-1 resize-none bg-transparent outline-none text-[15px] leading-7 text-[#202020] placeholder:text-[#999]  rounded-lg border border-[#EAEAEA] px-2.5 py-1 h-9.5 "
               />
 
               <button
                 onClick={handleSubmit}
                 disabled={!inputValue.trim() || isSearching}
-                className="w-12 h-12 rounded-2xl bg-[#1D4ED8] flex items-center justify-center hover:bg-[#1947C6] transition-colors disabled:opacity-40 shrink-0"
+                className="w-9.5 h-9.5 rounded-lg bg-[#1D4ED8] flex items-center justify-center hover:bg-[#1947C6] transition-colors disabled:opacity-40 shrink-0"
               >
                 {isSearching ? (
-                  <Loader2 className="w-4 h-4 text-white animate-spin" />
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
                 ) : (
-                  <Send className="w-4 h-4 text-white" />
+                  <Send className="w-5 h-5 text-white" />
                 )}
               </button>
             </div>
