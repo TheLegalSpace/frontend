@@ -61,7 +61,7 @@ export default function FeedPage() {
       <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] items-start">
         <Feed activeTab={activeTab} />
         {/* Right */}
-        <div className="min-w-0 border-l border-[#ECECEC] xl:min-h-screen">
+        <div className="min-w-0 border-l border-[#ECECEC] xl:min-h-screen ">
           <EventsPanel />
         </div>
       </div>
