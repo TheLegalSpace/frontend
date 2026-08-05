@@ -433,7 +433,7 @@ export default function ProfileCard({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-4xl font-bold tracking-wider text-[#374151]">
+                  <div className="flex h-full w-full items-center justify-center text-4xl font-bold tracking-wider text-white">
                     {isAnonymous ? "??" : getInitials(profile.fullName)}
                   </div>
                 )}
