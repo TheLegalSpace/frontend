@@ -177,16 +177,16 @@ export default function PostCard({ post, onReact, onReported }: Props) {
             />
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="font-medium text-[24px] text-gray-900 font-['Instrument_Serif'] hover:text-[#1D4ED8] transition-colors">
+              <div className="flex items-center">
+                <span className="font-medium text-[14px] text-gray-900 font-['Geist'] hover:text-[#1D4ED8] transition-colors">
                   {post.author}
                 </span>
                 {post.isVerified && (
                   <BadgeCheck size={16} className="text-blue-500 shrink-0" />
                 )}
               </div>
-              <div className="mt-1 flex items-center gap-1 text-xs text-gray-400">
-                <Clock className="w-3.5 h-3.5 text-gray-400" />
+              <div className="flex items-center text-xs text-gray-400">
+                <Clock className="w-3.5 h-3.5 gap-1 text-gray-400" />
                 <span>{post.timeAgo}</span>
               </div>
             </div>
