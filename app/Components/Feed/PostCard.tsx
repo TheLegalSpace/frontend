@@ -4,6 +4,8 @@
 import { useRouter } from "next/navigation";
 import { ThumbsUp, ThumbsDown, BadgeCheck, FileText, Calendar, BookOpen, Clock } from "lucide-react";
 import Avatar from "./Avatar";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export interface Post {
   id: string;
@@ -79,9 +81,18 @@ export default function PostCard({ post, onReact }: Props) {
       </div>
 
       {/* Body */}
-      <p className="px-4 text-[15px] text-gray-800 leading-6 whitespace-pre-line mb-3 font-['Geist']">
-        {post.body}
-      </p>
+      <div className="px-4 mb-3">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            p: ({ node, ...props }) => (
+              <p className="text-[15px] text-gray-800 leading-6 whitespace-pre-line mb-3 font-['Geist']" {...props} />
+            ),
+          }}
+        >
+          {post.body}
+        </ReactMarkdown>
+      </div>
 
       {/* Article preview — matches profile style */}
       {post.pdfUrl && (
