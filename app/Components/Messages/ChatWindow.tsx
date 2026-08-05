@@ -1,4 +1,3 @@
-// app/Components/Messages/ChatWindow.tsx
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -90,6 +89,17 @@ function formatDateLabel(dateStr: string) {
     if (firstKey !== undefined) dateLabelCache.delete(firstKey);
   }
   return label;
+}
+
+/** Strips clarify-flow metadata appended by buildClarifiedText in
+ *  FindALawyer.tsx, leaving only the user's original free-text message.
+ *  Pattern: "… Legal matter: X. Budget: Y. Location: Z." */
+function stripIntakeMetadata(body: string): string {
+  return body
+    .replace(/\s*Legal matter:\s*[^.]+\./g, "")
+    .replace(/\s*Budget:\s*[^.]+\./g, "")
+    .replace(/\s*Location:\s*[^.]+\./g, "")
+    .trim();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -560,7 +570,11 @@ export default function ChatWindow({
                                   }`
                             }`}
                           >
-                            <p>{msg.body}</p>
+                            <p>
+                              {msg.id === messages[0]?.id
+                                ? stripIntakeMetadata(msg.body)
+                                : msg.body}
+                            </p>
                             <p
                               className={`text-[11px] mt-1 flex items-center gap-2 ${
                                 isSent ? "text-blue-200" : "text-gray-400"
