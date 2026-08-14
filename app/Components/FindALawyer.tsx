@@ -11,6 +11,7 @@ import {
   Star,
   Users,
   Check,
+  X,
 } from "lucide-react";
 
 import {
@@ -68,15 +69,6 @@ function getAvatarColor(name: string): string {
   ];
 
   return colors[name.charCodeAt(0) % colors.length];
-}
-
-function formatFeeRange(min: number, max: number): string {
-  const fmt = (n: number) =>
-    n >= 1000000
-      ? `₦${(n / 1000000).toFixed(1)}M`
-      : `₦${(n / 1000).toFixed(0)}k`;
-
-  return `${fmt(min)} - ${fmt(max)}`;
 }
 
 function formatBudgetLabel(budget: string | null): string {
@@ -238,7 +230,7 @@ function LawyerCard({
     };
   }, []);
 
-  const { account, score, matchedFactors } = match;
+  const { account, score } = match;
 
   const handleSend = async () => {
     if (isSending || sent) return;
@@ -273,13 +265,20 @@ function LawyerCard({
     }
   };
 
+  const scoreColorClasses =
+    score >= 80
+      ? "bg-[#EFFAF2] text-[#159947]"
+      : score > 40
+        ? "bg-[#FFF8E8] text-[#C48529]"
+        : "bg-[#FFF4F4] text-[#C42929]";
+
   return (
-    <div className="rounded-lg border border-[#F0F0F0] bg-white p-5 transition-all ">
+    <div className="rounded-2xl border border-[#F0F0F0] bg-white p-5 transition-all">
       <div className="flex items-start justify-between gap-4">
         <div className="flex gap-4 min-w-0">
           {/* Avatar: show image if available, otherwise initials */}
           <div
-            className={`relative w-14 h-14 rounded-full flex items-center justify-center font-semibold text-sm shrink-0 overflow-hidden ${getAvatarColor(
+            className={`relative w-16 h-16 rounded-full flex items-center justify-center font-semibold text-base shrink-0 overflow-hidden ${getAvatarColor(
               account.fullName,
             )}`}
           >
@@ -288,7 +287,7 @@ function LawyerCard({
                 src={account.avatarUrl}
                 alt={account.fullName}
                 fill
-                sizes="56px"
+                sizes="64px"
                 className="object-cover"
               />
             ) : (
@@ -298,107 +297,66 @@ function LawyerCard({
 
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-[24px] font-['Instrument_Serif'] text-[#202020] truncate">
+              <h3 className="text-[22px] font-['Instrument_Serif'] text-[#202020] truncate">
                 {account.fullName}
               </h3>
 
               {account.lawyerProfile?.verificationStatus === "verified" && (
-                <div className="inline-flex items-center gap-1 rounded-full bg-[#EEF4FF] px-2 py-1 text-[11px] text-[#2D6BFF]">
+                <div className="inline-flex items-center gap-1 rounded-full bg-[#EEF4FF] px-2 py-1 text-[11px] text-[#2D6BFF] shrink-0">
                   <ShieldCheck className="w-3 h-3" />
                   Verified
                 </div>
               )}
             </div>
 
+            {/* Subtitle line — plain text, e.g. "Lawyer | Goal-Oriented | Future-focused" */}
             {account.bio && (
-              <p className="text-[12px] text-[#374151] mt-1 line-clamp-2 leading-6 font-['Geist'] font-light tracking-[0%]">
+              <p className="text-[13px] text-[#6B7280] mt-1 font-['Geist'] truncate">
                 {account.bio}
               </p>
             )}
-
-            <div className="flex flex-wrap gap-2 mt-4">
-              {account.locationCity && (
-                <div className="inline-flex items-center gap-1.5  bg-[#22C55E1A] px-3 py-1.5 text-[12px] text-[#22C55E]">
-                  <MapPin className="w-3 h-3" />
-                  {account.locationCity}, {account.locationCountry}
-                </div>
-              )}
-
-              <div className="inline-flex items-center gap-1.5  bg-[#F5C4511A] px-3 py-1.5 text-[12px] text-[#F5C451]">
-                <Star className="w-3 h-3 fill-[#F5C451] text-[#F5C451]" />
-                {parseFloat(account.avgRating || "0").toFixed(1)}
-              </div>
-
-              <div className="inline-flex items-center gap-1.5  bg-[#0084FF1A] px-3 py-1.5 text-[12px] text-[#0084FF]">
-                <Users className="w-3 h-3" />
-                {account.connectionCount}+ connections
-              </div>
-
-              {/* {account.lawyerProfile && (
-                <div className="inline-flex items-center  bg-[#F7F7F7] px-3 py-1.5 text-[12px] text-[#666]">
-                  {formatFeeRange(
-                    account.lawyerProfile.feeRangeMin,
-                    account.lawyerProfile.feeRangeMax,
-                  )}
-                </div>
-              )} */}
-            </div>
           </div>
         </div>
 
+        {/* Combined score + "Match" pill, single line */}
         <div
-          className={`rounded-full  px-6 py-2 text-center min-w-17.5 shrink-0 flex items-center gap-2 ${
-            score >= 80
-              ? "bg-[#EFFAF2] text-[#159947]"
-              : score > 40
-                ? "bg-[#FFF4F4] text-[#C48529]"
-                : "bg-[#FFF4F4] text-[#C42929]"
-          }`}
+          className={`rounded-full px-4 py-2 text-[13px] font-semibold shrink-0 whitespace-nowrap ${scoreColorClasses}`}
         >
-          <p
-            className={`text-[10px] font-semibold ${
-              score >= 80
-                ? "text-[#159947]"
-                : score > 40
-                  ? "text-[#C48529]"
-                  : "text-[#C42929]"
-            }`}
-          >
-            {score}%
-          </p>
-          <p
-            className={`text-[10px] font-semibold ${
-              score >= 80
-                ? "text-[#159947]"
-                : score > 40
-                  ? "text-[#C48529]"
-                  : "text-[#C42929]"
-            }`}
-          >
-            Match
-          </p>
+          {score}% Match
         </div>
       </div>
 
-      {/* {matchedFactors.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-5">
-          {matchedFactors.map((factor) => (
-            <div
-              key={factor}
-              className="rounded-full border border-[#ECECEC] px-3 py-1 text-[11px] text-[#666] capitalize"
-            >
-              {factor.replace(/_/g, " ")}
-            </div>
-          ))}
+      {/* Location + rating side by side */}
+      <div className="grid grid-cols-2 gap-3 mt-5">
+        {account.locationCity ? (
+          <div className="flex items-center justify-center gap-1.5 rounded-lg bg-[#EAFBF0] px-4 py-2.5 text-[13px] font-medium text-[#22C55E]">
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">
+              {account.locationCity}, {account.locationCountry}
+            </span>
+          </div>
+        ) : (
+          <div />
+        )}
+
+        <div className="flex items-center justify-center gap-1.5 rounded-lg bg-[#FEF9EC] px-4 py-2.5 text-[13px] font-medium text-[#D9A441]">
+          <Star className="w-3.5 h-3.5 fill-[#D9A441] text-[#D9A441] shrink-0" />
+          {parseFloat(account.avgRating || "0").toFixed(1)}
         </div>
-      )} */}
+      </div>
+
+      {/* Connections — full width */}
+      <div className="flex items-center justify-center gap-1.5 rounded-lg bg-[#EAF3FF] px-4 py-2.5 text-[13px] font-medium text-[#0084FF] mt-3">
+        <Users className="w-3.5 h-3.5" />
+        {account.connectionCount}+ Connections
+      </div>
 
       {error && <p className="text-[12px] text-red-500 mt-4">{error}</p>}
 
       <div className="grid grid-cols-2 gap-3 mt-6">
         <button
           onClick={() => onViewProfile(account.id)}
-          className="h-11 rounded border border-[#EAEAEA] text-[13px] font-medium text-[#444] hover:bg-[#FAFAFA] transition-colors"
+          className="h-11 rounded-lg border border-[#EAEAEA] bg-[#F7F7F7] text-[13px] font-medium text-[#444] hover:bg-[#EFEFEF] transition-colors"
         >
           Profile
         </button>
@@ -406,7 +364,7 @@ function LawyerCard({
         <button
           onClick={handleSend}
           disabled={sent || isSending || sendRequest.isPending}
-          className={`h-11 text-[13px] font-medium transition-all flex items-center justify-center gap-2 rounded ${
+          className={`h-11 rounded-lg text-[13px] font-medium transition-all flex items-center justify-center gap-2 ${
             sent
               ? "bg-green-500 text-white"
               : "bg-[#1D4ED8] text-white hover:bg-[#1B46C4]"
@@ -427,6 +385,7 @@ function LawyerCard({
     </div>
   );
 }
+
 // Same gradient-border technique used for the sidebar's "Find a Lawyer"
 // pill — a transparent border painted with two layered backgrounds so the
 // gradient only shows on the border, not the fill.
@@ -456,10 +415,10 @@ export default function FindALawyer() {
   const [activeTab, setActiveTab] = useState<"all" | "firms" | "lawyers">(
     "firms",
   );
-  // When set, show that account's profile in place (search results stay mounted).
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
     null,
   );
+  const [showMobileResults, setShowMobileResults] = useState(false);
 
   const searchByText = useSearchByText();
   const { data: practiceAreas } = usePracticeAreas();
@@ -471,18 +430,11 @@ export default function FindALawyer() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [searchState, clarifyState]);
 
-  // Steps for whichever fields still need answers, sourced from the same
-  // practice-areas list and option constants used by the dashboard's
-  // "Find a Lawyer" intake flow — keeps the chip choices consistent.
   const clarifySteps = buildIntakeSteps(practiceAreas ?? []).filter(
     (step) =>
       step.key === "matter" || step.key === "budget" || step.key === "location",
   );
 
-  // Applies the "which fields are missing" branching logic. Shared between
-  // the resolved-response path (backend returns 200 with error:true) and
-  // the thrown-error path (backend returns a non-2xx status instead) —
-  // we can't assume which one a given endpoint/deployment actually uses.
   const applyClarifyOrError = (
     text: string,
     message: string,
@@ -493,18 +445,14 @@ export default function FindALawyer() {
     );
 
     if (missing.length > 0) {
+      setShowMobileResults(false);
       setClarifyState({ originalText: text, extracted, missing, message });
       return;
     }
 
-    // Backend flagged an error but nothing is actually missing on our
-    // end — surface its message rather than guessing further.
     setValidationError(message);
   };
 
-  // Re-submits to /matchmaking/search-by-text with the clarified answers
-  // folded into the original text, rather than switching to the structured
-  // /matchmaking/search endpoint. Same NLP endpoint, richer input.
   const runClarifiedSearch = async (
     extracted: ExtractedIntake,
     originalText: string,
@@ -518,9 +466,6 @@ export default function FindALawyer() {
       const res = await searchByText.mutateAsync({ text: clarifiedText });
 
       if (res.error) {
-        // Backend still couldn't extract enough even with the clarified
-        // details appended — surface whatever's still missing instead of
-        // looping forever.
         applyClarifyOrError(originalText, res.message, res.data.extracted);
         return;
       }
@@ -530,6 +475,7 @@ export default function FindALawyer() {
         extracted: res.data.extracted,
         total: res.data.pagination.total,
       });
+      setShowMobileResults(true);
       setClarifyState(null);
     } catch (err: unknown) {
       const clarify = extractClarifyErrorBody(err);
@@ -558,7 +504,6 @@ export default function FindALawyer() {
     const nextMissing = clarifyState.missing.filter((k) => k !== key);
 
     if (nextMissing.length === 0) {
-      // All required fields answered — submit immediately.
       setClarifyState({
         ...clarifyState,
         extracted: nextExtracted,
@@ -575,11 +520,6 @@ export default function FindALawyer() {
     });
   };
 
-  // Handles a free-typed answer for the current clarify step (e.g. a city
-  // not in the preset list, or a custom budget amount). The value is folded
-  // into `extracted` and the whole combined text is re-submitted to the same
-  // /matchmaking/search-by-text NLP endpoint, so arbitrary locations/budgets
-  // are re-parsed by the LLM rather than requiring a structured backend call.
   const handleClarifyTextAnswer = (key: ClarifyKey, text: string) => {
     if (!clarifyState || searchByText.isPending) return;
 
@@ -591,8 +531,6 @@ export default function FindALawyer() {
     };
 
     if (key === "matter") {
-      // Prefer an exact known practice area so we keep a real id; otherwise
-      // store the typed name and let the LLM re-resolve it on resubmit.
       const known = clarifySteps
         .find((s) => s.key === "matter")
         ?.options.find((o) => o.label.toLowerCase() === trimmed.toLowerCase());
@@ -607,14 +545,12 @@ export default function FindALawyer() {
       );
       nextExtracted.budget = known ? known.value : trimmed;
     } else {
-      // location — free-form city/state, accepted as-is by the backend.
       nextExtracted.location = trimmed;
     }
 
     const nextMissing = clarifyState.missing.filter((k) => k !== key);
 
     if (nextMissing.length === 0) {
-      // All required fields answered — submit immediately.
       setClarifyState({
         ...clarifyState,
         extracted: nextExtracted,
@@ -641,6 +577,7 @@ export default function FindALawyer() {
 
     setValidationError("");
     setClarifyState(null);
+    setShowMobileResults(false);
     setHasSearched(true);
     localStorage.setItem("freeText", text);
 
@@ -657,12 +594,8 @@ export default function FindALawyer() {
         extracted: res.data.extracted,
         total: res.data.pagination.total,
       });
+      setShowMobileResults(true);
     } catch (err: unknown) {
-      // Some backends send this same "couldn't determine enough" payload
-      // with a non-2xx status instead of HTTP 200 — axios rejects in that
-      // case, so the response never reaches the `try` block above. Check
-      // the thrown error's payload for the same shape before giving up
-      // and showing a generic failure message.
       const clarify = extractClarifyErrorBody(err);
       if (clarify) {
         applyClarifyOrError(text, clarify.message, clarify.extracted);
@@ -678,9 +611,6 @@ export default function FindALawyer() {
 
     if (!text || searchByText.isPending) return;
 
-    // While the clarify step is asking for a missing field, the existing
-    // input box + send button answer the current step instead of starting
-    // a brand-new search.
     if (clarifyState && clarifyState.missing.length > 0) {
       handleClarifyTextAnswer(clarifyState.missing[0], text);
       setInputValue("");
@@ -697,18 +627,23 @@ export default function FindALawyer() {
     setClarifyState(null);
     setHasSearched(false);
     setActiveTab("all");
+    setShowMobileResults(false);
+    setSelectedAccountId(null);
 
     setTimeout(() => {
       inputRef.current?.focus();
     }, 100);
   };
 
+  const handleCancelMobileResults = () => {
+    setShowMobileResults(false);
+    setSelectedAccountId(null);
+  };
+
   const extracted = searchState?.extracted;
 
   const isSearching = searchByText.isPending;
 
-  // During clarify mode the bottom input box is reused to answer the
-  // current missing-field step, so its placeholder reflects that step.
   const activeClarifyKey = clarifyState?.missing[0];
   const inputPlaceholder = activeClarifyKey
     ? activeClarifyKey === "matter"
@@ -736,7 +671,6 @@ export default function FindALawyer() {
       (r) => classifyAccountType(r.account) === "lawyer",
     ) ?? [];
 
-  // "All" should show firms first per product request.
   const orderedResults =
     activeTab === "firms"
       ? firmResults
@@ -763,7 +697,6 @@ export default function FindALawyer() {
 
   return (
     <>
-      {/* In-place lawyer/firm profile — search results stay in memory */}
       {selectedAccountId && (
         <LawyerProfileView
           accountId={selectedAccountId}
@@ -776,8 +709,7 @@ export default function FindALawyer() {
           selectedAccountId ? "hidden" : ""
         }`}
       >
-        {/* SHARED HEADER — spans full width across both panels */}
-        <div className="h-18.5 border-b border-[#F0F0F0] px-8 flex items-center justify-between shrink-0 bg-white">
+        <div className="h-18.5 border-b border-[#F0F0F0] px-4 md:px-8 flex items-center justify-between shrink-0 bg-white">
           <div>
             <h1 className="text-[20px] font-['Instrument_serif'] text-[#202020]">
               Find a Lawyer
@@ -795,12 +727,13 @@ export default function FindALawyer() {
           )}
         </div>
 
-        {/* TWO-PANEL GRID */}
-        <div className="grid grid-cols-[55%_45%] flex-1 overflow-hidden">
-          {/* LEFT PANEL */}
-          <div className="bg-white border-r border-[#ECECEC] flex flex-col overflow-hidden">
-            {/* CONVERSATION */}
-            <div className="flex-1 overflow-y-auto px-8 py-8 h-full">
+        <div className="flex flex-col md:grid md:grid-cols-[55%_45%] flex-1 min-h-0 overflow-hidden">
+          <div
+            className={`bg-white md:border-r border-[#ECECEC] flex flex-col overflow-hidden flex-1 min-h-0 ${
+              showMobileResults ? "hidden md:flex" : "flex"
+            }`}
+          >
+            <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 h-full min-h-0">
               {!hasSearched && (
                 <div className="max-w-2xl">
                   <div className="pb-8 border-b border-[#EFEFEF]">
@@ -853,7 +786,6 @@ export default function FindALawyer() {
                   </div>
 
                   <div className="space-y-8">
-                    {/* Already-known fields, shown as resolved bubbles */}
                     {clarifySteps
                       .filter(
                         (step) =>
@@ -876,7 +808,6 @@ export default function FindALawyer() {
                         );
                       })}
 
-                    {/* The field we're currently asking about */}
                     {clarifyState.missing.length > 0 &&
                       (() => {
                         const currentKey = clarifyState.missing[0];
@@ -946,8 +877,7 @@ export default function FindALawyer() {
               <div ref={bottomRef} />
             </div>
 
-            {/* INPUT */}
-            <div className="border-t border-[#ECECEC] bg-white px-6 py-5 shrink-0">
+            <div className="border-t border-[#ECECEC] bg-white px-4 md:px-6 py-5 shrink-0">
               {validationError && (
                 <p className="text-[12px] text-red-500 mb-3">
                   {validationError}
@@ -985,18 +915,26 @@ export default function FindALawyer() {
                   )}
                 </button>
               </div>
-
-              {/* <p className="text-center text-[11px] text-[#B0B0B0] mt-3">
-              {clarifyState
-                ? "Press Enter to continue"
-                : "Press Enter to search"}
-            </p> */}
             </div>
           </div>
 
-          {/* RIGHT PANEL */}
-          <div className="bg-[#FCFCFC] overflow-y-auto">
-            <div className="px-8 py-8 max-w-3xl">
+          <div
+            className={`bg-[#FCFCFC] overflow-y-auto min-h-0 ${
+              showMobileResults ? "flex flex-1 flex-col md:block" : "hidden md:block"
+            }`}
+          >
+            <div className="px-4 md:px-8 py-6 md:py-8 max-w-3xl">
+              {showMobileResults && (
+                <div className="flex items-center justify-between mb-6 md:hidden">
+                  <button
+                    onClick={handleCancelMobileResults}
+                    className="flex items-center gap-2 rounded-full bg-white border border-[#EAEAEA] px-4 py-2 text-[13px] font-medium text-[#444] hover:bg-[#FAFAFA] transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancel
+                  </button>
+                </div>
+              )}
               {searchState && (
                 <div className="flex items-center justify-between mb-6">
                   <div>
@@ -1012,11 +950,11 @@ export default function FindALawyer() {
               )}
 
               {searchState && (
-                <div className="flex gap-2 mb-8">
+                <div className="flex gap-2 mb-8 overflow-x-auto no-scrollbar">
                   <button
                     type="button"
                     onClick={() => setActiveTab("firms")}
-                    className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                    className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
                       activeTab === "firms"
                         ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
                         : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
@@ -1027,7 +965,7 @@ export default function FindALawyer() {
                   <button
                     type="button"
                     onClick={() => setActiveTab("lawyers")}
-                    className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                    className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
                       activeTab === "lawyers"
                         ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
                         : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
@@ -1038,7 +976,7 @@ export default function FindALawyer() {
                   <button
                     type="button"
                     onClick={() => setActiveTab("all")}
-                    className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                    className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
                       activeTab === "all"
                         ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
                         : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
