@@ -119,7 +119,7 @@ export default function SignInClient() {
       <Navbar />
 
       {/* Main content area — vertically centered */}
-      <main className="flex-1 w-full flex items-center pb-12">
+      <main className="flex-1 w-full flex items-center pb-0">
         <div className="w-full  mx-auto s">
           <div className="grid grid-cols-1 lg:grid-cols-2  items-center">
             {/* Illustration — desktop only */}
