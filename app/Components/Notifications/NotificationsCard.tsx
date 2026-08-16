@@ -286,7 +286,10 @@ function getBodyText(notif: Notification): {
             your request.
           </>
         ),
-        secondary: reason ? `Reason: ${reason}` : undefined,
+        // A decline returns the match slot, so they can be matched again now.
+        secondary: reason
+          ? `Reason: ${reason}. You can be matched with another lawyer now.`
+          : "You can be matched with another lawyer now.",
       };
     }
     case "request_expired":

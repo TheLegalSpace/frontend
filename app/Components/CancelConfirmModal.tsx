@@ -22,7 +22,6 @@ export default function CancelConfirmModal({
       }}
     >
       <div className="w-full max-w-sm bg-white rounded-2xl p-6 relative">
-
         {/* Close button */}
         <button
           onClick={onClose}
@@ -42,8 +41,9 @@ export default function CancelConfirmModal({
           Are you sure?
         </h3>
         <p className="text-[13px] text-gray-500 leading-relaxed mb-6">
-          This will withdraw your request from the lawyer. You can submit a
-          new request anytime.
+          This will withdraw your request from the lawyer. Cancelling does not
+          restore your match allowance, so you will need a new match before you
+          can send another request for this type of matter.
         </p>
 
         {/* Actions */}

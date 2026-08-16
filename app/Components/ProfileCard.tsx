@@ -35,8 +35,10 @@ interface LawyerProfile {
   scn: string;
   callToBarYear: number;
   nbaBranch: string;
-  feeRangeMin: number;
-  feeRangeMax: number;
+  // Fees are never returned to clients anymore (only the account itself and
+  // admins see them), so these are absent on any viewed profile.
+  feeRangeMin?: number;
+  feeRangeMax?: number;
   verificationStatus: "verified" | "pending" | "rejected";
 }
 

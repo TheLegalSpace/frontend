@@ -3,6 +3,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  AlertTriangle,
+  CalendarClock,
+  Check,
+  Hourglass,
   Loader2,
   MapPin,
   RotateCcw,
@@ -10,16 +14,17 @@ import {
   ShieldCheck,
   Star,
   Users,
-  Check,
   X,
 } from "lucide-react";
 
 import {
+  MatchOffer,
   MatchResult,
   SearchPayload,
   ExtractedIntake,
   buildIntakeSteps,
   BUDGET_OPTIONS,
+  intakeService,
 } from "@/services/intake.services";
 
 import { SendRequestPayload } from "@/services/requests.services";
@@ -43,6 +48,22 @@ interface SearchState {
   extracted: ExtractedIntake;
   searchPayload?: SearchPayload;
   total: number;
+  offer: MatchOffer | null;
+}
+
+/**
+ * A hard stop surfaced instead of a results grid. The backend now returns three
+ * blocking states from search — on cooldown, allowance used up, no match found —
+ * and the intake should check availability up front rather than erroring after
+ * every question.
+ */
+interface BlockedState {
+  type: "cooldown" | "quota" | "no-match";
+  message: string;
+  hoursRemaining?: number;
+  offersUsed?: number;
+  offersAllowed?: number;
+  cooldownUntil?: string;
 }
 
 function getInitials(name: string): string {
@@ -118,6 +139,13 @@ function getErrorMessage(err: unknown, fallback: string): string {
   };
 
   return maybe.response?.data?.message ?? fallback;
+}
+
+function getErrorStatus(err: unknown): number | null {
+  if (typeof err !== "object" || err === null) return null;
+
+  const maybe = err as { response?: { status?: number } };
+  return maybe.response?.status ?? null;
 }
 
 // Some backends send the "couldn't determine enough" clarify payload with
@@ -351,7 +379,15 @@ function LawyerCard({
         {account.connectionCount}+ Connections
       </div>
 
+      {/* Why this match — fee_range reads as "Within your budget". */}
+      <MatchFactorBadges factors={match.matchedFactors} />
+
       {error && <p className="text-[12px] text-red-500 mt-4">{error}</p>}
+      {sent && (
+        <p className="text-[12px] text-[#159947] mt-3">
+          Request sent — you will be connected once they accept.
+        </p>
+      )}
 
       <div className="grid grid-cols-2 gap-3 mt-6">
         <button
@@ -406,14 +442,178 @@ function GradientPill({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ─── Match screen helpers ─────────────────────────────────────────────────────
+// The backend no longer returns a browsable list — at most one lawyer and one
+// firm, plus an offer block. These helpers render that single match.
+
+const MATCH_FACTOR_LABELS: Record<string, string> = {
+  practice_area: "Practice area",
+  location: "Location",
+  fee_range: "Within your budget",
+  rating: "Highly rated",
+  experience: "Experienced",
+  availability: "Available",
+};
+
+function matchedFactorLabel(factor: string): string {
+  return (
+    MATCH_FACTOR_LABELS[factor] ??
+    factor
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")
+  );
+}
+
+function formatRespondBy(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+function formatHours(hours: number): string {
+  const h = Math.max(1, Math.round(hours));
+  return h === 1 ? "1 hour" : `${h} hours`;
+}
+
+/** Cooldown helpers — kept at module scope so relative time is not computed in render. */
+function isCooldownActive(offer: MatchOffer): boolean {
+  if (!offer.cooldownUntil) return false;
+  return new Date(offer.cooldownUntil).getTime() > Date.now();
+}
+
+function cooldownHoursRemaining(offer: MatchOffer): number {
+  if (!offer.cooldownUntil) return 0;
+  return Math.max(
+    1,
+    Math.ceil(
+      (new Date(offer.cooldownUntil).getTime() - Date.now()) / (60 * 60 * 1000),
+    ),
+  );
+}
+
+/** Why this match was chosen — fee_range reads as "Within your budget". */
+function MatchFactorBadges({ factors }: { factors: string[] }) {
+  if (!factors?.length) return null;
+  return (
+    <div className="flex flex-wrap gap-2 mt-4">
+      {factors.map((f) => (
+        <span
+          key={f}
+          className={`rounded-full px-3 py-1.5 text-[12px] font-medium ${
+            f === "fee_range"
+              ? "bg-[#EFFAF2] text-[#159947]"
+              : "bg-[#EEF4FF] text-[#2D6BFF]"
+          }`}
+        >
+          {matchedFactorLabel(f)}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** Deadline + allowance + cooldown state for the current match. */
+function OfferBanner({ offer }: { offer: MatchOffer }) {
+  const respondBy = formatRespondBy(offer.expiresAt);
+  const isCooldown = isCooldownActive(offer);
+  const cooldownHours = isCooldown ? cooldownHoursRemaining(offer) : 0;
+
+  return (
+    <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 mb-5">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <CalendarClock className="w-4 h-4 text-[#2D6BFF]" />
+          <span className="text-[13px] font-medium text-[#202020]">
+            {respondBy ? `Respond by ${respondBy}` : "Match active"}
+          </span>
+        </div>
+        <span className="text-[12px] text-[#6B7280]">
+          {offer.offersUsed} of {offer.offersAllowed} matches used this week
+        </span>
+      </div>
+      {isCooldown && (
+        <div className="mt-3 flex items-center gap-2 rounded-lg bg-[#EEF4FF] px-3 py-2 text-[12px] text-[#2D6BFF]">
+          <Hourglass className="w-3.5 h-3.5 shrink-0" />
+          You can be matched again for this type of matter in{" "}
+          {formatHours(cooldownHours)}.
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The only affordability signal a client gets once fee figures are gone. Surface
+ * it plainly — it's the only warning they'll see that the match may cost more.
+ */
+function BudgetRelaxedBanner() {
+  return (
+    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 mb-5">
+      <div className="flex items-start gap-3">
+        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-[13px] font-semibold text-amber-900">
+            No lawyers matched your budget for this matter
+          </p>
+          <p className="text-[13px] leading-6 text-amber-800 mt-1">
+            This is the closest fit, and may cost more than you indicated.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Whether an account is a firm or an individual lawyer — used to cap a match to one of each. */
+function classifyRole(account: MatchResult["account"]): "lawyer" | "firm" {
+  const role = (account.role ?? "").toUpperCase();
+  if (role === "FIRM" || account.firmProfile) return "firm";
+  return "lawyer";
+}
+
+/** Empty-state card for the three blocking outcomes of a search. */
+function BlockedCard({ blocked }: { blocked: BlockedState }) {
+  const title =
+    blocked.type === "quota"
+      ? "You've used your matches for this type of matter"
+      : blocked.type === "cooldown"
+        ? "You'll be matched again soon"
+        : "No match found right now";
+  const icon =
+    blocked.type === "no-match" ? (
+      <Users className="w-7 h-7 text-[#999]" />
+    ) : (
+      <Hourglass className="w-7 h-7 text-[#C48529]" />
+    );
+
+  return (
+    <div className="rounded-3xl border border-[#ECECEC] bg-white p-10 text-center">
+      <div className="w-16 h-16 rounded-3xl bg-[#F7F7F7] border border-[#EFEFEF] mx-auto flex items-center justify-center mb-6">
+        {icon}
+      </div>
+      <h3 className="text-[18px] font-semibold text-[#202020]">{title}</h3>
+      <p className="text-[14px] text-[#6B7280] mt-3 leading-7 max-w-md mx-auto">
+        {blocked.message}
+      </p>
+      {blocked.type === "quota" && (
+        <p className="text-[13px] text-[#1D4ED8] mt-4">
+          Try a different type of legal matter.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function FindALawyer() {
   const [inputValue, setInputValue] = useState("");
   const [searchState, setSearchState] = useState<SearchState | null>(null);
   const [validationError, setValidationError] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const [clarifyState, setClarifyState] = useState<ClarifyState | null>(null);
+  const [blockedState, setBlockedState] = useState<BlockedState | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "firms" | "lawyers">(
-    "firms",
+    "all",
   );
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
     null,
@@ -453,11 +653,63 @@ export default function FindALawyer() {
     setValidationError(message);
   };
 
+  /**
+   * Pre-check the per-practice-area allowance before walking the user through
+   * the remaining intake questions. Only a hard quota stop blocks here — an
+   * active cooldown just replays their existing match, which the results screen
+   * renders as "Your match".
+   */
+  const checkAvailability = async (
+    practiceAreaId: string,
+  ): Promise<boolean> => {
+    try {
+      const res = await intakeService.availability(practiceAreaId);
+      const a = res.data.data;
+      if (a.quotaExhausted) {
+        setClarifyState(null);
+        setBlockedState({
+          type: "quota",
+          message: `You've used your ${a.offersUsed} of ${a.offersAllowed} matches for this type of matter in the last ${a.windowDays} days. You can be matched again for it soon, or start a request for a different type of legal matter.`,
+          offersUsed: a.offersUsed,
+          offersAllowed: a.offersAllowed,
+        });
+        setShowMobileResults(true);
+        return true;
+      }
+      return false;
+    } catch {
+      // If availability can't be read, let the search itself enforce the rules.
+      return false;
+    }
+  };
+
+  /** Turn a rejected search into a blocking state or a plain inline error. */
+  const applySearchError = (err: unknown, fallback: string) => {
+    const status = getErrorStatus(err);
+    const message = getErrorMessage(err, fallback);
+
+    if (status === 404) {
+      // No eligible lawyer for that matter — an empty state, not an error toast.
+      setBlockedState({ type: "no-match", message });
+      setShowMobileResults(true);
+      return;
+    }
+    if (status === 400) {
+      // From matchmaking/search a 400 means the allowance for this practice
+      // area is spent. The backend copy is user-readable — surface it as-is.
+      setBlockedState({ type: "quota", message });
+      setShowMobileResults(true);
+      return;
+    }
+    setValidationError(message);
+  };
+
   const runClarifiedSearch = async (
     extracted: ExtractedIntake,
     originalText: string,
   ) => {
     setValidationError("");
+    setBlockedState(null);
 
     const clarifiedText = buildClarifiedText(originalText, extracted);
     localStorage.setItem("freeText", clarifiedText);
@@ -474,6 +726,7 @@ export default function FindALawyer() {
         results: res.data.items,
         extracted: res.data.extracted,
         total: res.data.pagination.total,
+        offer: res.data.offer ?? null,
       });
       setShowMobileResults(true);
       setClarifyState(null);
@@ -484,15 +737,20 @@ export default function FindALawyer() {
         return;
       }
 
-      setValidationError(getErrorMessage(err, "Search failed"));
+      applySearchError(err, "Search failed");
     }
   };
 
-  const handleClarifyAnswer = (
+  const handleClarifyAnswer = async (
     key: ClarifyKey,
     option: { label: string; value: string },
   ) => {
     if (!clarifyState) return;
+
+    if (key === "matter") {
+      const blocked = await checkAvailability(option.value);
+      if (blocked) return;
+    }
 
     const nextExtracted: ExtractedIntake = {
       ...clarifyState.extracted,
@@ -520,7 +778,7 @@ export default function FindALawyer() {
     });
   };
 
-  const handleClarifyTextAnswer = (key: ClarifyKey, text: string) => {
+  const handleClarifyTextAnswer = async (key: ClarifyKey, text: string) => {
     if (!clarifyState || searchByText.isPending) return;
 
     const trimmed = text.trim();
@@ -546,6 +804,11 @@ export default function FindALawyer() {
       nextExtracted.budget = known ? known.value : trimmed;
     } else {
       nextExtracted.location = trimmed;
+    }
+
+    if (key === "matter" && nextExtracted.matter?.id) {
+      const blocked = await checkAvailability(nextExtracted.matter.id);
+      if (blocked) return;
     }
 
     const nextMissing = clarifyState.missing.filter((k) => k !== key);
@@ -577,6 +840,7 @@ export default function FindALawyer() {
 
     setValidationError("");
     setClarifyState(null);
+    setBlockedState(null);
     setShowMobileResults(false);
     setHasSearched(true);
     localStorage.setItem("freeText", text);
@@ -593,6 +857,7 @@ export default function FindALawyer() {
         results: res.data.items,
         extracted: res.data.extracted,
         total: res.data.pagination.total,
+        offer: res.data.offer ?? null,
       });
       setShowMobileResults(true);
     } catch (err: unknown) {
@@ -602,7 +867,7 @@ export default function FindALawyer() {
         return;
       }
 
-      setValidationError(getErrorMessage(err, "Search failed"));
+      applySearchError(err, "Search failed");
     }
   };
 
@@ -625,8 +890,9 @@ export default function FindALawyer() {
     setSearchState(null);
     setValidationError("");
     setClarifyState(null);
-    setHasSearched(false);
+    setBlockedState(null);
     setActiveTab("all");
+    setHasSearched(false);
     setShowMobileResults(false);
     setSelectedAccountId(null);
 
@@ -653,47 +919,37 @@ export default function FindALawyer() {
         : "Type your location (e.g. Enugu) and press Enter..."
     : "Describe your legal situation...";
 
-  const classifyAccountType = (account: MatchResult["account"]) => {
-    const role = (account.role ?? "").toUpperCase();
-
-    if (role === "FIRM" || account.firmProfile) return "firm";
-    if (role === "LAWYER" || account.lawyerProfile) return "lawyer";
-
-    return "lawyer";
-  };
-
-  const firmResults =
-    searchState?.results.filter(
-      (r) => classifyAccountType(r.account) === "firm",
-    ) ?? [];
-  const lawyerResults =
-    searchState?.results.filter(
-      (r) => classifyAccountType(r.account) === "lawyer",
-    ) ?? [];
-
-  const orderedResults =
-    activeTab === "firms"
-      ? firmResults
-      : activeTab === "lawyers"
-        ? lawyerResults
-        : [...firmResults, ...lawyerResults];
-
-  const resultsSummaryText = (() => {
-    if (!searchState) return "";
-    if (activeTab === "all") {
-      return `${searchState.total} account${
-        searchState.total === 1 ? "" : "s"
-      } matched your request`;
-    }
-
-    const noun = activeTab === "firms" ? "firms" : "lawyers";
-    return `Showing ${orderedResults.length} ${noun} in your results`;
+  // A single match (one lawyer and/or one firm) — never a browsable list. We
+  // also cap defensively: even if a stale backend still returns more than two
+  // items, the screen shows at most the best lawyer and the best firm.
+  const matchItems = (() => {
+    const results = searchState?.results ?? [];
+    const firm = results.find((r) => classifyRole(r.account) === "firm");
+    const lawyer = results.find((r) => classifyRole(r.account) === "lawyer");
+    const picks: MatchResult[] = [];
+    if (firm) picks.push(firm);
+    if (lawyer) picks.push(lawyer);
+    return picks.length > 0 ? picks : results.slice(0, 2);
   })();
 
-  const emptyStateTitle =
-    activeTab === "all"
-      ? "No matching accounts found"
-      : `No matching ${activeTab === "firms" ? "firms" : "lawyers"} found`;
+  // Tab filter over the single match: Firms, Lawyers, or All.
+  const firmMatch = matchItems.find((r) => classifyRole(r.account) === "firm");
+  const lawyerMatch = matchItems.find(
+    (r) => classifyRole(r.account) === "lawyer",
+  );
+  const visibleMatches =
+    activeTab === "firms"
+      ? firmMatch
+        ? [firmMatch]
+        : []
+      : activeTab === "lawyers"
+        ? lawyerMatch
+          ? [lawyerMatch]
+          : []
+        : matchItems;
+
+  const isPinned = searchState?.offer?.pinned ?? false;
+  const matchSummaryText = isPinned ? "Your match" : "We found you a match";
 
   return (
     <>
@@ -722,7 +978,7 @@ export default function FindALawyer() {
               className="rounded-full bg-[#F7F7F7] px-4 py-2 text-[12px] text-[#555] hover:bg-[#EFEFEF] transition-colors flex items-center gap-2"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Restart search
+              Start over
             </button>
           )}
         </div>
@@ -920,7 +1176,9 @@ export default function FindALawyer() {
 
           <div
             className={`bg-[#FCFCFC] overflow-y-auto min-h-0 ${
-              showMobileResults ? "flex flex-1 flex-col md:block" : "hidden md:block"
+              showMobileResults
+                ? "flex flex-1 flex-col md:block"
+                : "hidden md:block"
             }`}
           >
             <div className="px-4 md:px-8 py-6 md:py-8 max-w-3xl">
@@ -939,18 +1197,37 @@ export default function FindALawyer() {
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-[30px] font-[Instrument_serif] text-[#202020] leading-none">
-                      Search Result
+                      {matchSummaryText}
                     </h2>
 
                     <p className="text-[14px] text-[#777] mt-3">
-                      {resultsSummaryText}
+                      You can only send a request to someone you were matched
+                      with.
                     </p>
                   </div>
                 </div>
               )}
 
-              {searchState && (
+              {searchState?.offer && (
+                <div className="mb-5">
+                  <OfferBanner offer={searchState.offer} />
+                  {searchState.offer.budgetRelaxed && <BudgetRelaxedBanner />}
+                </div>
+              )}
+
+              {searchState && !blockedState && (
                 <div className="flex gap-2 mb-8 overflow-x-auto no-scrollbar">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("all")}
+                    className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+                      activeTab === "all"
+                        ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
+                        : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
+                    }`}
+                  >
+                    All
+                  </button>
                   <button
                     type="button"
                     onClick={() => setActiveTab("firms")}
@@ -972,17 +1249,6 @@ export default function FindALawyer() {
                     }`}
                   >
                     Lawyers
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("all")}
-                    className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
-                      activeTab === "all"
-                        ? "bg-[#1D4ED8] border-[#1D4ED8] text-white"
-                        : "bg-white border-[#EAEAEA] text-[#444] hover:bg-[#FAFAFA]"
-                    }`}
-                  >
-                    All
                   </button>
                 </div>
               )}
@@ -1007,10 +1273,14 @@ export default function FindALawyer() {
                 </div>
               )}
 
-              {!isSearching && searchState && (
+              {!isSearching && blockedState && (
+                <BlockedCard blocked={blockedState} />
+              )}
+
+              {!isSearching && !blockedState && searchState && (
                 <div className="space-y-5">
-                  {orderedResults.length > 0 ? (
-                    orderedResults.map((match) => (
+                  {visibleMatches.length > 0 ? (
+                    visibleMatches.map((match) => (
                       <LawyerCard
                         key={match.account.id}
                         match={match}
@@ -1018,58 +1288,37 @@ export default function FindALawyer() {
                         onViewProfile={setSelectedAccountId}
                       />
                     ))
+                  ) : matchItems.length === 0 ? (
+                    <div className="rounded-3xl border border-[#ECECEC] bg-white p-10 text-center">
+                      <h3 className="text-[18px] font-semibold text-[#202020]">
+                        We were unable to find a match right now
+                      </h3>
+                      <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
+                        Try describing a different type of legal matter, or
+                        check back shortly.
+                      </p>
+                    </div>
                   ) : (
                     <div className="rounded-3xl border border-[#ECECEC] bg-white p-10 text-center">
                       <h3 className="text-[18px] font-semibold text-[#202020]">
-                        {emptyStateTitle}
+                        {activeTab === "firms"
+                          ? "No firms matched"
+                          : "No lawyers matched"}
                       </h3>
                       <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
-                        Try adjusting your legal description, budget, or
-                        preferred location to broaden the search.
+                        Check out the{" "}
+                        <button
+                          onClick={() =>
+                            setActiveTab(
+                              activeTab === "firms" ? "lawyers" : "firms",
+                            )
+                          }
+                          className="text-[#1D4ED8] hover:text-[#1947C6]"
+                        >
+                          {activeTab === "firms" ? "lawyers" : "firms"}
+                        </button>{" "}
+                        instead.
                       </p>
-                      {activeTab === "firms" && (
-                        <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
-                          Check out the{" "}
-                          <button
-                            onClick={() => setActiveTab("lawyers")}
-                            className="text-[#1D4ED8] hover:text-[#1947C6]"
-                          >
-                            lawyers
-                          </button>{" "}
-                          instead.
-                        </p>
-                      )}
-                      {activeTab === "lawyers" && (
-                        <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
-                          Check out the{" "}
-                          <button
-                            onClick={() => setActiveTab("firms")}
-                            className="text-[#1D4ED8] hover:text-[#1947C6]"
-                          >
-                            firms
-                          </button>{" "}
-                          instead.
-                        </p>
-                      )}
-                      {activeTab === "all" && (
-                        <p className="text-[14px] text-[#777] mt-3 leading-7 max-w-md mx-auto">
-                          Check out the{" "}
-                          <button
-                            onClick={() => setActiveTab("firms")}
-                            className="text-[#1D4ED8] hover:text-[#1947C6]"
-                          >
-                            firms
-                          </button>{" "}
-                          or{" "}
-                          <button
-                            onClick={() => setActiveTab("lawyers")}
-                            className="text-[#1D4ED8] hover:text-[#1947C6]"
-                          >
-                            lawyers
-                          </button>{" "}
-                          instead.
-                        </p>
-                      )}
                     </div>
                   )}
                 </div>

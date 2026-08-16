@@ -8,8 +8,11 @@ export interface LawyerProfile {
   scn: string;
   callToBarYear: number;
   nbaBranch: string;
-  feeRangeMin: number;
-  feeRangeMax: number;
+  // Fees are no longer returned to clients (only the account itself and admins
+  // see them). These are now absent from every client-facing payload — never
+  // render them for a viewer that isn't the profile owner.
+  feeRangeMin?: number;
+  feeRangeMax?: number;
   verificationStatus: "verified" | "pending" | "rejected";
   verificationFlags: Record<string, unknown>;
   practicingCertExpiresAt: string | null;
@@ -36,11 +39,37 @@ export interface TextSearchPagination {
   totalPages: number;
 }
 
+/**
+ * The offer block that now accompanies every matchmaking search response.
+ *
+ * The platform matches rather than lists: `items` holds at most two entries
+ * (one lawyer, one firm) and `offer` describes the state of that match — how
+ * long it stays actionable, when they can be matched again, whether it was
+ * replayed from an earlier search (pinned), and whether the budget had to be
+ * relaxed because nobody was inside it.
+ */
+export interface MatchOffer {
+  batchId: string;
+  practiceAreaId: string;
+  /** When this match stops being actionable (7 days) — POST /requests rejects after. */
+  expiresAt: string;
+  /** When they may be matched again for this practice area (48h). */
+  cooldownUntil: string | null;
+  /** True = the offer they already had, replayed rather than redrawn. */
+  pinned: boolean;
+  /** True = nobody was inside their budget; ceiling was lifted. */
+  budgetRelaxed: boolean;
+  offersUsed: number;
+  offersAllowed: number;
+  windowDays: number;
+}
+
 // Returned when the backend has enough info to actually search.
 export interface TextSearchSuccessData {
   items: MatchResult[];
   pagination: TextSearchPagination;
   extracted: ExtractedIntake;
+  offer: MatchOffer | null;
 }
 
 // Returned when the backend couldn't confidently extract matter +
@@ -113,7 +142,34 @@ export interface SearchResponse {
       limit: number;
       totalPages: number;
     };
+    offer: MatchOffer | null;
   };
+}
+
+/**
+ * GET /matchmaking/availability?practiceAreaId=
+ *
+ * Call before walking the user through the intake so they aren't asked every
+ * question and then hit with an error. `available` is the single boolean to
+ * gate on; `onCooldown` and `quotaExhausted` say which message to show.
+ */
+export interface MatchAvailability {
+  practiceAreaId: string;
+  available: boolean;
+  onCooldown: boolean;
+  cooldownUntil: string | null;
+  cooldownHours: number;
+  hoursRemaining: number;
+  offersUsed: number;
+  offersAllowed: number;
+  windowDays: number;
+  quotaExhausted: boolean;
+}
+
+export interface AvailabilityResponse {
+  error: boolean;
+  message: string;
+  data: MatchAvailability;
 }
 
 // ✅ Exact shape the API expects
@@ -178,9 +234,11 @@ export const intakeService = {
   search: (payload: SearchPayload) =>
     api.post<SearchResponse>("/matchmaking/search", payload),
 
-  //    search: (payload: SearchPayload) =>
-  // //     api.post<SearchResponse>("/matchmaking/search", payload),
-
   searchByText: (payload: TextSearchPayload) =>
     api.post<TextSearchBody>("/matchmaking/search-by-text", payload),
+
+  availability: (practiceAreaId: string) =>
+    api.get<AvailabilityResponse>("/matchmaking/availability", {
+      params: { practiceAreaId },
+    }),
 };
