@@ -38,6 +38,7 @@ https://legalspace.onrender.com/api/v1
 All API calls are centralised through a single Axios instance (`services/api.ts`) so token injection, auto-refresh, and error handling are handled in one place — not scattered across components.
 
 **Stack used:**
+
 - `axios` — HTTP client
 - `@tanstack/react-query` — server state caching
 - React Context — global auth state
@@ -70,7 +71,7 @@ frontend/
 Add this to your `.env.local`:
 
 ```env
-NEXT_PUBLIC_API_URL=https://legalspace.onrender.com
+API_URL=https://legalspace.onrender.com
 ```
 
 > **Note:** The `/api/v1` prefix is included in each service method — do not add it to the base URL.
@@ -82,6 +83,7 @@ NEXT_PUBLIC_API_URL=https://legalspace.onrender.com
 ### 1. `services/api.ts` — Axios Instance
 
 **What it does:**
+
 - Creates a single shared Axios instance with the base URL and default headers
 - Attaches the `Authorization: Bearer <token>` header to every outgoing request automatically
 - On a `401 Unauthorized` response, it automatically attempts to refresh the access token using the stored refresh token, then retries the original request
@@ -100,11 +102,11 @@ const response = await api.get("/api/v1/some-endpoint");
 
 **Token storage keys used:**
 
-| Key | Value |
-|---|---|
-| `accessToken` | JWT access token |
-| `refreshToken` | JWT refresh token |
-| `user` | JSON string of the user object |
+| Key            | Value                          |
+| -------------- | ------------------------------ |
+| `accessToken`  | JWT access token               |
+| `refreshToken` | JWT refresh token              |
+| `user`         | JSON string of the user object |
 
 ---
 
@@ -113,6 +115,7 @@ const response = await api.get("/api/v1/some-endpoint");
 **What it does:** Wraps all authentication-related API endpoints as typed methods.
 
 **Import:**
+
 ```ts
 import { authService } from "@/services/auth.service";
 ```
@@ -120,6 +123,7 @@ import { authService } from "@/services/auth.service";
 **Available Methods:**
 
 #### `authService.login(payload)`
+
 ```ts
 const { data } = await authService.login({
   authProvider: "email",
@@ -130,6 +134,7 @@ const { data } = await authService.login({
 ```
 
 #### `authService.registerUser(payload)`
+
 ```ts
 await authService.registerUser({
   authProvider: "email",
@@ -140,6 +145,7 @@ await authService.registerUser({
 ```
 
 #### `authService.registerLawyer(payload)`
+
 ```ts
 await authService.registerLawyer({
   authProvider: "email",
@@ -158,6 +164,7 @@ await authService.registerLawyer({
 ```
 
 #### `authService.registerFirm(payload)`
+
 ```ts
 await authService.registerFirm({
   authProvider: "email",
@@ -174,25 +181,31 @@ await authService.registerFirm({
 ```
 
 #### `authService.logout()`
+
 ```ts
 await authService.logout();
 ```
+
 > Use `useAuth().logout()` from context instead — it also clears state and redirects.
 
 #### `authService.forgotPassword(email)`
+
 ```ts
 await authService.forgotPassword("adaeze@example.com");
 ```
 
 #### `authService.resetPassword(token, newPassword)`
+
 ```ts
 await authService.resetPassword("reset-token-from-email", "newSecure123");
 ```
 
 #### `authService.deleteAccount()`
+
 ```ts
 await authService.deleteAccount();
 ```
+
 > Requires auth. Soft-deletes the account and wipes the Supabase identity.
 
 ---
@@ -202,6 +215,7 @@ await authService.deleteAccount();
 **What it does:** Wraps all profile-related API endpoints. All methods require the user to be authenticated.
 
 **Import:**
+
 ```ts
 import { profileService } from "@/services/profile.service";
 ```
@@ -209,17 +223,20 @@ import { profileService } from "@/services/profile.service";
 **Available Methods:**
 
 #### `profileService.getMe()`
+
 ```ts
 const { data } = await profileService.getMe();
 ```
 
 #### `profileService.getById(accountId)`
+
 ```ts
 const { data } = await profileService.getById("some-account-uuid");
 // Anonymity masking is applied by the backend
 ```
 
 #### `profileService.updateMe(payload)`
+
 ```ts
 await profileService.updateMe({
   bio: "Lawyer | Goal-Oriented",
@@ -229,34 +246,40 @@ await profileService.updateMe({
 ```
 
 #### `profileService.uploadAvatar(file)`
+
 ```ts
 // file is a File object from an <input type="file">
 await profileService.uploadAvatar(file);
 ```
 
 #### `profileService.uploadCover(file)`
+
 ```ts
 await profileService.uploadCover(file);
 ```
 
 #### `profileService.toggleAnonymous(isAnonymous)`
+
 ```ts
 // Only for USER role
 await profileService.toggleAnonymous(true);
 ```
 
 #### `profileService.updatePracticeAreas(practiceAreaIds)`
+
 ```ts
 // Only for LAWYER and FIRM roles
 await profileService.updatePracticeAreas(["uuid-1", "uuid-2"]);
 ```
 
 #### `profileService.getConnections(accountId, page?, limit?)`
+
 ```ts
 const { data } = await profileService.getConnections("account-uuid", 1, 20);
 ```
 
 #### `profileService.getArticles(accountId, page?, limit?)`
+
 ```ts
 const { data } = await profileService.getArticles("account-uuid", 1, 20);
 ```
@@ -268,6 +291,7 @@ const { data } = await profileService.getArticles("account-uuid", 1, 20);
 ### 4. `context/AuthContext.tsx` — Global Auth State
 
 **What it does:**
+
 - Stores the logged-in `user` object in React state
 - Exposes `login()` and `logout()` methods that handle token storage automatically
 - Restores the user from `localStorage` on page refresh
@@ -289,7 +313,7 @@ export default function SomeComponent() {
   return (
     <div>
       <p>Welcome, {user.email}</p>
-      <p>Role: {user.role}</p>  {/* USER | LAWYER | FIRM | ADMIN */}
+      <p>Role: {user.role}</p> {/* USER | LAWYER | FIRM | ADMIN */}
       <button onClick={logout}>Logout</button>
     </div>
   );
@@ -297,6 +321,7 @@ export default function SomeComponent() {
 ```
 
 **`login()` — call this on your login form submit:**
+
 ```tsx
 const { login } = useAuth();
 
@@ -317,12 +342,12 @@ const handleSubmit = async () => {
 
 **Returned values:**
 
-| Value | Type | Description |
-|---|---|---|
-| `user` | `User \| null` | The logged-in user, or null if not authenticated |
-| `isLoading` | `boolean` | True while restoring session from localStorage on mount |
-| `login(payload)` | `async function` | Calls auth API, saves tokens, sets user state |
-| `logout()` | `async function` | Calls logout API, clears tokens, redirects to /signin |
+| Value            | Type             | Description                                             |
+| ---------------- | ---------------- | ------------------------------------------------------- |
+| `user`           | `User \| null`   | The logged-in user, or null if not authenticated        |
+| `isLoading`      | `boolean`        | True while restoring session from localStorage on mount |
+| `login(payload)` | `async function` | Calls auth API, saves tokens, sets user state           |
+| `logout()`       | `async function` | Calls logout API, clears tokens, redirects to /signin   |
 
 ---
 
@@ -333,6 +358,7 @@ These hooks use React Query under the hood — they cache results, deduplicate r
 ### 5. `hooks/useProfile.ts` — Profile Data & Mutations
 
 #### `useMe()` — Get the current user's profile
+
 ```tsx
 import { useMe } from "@/hooks/useProfile";
 
@@ -345,9 +371,11 @@ export default function ProfilePage() {
   return <p>{profile.fullName}</p>;
 }
 ```
+
 > Cached for **5 minutes**. Only one network request fires even if multiple components call `useMe()` at the same time.
 
 #### `useUpdateMe()` — Update the current user's profile
+
 ```tsx
 import { useUpdateMe } from "@/hooks/useProfile";
 
@@ -383,12 +411,15 @@ export default function PracticeAreaSelect() {
   return (
     <select>
       {areas.map((area) => (
-        <option key={area.id} value={area.id}>{area.name}</option>
+        <option key={area.id} value={area.id}>
+          {area.name}
+        </option>
       ))}
     </select>
   );
 }
 ```
+
 > Cached for **1 hour** — matches the backend's own 1h cache on this endpoint.
 
 ---
@@ -398,6 +429,7 @@ export default function PracticeAreaSelect() {
 ### 7. `app/providers.tsx` — App-Wide Wrappers
 
 **What it does:** Wraps the entire app with:
+
 1. `QueryClientProvider` — enables React Query caching globally
 2. `AuthProvider` — enables `useAuth()` globally
 
@@ -420,20 +452,20 @@ export default function RootLayout({ children }) {
 
 **Default React Query settings (set in providers.tsx):**
 
-| Setting | Value | Meaning |
-|---|---|---|
+| Setting     | Value     | Meaning                                                           |
+| ----------- | --------- | ----------------------------------------------------------------- |
 | `staleTime` | 5 minutes | Data is considered fresh for 5 min; no refetch during this window |
-| `retry` | 1 | Failed requests retry once before throwing an error |
+| `retry`     | 1         | Failed requests retry once before throwing an error               |
 
 ---
 
 ## Base URL & API Prefix
 
-| Variable | Value |
-|---|---|
-| Base URL (env) | `https://legalspace.onrender.com` |
-| API prefix | `/api/v1` |
-| Full example | `https://legalspace.onrender.com/api/v1/auth/login` |
+| Variable       | Value                                               |
+| -------------- | --------------------------------------------------- |
+| Base URL (env) | `https://legalspace.onrender.com`                   |
+| API prefix     | `/api/v1`                                           |
+| Full example   | `https://legalspace.onrender.com/api/v1/auth/login` |
 
 The `/api/v1` prefix is included in every service method call — it is **not** part of the env variable.
 
@@ -506,12 +538,12 @@ const { data } = await api.get("/api/v1/some-endpoint");
 
 ## Common Mistakes to Avoid
 
-| Mistake | Why it's wrong | Correct approach |
-|---|---|---|
-| Calling `localStorage` directly in a component | Breaks SSR in Next.js | Use `useAuth()` which handles this safely |
-| Using `async` directly in `useEffect` | React doesn't support async effect callbacks | Define an inner async function and call it |
-| Importing `api` in a component and calling endpoints | Bypasses caching, no deduplication | Use the relevant hook (`useMe`, `usePracticeAreas`, etc.) |
-| Adding `AuthProvider` or `QueryClientProvider` in individual pages | Causes duplicate context, broken state | They are already in `app/providers.tsx` — use them via hooks only |
-| Forgetting `await` on service calls | Gets a `Promise` instead of the response | Always `await` async service methods |
-| Hardcoding the API URL | Breaks across environments | Always use `process.env.NEXT_PUBLIC_API_URL` |
-| Storing sensitive data beyond tokens in localStorage | Security risk | Only store `accessToken`, `refreshToken`, and the `user` object |
+| Mistake                                                            | Why it's wrong                               | Correct approach                                                  |
+| ------------------------------------------------------------------ | -------------------------------------------- | ----------------------------------------------------------------- |
+| Calling `localStorage` directly in a component                     | Breaks SSR in Next.js                        | Use `useAuth()` which handles this safely                         |
+| Using `async` directly in `useEffect`                              | React doesn't support async effect callbacks | Define an inner async function and call it                        |
+| Importing `api` in a component and calling endpoints               | Bypasses caching, no deduplication           | Use the relevant hook (`useMe`, `usePracticeAreas`, etc.)         |
+| Adding `AuthProvider` or `QueryClientProvider` in individual pages | Causes duplicate context, broken state       | They are already in `app/providers.tsx` — use them via hooks only |
+| Forgetting `await` on service calls                                | Gets a `Promise` instead of the response     | Always `await` async service methods                              |
+| Hardcoding the API URL                                             | Breaks across environments                   | Always use `process.env.API_URL`                                  |
+| Storing sensitive data beyond tokens in localStorage               | Security risk                                | Only store `accessToken`, `refreshToken`, and the `user` object   |
