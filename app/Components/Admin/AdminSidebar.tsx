@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   Loader2,
   Flag,
+  Download,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -177,7 +178,21 @@ export default function AdminSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-[#E5E7EB]">
+      <div className="p-3 border-t border-[#E5E7EB] flex flex-col gap-2">
+        <a
+          href="/api/waitlist"
+          className="w-full py-2 rounded-lg text-[14px] font-medium text-gray-900 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+          style={{
+            border: "2px solid transparent",
+            backgroundImage:
+              "linear-gradient(white, white), linear-gradient(90deg, #216399 0%, #FFE500 50%, #C34B00 100%)",
+            backgroundOrigin: "border-box",
+            backgroundClip: "padding-box, border-box",
+          }}
+        >
+          <Download className="w-4 h-4" />
+          Download Waitlist
+        </a>
         <button
           onClick={() => setShowLogoutModal(true)}
           className="w-full py-2.5 rounded-lg bg-red-50 text-[14px] font-medium text-red-500 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
