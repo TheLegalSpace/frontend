@@ -1,16 +1,16 @@
 // app/api/waitlist/route.ts
 //
 // Server-side waitlist collection for the /frontend project (no backend
-// dependency). Signups are persisted to Netlify Blobs when running on Netlify
-// (the serverless filesystem is read-only, so `fs` fails with a 500 there),
-// and to a local CSV file under ./data for local `npm run dev`.
+// dependency). Signups are appended to a Google Spreadsheet via a service
+// account. If the Google env vars aren't configured yet, it falls back to
+// Netlify Blobs (on Netlify) or a local CSV under ./data (for `npm run dev`).
 // A GET to this route streams the full spreadsheet back as a downloadable file.
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import { getStore } from "@netlify/blobs";
+import { google, sheets_v4 } from "googleapis";
 
-// Node runtime so we can use the filesystem fallback locally.
 export const runtime = "nodejs";
 
 export type WaitlistVariant = "lawyer" | "user";
@@ -28,6 +28,32 @@ interface WaitlistEntry {
   createdAt: string;
 }
 
+const CSV_HEADERS: (keyof WaitlistEntry)[] = [
+  "fullName",
+  "email",
+  "type",
+  "createdAt",
+];
+
+// ── Config ────────────────────────────────────────────────────────────────────
+// Set these in Netlify (or .env locally):
+//   GOOGLE_SHEET_ID             – the id from your spreadsheet URL
+//   GOOGLE_SERVICE_ACCOUNT_EMAIL – client_email from the service account JSON
+//   GOOGLE_PRIVATE_KEY          – private_key from the service account JSON
+//   GOOGLE_SHEET_NAME           – optional, defaults to "Sheet1"
+const GOOGLE_SHEET_ID = process.env.GOOGLE_SHEET_ID ?? "";
+const GOOGLE_SERVICE_ACCOUNT_EMAIL =
+  process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ?? "";
+const GOOGLE_PRIVATE_KEY = (process.env.GOOGLE_PRIVATE_KEY ?? "").replace(
+  /\\n/g,
+  "\n",
+);
+const GOOGLE_SHEET_NAME = process.env.GOOGLE_SHEET_NAME || "Sheet1";
+
+const GOOGLE_CONFIGURED = Boolean(
+  GOOGLE_SHEET_ID && GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY,
+);
+
 // Netlify sets NETLIFY=true on its build/function runtime; locally it is unset.
 const IS_NETLIFY = process.env.NETLIFY === "true";
 
@@ -37,36 +63,61 @@ const BLOB_KEY = "waitlist.csv";
 const DATA_DIR = path.join(process.cwd(), "data");
 const CSV_PATH = path.join(DATA_DIR, "waitlist.csv");
 
-const CSV_HEADERS: (keyof WaitlistEntry)[] = [
-  "fullName",
-  "email",
-  "type",
-  "createdAt",
-];
+// ── Google Sheets storage ─────────────────────────────────────────────────────
+let sheetsClient: sheets_v4.Sheets | null = null;
 
-// Escape a single CSV cell per RFC 4180 (quotes doubled, wrap in quotes when
-// the value contains a comma, quote, or newline).
-function csvCell(value: string): string {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
+function getSheetsClient(): sheets_v4.Sheets {
+  if (!sheetsClient) {
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: GOOGLE_PRIVATE_KEY,
+      },
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+    sheetsClient = google.sheets({ version: "v4", auth });
   }
-  return value;
+  return sheetsClient;
 }
 
-function emailValid(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+async function appendGoogleRow(entry: WaitlistEntry): Promise<void> {
+  const sheets = getSheetsClient();
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: GOOGLE_SHEET_ID,
+    range: `${GOOGLE_SHEET_NAME}!A:D`,
+    valueInputOption: "USER_ENTERED",
+    insertDataOption: "INSERT_ROWS",
+    requestBody: {
+      values: [[entry.fullName, entry.email, entry.type, entry.createdAt]],
+    },
+  });
 }
 
-function toCsvRow(entry: WaitlistEntry): string {
-  return CSV_HEADERS.map((h) => csvCell(String(entry[h]))).join(",");
+async function googleRows(): Promise<WaitlistEntry[]> {
+  const sheets = getSheetsClient();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: GOOGLE_SHEET_ID,
+    range: `${GOOGLE_SHEET_NAME}!A:D`,
+  });
+  const values = res.data.values ?? [];
+  // First row is the header – skip it.
+  return values
+    .slice(1)
+    .map(
+      (row): WaitlistEntry => ({
+        fullName: String(row[0] ?? ""),
+        email: String(row[1] ?? "").toLowerCase(),
+        type: String(row[2] ?? "") === "user" ? "user" : "lawyer",
+        createdAt: String(row[3] ?? ""),
+      }),
+    )
+    .filter((r) => r.email);
 }
 
-// ── Netlify Blobs storage ─────────────────────────────────────────────────────
-// Blobs are persistent across function invocations and survive cold starts.
+// ── Netlify Blobs storage (fallback when Google isn't configured) ─────────────
 async function readBlobCsv(): Promise<string> {
   const store = getStore(STORE_NAME);
-  const raw = await store.get(BLOB_KEY, { type: "text" });
-  return raw ?? "";
+  return (await store.get(BLOB_KEY, { type: "text" })) ?? "";
 }
 
 async function appendBlobCsv(row: string): Promise<void> {
@@ -74,17 +125,6 @@ async function appendBlobCsv(row: string): Promise<void> {
   const existing = await readBlobCsv();
   const next = existing.endsWith("\n") ? existing : `${existing}\n`;
   await store.set(BLOB_KEY, `${next}${row}\n`);
-}
-
-async function blobHasEmail(email: string): Promise<boolean> {
-  const raw = await readBlobCsv();
-  return raw
-    .split("\n")
-    .slice(1)
-    .some((line) => {
-      const cols = line.split(",");
-      return cols[1]?.trim().toLowerCase() === email;
-    });
 }
 
 // ── Local filesystem storage (fallback for `npm run dev`) ────────────────────
@@ -107,23 +147,63 @@ async function appendLocalCsv(row: string): Promise<void> {
   await fs.appendFile(CSV_PATH, `${row}\n`, "utf8");
 }
 
-async function localHasEmail(email: string): Promise<boolean> {
+// ── Helpers ───────────────────────────────────────────────────────────────────
+// Escape a single CSV cell per RFC 4180 (quotes doubled, wrap in quotes when
+// the value contains a comma, quote, or newline).
+function csvCell(value: string): string {
+  if (/[",\n\r]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
+function emailValid(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function toCsvRow(entry: WaitlistEntry): string {
+  return CSV_HEADERS.map((h) => csvCell(String(entry[h]))).join(",");
+}
+
+function entriesToCsv(entries: WaitlistEntry[]): string {
+  return [CSV_HEADERS.join(","), ...entries.map(toCsvRow)].join("\n") + "\n";
+}
+
+function emailsFromCsv(raw: string): Set<string> {
+  const emails = new Set<string>();
+  for (const line of raw.split("\n").slice(1)) {
+    const email = line.split(",")[1]?.trim().toLowerCase();
+    if (email) emails.add(email);
+  }
+  return emails;
+}
+
+async function fallbackEntries(): Promise<WaitlistEntry[]> {
+  if (IS_NETLIFY) {
+    const raw = await readBlobCsv();
+    const emails = emailsFromCsv(raw);
+    return [...emails].map((email) => ({
+      fullName: "",
+      email,
+      type: "lawyer" as WaitlistVariant,
+      createdAt: "",
+    }));
+  }
   const raw = await readLocalCsv();
   return raw
     .split("\n")
     .slice(1)
-    .some((line) => {
+    .filter((l) => l.trim())
+    .map((line) => {
       const cols = line.split(",");
-      return cols[1]?.trim().toLowerCase() === email;
+      return {
+        fullName: cols[0] ?? "",
+        email: (cols[1] ?? "").toLowerCase(),
+        type: cols[2] === "user" ? "user" : "lawyer",
+        createdAt: cols[3] ?? "",
+      };
     });
 }
-
-// ── Storage adapter ───────────────────────────────────────────────────────────
-const readCsv = () => (IS_NETLIFY ? readBlobCsv() : readLocalCsv());
-const appendCsv = (row: string) =>
-  IS_NETLIFY ? appendBlobCsv(row) : appendLocalCsv(row);
-const hasEmail = (email: string) =>
-  IS_NETLIFY ? blobHasEmail(email) : localHasEmail(email);
 
 export async function POST(request: NextRequest) {
   let body: WaitlistPayload;
@@ -145,20 +225,53 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    if (await hasEmail(email)) {
-      return NextResponse.json(
-        { message: "You're already on the waitlist.", duplicate: true },
-        { status: 200 },
+    if (GOOGLE_CONFIGURED) {
+      const existing = await googleRows();
+      if (existing.some((r) => r.email === email)) {
+        return NextResponse.json(
+          { message: "You're already on the waitlist.", duplicate: true },
+          { status: 200 },
+        );
+      }
+      await appendGoogleRow({
+        fullName,
+        email,
+        type,
+        createdAt: new Date().toISOString(),
+      });
+    } else if (IS_NETLIFY) {
+      const raw = await readBlobCsv();
+      if (emailsFromCsv(raw).has(email)) {
+        return NextResponse.json(
+          { message: "You're already on the waitlist.", duplicate: true },
+          { status: 200 },
+        );
+      }
+      await appendBlobCsv(
+        toCsvRow({
+          fullName,
+          email,
+          type,
+          createdAt: new Date().toISOString(),
+        }),
+      );
+    } else {
+      const raw = await readLocalCsv();
+      if (emailsFromCsv(raw).has(email)) {
+        return NextResponse.json(
+          { message: "You're already on the waitlist.", duplicate: true },
+          { status: 200 },
+        );
+      }
+      await appendLocalCsv(
+        toCsvRow({
+          fullName,
+          email,
+          type,
+          createdAt: new Date().toISOString(),
+        }),
       );
     }
-
-    const row = toCsvRow({
-      fullName,
-      email,
-      type,
-      createdAt: new Date().toISOString(),
-    });
-    await appendCsv(row);
 
     return NextResponse.json(
       { message: "You're on the waitlist!", success: true },
@@ -175,10 +288,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const content = await readCsv();
+    let csv: string;
+    if (GOOGLE_CONFIGURED) {
+      csv = entriesToCsv(await googleRows());
+    } else {
+      csv = entriesToCsv(await fallbackEntries());
+    }
 
-    // Stream the spreadsheet back as a downloadable CSV file.
-    return new NextResponse(content, {
+    return new NextResponse(csv, {
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
