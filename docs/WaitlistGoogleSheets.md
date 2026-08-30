@@ -105,3 +105,31 @@ Then redeploy. No build-time secrets — these are read at runtime by the
   never from the browser — the service account key is never exposed to clients.
 - If you later remove the Google env vars, the route falls back to Netlify Blobs /
   local CSV without any code change.
+
+## Troubleshooting
+
+### Deployed site returns `"Something went wrong saving your signup. Please try again."` (HTTP 500)
+
+This almost always means the deployed host (Netlify) is missing the Google env
+vars, so the route fell back to **Netlify Blobs**, which isn't configured for the
+site. Since `.env` is gitignored, the values in your local `.env` are **not**
+deployed.
+
+Fix — add the three vars to **Netlify → Site settings → Environment variables**
+(matching `.env`), then redeploy:
+
+- `GOOGLE_SHEET_ID`
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL`
+- `GOOGLE_PRIVATE_KEY` (keep the literal `\n` escapes intact)
+
+### Deployed site returns `"Waitlist storage isn't configured on this deployment..."` (HTTP 503)
+
+Same root cause. The route now detects an unconfigured Netlify Blobs environment
+and returns this explicit message instead of a generic 500. Add the Google env
+vars above and redeploy.
+
+### Duplicate email still shows the success screen
+
+Make sure the waitlist form is using the updated `WaitlistPlaceholder` component,
+which checks the `duplicate: true` flag in the response and shows the error banner
+("You're already on the waitlist.") instead of the success state.

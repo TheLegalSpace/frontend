@@ -178,6 +178,20 @@ function emailsFromCsv(raw: string): Set<string> {
   return emails;
 }
 
+// Returned when this deployment has no working storage backend (e.g. Netlify
+// Blobs is not configured on the deployed site). The Google Sheets env vars
+// must be set on the host (Netlify → Site settings → Environment variables)
+// for signups to persist.
+function storageNotConfiguredResponse() {
+  return NextResponse.json(
+    {
+      error:
+        "Waitlist storage isn't configured on this deployment. Add the Google Sheets env vars (GOOGLE_SHEET_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY) to Netlify and redeploy.",
+    },
+    { status: 503 },
+  );
+}
+
 async function fallbackEntries(): Promise<WaitlistEntry[]> {
   if (IS_NETLIFY) {
     const raw = await readBlobCsv();
@@ -240,21 +254,35 @@ export async function POST(request: NextRequest) {
         createdAt: new Date().toISOString(),
       });
     } else if (IS_NETLIFY) {
-      const raw = await readBlobCsv();
+      // Netlify Blobs throws "The environment has not been configured to use
+      // Netlify Blobs" when the deploy isn't set up for it. Surface that as a
+      // clear 503 instead of a generic 500 so the misconfiguration is obvious.
+      let raw: string;
+      try {
+        raw = await readBlobCsv();
+      } catch (blobErr) {
+        console.error("[waitlist] Netlify Blobs unavailable:", blobErr);
+        return storageNotConfiguredResponse();
+      }
       if (emailsFromCsv(raw).has(email)) {
         return NextResponse.json(
           { message: "You're already on the waitlist.", duplicate: true },
           { status: 200 },
         );
       }
-      await appendBlobCsv(
-        toCsvRow({
-          fullName,
-          email,
-          type,
-          createdAt: new Date().toISOString(),
-        }),
-      );
+      try {
+        await appendBlobCsv(
+          toCsvRow({
+            fullName,
+            email,
+            type,
+            createdAt: new Date().toISOString(),
+          }),
+        );
+      } catch (blobErr) {
+        console.error("[waitlist] Netlify Blobs write failed:", blobErr);
+        return storageNotConfiguredResponse();
+      }
     } else {
       const raw = await readLocalCsv();
       if (emailsFromCsv(raw).has(email)) {
@@ -292,7 +320,12 @@ export async function GET() {
     if (GOOGLE_CONFIGURED) {
       csv = entriesToCsv(await googleRows());
     } else {
-      csv = entriesToCsv(await fallbackEntries());
+      try {
+        csv = entriesToCsv(await fallbackEntries());
+      } catch (err) {
+        console.error("[waitlist] failed to read fallback store:", err);
+        return storageNotConfiguredResponse();
+      }
     }
 
     return new NextResponse(csv, {
