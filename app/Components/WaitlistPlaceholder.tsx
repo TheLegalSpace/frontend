@@ -76,8 +76,13 @@ export default function WaitlistPlaceholder() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fullName, email, variant }),
       });
+      const data = await res.json().catch(() => null);
+      // The API returns HTTP 200 with a `duplicate: true` flag when this email
+      // is already on the list, so surface it as an error instead of success.
+      if (data?.duplicate) {
+        throw new Error(data.message ?? "You're already on the waitlist.");
+      }
       if (!res.ok) {
-        const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? "Failed to join the waitlist.");
       }
       setSubmitted(true);
