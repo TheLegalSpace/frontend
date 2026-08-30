@@ -1,14 +1,16 @@
 // app/api/waitlist/route.ts
 //
 // Server-side waitlist collection for the /frontend project (no backend
-// dependency). Each signup is appended to a CSV spreadsheet on the server:
-//   frontend/data/waitlist.csv
+// dependency). Signups are persisted to Netlify Blobs when running on Netlify
+// (the serverless filesystem is read-only, so `fs` fails with a 500 there),
+// and to a local CSV file under ./data for local `npm run dev`.
 // A GET to this route streams the full spreadsheet back as a downloadable file.
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
+import { getStore } from "@netlify/blobs";
 
-// Node runtime so we can use the filesystem to persist the spreadsheet.
+// Node runtime so we can use the filesystem fallback locally.
 export const runtime = "nodejs";
 
 export type WaitlistVariant = "lawyer" | "user";
@@ -19,10 +21,28 @@ interface WaitlistPayload {
   variant?: WaitlistVariant;
 }
 
+interface WaitlistEntry {
+  fullName: string;
+  email: string;
+  type: WaitlistVariant;
+  createdAt: string;
+}
+
+// Netlify sets NETLIFY=true on its build/function runtime; locally it is unset.
+const IS_NETLIFY = process.env.NETLIFY === "true";
+
+const STORE_NAME = "waitlist";
+const BLOB_KEY = "waitlist.csv";
+
 const DATA_DIR = path.join(process.cwd(), "data");
 const CSV_PATH = path.join(DATA_DIR, "waitlist.csv");
 
-const CSV_HEADERS = ["fullName", "email", "type", "createdAt"];
+const CSV_HEADERS: (keyof WaitlistEntry)[] = [
+  "fullName",
+  "email",
+  "type",
+  "createdAt",
+];
 
 // Escape a single CSV cell per RFC 4180 (quotes doubled, wrap in quotes when
 // the value contains a comma, quote, or newline).
@@ -37,7 +57,38 @@ function emailValid(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-async function ensureSpreadsheet(): Promise<void> {
+function toCsvRow(entry: WaitlistEntry): string {
+  return CSV_HEADERS.map((h) => csvCell(String(entry[h]))).join(",");
+}
+
+// ── Netlify Blobs storage ─────────────────────────────────────────────────────
+// Blobs are persistent across function invocations and survive cold starts.
+async function readBlobCsv(): Promise<string> {
+  const store = getStore(STORE_NAME);
+  const raw = await store.get(BLOB_KEY, { type: "text" });
+  return raw ?? "";
+}
+
+async function appendBlobCsv(row: string): Promise<void> {
+  const store = getStore(STORE_NAME);
+  const existing = await readBlobCsv();
+  const next = existing.endsWith("\n") ? existing : `${existing}\n`;
+  await store.set(BLOB_KEY, `${next}${row}\n`);
+}
+
+async function blobHasEmail(email: string): Promise<boolean> {
+  const raw = await readBlobCsv();
+  return raw
+    .split("\n")
+    .slice(1)
+    .some((line) => {
+      const cols = line.split(",");
+      return cols[1]?.trim().toLowerCase() === email;
+    });
+}
+
+// ── Local filesystem storage (fallback for `npm run dev`) ────────────────────
+async function ensureLocalSpreadsheet(): Promise<void> {
   await fs.mkdir(DATA_DIR, { recursive: true });
   try {
     await fs.access(CSV_PATH);
@@ -46,22 +97,33 @@ async function ensureSpreadsheet(): Promise<void> {
   }
 }
 
-async function readExistingEmails(): Promise<Set<string>> {
-  try {
-    const raw = await fs.readFile(CSV_PATH, "utf8");
-    const lines = raw.split("\n").slice(1);
-    const emails = new Set<string>();
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      // Columns are simple (no embedded newlines), so a naive split is fine.
-      const email = line.split(",")[1]?.trim().toLowerCase();
-      if (email) emails.add(email);
-    }
-    return emails;
-  } catch {
-    return new Set();
-  }
+async function readLocalCsv(): Promise<string> {
+  await ensureLocalSpreadsheet();
+  return fs.readFile(CSV_PATH, "utf8");
 }
+
+async function appendLocalCsv(row: string): Promise<void> {
+  await ensureLocalSpreadsheet();
+  await fs.appendFile(CSV_PATH, `${row}\n`, "utf8");
+}
+
+async function localHasEmail(email: string): Promise<boolean> {
+  const raw = await readLocalCsv();
+  return raw
+    .split("\n")
+    .slice(1)
+    .some((line) => {
+      const cols = line.split(",");
+      return cols[1]?.trim().toLowerCase() === email;
+    });
+}
+
+// ── Storage adapter ───────────────────────────────────────────────────────────
+const readCsv = () => (IS_NETLIFY ? readBlobCsv() : readLocalCsv());
+const appendCsv = (row: string) =>
+  IS_NETLIFY ? appendBlobCsv(row) : appendLocalCsv(row);
+const hasEmail = (email: string) =>
+  IS_NETLIFY ? blobHasEmail(email) : localHasEmail(email);
 
 export async function POST(request: NextRequest) {
   let body: WaitlistPayload;
@@ -73,7 +135,7 @@ export async function POST(request: NextRequest) {
 
   const fullName = (body.fullName ?? "").trim();
   const email = (body.email ?? "").trim().toLowerCase();
-  const variant: WaitlistVariant = body.variant === "user" ? "user" : "lawyer";
+  const type: WaitlistVariant = body.variant === "user" ? "user" : "lawyer";
 
   if (!fullName || !emailValid(email)) {
     return NextResponse.json(
@@ -82,41 +144,54 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await ensureSpreadsheet();
+  try {
+    if (await hasEmail(email)) {
+      return NextResponse.json(
+        { message: "You're already on the waitlist.", duplicate: true },
+        { status: 200 },
+      );
+    }
 
-  const existing = await readExistingEmails();
-  if (existing.has(email)) {
+    const row = toCsvRow({
+      fullName,
+      email,
+      type,
+      createdAt: new Date().toISOString(),
+    });
+    await appendCsv(row);
+
     return NextResponse.json(
-      { message: "You're already on the waitlist.", duplicate: true },
-      { status: 200 },
+      { message: "You're on the waitlist!", success: true },
+      { status: 201 },
+    );
+  } catch (err) {
+    console.error("[waitlist] failed to save signup:", err);
+    return NextResponse.json(
+      { error: "Something went wrong saving your signup. Please try again." },
+      { status: 500 },
     );
   }
-
-  const row = [fullName, email, variant, new Date().toISOString()]
-    .map(csvCell)
-    .join(",");
-
-  await fs.appendFile(CSV_PATH, `${row}\n`, "utf8");
-
-  return NextResponse.json(
-    { message: "You're on the waitlist!", success: true },
-    { status: 201 },
-  );
 }
 
 export async function GET() {
-  await ensureSpreadsheet();
+  try {
+    const content = await readCsv();
 
-  const content = await fs.readFile(CSV_PATH, "utf8");
-
-  // Stream the spreadsheet back as a downloadable CSV file.
-  return new NextResponse(content, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="waitlist-${new Date()
-        .toISOString()
-        .slice(0, 10)}.csv"`,
-    },
-  });
+    // Stream the spreadsheet back as a downloadable CSV file.
+    return new NextResponse(content, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="waitlist-${new Date()
+          .toISOString()
+          .slice(0, 10)}.csv"`,
+      },
+    });
+  } catch (err) {
+    console.error("[waitlist] failed to read spreadsheet:", err);
+    return NextResponse.json(
+      { error: "Failed to load the waitlist spreadsheet." },
+      { status: 500 },
+    );
+  }
 }
