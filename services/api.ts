@@ -1,10 +1,30 @@
 // services/api.ts
-import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import axios, {
+  AxiosInstance,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
 
 type SessionTokens = {
   accessToken: string;
   refreshToken: string;
 };
+
+// Build a single-slash API base URL.
+//
+// The deployed frontend occasionally supplies NEXT_PUBLIC_API_URL with a
+// trailing "/" (e.g. "https://legalspace.onrender.com/") while NEXT_PUBLIC_API_PATH
+// starts with "/" (e.g. "/api/v1"). Naively concatenating them produces a
+// double slash ("https://legalspace.onrender.com//api/v1") in the request path;
+// the backend then replies "Route POST://api/v1/... not found" because no
+// route matches the doubled path. Normalising both parts here fixes that
+// regardless of which slash form the env vars use.
+const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/+$/, "");
+const API_PATH = (process.env.NEXT_PUBLIC_API_PATH ?? "/api/v1").replace(
+  /^\/+|\/+$/g,
+  "",
+);
+export const API_BASE = API_URL ? `${API_URL}/${API_PATH}` : `/${API_PATH}`;
 
 // Singleton refresh promise — all concurrent 401s wait on this,
 // preventing multiple parallel refresh calls.
@@ -49,10 +69,9 @@ async function refreshSession(): Promise<SessionTokens> {
     const refreshToken = getStoredToken("refreshToken");
     if (!refreshToken) throw new Error("No refresh token");
 
-    const { data } = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`,
-      { refreshToken }
-    );
+    const { data } = await axios.post(`${API_BASE}/auth/refresh`, {
+      refreshToken,
+    });
 
     if (data?.error === true) throw new Error(data.message);
 
@@ -74,7 +93,7 @@ async function refreshSession(): Promise<SessionTokens> {
 }
 
 export const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL + process.env.NEXT_PUBLIC_API_PATH!,
+  baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
   timeout: 15000,
 });
@@ -163,9 +182,7 @@ api.interceptors.response.use(
       // If another concurrent request already refreshed the token, just retry.
       const authHeader = original.headers?.["Authorization"];
       const sentToken =
-        typeof authHeader === "string"
-          ? authHeader.split(" ")[1]
-          : undefined;
+        typeof authHeader === "string" ? authHeader.split(" ")[1] : undefined;
       const currentToken = getStoredToken("accessToken");
 
       if (currentToken && sentToken && currentToken !== sentToken) {
@@ -185,5 +202,5 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );

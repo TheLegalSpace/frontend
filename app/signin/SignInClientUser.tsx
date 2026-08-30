@@ -9,13 +9,25 @@ import Image from "next/image";
 import signinIllustration from "../../public/signin-illustration.jpg";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
+import WaitlistPlaceholder from "../Components/WaitlistPlaceholder";
 
 declare const google: any;
 
 const GOOGLE_BTN_MIN_WIDTH = 200;
 const GOOGLE_BTN_MAX_WIDTH = 1200;
 
-export default function SignInClient() {
+/**
+ * Whether the sign-in page shows the waitlist variant.
+ *
+ * The `NEXT_PUBLIC_` prefix is required: Next.js only inlines env vars with
+ * that prefix into the client bundle, so a bare `WAILTLIST` check would always
+ * be `undefined` here and the waitlist branch would never render.
+ */
+const WAITLIST_ENABLED = ["true", "1"].includes(
+  process.env.NEXT_PUBLIC_WAITLIST?.trim().toLowerCase() ?? "",
+);
+
+export default function SignInClientUser() {
   const { loginWithGoogle } = useAuth();
   const searchParams = useSearchParams();
 
@@ -173,76 +185,84 @@ export default function SignInClient() {
           </div>
 
           {/* Sign-in content — consistent 16px gap on left (from image) and right */}
-          <div className="w-full flex items-center justify-center px-4 py-16">
-            <div className="w-full max-w-lg">
-              <h1 className="text-3xl sm:text-3xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
-                Welcome to The Legal Space
-              </h1>
-              <p className="text-base sm:text-md text-gray-500 mb-8 leading-relaxed font-dmSans">
-                Access legal support, professional insights, and trusted
-                connections all in one place.
-              </p>
-
-              {/* Errors */}
-              {(callbackError || error) && (
-                <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-[13px] text-red-600">
-                    {error ||
-                      (callbackError === "google_failed"
-                        ? "Google sign in failed. Please try again."
-                        : "Something went wrong. Please try again.")}
-                  </p>
-                </div>
-              )}
-
-              {/* Custom button / loading */}
-              {isLoading ? (
-                <div className="w-full px-3 py-3.5 bg-white border border-gray-200 rounded-xl text-center">
-                  <p className="text-[14px] text-gray-600 font-dmSans">
-                    Signing you in…
-                  </p>
-                </div>
-              ) : (
-                <div ref={wrapperRef} className="relative w-full">
-                  <div
-                    key={resetKey}
-                    ref={googleButtonRef}
-                    aria-hidden
-                    className="absolute inset-y-0 left-0 z-10 opacity-0 overflow-hidden h-full [&_div]:w-full! [&_div]:h-full! [&_iframe]:w-full! [&_iframe]:h-full!"
-                    style={{
-                      width: `${btnWidth}px`,
-                      transform: `scaleX(${scaleX})`,
-                      transformOrigin: "left",
-                    }}
-                  />
-                  <button
-                    type="button"
-                    disabled={!googleReady}
-                    className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] font-medium text-gray-700 shadow-sm transition hover:bg-white active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed font-dmSans"
-                  >
-                    <GoogleIcon />
-                    Sign in with Google
-                  </button>
-                </div>
-              )}
-
-              {/* Account link */}
-              <p className="mt-6 text-center text-sm text-gray-600 font-dmSans">
-                Don&apos;t have an account?{" "}
-                <span className="relative inline-block align-baseline">
-                  <span
-                    key={`signup-${resetKey}`}
-                    ref={googleSignUpButtonRef}
-                    aria-hidden
-                    className="absolute inset-0 z-10 opacity-0 overflow-hidden w-full h-full [&_div]:w-full! [&_div]:h-full! [&_iframe]:w-full! [&_iframe]:h-full!"
-                  />
-                  <span className="font-semibold text-blue-600 hover:underline cursor-pointer">
-                    Sign up
-                  </span>
-                </span>
-              </p>
+          {WAITLIST_ENABLED ? (
+            <div className="w-full flex items-center justify-center px-4 py-16">
+              <div className="w-full max-w-lg">
+                <WaitlistPlaceholder />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="w-full flex items-center justify-center px-4 py-16">
+              <div className="w-full max-w-lg">
+                <h1 className="text-3xl sm:text-3xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
+                  Welcome to The Legal Space
+                </h1>
+                <p className="text-base sm:text-md text-gray-500 mb-8 leading-relaxed font-dmSans">
+                  Access legal support, professional insights, and trusted
+                  connections all in one place.
+                </p>
+
+                {/* Errors */}
+                {(callbackError || error) && (
+                  <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl">
+                    <p className="text-[13px] text-red-600">
+                      {error ||
+                        (callbackError === "google_failed"
+                          ? "Google sign in failed. Please try again."
+                          : "Something went wrong. Please try again.")}
+                    </p>
+                  </div>
+                )}
+
+                {/* Custom button / loading */}
+                {isLoading ? (
+                  <div className="w-full px-3 py-3.5 bg-white border border-gray-200 rounded-xl text-center">
+                    <p className="text-[14px] text-gray-600 font-dmSans">
+                      Signing you in…
+                    </p>
+                  </div>
+                ) : (
+                  <div ref={wrapperRef} className="relative w-full">
+                    <div
+                      key={resetKey}
+                      ref={googleButtonRef}
+                      aria-hidden
+                      className="absolute inset-y-0 left-0 z-10 opacity-0 overflow-hidden h-full [&_div]:w-full! [&_div]:h-full! [&_iframe]:w-full! [&_iframe]:h-full!"
+                      style={{
+                        width: `${btnWidth}px`,
+                        transform: `scaleX(${scaleX})`,
+                        transformOrigin: "left",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={!googleReady}
+                      className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] font-medium text-gray-700 shadow-sm transition hover:bg-white active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed font-dmSans"
+                    >
+                      <GoogleIcon />
+                      Sign in with Google
+                    </button>
+                  </div>
+                )}
+
+                {/* Account link */}
+                <p className="mt-6 text-center text-sm text-gray-600 font-dmSans">
+                  Don&apos;t have an account?{" "}
+                  <span className="relative inline-block align-baseline">
+                    <span
+                      key={`signup-${resetKey}`}
+                      ref={googleSignUpButtonRef}
+                      aria-hidden
+                      className="absolute inset-0 z-10 opacity-0 overflow-hidden w-full h-full [&_div]:w-full! [&_div]:h-full! [&_iframe]:w-full! [&_iframe]:h-full!"
+                    />
+                    <span className="font-semibold text-blue-600 hover:underline cursor-pointer">
+                      Sign up
+                    </span>
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

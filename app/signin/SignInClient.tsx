@@ -11,6 +11,18 @@ import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import signupIllustration from "../../public/signup-illustration.png";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
+import WaitlistPlaceholder from "../Components/WaitlistPlaceholder";
+
+/**
+ * Whether the sign-in page shows the waitlist variant.
+ *
+ * The `NEXT_PUBLIC_` prefix is required: Next.js only inlines env vars with
+ * that prefix into the client bundle, so a bare `WAILTLIST` check would always
+ * be `undefined` here and the waitlist branch would never render.
+ */
+const WAITLIST_ENABLED = ["true", "1"].includes(
+  process.env.NEXT_PUBLIC_WAITLIST?.trim().toLowerCase() ?? "",
+);
 
 declare const google: {
   accounts: {
@@ -121,7 +133,7 @@ export default function SignInClient() {
       {/* Main content area — vertically centered */}
       <main className="flex-1 w-full flex items-center pb-0">
         <div className="w-full  mx-auto s">
-          <div className="grid grid-cols-1 lg:grid-cols-2  items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2  items-center gap-2">
             {/* Illustration — desktop only */}
             <div className="hidden lg:block">
               <Image
@@ -133,145 +145,151 @@ export default function SignInClient() {
             </div>
 
             {/* Sign-in content */}
-            <div className="w-full px-8 md:px-20 text-left">
-              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
-                Welcome Back
-              </h1>
-              <p className="text-base sm:text-lg text-gray-500 mb-8 leading-relaxed font-dmSans">
-                Sign in to access your profile, opportunities, research tools,
-                and everything The Legal Space has to offer.
-              </p>
+            {/* Waitlist variant is a placeholder and will be redesigned. */}
+            {WAITLIST_ENABLED ? (
+              <WaitlistPlaceholder />
+            ) : (
+              <div className="w-full px-8 md:px-20 text-left">
+                <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
+                  Welcome Back
+                </h1>
+                <p className="text-base sm:text-lg text-gray-500 mb-8 leading-relaxed font-dmSans">
+                  Sign in to access your profile, opportunities, research tools,
+                  and everything The Legal Space has to offer.
+                </p>
 
-              {/* Callback error */}
-              {callbackError && (
-                <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-[13px] text-red-600 font-dmSans">
-                    {callbackError === "google_failed"
-                      ? "Google sign in failed. Please try again."
-                      : "Something went wrong. Please try again."}
-                  </p>
-                </div>
-              )}
-
-              {/* Email / password form */}
-              <form
-                onSubmit={handleEmailSubmit}
-                className="flex flex-col gap-4 font-dmSans"
-              >
-                {/* Email */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[13px] text-gray-600">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                    <input
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      disabled={anyLoading}
-                      className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
-                    />
+                {/* Callback error */}
+                {callbackError && (
+                  <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl">
+                    <p className="text-[13px] text-red-600 font-dmSans">
+                      {callbackError === "google_failed"
+                        ? "Google sign in failed. Please try again."
+                        : "Something went wrong. Please try again."}
+                    </p>
                   </div>
-                </div>
-
-                {/* Password */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[13px] text-gray-600">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={anyLoading}
-                      className="w-full pl-11 pr-11 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      {showPassword ? (
-                        <Eye className="w-4 h-4" />
-                      ) : (
-                        <EyeOff className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Error */}
-                {error && (
-                  <p className="text-[13px] text-red-600 -mt-1">{error}</p>
                 )}
 
-                {/* Forgot password */}
-                <div className="flex justify-end -mt-1">
-                  <Link
-                    href="/forgot-password"
-                    className="text-[13px] text-blue-600 hover:underline"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-
-                {/* Submit */}
-                <button
-                  type="submit"
-                  disabled={anyLoading}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#1A56DB] px-4 py-3.5 text-[15px] font-medium text-white shadow-sm transition hover:bg-[#1648b8] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+                {/* Email / password form */}
+                <form
+                  onSubmit={handleEmailSubmit}
+                  className="flex flex-col gap-4 font-dmSans"
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> Signing in...
-                    </>
-                  ) : (
-                    "Login"
+                  {/* Email */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[13px] text-gray-600">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                      <input
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        disabled={anyLoading}
+                        className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[13px] text-gray-600">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        disabled={anyLoading}
+                        className="w-full pl-11 pr-11 py-3 bg-white border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 disabled:opacity-50 transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        {showPassword ? (
+                          <Eye className="w-4 h-4" />
+                        ) : (
+                          <EyeOff className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Error */}
+                  {error && (
+                    <p className="text-[13px] text-red-600 -mt-1">{error}</p>
                   )}
-                </button>
-              </form>
 
-              {/* OR divider */}
-              <div className="flex items-center gap-3 my-5">
-                <div className="flex-1 h-px bg-gray-200" />
-                <span className="text-[12px] text-gray-400 font-dmSans">
-                  OR
-                </span>
-                <div className="flex-1 h-px bg-gray-200" />
-              </div>
-
-              {/* Google button (hidden real button overlaid by custom one) */}
-              <div className="relative">
-                <div
-                  ref={googleButtonRef}
-                  className="w-full overflow-hidden"
-                  style={{ minHeight: "48px" }}
-                />
-                {googleLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl">
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                  {/* Forgot password */}
+                  <div className="flex justify-end -mt-1">
+                    <Link
+                      href="/forgot-password"
+                      className="text-[13px] text-blue-600 hover:underline"
+                    >
+                      Forgot password?
+                    </Link>
                   </div>
-                )}
+
+                  {/* Submit */}
+                  <button
+                    type="submit"
+                    disabled={anyLoading}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#1A56DB] px-4 py-3.5 text-[15px] font-medium text-white shadow-sm transition hover:bg-[#1648b8] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Signing
+                        in...
+                      </>
+                    ) : (
+                      "Login"
+                    )}
+                  </button>
+                </form>
+
+                {/* OR divider */}
+                <div className="flex items-center gap-3 my-5">
+                  <div className="flex-1 h-px bg-gray-200" />
+                  <span className="text-[12px] text-gray-400 font-dmSans">
+                    OR
+                  </span>
+                  <div className="flex-1 h-px bg-gray-200" />
+                </div>
+
+                {/* Google button (hidden real button overlaid by custom one) */}
+                <div className="relative">
+                  <div
+                    ref={googleButtonRef}
+                    className="w-full overflow-hidden"
+                    style={{ minHeight: "48px" }}
+                  />
+                  {googleLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Register link */}
+                <p className="mt-6 text-center text-sm text-gray-600 font-dmSans">
+                  New to TheLegalSpace?{" "}
+                  <Link
+                    href="/signup"
+                    className="font-semibold text-blue-600 hover:underline"
+                  >
+                    Create a free account
+                  </Link>
+                </p>
               </div>
-
-              {/* Register link */}
-              <p className="mt-6 text-center text-sm text-gray-600 font-dmSans">
-                New to TheLegalSpace?{" "}
-                <Link
-                  href="/signup"
-                  className="font-semibold text-blue-600 hover:underline"
-                >
-                  Create a free account
-                </Link>
-              </p>
-            </div>
-
-            
+            )}
           </div>
         </div>
       </main>
