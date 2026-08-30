@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+const BASE_URL = process.env.API_URL ?? "";
 
 let socket: Socket | null = null;
 let socketToken: string | null = null;
@@ -8,7 +8,7 @@ let debugListenersBound = false;
 let offlineHandlersBound = false;
 
 // Check if we're in the browser
-const isBrowser = typeof window !== 'undefined';
+const isBrowser = typeof window !== "undefined";
 
 export function connectSocket(token: string): Socket {
   if (!BASE_URL) {
@@ -62,8 +62,8 @@ export function connectSocket(token: string): Socket {
       }
     };
 
-    window.addEventListener('offline', handleOffline);
-    window.addEventListener('online', handleOnline);
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
     offlineHandlersBound = true;
   }
 

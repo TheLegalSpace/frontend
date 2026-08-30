@@ -12,14 +12,14 @@ type SessionTokens = {
 
 // Build a single-slash API base URL.
 //
-// The deployed frontend occasionally supplies NEXT_PUBLIC_API_URL with a
+// The deployed frontend occasionally supplies API_URL with a
 // trailing "/" (e.g. "https://legalspace.onrender.com/") while NEXT_PUBLIC_API_PATH
 // starts with "/" (e.g. "/api/v1"). Naively concatenating them produces a
 // double slash ("https://legalspace.onrender.com//api/v1") in the request path;
 // the backend then replies "Route POST://api/v1/... not found" because no
 // route matches the doubled path. Normalising both parts here fixes that
 // regardless of which slash form the env vars use.
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/+$/, "");
+const API_URL = (process.env.API_URL ?? "").replace(/\/+$/, "");
 const API_PATH = (process.env.NEXT_PUBLIC_API_PATH ?? "/api/v1").replace(
   /^\/+|\/+$/g,
   "",

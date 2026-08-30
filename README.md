@@ -26,7 +26,7 @@ npm install
 Create a `.env.local` file in the root:
 
 ```env
-NEXT_PUBLIC_API_URL=https://legalspace.onrender.com
+API_URL=https://legalspace.onrender.com
 ```
 
 ### Run the Dev Server
@@ -172,7 +172,7 @@ The easiest way to deploy is via [Vercel](https://vercel.com):
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
 
-Remember to add `NEXT_PUBLIC_API_URL` to your Vercel environment variables.
+Remember to add `API_URL` to your Vercel environment variables.
 
 ---
 

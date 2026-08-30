@@ -3,8 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 
 // Same single-slash normalisation as services/api.ts — guards against a
-// trailing "/" on NEXT_PUBLIC_API_URL producing "//api/v1/..." in the path.
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/+$/, "");
+// trailing "/" on API_URL producing "//api/v1/..." in the path.
+const API_URL = (process.env.API_URL ?? "").replace(/\/+$/, "");
 const API_PATH = (process.env.NEXT_PUBLIC_API_PATH ?? "/api/v1").replace(
   /^\/+|\/+$/g,
   "",
