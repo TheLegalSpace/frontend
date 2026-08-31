@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     siteName: "The Legal Space",
     images: [
       {
-        url: "https://metatags.io/images/meta-tags.png",
+        url: "/Preview_img.png",
         width: 1200,
         height: 630,
         alt: "The Legal Space",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "The Legal Space",
     description: "Connecting Nigerians to verified lawyers and legal firms",
-    images: ["https://metatags.io/images/meta-tags.png"],
+    images: ["/Preview_img.png"],
   },
   // ❌ Remove themeColor and viewport from here
   appleWebApp: {
