@@ -10,6 +10,7 @@ import Script from "next/script";
 import { ServiceWorkerRegistration } from "./Components/ServiceWorkerRegistration";
 // ✅ Metadata export - only non-viewport metadata
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.thelegalspace.com"),
   title: {
     default: "The Legal Space",
     template: "%s | The Legal Space",
@@ -17,6 +18,27 @@ export const metadata: Metadata = {
   description: "Connecting Nigerians to verified lawyers and legal firms",
   keywords: ["Legal", "Lawyers", "Nigeria", "Legal Services"],
   manifest: "/manifest.json",
+  openGraph: {
+    type: "website",
+    url: "https://www.thelegalspace.com/",
+    title: "The Legal Space",
+    description: "Connecting Nigerians to verified lawyers and legal firms",
+    siteName: "The Legal Space",
+    images: [
+      {
+        url: "https://metatags.io/images/meta-tags.png",
+        width: 1200,
+        height: 630,
+        alt: "The Legal Space",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Legal Space",
+    description: "Connecting Nigerians to verified lawyers and legal firms",
+    images: ["https://metatags.io/images/meta-tags.png"],
+  },
   // ❌ Remove themeColor and viewport from here
   appleWebApp: {
     capable: true,
