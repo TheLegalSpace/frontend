@@ -1,4 +1,4 @@
-﻿import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import type { Post } from "@/app/Components/Feed/PostCard";
 
@@ -20,10 +20,18 @@ interface RawPost {
     isAnonymous?: boolean;
     avgRating?: string;
     role?: string;
+    connectionCount?: number;
+    connectionsCount?: number;
+    connection_count?: number;
+    followerCount?: number;
+    followersCount?: number;
+    follower_count?: number;
   };
   pdfUrl?: string | null;
   pdfName?: string | null;
+  title?: string | null;
   pdfSizeBytes?: number | null;
+  moderationStatus?: "under_review" | null;
 }
 
 export const feedKeys = {
@@ -58,7 +66,8 @@ export function setCachedReaction(
 function getInitials(name: string) {
   if (!name) return "??";
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
@@ -81,6 +90,7 @@ function normalizePost(
 ): Post {
   return {
     id: raw.id,
+    authorAccountId: raw.authorAccountId,
     author: raw.author?.fullName ?? "Unknown",
     authorInitials: getInitials(raw.author?.fullName ?? ""),
     avatarUrl: raw.author?.avatarUrl,
@@ -89,11 +99,66 @@ function normalizePost(
     body: raw.body,
     pdfUrl: raw.pdfUrl ?? null,
     pdfName: raw.pdfName ?? null,
+    title: raw.title ?? null,
     pdfSizeBytes: raw.pdfSizeBytes ?? null,
     likes: raw.likeCount,
     dislikes: raw.dislikeCount,
     userReaction: cachedReactions[raw.id] ?? null,
+    createdAt: raw.createdAt,
+    moderationStatus: raw.moderationStatus ?? null,
   };
+}
+
+function getConnectionCount(author: RawPost["author"] | undefined): number {
+  if (!author) return 0;
+
+  const numericValue =
+    (author as RawPost["author"] & Record<string, unknown>).connectionCount ??
+    (author as RawPost["author"] & Record<string, unknown>).connectionsCount ??
+    (author as RawPost["author"] & Record<string, unknown>).connection_count ??
+    (author as RawPost["author"] & Record<string, unknown>).followerCount ??
+    (author as RawPost["author"] & Record<string, unknown>).followersCount ??
+    (author as RawPost["author"] & Record<string, unknown>).follower_count ??
+    0;
+
+  return typeof numericValue === "number"
+    ? numericValue
+    : Number(numericValue) || 0;
+}
+
+function shapeFeedItems(items: RawPost[], tab: FeedTab): RawPost[] {
+  const normalized = [...items];
+
+  if (tab === "Articles") {
+    return normalized.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }
+
+  if (tab === "Top Lawyers") {
+    const latestByAuthor = new Map<string, RawPost>();
+
+    for (const item of normalized) {
+      const existing = latestByAuthor.get(item.authorAccountId);
+      if (!existing) {
+        latestByAuthor.set(item.authorAccountId, item);
+        continue;
+      }
+
+      const existingTime = new Date(existing.createdAt).getTime();
+      const currentTime = new Date(item.createdAt).getTime();
+      if (currentTime > existingTime) {
+        latestByAuthor.set(item.authorAccountId, item);
+      }
+    }
+
+    return Array.from(latestByAuthor.values()).sort(
+      (a, b) => getConnectionCount(b.author) - getConnectionCount(a.author),
+    );
+  }
+
+  return normalized;
 }
 
 async function fetchFeed(tab: FeedTab): Promise<Post[]> {
@@ -106,7 +171,9 @@ async function fetchFeed(tab: FeedTab): Promise<Post[]> {
   });
   const items = (data?.data?.items ?? []) as RawPost[];
   const cachedReactions = getCachedReactions();
-  return items.map((raw) => normalizePost(raw, cachedReactions));
+  return shapeFeedItems(items, tab).map((raw) =>
+    normalizePost(raw, cachedReactions),
+  );
 }
 
 export function useFeed(tab: FeedTab) {
@@ -130,9 +197,15 @@ export function useFeedCache() {
     );
   };
 
+  const removePostFromFeed = (tab: FeedTab, id: string) => {
+    queryClient.setQueryData<Post[]>(feedKeys.tab(tab), (prev = []) =>
+      prev.filter((post) => post.id !== id),
+    );
+  };
+
   const invalidateFeed = (tab: FeedTab) => {
     queryClient.invalidateQueries({ queryKey: feedKeys.tab(tab) });
   };
 
-  return { updatePostReaction, invalidateFeed };
+  return { updatePostReaction, removePostFromFeed, invalidateFeed };
 }

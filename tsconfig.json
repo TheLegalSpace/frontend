@@ -22,6 +22,8 @@
       "@/*": ["./*"]
     }
   },
+  "types": ["node"],
+  "module": "ESNext",
   "include": [
     "next-env.d.ts",
     "**/*.ts",

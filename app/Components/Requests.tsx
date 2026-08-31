@@ -3,13 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Clock,
-  Loader2,
-  AlertTriangle,
-  X,
-  XCircle,
-} from "lucide-react";
+import { Clock, Loader2, AlertTriangle, X, XCircle } from "lucide-react";
 import {
   useRequests,
   useRequestStats,
@@ -31,7 +25,8 @@ function timeAgo(dateStr: string): string {
 
 function getInitials(name: string): string {
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .toUpperCase()
@@ -89,7 +84,7 @@ function CancelConfirmModal({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="w-full py-3 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-900 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="w-full py-3 border border-gray-200 rounded-xl text-[13px] font-medium text-gray-900 hover:bg-white transition-colors disabled:opacity-50"
           >
             Keep Request
           </button>
@@ -294,7 +289,7 @@ export default function RequestsPage() {
     <div className="min-h-screen bg-white">
       <div className="w-full px-4 py-6">
         {/* Page title */}
-        <h1 className="font-[Instrument_Serif] text-[22px] font-regulal text-gray-900 mb-[17px] font-[Instrument_Serif] ">
+        <h1 className="text-[22px] font-regulal text-gray-900 mb-4.25 font-[Instrument_Serif] ">
           Requests
         </h1>
         <span className="block h-px bg-[#E5E7EB] my-4 -mx-4" />

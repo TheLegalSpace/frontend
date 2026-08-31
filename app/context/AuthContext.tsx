@@ -19,8 +19,11 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   disconnectSocket,
   refreshSocketAuth,
+  connectSocket,
 } from "@/services/socket.services";
 
+import { urlBase64ToUint8Array } from "../utils/web-push";
+import { notificationsService } from "@/services/notifications.services";
 export type AuthErrorCode =
   | "INVALID_CREDENTIALS"
   | "ACCOUNT_NOT_FOUND"
@@ -37,7 +40,13 @@ export interface AuthError {
 }
 
 interface AuthContextType {
-  user: AuthResponse["data"]["account"] | null;
+  user:
+    | (AuthResponse["data"]["account"] & {
+        unreadMessageCount?: number;
+        unreadNotificationCount?: number;
+        pendingLeadCount?: number;
+      })
+    | null;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
   loginWithGoogle: (
@@ -47,6 +56,7 @@ interface AuthContextType {
   ) => Promise<void>;
   logout: () => Promise<void>;
   saveSession: (data: AuthResponse["data"]) => void; // ✅ exposed for register flow
+  refreshUser: () => Promise<AuthResponse["data"]["account"] | null>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -55,6 +65,9 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function getPostAuthRoute(
   account: AuthResponse["data"]["account"],
 ): string {
+  if (account.role === "ADMIN") {
+    return "/admin";
+  }
   if (account.role === "PENDING_PROFESSIONAL") {
     return "/register/lawyer-setup";
   }
@@ -62,7 +75,7 @@ export function getPostAuthRoute(
     return "/register/lawyer-setup";
   }
   if (account.role === "FIRM" && !account.firmProfile) {
-    return "/register/firm-setup";
+    return "/register/lawyer-setup";
   }
   return "/dashboard/feeds";
 }
@@ -76,40 +89,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // routes (landing, /signin, /register, …) there is nothing to verify.
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
-    const onDashboard = window.location.pathname.startsWith("/dashboard");
-    return onDashboard && !!localStorage.getItem("accessToken");
+    const pathname = window.location.pathname;
+    const onProtectedRoute =
+      pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
+    return onProtectedRoute && !!localStorage.getItem("accessToken");
   });
   const router = useRouter();
   const pathname = usePathname();
 
-  // ── Session check — DASHBOARD ROUTES ONLY ───────────────────────────────────
-  // The "is there a logged-in user?" check must be confined to /dashboard and
-  // its children. Running it on public routes fires a token-less /profile/me
-  // call that the API treats as an expired session, which triggers auth:logout
-  // and bounces the user out of the sign-in flow.
+  // ── Session check ──────────────────────────────────────────────────────────
+  // Hydrate the user from localStorage on any route if present. The network
+  // check/verification must still be confined to /dashboard to avoid redirect loops
+  // or unauthorized API calls on public routes.
   useEffect(() => {
     if (typeof window === "undefined") return;
-
-    const isProtectedRoute = pathname?.startsWith("/dashboard") ?? false;
-    if (!isProtectedRoute) return; // public route — nothing to check
 
     const token = localStorage.getItem("accessToken");
     const savedUser = localStorage.getItem("user");
 
-    // No token on a protected route → isLoading already starts false (see
-    // initializer), so the dashboard guard can redirect right away.
-    if (!token) return;
-
-    // Hydrate immediately from cache so the dashboard guard doesn't flash.
+    // Hydrate immediately from cache so the user state is available on all pages.
     if (savedUser) {
       try {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setUser(JSON.parse(savedUser));
       } catch {
-        // Corrupt cache — drop it and let getMe below refetch a fresh profile.
+        // Corrupt cache — drop it.
         localStorage.removeItem("user");
       }
     }
+
+    const isProtectedRoute =
+      (pathname?.startsWith("/dashboard") ?? false) ||
+      (pathname?.startsWith("/admin") ?? false);
+    if (!isProtectedRoute) return; // public route — nothing else to check
+
+    // No token on a protected route → isLoading already starts false (see
+    // initializer), so the dashboard/admin guard can redirect right away.
+    if (!token) return;
 
     let cancelled = false;
     profileService
@@ -147,7 +162,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener("auth:logout", handleAuthLogout);
     return () => window.removeEventListener("auth:logout", handleAuthLogout);
   }, [router]);
+  // Auto-subscribe to push notifications after login
+  useEffect(() => {
+    if (!user) return;
 
+    const autoSubscribe = async () => {
+      try {
+        // Check if browser supports push
+        if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+          return;
+        }
+
+        // Check if already subscribed
+        const registration = await navigator.serviceWorker.ready;
+        const existingSub = await registration.pushManager.getSubscription();
+        if (existingSub) {
+          // Already subscribed, but we can sync it with backend if needed
+          return;
+        }
+
+        // Only ask for permission if not denied
+        if (Notification.permission === "denied") {
+          console.log("[Push] Permission denied, skipping auto-subscribe.");
+          return;
+        }
+
+        // If default, request permission (user will see prompt)
+        if (Notification.permission === "default") {
+          const result = await Notification.requestPermission();
+          if (result !== "granted") {
+            console.log("[Push] Permission not granted, skipping.");
+            return;
+          }
+        }
+
+        // Now subscribe
+        const sub = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+          ),
+        });
+
+        const serializedSub = JSON.parse(JSON.stringify(sub));
+        await notificationsService.savePushSubscription(
+          serializedSub,
+          "desktop", // you can detect device type if needed
+        );
+        console.log("[Push] Auto-subscribed successfully.");
+      } catch (error) {
+        console.error("[Push] Auto-subscribe failed:", error);
+      }
+    };
+
+    autoSubscribe();
+  }, [user]);
   // ✅ Exposed so RegisterFlow can call it after OTP verify
   const saveSession = (data: AuthResponse["data"]) => {
     const { account, session } = data;
@@ -211,6 +280,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /** Read `?redirect=` from the current URL and return it if it's an internal path. */
+  function resolveRedirect(fallback: string): string {
+    if (typeof window === "undefined") return fallback;
+    const redirect = new URLSearchParams(window.location.search).get(
+      "redirect",
+    );
+    if (redirect && redirect.startsWith("/")) return redirect;
+    return fallback;
+  }
+
   const login = async (payload: LoginPayload): Promise<void> => {
     try {
       const response = await authService.login(payload);
@@ -220,8 +299,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = response.data.data;
       saveSession(data);
 
-      // ✅ Route based on profile completion — handles incomplete setup
-      const route = getPostAuthRoute(data.account);
+      // ✅ Route based on profile completion unless a ?redirect= param was given
+      const route = resolveRedirect(getPostAuthRoute(data.account));
       router.replace(route);
     } catch (err: unknown) {
       if (typeof err === "object" && err !== null && "code" in err) throw err;
@@ -245,8 +324,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (googleAvatarUrl && !data.account.avatarUrl) {
         await syncGoogleAvatar(googleAvatarUrl);
       }
-      // ✅ Route based on profile completion
-      const route = getPostAuthRoute(data.account);
+      // ✅ Route based on profile completion unless a ?redirect= param was given
+      const route = resolveRedirect(getPostAuthRoute(data.account));
       router.replace(route);
     };
 
@@ -254,7 +333,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await attemptLogin();
       // check if the user role is "PENDING_PROFESSIONAL"
       if (response.data.data.account.role === "PENDING_PROFESSIONAL") {
-        router.replace("/register/lawyer-setup");
+        router.replace(resolveRedirect("/register/lawyer-setup"));
         return;
       } else {
         await handlePostLogin(response.data.data, avatarUrl);
@@ -272,7 +351,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const response = await attemptLogin();
           // check if the user role is "PENDING_PROFESSIONAL"
           if (response.data.data.account.role === "PENDING_PROFESSIONAL") {
-            router.replace("/register/lawyer-setup");
+            router.replace(resolveRedirect("/register/lawyer-setup"));
             return;
           }
           await handlePostLogin(response.data.data, avatarUrl);
@@ -299,6 +378,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshUser = async (): Promise<
+    AuthResponse["data"]["account"] | null
+  > => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return null;
+    try {
+      const r = await profileService.getMe();
+      const fresh = r.data.data;
+      localStorage.setItem("user", JSON.stringify(fresh));
+      setUser(fresh);
+      return fresh;
+    } catch (err) {
+      console.error("Failed to refresh user profile:", err);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    const pathname = window.location.pathname;
+    const shouldUseRealtime = [
+      "/dashboard/messages",
+      "/dashboard/notifications",
+      "/dashboard/leads",
+    ].some((route) => pathname.startsWith(route));
+
+    if (!token || !user || !shouldUseRealtime) return;
+
+    const socket = connectSocket(token);
+
+    const handleUpdate = () => {
+      refreshUser();
+    };
+
+    socket.on("notification", handleUpdate);
+    socket.on("message", handleUpdate);
+    socket.on("conversation:updated", handleUpdate);
+    socket.on("message:read", handleUpdate);
+
+    return () => {
+      socket.off("notification", handleUpdate);
+      socket.off("message", handleUpdate);
+      socket.off("conversation:updated", handleUpdate);
+      socket.off("message:read", handleUpdate);
+    };
+  }, [user?.id]);
+
   const logout = async (): Promise<void> => {
     try {
       await authService.logout();
@@ -311,7 +437,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, loginWithGoogle, logout, saveSession }}
+      value={{
+        user,
+        isLoading,
+        login,
+        loginWithGoogle,
+        logout,
+        saveSession,
+        refreshUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

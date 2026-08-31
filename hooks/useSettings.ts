@@ -1,8 +1,13 @@
 // hooks/useSettings.ts
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
- import { authService } from "@/services/auth.services";
-import { ServiceRow, settingsService, UpdatePersonalInfoPayload, UpdatePracticeAreasPayload, UpdateProfilePayload, UpdateServicesPayload } from "@/services/settings.services";
- 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { authService } from "@/services/auth.services";
+import {
+  settingsService,
+  UpdatePersonalInfoPayload,
+  UpdatePracticeAreasPayload,
+  UpdateProfilePayload,
+} from "@/services/settings.services";
+
 export const useUpdatePersonalInfo = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -20,18 +25,6 @@ export const useUpdatePracticeAreas = () => {
     mutationFn: (payload: UpdatePracticeAreasPayload) =>
       settingsService.updatePracticeAreas(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
-    },
-  });
-};
-
-export const useUpdateServices = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (services: ServiceRow[]) =>
-      settingsService.updateServices(services),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["services"] });
       queryClient.invalidateQueries({ queryKey: ["profile", "me"] });
     },
   });
@@ -64,13 +57,3 @@ export const useDeleteAccount = () => {
     mutationFn: () => settingsService.deleteAccount(),
   });
 };
-
-export const useServices = (enabled = true) =>
-  useQuery({
-    queryKey: ["services"],
-    queryFn: () => settingsService.getServices().then((r) => r.data.data),
-    enabled,
-    staleTime: 1000 * 60 * 2,
-  });
-
-

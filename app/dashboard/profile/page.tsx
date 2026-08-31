@@ -28,16 +28,16 @@ export default function ProfilePage() {
     <div className=" w-full bg-white min-h-screen  ">
       <div className=" ">
         {/* Page title */}
-        <div className=" h-[75px] flex items-center border-b border-[#E5E7EB] px-4 fixed w-full bg-white z-99999">
+        <div className=" h-18.75 flex items-center border-b border-[#E5E7EB] px-4 fixed w-full bg-white z-99999">
           <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937]">
             Profile
           </h1>
         </div>
 
         {/* Layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-5 items-start  px-4 ">
+        <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-5 items-start">
           {/* Left */}
-          <div className="min-w-0 mt-[95px]">
+          <div className="min-w-0 mt-23.75">
             <ProfileCard
               profile={{
                 ...(profile?.data as ProfileData),
@@ -51,10 +51,23 @@ export default function ProfilePage() {
             />
           </div>
 
-          {/* Right */}
-          <div className="min-w-0">
+          {/* Right column spacer — keeps grid space on xl, renders EventsPanel on mobile */}
+          <div className="min-w-0 xl:invisible">
             <EventsPanel />
           </div>
+        </div>
+
+        {/* Fixed EventsPanel on desktop — immune to ancestor overflow changes */}
+        <div
+          className="hidden xl:block fixed top-18.75 bg-white"
+          style={{
+            right: 0,
+            width: "calc((100vw - 220px) * 0.4)",
+            height: "calc(100vh - 75px)",
+            overflowY: "auto",
+          }}
+        >
+          <EventsPanel />
         </div>
       </div>
     </div>

@@ -1,9 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-inter), var(--font-geist), sans-serif;
+  --font-sans: var(--font-dmSans), var(--font-inter), var(--font-geist), sans-serif;
   --font-dmSans: var(--font-dmSans), sans-serif;
   --font-instrument: var(--font-instrument), serif;
+}
+
+body {
+  font-family: var(--font-dmSans), sans-serif;
 }
 
 .signinbg {
@@ -68,10 +72,8 @@ button[disabled] {
   top: 32px; */
 
   background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0px 0px 0px 5px #ffffff;
   backdrop-filter: blur(10px);
   /* Note: backdrop-filter has minimal browser support */
-  border-radius: 999px;
 }
 
 @media (min-width: 1280px) {

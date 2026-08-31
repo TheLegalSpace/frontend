@@ -10,7 +10,8 @@ import Image from "next/image";
 function getInitials(name: string) {
   if (!name) return "??";
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
@@ -42,13 +43,8 @@ function timeAgo(dateStr: string) {
 function formatBudget(budget?: string) {
   if (!budget) return "";
   const map: Record<string, string> = {
-    under_50k: "Under ₦50k",
-    "50k_to_100k": "₦50k–₦100k",
-    "100k_to_500k": "₦100k–₦500k",
-    "500k_to_1m": "₦500k–₦1M",
-    above_1m: "Above ₦1M",
     under_100k: "Under ₦100k",
-    "50k_to_200k": "₦50k–₦200k",
+    "100k_to_500k": "₦100k–₦500k",
     "500k_to_2m": "₦500k–₦2M",
     above_2m: "Above ₦2M",
   };
@@ -115,7 +111,18 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
     <div className="bg-white border-b border-[#E5E7EB] px-5 py-5">
       {/* Header — avatar + name + rating */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2.5">
+        <button
+          type="button"
+          onClick={() => {
+            const accountId = userAccount?.id ?? lead.userAccountId;
+            if (accountId) {
+              router.push(
+                `/dashboard/leads?accountId=${encodeURIComponent(accountId)}`,
+              );
+            }
+          }}
+          className="flex items-center gap-2.5 text-left"
+        >
           <div
             className={`relative w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0 overflow-hidden ${avatarColor(
               userAccount?.fullName ?? "",
@@ -133,10 +140,10 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
               getInitials(userAccount?.fullName ?? "")
             )}
           </div>
-          <span className="text-[15px] font-semibold text-gray-900">
+          <span className="text-[15px] font-semibold text-gray-900 hover:text-[#1D4ED8] transition-colors">
             {displayName}
           </span>
-        </div>
+        </button>
         <span className="text-[13px] text-gray-500">{rating}/5★</span>
       </div>
 
@@ -174,7 +181,15 @@ export default function LeadCard({ lead, onUpdate, matterName }: Props) {
             <Clock size={11} />
             {timeAgo(createdAt)}
           </span>
-          <span className="text-[11px] text-green-400 font-medium">
+          <span
+            className={`text-[11px] font-medium ${
+              relevanceScore >= 80
+                ? "text-[#159947]"
+                : relevanceScore > 40
+                  ? "text-[#C48529]"
+                  : "text-[#C42929]"
+            }`}
+          >
             {relevanceScore}% match
           </span>
         </div>

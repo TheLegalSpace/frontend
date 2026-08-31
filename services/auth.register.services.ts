@@ -1,5 +1,6 @@
 // services/auth.register.service.ts
 import { api } from "./api";
+import type { AreaFeeEntry } from "@/app/Components/Lawyer-Signup/StepProfessionalFees";
 
 export type RegisterRole = "USER" | "LAWYER" | "FIRM" | "PENDING_PROFESSIONAL";
 
@@ -13,23 +14,27 @@ export const registerService = {
     api.post("/auth/register/verify", payload),
 
   // Resend
-  resend: (email: string) =>
-    api.post("/auth/register/resend", { email }),
+  resend: (email: string) => api.post("/auth/register/resend", { email }),
 
   // Google
-  google: (payload: { idToken: string; role: RegisterRole; fullName?: string }) =>
-    api.post("/auth/register/google", payload),
+  google: (payload: {
+    idToken: string;
+    role: RegisterRole;
+    fullName?: string;
+  }) => api.post("/auth/register/google", payload),
 
   // Lawyer setup — Bearer token required
+  // NOTE: practiceAreas now carries fee ranges (minFee/maxFee in kobo).
+  // The old practiceAreaIds + services[] shape was removed by the backend.
   lawyerSetup: (payload: {
     firstName: string;
     lastName: string;
     whatsappNumber: string;
     callToBarYear: number;
     locationCity: string;
+    officeAddress: string;
     locationCountry?: string;
-    practiceAreaIds: string[];
-    services: { practiceAreaId: string; name: string; price: number }[];
+    practiceAreas: AreaFeeEntry[];
   }) => api.post("/profile/me/lawyer/setup", payload),
 
   // Firm setup — Bearer token required
@@ -40,8 +45,7 @@ export const registerService = {
     firmEstablishmentYear: number;
     locationCity: string;
     locationCountry?: string;
-    practiceAreaIds: string[];
-    services: { practiceAreaId: string; name: string; price: number }[];
+    practiceAreas: AreaFeeEntry[];
   }) => api.post("/profile/me/firm/setup", payload),
 
   // Document upload
@@ -51,7 +55,7 @@ export const registerService = {
     return api.post(
       `/profile/me/verification/document?docType=${docType}`,
       form,
-      { headers: { "Content-Type": "multipart/form-data" } }
+      { headers: { "Content-Type": "multipart/form-data" } },
     );
   },
 };

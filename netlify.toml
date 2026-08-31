@@ -1,0 +1,11 @@
+# Netlify build configuration
+# Fixes "Next.js build worker exited with code: null and signal: SIGABRT"
+# (JavaScript heap out of memory) caused by Turbopack/Next.js build workers
+# exceeding Netlify's default Node heap limit on build machines.
+
+[build]
+  command = "NODE_OPTIONS=--max-old-space-size=4096 next build --webpack"
+  publish = ".next"
+
+[build.environment]
+  NODE_OPTIONS = "--max-old-space-size=4096"

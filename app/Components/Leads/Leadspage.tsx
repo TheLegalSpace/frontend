@@ -2,11 +2,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Lead, LeadStatus } from "@/app/types/leads";
 import { connectSocket } from "@/services/socket.services";
 import LeadsStatsRow from "./Leadsstatsrow";
 import LeadCard from "./Leadcard";
+import LawyerProfileView from "@/app/Components/LawyerProfileView";
 import { useLeads, useLeadStats, useLeadsCache } from "@/hooks/useLeads";
 
 const STATUS_TABS: { label: string; value: LeadStatus }[] = [
@@ -17,7 +19,11 @@ const STATUS_TABS: { label: string; value: LeadStatus }[] = [
 ];
 
 export default function LeadsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<LeadStatus>("pending");
+
+  const selectedAccountId = searchParams.get("accountId");
 
   const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
     useLeads(activeTab, 20);
@@ -66,10 +72,22 @@ export default function LeadsPage() {
   const activeLabel =
     STATUS_TABS.find((t) => t.value === activeTab)?.label ?? "";
 
+  if (selectedAccountId) {
+    return (
+      <div className="min-h-screen bg-white">
+        <LawyerProfileView
+          accountId={selectedAccountId}
+          onBack={() => router.push("/dashboard/leads")}
+          backLabel="Leads"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <div className=" ">
-        <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937] ps-4 pt-6 pb-px">
+        <h1 className="font-[Instrument_Serif] text-[20px] leading-none font-light text-[#1F2937] ps-4 pt-6 pb-3.5">
           Leads
         </h1>
         <div className="w-full h-px bg-[#E6EAED] my-4"></div>

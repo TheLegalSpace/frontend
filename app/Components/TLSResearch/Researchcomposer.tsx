@@ -1,10 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Send, Paperclip, X, Loader2 } from "lucide-react";
+import { Send, Paperclip, X, Loader2, Square } from "lucide-react";
 
 interface Props {
   onSend: (text: string, pdf?: File) => void;
+  onCancel?: () => void;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -13,6 +14,7 @@ const MAX_PDF_BYTES = 25 * 1024 * 1024; // 25 MB
 
 export default function ResearchComposer({
   onSend,
+  onCancel,
   disabled,
   placeholder,
 }: Props) {
@@ -60,7 +62,7 @@ export default function ResearchComposer({
       {pdf && (
         <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-xl w-fit text-[12px] text-blue-700">
           <span>📄</span>
-          <span className="max-w-[220px] truncate">{pdf.name}</span>
+          <span className="max-w-55 truncate">{pdf.name}</span>
           <span className="text-blue-400">
             {(pdf.size / 1024).toFixed(0)} KB
           </span>
@@ -81,12 +83,12 @@ export default function ResearchComposer({
       )}
 
       {/* Input row */}
-      <div className="flex items-end gap-2">
+      <div className="flex items-center gap-2">
         {/* PDF upload button */}
         <button
           onClick={() => fileRef.current?.click()}
           disabled={disabled || !!pdf}
-          className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition disabled:opacity-40 shrink-0 mb-0.5"
+          className="w-16 h-12 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:bg-white hover:text-gray-600 transition disabled:opacity-40 shrink-0 mb-0.5"
           title="Attach PDF"
         >
           <Paperclip size={15} />
@@ -108,7 +110,7 @@ export default function ResearchComposer({
             disabled={disabled}
             placeholder={placeholder ?? "Describe your legal issue or case…"}
             rows={1}
-            className="w-full px-4 py-2.5 text-[14px] bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:border-gray-300 placeholder:text-gray-400 resize-none leading-relaxed disabled:opacity-50 max-h-40 overflow-y-auto"
+            className="w-full px-4 py-2.5 text-[14px] bg-white border border-gray-200 rounded-2xl outline-none focus:border-gray-300 placeholder:text-gray-400 resize-none leading-relaxed disabled:opacity-50 max-h-40 overflow-y-auto"
             style={{ minHeight: "44px" }}
             onInput={(e) => {
               const el = e.currentTarget;
@@ -127,19 +129,30 @@ export default function ResearchComposer({
           )}
         </div>
 
-        {/* Send button */}
-        <button
-          onClick={handleSend}
-          disabled={!text.trim() || disabled || overLimit}
-          className="w-9 h-9 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition disabled:opacity-40 shrink-0 mb-0.5"
-          aria-label="Send"
-        >
-          {disabled ? (
-            <Loader2 size={15} className="text-white animate-spin" />
-          ) : (
-            <Send size={15} className="text-white" />
-          )}
-        </button>
+        {/* Send / Stop button */}
+        {disabled && onCancel ? (
+          <button
+            onClick={onCancel}
+            className="w-16 h-12 rounded-full bg-gray-900 hover:bg-gray-800 flex items-center justify-center transition shrink-0 mb-0.5"
+            aria-label="Stop generating"
+            title="Cancel this request"
+          >
+            <Square size={13} className="text-white fill-white" />
+          </button>
+        ) : (
+          <button
+            onClick={handleSend}
+            disabled={!text.trim() || disabled || overLimit}
+            className="w-16 h-12 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition disabled:opacity-40 shrink-0 mb-0.5"
+            aria-label="Send"
+          >
+            {disabled ? (
+              <Loader2 size={15} className="text-white animate-spin" />
+            ) : (
+              <Send size={15} className="text-white" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Disclaimer */}

@@ -10,7 +10,13 @@ export interface Event {
   startAt: string;
   endAt: string;
   registrationUrl: string;
-  status: "published" | "draft" | "cancelled";
+  status:
+    | "draft"
+    | "pending_payment"
+    | "pending_review"
+    | "published"
+    | "rejected"
+    | "past";
   createdByAdminId: string;
   createdAt: string;
   updatedAt: string;
@@ -36,24 +42,53 @@ export interface CreateEventPayload {
   location: string;
   startAt: string;
   endAt: string;
-  registrationUrl: string;
+  status:
+    | "draft"
+    | "pending_payment"
+    | "pending_review"
+    | "published"
+    | "rejected"
+    | "past";
+  registrationUrl?: string | null;
 }
+
+export type UpdateEventPayload = Partial<CreateEventPayload> & {
+  coverUrl?: string | null;
+};
 
 export const eventService = {
   list: (page = 1, limit = 20) =>
     api.get<EventsResponse>("/events", { params: { page, limit } }),
 
+  // When isAdmin is true, uses the admin endpoint (returns ALL published events).
+  // Otherwise, uses the public endpoint (returns upcoming events — safe for any role).
+  // Avoids noisy 403 errors in the browser console for non-admin users.
+  listPublished: async (page = 1, limit = 20, isAdmin = false) => {
+    if (isAdmin) {
+      const res = await api.get<EventsResponse>("/admin/events", {
+        params: { status: "published", page, limit },
+      });
+      return res;
+    }
+    return api.get<EventsResponse>("/events", { params: { page, limit } });
+  },
+
   get: (id: string) =>
     api.get<{ error: boolean; message: string; data: Event }>(`/events/${id}`),
 
   create: (payload: CreateEventPayload) =>
-    api.post<{ error: boolean; message: string; data: Event }>("/events", payload),
+    api.post<{ error: boolean; message: string; data: Event }>(
+      "/events",
+      payload,
+    ),
 
-  update: (id: string, payload: Partial<CreateEventPayload>) =>
-    api.patch<{ error: boolean; message: string; data: Event }>(`/events/${id}`, payload),
+  update: (id: string, payload: UpdateEventPayload) =>
+    api.patch<{ error: boolean; message: string; data: Event }>(
+      `/events/${id}`,
+      payload,
+    ),
 
-  delete: (id: string) =>
-    api.delete(`/events/${id}`),
+  delete: (id: string) => api.delete(`/events/${id}`),
 
   uploadCover: (id: string, file: File) => {
     const form = new FormData();

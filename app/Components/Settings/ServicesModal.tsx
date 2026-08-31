@@ -1,28 +1,24 @@
-// components/settings/ServicesModal.tsx
+// components/settings/ServicesModal.tsx — "Professional Fees" (per-area min/max)
 "use client";
 
 import { useState } from "react";
-import { X, Plus, Trash2, Loader2 } from "lucide-react";
-import { useUpdateServices } from "@/hooks/useSettings";
-import { ServiceOffering } from "@/services/settings.services";
+import { X, Banknote, Loader2 } from "lucide-react";
+import { useUpdatePracticeAreas } from "@/hooks/useSettings";
+import type { PracticeAreaFee } from "@/services/settings.services";
 import { useToast } from "@/app/context/ToastContext";
 
-interface PracticeArea {
+export interface AreaFee {
   id: string;
   name: string;
-}
-
-// ✅ Client-side row — uses index as key, no stable id needed
-interface EditRow {
-  name: string;
-  priceNaira: string; // user types naira, we convert to kobo on save
+  minFee: number; // kobo
+  maxFee: number; // kobo
 }
 
 interface Props {
-  areaId: string;
-  areaName: string;
-  allServices: ServiceOffering[]; // ALL current services across all areas
-  practiceAreas: PracticeArea[];
+  /** The practice area whose fee range is being edited. */
+  area: AreaFee;
+  /** The full set of selected areas — the backend expects the whole array. */
+  allAreas: AreaFee[];
   onClose: () => void;
 }
 
@@ -31,195 +27,187 @@ function nairaToKobo(naira: string): number {
 }
 
 function koboToNaira(kobo: number): string {
-  return (kobo / 100).toString();
+  return kobo > 0 ? String(kobo / 100) : "";
 }
 
-export default function ServicesModal({
-  areaId,
-  areaName,
-  allServices,
-  practiceAreas,
-  onClose,
-}: Props) {
+/** Format digits with thousands separators as the user types (e.g. 1000000 -> 1,000,000). */
+function formatNairaInput(s: string): string {
+  const cleaned = s.replace(/[^0-9.]/g, "");
+  const [intPart, decPart] = cleaned.split(".");
+  const formattedInt = intPart ? Number(intPart).toLocaleString("en-US") : "";
+  return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt;
+}
+
+export default function ServicesModal({ area, allAreas, onClose }: Props) {
   const { showSuccess, showError } = useToast();
-  const updateServices = useUpdateServices();
+  const updateAreas = useUpdatePracticeAreas();
 
-  // ✅ Seed rows from existing services for this area
-  const existingForArea = allServices.filter((s) => s.practiceAreaId === areaId);
-
-  const [rows, setRows] = useState<EditRow[]>(
-    existingForArea.length > 0
-      ? existingForArea.map((s) => ({
-          name: s.name,
-          priceNaira: koboToNaira(s.price),
-        }))
-      : [{ name: "", priceNaira: "" }]
+  const [minNaira, setMinNaira] = useState(
+    formatNairaInput(koboToNaira(area.minFee)),
   );
-
+  const [maxNaira, setMaxNaira] = useState(
+    formatNairaInput(koboToNaira(area.maxFee)),
+  );
   const [error, setError] = useState("");
+  const [rangeError, setRangeError] = useState("");
 
-  const addRow = () => setRows((prev) => [...prev, { name: "", priceNaira: "" }]);
-
-  const removeRow = (i: number) => {
-    if (rows.length === 1) return; // keep at least one row
-    setRows((prev) => prev.filter((_, idx) => idx !== i));
+  const handleMinChange = (val: string) => {
+    const formatted = formatNairaInput(val);
+    setMinNaira(formatted);
+    if (
+      formatted.trim() &&
+      maxNaira.trim() &&
+      nairaToKobo(formatted) >= nairaToKobo(maxNaira)
+    ) {
+      setRangeError("Maximum fee can't be lower than the minimum fee.");
+    } else {
+      setRangeError("");
+    }
   };
 
-  const updateRow = (i: number, field: keyof EditRow, val: string) => {
-    setRows((prev) => {
-      const next = [...prev];
-      next[i] = { ...next[i], [field]: val };
-      return next;
-    });
+  const handleMaxChange = (val: string) => {
+    const formatted = formatNairaInput(val);
+    setMaxNaira(formatted);
+    if (
+      minNaira.trim() &&
+      formatted.trim() &&
+      nairaToKobo(formatted) <= nairaToKobo(minNaira)
+    ) {
+      setRangeError("Maximum fee can't be lower than the minimum fee.");
+    } else {
+      setRangeError("");
+    }
   };
 
   const handleSave = async () => {
     setError("");
 
-    // ✅ Validate — at least one filled row
-    const filledRows = rows.filter((r) => r.name.trim());
-    if (filledRows.length === 0) {
-      setError("Please add at least one service.");
+    const minFee = nairaToKobo(minNaira);
+    const maxFee = nairaToKobo(maxNaira);
+
+    if (!minNaira.trim() || !maxNaira.trim()) {
+      setError("Please enter both a minimum and maximum fee.");
+      return;
+    }
+    if (minFee < 0 || maxFee < 0) {
+      setError("Fees can't be negative.");
+      return;
+    }
+    if (minFee >= maxFee) {
+      setRangeError("Maximum fee can't be lower than the minimum fee.");
+      setError("Minimum fee can't be greater than the maximum fee.");
       return;
     }
 
-    // ✅ Every filled name needs a price
-    for (const row of filledRows) {
-      if (!row.priceNaira.trim() || parseFloat(row.priceNaira) < 0) {
-        setError(`Please add a valid price for "${row.name}".`);
-        return;
-      }
-    }
-
-    // ✅ Build the FULL services list (replace-all)
-    // Keep other areas' services untouched, replace only this area's
-    const otherAreaServices = allServices
-      .filter((s) => s.practiceAreaId !== areaId)
-      .map((s) => ({
-        practiceAreaId: s.practiceAreaId,
-        name: s.name,
-        price: s.price,
-      }));
-
-    const thisAreaServices = filledRows.map((row) => ({
-      practiceAreaId: areaId,
-      name: row.name.trim(),
-      price: nairaToKobo(row.priceNaira),
+    // Backend expects the FULL array — replace only this area's range.
+    const practiceAreas: PracticeAreaFee[] = allAreas.map((a) => ({
+      practiceAreaId: a.id,
+      minFee: a.id === area.id ? minFee : a.minFee,
+      maxFee: a.id === area.id ? maxFee : a.maxFee,
     }));
 
-    const allServiceRows = [...otherAreaServices, ...thisAreaServices];
-
     try {
-      await updateServices.mutateAsync(allServiceRows);
-      showSuccess(`Services for ${areaName} updated.`);
+      await updateAreas.mutateAsync({ practiceAreas });
+      showSuccess(`Fees for ${area.name} updated.`);
       onClose();
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? "Failed to save services.";
-      showError(msg);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Failed to save fees.";
       setError(msg);
+      showError(msg);
     }
   };
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Professional fees"
     >
       <div className="w-full max-w-md bg-white rounded-2xl p-6 shadow-xl">
-
         {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h3 className="text-[15px] font-semibold text-gray-900">
-              Specialization & Pricing
-            </h3>
-            <p className="text-[11px] text-gray-400 mt-0.5">
-              All fields required per service
-            </p>
-          </div>
+        <div className="flex items-start justify-between mb-1">
+          <h3 className="text-[22px] font-semibold text-gray-900">
+            Professional Fees
+          </h3>
           <button
+            type="button"
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors shrink-0"
           >
-            <X className="w-3.5 h-3.5 text-gray-600" />
+            <X className="w-4 h-4 text-gray-600" />
           </button>
         </div>
-
-        {/* Area badge */}
-        <div className="mb-4">
-          <span className="inline-flex items-center px-3 py-1.5 bg-blue-50 border border-blue-200 text-[#2563EB] rounded-full text-[12px] font-medium">
-            {areaName} ✓
-          </span>
-        </div>
-
-        {/* Column headers */}
-        <div className="grid grid-cols-[1fr_1fr_32px] gap-2 mb-2">
-          <span className="text-[12px] text-gray-500">
-            Service <span className="text-red-400">*</span>
-          </span>
-          <span className="text-[12px] text-gray-500">
-            Pricing <span className="text-red-400">*</span>
-          </span>
-          <span />
-        </div>
-
-        {/* ✅ Rows — keyed by index since ids aren't stable */}
-        <div className="flex flex-col gap-2 mb-3 max-h-64 overflow-y-auto">
-          {rows.map((row, i) => (
-            <div key={i} className="grid grid-cols-[1fr_1fr_32px] gap-2 items-center">
-              <input
-                type="text"
-                value={row.name}
-                onChange={(e) => updateRow(i, "name", e.target.value)}
-                placeholder="e.g., Contract Drafting"
-                className="px-3 py-2.5 border border-gray-200 rounded-lg text-[12px] outline-none focus:border-[#2563EB] transition-colors"
-              />
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-gray-400">₦</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={row.priceNaira}
-                  onChange={(e) => updateRow(i, "priceNaira", e.target.value)}
-                  placeholder="50000"
-                  className="w-full pl-6 pr-3 py-2.5 border border-gray-200 rounded-lg text-[12px] outline-none focus:border-[#2563EB] transition-colors"
-                />
-              </div>
-              <button
-                onClick={() => removeRow(i)}
-                disabled={rows.length === 1}
-                className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-50 text-gray-300 hover:text-red-400 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Add row */}
-        <button
-          onClick={addRow}
-          className="w-full py-2.5 border border-gray-200 border-dashed rounded-xl text-[12px] text-gray-400 hover:bg-gray-50 flex items-center justify-center gap-1.5 transition-colors mb-4"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Add New
-        </button>
-
-        <p className="text-[11px] text-gray-400 italic mb-4">
-          Pricing is used for matching and will not be displayed publicly.
+        <p className="text-[14px] text-gray-500 leading-relaxed mb-5">
+          Help clients understand your typical fees for services within your
+          practice areas.
         </p>
 
-        {error && (
-          <p className="text-[12px] text-red-500 mb-3">{error}</p>
+        {/* Area chip */}
+        <div className="rounded-xl px-5 py-3 mb-3 text-center bg-[#E7F0FF] border border-[#1A56DB33]">
+          <span className="text-[14px] font-medium text-[#1A56DB]">
+            {area.name}
+          </span>
+        </div>
+
+        {/* Min / Max fee */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="relative">
+            <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              inputMode="numeric"
+              value={minNaira}
+              onChange={(e) => handleMinChange(e.target.value)}
+              placeholder="Minimum Fee"
+              className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#1A56DB] transition-colors"
+            />
+          </div>
+          <div className="relative">
+            <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              inputMode="numeric"
+              value={maxNaira}
+              onChange={(e) => handleMaxChange(e.target.value)}
+              placeholder="Maximum Fee"
+              className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#1A56DB] transition-colors"
+            />
+          </div>
+        </div>
+
+        {rangeError && (
+          <p className="text-[12px] text-red-600 mb-3 -mt-2">{rangeError}</p>
         )}
 
+        {/* Note */}
+        <div className="rounded-xl bg-[#FBFAF5] border border-[#EFEBDD] px-4 py-3.5 mb-5">
+          <p className="text-[13px] font-semibold text-gray-900 mb-1">Note</p>
+          <p className="text-[13px] text-gray-600 leading-relaxed">
+            This range helps clients understand your pricing expectations before
+            connecting with you. Final fees may vary depending on the nature and
+            complexity of the matter.
+          </p>
+        </div>
+
+        {error && <p className="text-[12px] text-red-600 mb-3">{error}</p>}
+
+        {/* Save */}
         <button
+          type="button"
           onClick={handleSave}
-          disabled={updateServices.isPending}
-          className="w-full py-3 bg-[#2563EB] text-white text-[13px] font-medium rounded-xl hover:bg-[#1d4ed8] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          disabled={updateAreas.isPending}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A56DB] py-3.5 text-[14px] font-semibold text-white transition hover:bg-[#1648b8] disabled:opacity-60"
         >
-          {updateServices.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-          {updateServices.isPending ? "Saving..." : "Save and Continue"}
+          {updateAreas.isPending && (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          )}
+          {updateAreas.isPending ? "Saving..." : "Save and Continue"}
         </button>
       </div>
     </div>

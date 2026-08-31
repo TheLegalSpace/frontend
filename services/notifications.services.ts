@@ -22,4 +22,19 @@ export const notificationsService = {
     const { data } = await api.patch("/notifications/read-all");
     return data;
   },
+  // services/notifications.services.ts
+  async savePushSubscription(subscription: any, deviceType?: string) {
+    const { data } = await api.post("/notifications/subscribe", {
+      subscription,
+      deviceType,
+    });
+    return data;
+  },
+
+  async deletePushSubscription(endpoint: string) {
+    const { data } = await api.post("/notifications/unsubscribe", {
+      endpoint,
+    });
+    return data;
+  },
 };

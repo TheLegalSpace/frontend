@@ -23,7 +23,7 @@ export default function HeroCTA() {
         backgroundRepeat: "no-repeat",
       }}
     >
-      <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-end min-h-[480px]">
+      <div className="max-w-360 mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-end min-h-120">
         {/* Left text */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -55,7 +55,7 @@ export default function HeroCTA() {
               onClick={() => loginType("user")}
               className="px-5 py-2.5 bg-[#1A56DB] text-white rounded-4xl text-sm font-medium hover:bg-[#1648b8] transition-colors shadow-sm"
             >
-              Find a lawyer
+              Find a Lawyer
             </button>
           </div>
         </motion.div>

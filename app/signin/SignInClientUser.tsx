@@ -1,7 +1,7 @@
-// app/signin/SignInClient.tsx
+// app/signin/SignInClientUser.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AuthError, useAuth } from "../context/AuthContext";
 import Image from "next/image";
@@ -9,19 +9,45 @@ import Image from "next/image";
 import signinIllustration from "../../public/signin-illustration.jpg";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
+import WaitlistPlaceholder from "../Components/WaitlistPlaceholder";
 
 declare const google: any;
 
-export default function SignInClient() {
+const GOOGLE_BTN_MIN_WIDTH = 200;
+const GOOGLE_BTN_MAX_WIDTH = 1200;
+
+/**
+ * Whether the sign-in page shows the waitlist variant.
+ *
+ * The `NEXT_PUBLIC_` prefix is required: Next.js only inlines env vars with
+ * that prefix into the client bundle, so a bare `WAILTLIST` check would always
+ * be `undefined` here and the waitlist branch would never render.
+ */
+const WAITLIST_ENABLED = ["true", "1"].includes(
+  process.env.NEXT_PUBLIC_WAITLIST?.trim().toLowerCase() ?? "",
+);
+
+export default function SignInClientUser() {
   const { loginWithGoogle } = useAuth();
   const searchParams = useSearchParams();
 
-  // Hidden, real Google button — drives the actual auth
-  const googleHiddenRef = useRef<HTMLDivElement>(null);
+  // Wrapper we measure to size the real Google button in real pixels.
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  // Real Google button — rendered directly over the visible custom button
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  // Second Google button overlaying the "Sign up" link
+  const googleSignUpButtonRef = useRef<HTMLDivElement>(null);
 
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [googleReady, setGoogleReady] = useState<boolean>(false);
+  // Bumped whenever the tab regains focus, forcing the Google button
+  // wrapper to remount with a brand-new iframe.
+  const [resetKey, setResetKey] = useState(0);
+  // Google only accepts a fixed pixel width, not "100%". We track the wrapper's
+  // width to size the invisible real button underneath.
+  const [btnWidth, setBtnWidth] = useState(400);
+  const [scaleX, setScaleX] = useState(1);
 
   const callbackError = searchParams.get("error");
 
@@ -33,6 +59,7 @@ export default function SignInClient() {
 
       google.accounts.id.initialize({
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+        cancel_on_tap_outside: false,
         callback: async (resp: { credential: string }) => {
           setIsLoading(true);
           setError("");
@@ -67,33 +94,76 @@ export default function SignInClient() {
     return () => clearInterval(interval);
   }, [loginWithGoogle]);
 
-  // 2. Render the REAL Google button once, hidden off-screen.
-  //    Width/shape don't matter here since the user never sees it.
+  // 2. Measure the wrapper's real width
+  useLayoutEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const width = Math.round(el.getBoundingClientRect().width);
+      if (width > 400) {
+        setBtnWidth(400);
+        setScaleX(width / 400);
+      } else {
+        const clamped = Math.min(400, Math.max(GOOGLE_BTN_MIN_WIDTH, width));
+        setBtnWidth((prev) => (prev === clamped ? prev : clamped));
+        setScaleX(1);
+      }
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // 3. Render the REAL Google buttons
   useEffect(() => {
     if (!googleReady) return;
-    const el = googleHiddenRef.current;
-    if (!el || typeof google === "undefined") return;
+    const el = googleButtonRef.current;
+    const signUpEl = googleSignUpButtonRef.current;
+    if (typeof google === "undefined") return;
 
-    el.innerHTML = "";
-    google.accounts.id.renderButton(el, {
-      type: "standard",
-      theme: "outline",
-      size: "large",
-      text: "signin_with",
-      shape: "rectangular",
-      width: 400,
-    });
-  }, [googleReady]);
+    if (el) {
+      el.innerHTML = "";
+      google.accounts.id.renderButton(el, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular",
+        width: btnWidth,
+      });
+    }
 
-  // 3. Forward clicks from our custom button to the hidden Google button
+    if (signUpEl) {
+      signUpEl.innerHTML = "";
+      google.accounts.id.renderButton(signUpEl, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        text: "signup_with",
+        shape: "rectangular",
+        width: 200, // Smallest width allowed by Google, scaled to cover via absolute & css
+      });
+    }
+  }, [googleReady, resetKey, btnWidth]);
+
+  // 4. If the tab regains focus, remount the buttons
+  useEffect(() => {
+    const handleFocus = () => {
+      if (!isLoading) {
+        setResetKey((k) => k + 1);
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [isLoading]);
+
+  // 5. Fallback trigger
   const triggerGoogle = () => {
-    const root = googleHiddenRef.current;
-    if (!root) return;
-    const clickable =
-      root.querySelector<HTMLElement>('div[role="button"]') ??
-      root.querySelector<HTMLElement>("div") ??
-      root;
-    clickable.click();
+    if (typeof google === "undefined" || !googleReady) return;
+    google.accounts.id.prompt();
   };
 
   return (
@@ -102,80 +172,97 @@ export default function SignInClient() {
 
       {/* Main content area — vertically centered */}
       <main className="flex-1 w-full flex items-center">
-        <div className="w-full h-[90vh]">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            {/* Illustration — desktop only */}
-            <div className="hidden lg:block">
-              <Image
-                src={signinIllustration}
-                alt="The Legal Space community illustration"
-                className="w-full h-auto  object-cover"
-                priority
-              />
-            </div>
-
-            {/* Sign-in content */}
-            <div className="w-full px-4 lg:mx-0 text-left">
-              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
-                Welcome to The Legal Space
-              </h1>
-              <p className="text-base sm:text-lg text-gray-500 mb-8 leading-relaxed font-dmSans">
-                Access legal support, professional insights, and trusted
-                connections all in one place.
-              </p>
-
-              {/* Errors */}
-              {(callbackError || error) && (
-                <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-[13px] text-red-600">
-                    {error ||
-                      (callbackError === "google_failed"
-                        ? "Google sign in failed. Please try again."
-                        : "Something went wrong. Please try again.")}
-                  </p>
-                </div>
-              )}
-
-              {/* Hidden real Google button (off-screen, fully rendered) */}
-              <div
-                ref={googleHiddenRef}
-                aria-hidden
-                className="absolute opacity-0 pointer-events-none"
-                style={{ left: "-9999px", top: 0, width: 400, height: 50 }}
-              />
-
-              {/* Custom button / loading */}
-              {isLoading ? (
-                <div className="w-full px-3 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-center">
-                  <p className="text-[14px] text-gray-600 font-dmSans">
-                    Signing you in…
-                  </p>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={triggerGoogle}
-                  disabled={!googleReady}
-                  className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed font-dmSans"
-                >
-                  <GoogleIcon />
-                  Sign in with Google
-                </button>
-              )}
-
-              {/* Account link */}
-              <p className="mt-6 text-center text-sm text-gray-600 font-dmSans">
-                Don&apos;t have an account?{" "}
-                <a
-                  // href="/signup"
-                  onClick={triggerGoogle}
-                  className="font-semibold text-blue-600 hover:underline"
-                >
-                  Sign up
-                </a>
-              </p>
-            </div>
+        <div className="w-full min-h-[90vh] grid grid-cols-1 lg:grid-cols-2">
+          {/* Illustration — desktop only, fills full height */}
+          <div className="hidden lg:block relative">
+            <Image
+              src={signinIllustration}
+              alt="The Legal Space community illustration"
+              fill
+              className="object-cover"
+              priority
+            />
           </div>
+
+          {/* Sign-in content — consistent 16px gap on left (from image) and right */}
+          {WAITLIST_ENABLED ? (
+            <div className="w-full flex items-center justify-center px-4 py-16">
+              <div className="w-full max-w-lg">
+                <WaitlistPlaceholder />
+              </div>
+            </div>
+          ) : (
+            <div className="w-full flex items-center justify-center px-4 py-16">
+              <div className="w-full max-w-lg">
+                <h1 className="text-3xl sm:text-3xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
+                  Welcome to The Legal Space
+                </h1>
+                <p className="text-base sm:text-md text-gray-500 mb-8 leading-relaxed font-dmSans">
+                  Access legal support, professional insights, and trusted
+                  connections all in one place.
+                </p>
+
+                {/* Errors */}
+                {(callbackError || error) && (
+                  <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl">
+                    <p className="text-[13px] text-red-600">
+                      {error ||
+                        (callbackError === "google_failed"
+                          ? "Google sign in failed. Please try again."
+                          : "Something went wrong. Please try again.")}
+                    </p>
+                  </div>
+                )}
+
+                {/* Custom button / loading */}
+                {isLoading ? (
+                  <div className="w-full px-3 py-3.5 bg-white border border-gray-200 rounded-xl text-center">
+                    <p className="text-[14px] text-gray-600 font-dmSans">
+                      Signing you in…
+                    </p>
+                  </div>
+                ) : (
+                  <div ref={wrapperRef} className="relative w-full">
+                    <div
+                      key={resetKey}
+                      ref={googleButtonRef}
+                      aria-hidden
+                      className="absolute inset-y-0 left-0 z-10 opacity-0 overflow-hidden h-full [&_div]:w-full! [&_div]:h-full! [&_iframe]:w-full! [&_iframe]:h-full!"
+                      style={{
+                        width: `${btnWidth}px`,
+                        transform: `scaleX(${scaleX})`,
+                        transformOrigin: "left",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={!googleReady}
+                      className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[15px] font-medium text-gray-700 shadow-sm transition hover:bg-white active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed font-dmSans"
+                    >
+                      <GoogleIcon />
+                      Sign in with Google
+                    </button>
+                  </div>
+                )}
+
+                {/* Account link */}
+                <p className="mt-6 text-center text-sm text-gray-600 font-dmSans">
+                  Don&apos;t have an account?{" "}
+                  <span className="relative inline-block align-baseline">
+                    <span
+                      key={`signup-${resetKey}`}
+                      ref={googleSignUpButtonRef}
+                      aria-hidden
+                      className="absolute inset-0 z-10 opacity-0 overflow-hidden w-full h-full [&_div]:w-full! [&_div]:h-full! [&_iframe]:w-full! [&_iframe]:h-full!"
+                    />
+                    <span className="font-semibold text-blue-600 hover:underline cursor-pointer">
+                      Sign up
+                    </span>
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

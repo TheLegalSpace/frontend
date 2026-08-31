@@ -25,7 +25,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative bg-[#F7F9FF] pt-32 pb-0 px-4 sm:px-8 lg:px-16 overflow-hidden"
+      className="relative bg-[#F7F8FA] pt-32 pb-0 px-4 sm:px-8 lg:px-16 overflow-hidden"
     >
       {/* ── Main content row ── */}
       <div className="max-w-[1440px] mx-auto relative">
@@ -67,7 +67,7 @@ export default function Hero() {
               onClick={() => loginType("user")}
               className="px-6 py-3 bg-[#1A56DB] text-white rounded-full text-sm font-medium hover:bg-[#1648b8] transition-colors"
             >
-              Find a lawyer
+              Find a Lawyer
             </button>
           </motion.div>
         </div>

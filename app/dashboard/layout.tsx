@@ -25,6 +25,10 @@ export default function DashboardLayout({
     if (isLoading) return;
     if (!user || !hasSession()) {
       router.replace("/");
+      return;
+    }
+    if (user.role === "ADMIN") {
+      router.replace("/admin");
     }
   }, [user, isLoading, router]);
 
@@ -46,19 +50,17 @@ export default function DashboardLayout({
 
   if (isLoading || !user || !hasSession()) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="w-7 h-7 rounded-full border-2 border-gray-300 border-t-black animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-white">
       <Providers>
         <Sidebar />
-        <main className="flex-1 min-w-0 overflow-y-auto  md:pt-0">
-          {children}
-        </main>
+        <main className="flex-1 min-w-0 md:pt-0">{children}</main>
       </Providers>
     </div>
   );

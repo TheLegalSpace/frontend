@@ -94,7 +94,7 @@ export default function Step3Verification({
               <div className="flex items-center justify-center gap-3">
                 <FileText className="w-8 h-8 text-green-500" />
                 <div className="text-left">
-                  <p className="text-[13px] font-medium text-gray-700 truncate max-w-[160px]">
+                  <p className="text-[13px] font-medium text-gray-700 truncate max-w-40">
                     {file.name}
                   </p>
                   <p className="text-[11px] text-gray-400">

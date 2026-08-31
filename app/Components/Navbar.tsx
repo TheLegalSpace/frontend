@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
@@ -33,18 +32,19 @@ function scrollToSection(href: string) {
   window.scrollTo({ top, behavior: "smooth" });
 }
 
-export default function Navbar() {
+type NavbarProps = {
+  /**
+   * Kept for API compatibility with callers; no longer changes styling
+   * since the bar now uses a single flat translucent treatment everywhere.
+   */
+  strongBlur?: boolean;
+};
+
+export default function Navbar({ strongBlur = false }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
   const usePathName = usePathname();
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   const loginType = (type: "lawyer" | "user") => {
     localStorage.setItem("loginType", type);
@@ -57,20 +57,26 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Floating navbar wrapper */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-[1440px] z-50 font-dmSans px-0 sm:px-0 lg:px-12 xl:p-0">
+      {/* Sticky navbar wrapper */}
+      <div className="fixed top-0 left-0 w-full z-50 font-dmSans">
         <motion.nav
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className={`flex items-center justify-between px-5 py-3 rounded-[999px] z-5000 border border-[#E5E7EB] transition-all duration-300 ${
-            scrolled
-              ? "bg-white/95 backdrop-blur-md shadow-lg shadow-black/5 nav-glass"
-              : "bg-white/90 backdrop-blur-sm shadow-md shadow-black/4"
-          }`}
+          className="flex items-center justify-between px-5 sm:px-8 lg:px-12 py-3 z-5000 bg-[#FFFFFF0D] backdrop-blur-md nav-glass transition-all duration-300"
         >
           {/* Logo */}
-          <Link href="/" className="shrink-0">
+          <button
+            onClick={() => {
+              if (usePathName === "/") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              } else {
+                router.push("/");
+              }
+            }}
+            className="shrink-0"
+            aria-label="Go to top"
+          >
             <Image
               src="/logo.png"
               alt="The Legal Space"
@@ -78,7 +84,7 @@ export default function Navbar() {
               height={32}
               className="h-8 w-auto"
             />
-          </Link>
+          </button>
 
           {/* Desktop links */}
           <ul className="hidden md:flex items-center gap-1 navLink">
@@ -92,7 +98,7 @@ export default function Navbar() {
                 >
                   <button
                     onClick={() => scrollToSection(link.href)}
-                    className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors font-dmSans"
+                    className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors font-dmSans"
                   >
                     {link.label}
                     <ChevronDown
@@ -106,7 +112,7 @@ export default function Navbar() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.97 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute top-full left-0 mt-2 w-44 bg-white border border-[#E5E7EB] rounded-xl shadow-lg py-1.5 z-50"
+                        className="absolute top-full left-0 mt-2 w-44 bg-white rounded-xl shadow-lg py-1.5 z-50"
                       >
                         {link.dropdown.map((item) => (
                           <button
@@ -115,7 +121,7 @@ export default function Navbar() {
                               scrollToSection(item.href);
                               setResourcesOpen(false);
                             }}
-                            className="block w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                            className="block w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-white hover:text-gray-900 transition-colors"
                           >
                             {item.label}
                           </button>
@@ -128,7 +134,7 @@ export default function Navbar() {
                 <li key={link.label}>
                   <button
                     onClick={() => scrollToSection(link.href)}
-                    className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors font-dmSans"
+                    className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors font-dmSans"
                   >
                     {link.label}
                   </button>
@@ -141,13 +147,13 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-2 ctaLink">
             <button
               onClick={() => loginType("lawyer")}
-              className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="text-sm text-gray-600 hover:text-gray-900 px-3 py-2 rounded-full hover:bg-white/10 transition-colors font-medium"
             >
-              Lawyer Login
+              Join as a Lawyer
             </button>
             <button
               onClick={() => loginType("user")}
-              className="text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-xl hover:bg-[#1648b8] transition-colors font-medium shadow-sm"
+              className="text-sm bg-[#1A56DB] text-white px-4 py-2.5 rounded-full hover:bg-[#1648b8] transition-colors font-medium shadow-sm"
             >
               Find a lawyer
             </button>
@@ -156,7 +162,7 @@ export default function Navbar() {
           {/* Mobile hamburger */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="hamBtn md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+            className="hamBtn md:hidden p-2 rounded-lg text-gray-600 hover:bg-white/10 transition-colors"
           >
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -170,7 +176,7 @@ export default function Navbar() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.97 }}
               transition={{ duration: 0.2 }}
-              className="mt-2 bg-white border border-[#E5E7EB] rounded-2xl shadow-xl p-3"
+              className="bg-white shadow-xl p-3 mx-5 sm:mx-8 lg:mx-12 rounded-2xl"
             >
               {navLinks.map((link) => (
                 <button
@@ -179,23 +185,23 @@ export default function Navbar() {
                     scrollToSection(link.href);
                     setIsOpen(false);
                   }}
-                  className="block w-full text-left px-4 py-3 text-sm text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                  className="block w-full text-left px-4 py-3 text-sm text-gray-700 rounded-xl hover:bg-white transition-colors font-medium"
                 >
                   {link.label}
                 </button>
               ))}
-              <div className="border-t border-[#E5E7EB] mt-2 pt-2 space-y-1">
+              <div className="mt-2 pt-2 space-y-1">
                 <button
                   onClick={() => loginType("lawyer")}
-                  className="block w-full text-left px-4 py-3 text-sm text-gray-700 rounded-xl hover:bg-gray-50 font-medium"
+                  className="block w-full text-left px-4 py-3 text-sm text-gray-700 rounded-xl hover:bg-white font-medium"
                 >
-                  Lawyer Login
+                  Join as a Lawyer
                 </button>
                 <button
                   onClick={() => loginType("user")}
                   className="block w-full text-center bg-[#1A56DB] text-white px-4 py-3 rounded-xl text-sm font-medium hover:bg-[#1648b8] transition-colors"
                 >
-                  Find a Lawyer
+                  Find a lawyer
                 </button>
               </div>
             </motion.div>

@@ -5,6 +5,9 @@ export interface Conversation {
     fullName: string;
     avatarUrl?: string;
     isAnonymous?: boolean;
+    /** Role of the other party — USER, LAWYER, or FIRM.
+     *  Only USER accounts can be anonymous; lawyers/firms are always visible. */
+    role?: string;
     /** Lawyer's phone — passed to engagement modal for WhatsApp link */
     phone?: string | null;
     /** Lawyer's email — passed to engagement modal for mailto link */

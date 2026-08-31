@@ -1,405 +1,374 @@
 // app/Components/Lawyer-Signup/LawyerSignup.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Menu, X } from "lucide-react";
-import Step1AccountType from "./Step1AccountType";
-import Step2LawyerInfo from "./Step2LawyerInfo";
-import Step2FirmInfo from "./Step2FirmInfo";
-import Step3Verification from "./Step3Verification";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import Image from "next/image";
 import { registerService } from "@/services/auth.register.services";
 import { useToast } from "@/app/context/ToastContext";
 import { useAuth } from "@/app/context/AuthContext";
+import signupIllustration from "@/public/registerillustration.png";
+
+import Step1AccountType from "./Step1AccountType";
+import StepMembership from "./StepMembership";
+import StepPersonalInfo from "./StepPersonalInfo";
+import StepPracticeAreas from "./StepPracticeAreas";
+import StepProfessionalFees, {
+  type AreaFeeEntry,
+} from "./StepProfessionalFees";
+import StepVerification from "./StepVerification";
+import { profileService } from "@/services/profile.services";
+import { membershipService } from "@/services/membership.services";
 
 export type AccountType = "lawyer" | "firm";
 
-const MAIN_STEPS = [
-  {
-    id: 1,
-    title: "How will you use TheLegalSpace?",
-    subtitle: "Set up as an individual lawyer or law firm.",
-  },
-  {
-    id: 2,
-    title: "Tell us about yourself",
-    subtitle: "Share your details for clients to see your expertise.",
-  },
-  {
-    id: 3,
-    title: "Verify your identity",
-    subtitle: "Submit your details for review to activate your account",
-  },
-];
+// ─── Step identifiers ────────────────────────────────────────────────────────
+type Step =
+  | "account_type" // 1 — Lawyer / Law Firm
+  | "membership" // 2 — Professional (pay) / Community (free)
+  | "personal_info" // 3 — Tell Us About Yourself
+  | "practice_areas" // 4 — Professional Information
+  | "fees" // 5 — Professional Fees
+  | "verification" // 6 — Verify Professional Status (lawyers only)
+  | "success"; // 7 — Registration Complete
+
+// Step order for Back navigation (firms skip verification; locked users can't
+// reach account_type/membership once they've paid for Professional)
+function prevStep(
+  step: Step,
+  accountType: AccountType | null,
+  locked: boolean,
+): Step | null {
+  const allSteps: Step[] = [
+    "account_type",
+    "membership",
+    "personal_info",
+    "practice_areas",
+    "fees",
+    "verification",
+    "success",
+  ];
+  const lawyerFlow = allSteps;
+  const firmFlow = allSteps.filter((s) => s !== "verification");
+  let flow = accountType === "firm" ? firmFlow : lawyerFlow;
+  if (locked) {
+    flow = flow.filter((s) => s !== "account_type" && s !== "membership");
+  }
+  const idx = flow.indexOf(step);
+  return idx > 0 ? flow[idx - 1] : null;
+}
 
 export default function LawyerSignup() {
   const router = useRouter();
   const { showSuccess, showError } = useToast();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
-  const [mainStep, setMainStep] = useState(1);
+  const [step, setStep] = useState<Step>("account_type");
   const [accountType, setAccountType] = useState<AccountType | null>(null);
-  const [subStep, setSubStep] = useState(1);
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleAccountTypeSelect = (type: AccountType) => {
-    setAccountType(type);
-    setMainStep(2);
-    setSubStep(1);
-  };
+  const [locked, setLocked] = useState(false); // true once Professional payment is confirmed
+  const [resuming, setResuming] = useState(true); // true while we check for a half-finished user
 
-  const handleSubStepComplete = (data: any) => {
-    setFormData((prev: any) => ({ ...prev, ...data }));
-    if (subStep < 3) {
-      setSubStep(subStep + 1);
-    } else {
-      setMainStep(3);
-    }
-  };
+  // Detect a returning half-finished user (per Plan Selection & Payment Flow doc)
+  useEffect(() => {
+    (async () => {
+      try {
+        const account = await refreshUser();
+        if (!account) {
+          setResuming(false);
+          return;
+        }
 
-  const handleFinishSetup = async (file: File) => {
-    if (!formData || !accountType) return;
-    setIsLoading(true);
+        if (account.role === "LAWYER" || account.role === "FIRM") {
+          const type: AccountType = account.role === "FIRM" ? "firm" : "lawyer";
+          setAccountType(type);
 
-    try {
-      const services: {
-        practiceAreaId: string;
-        name: string;
-        price: number;
-      }[] = [];
-      Object.entries(formData.areaServices ?? {}).forEach(
-        ([areaId, rows]: any) => {
-          (rows as { service: string; pricing: string }[]).forEach((row) => {
-            if (row.service.trim()) {
-              services.push({
-                practiceAreaId: areaId,
-                name: row.service.trim(),
-                price: Math.round(
-                  parseFloat(row.pricing.replace(/,/g, "") || "0") * 100,
-                ),
-              });
-            }
-          });
-        },
-      );
+          const hasProfile =
+            type === "lawyer" ? !!account.lawyerProfile : !!account.firmProfile;
 
-      if (accountType === "lawyer") {
-        await registerService.lawyerSetup({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          whatsappNumber: `+234${formData.phone}`,
-          callToBarYear: parseInt(formData.callToBarYear),
-          locationCity: formData.locationCity,
-          locationCountry: "Nigeria",
-          practiceAreaIds: formData.practiceAreaIds ?? [],
-          services,
-        });
-        await registerService.uploadDocument(file, "call_to_bar_cert");
-      } else {
-        await registerService.firmSetup({
-          firmName: formData.firmName,
-          whatsappNumber: `+234${formData.phone}`,
-          officeAddress: formData.officeAddress,
-          firmEstablishmentYear: parseInt(formData.firmEstablishmentYear),
-          locationCity: formData.locationCity,
-          locationCountry: "Nigeria",
-          practiceAreaIds: formData.practiceAreaIds ?? [],
-          services,
-        });
-        await registerService.uploadDocument(file, "cac_cert");
+          if (hasProfile) {
+            router.replace("/dashboard/feeds"); // fully onboarded, shouldn't be here
+            return;
+          }
+
+          const membership = await membershipService.getMembership();
+          if (membership.data?.tier === "professional") {
+            setLocked(true);
+            setStep("personal_info"); // already paid — skip account_type + membership
+          } else {
+            setStep("membership"); // type already picked, still on Community
+          }
+        }
+        // role === "PENDING_PROFESSIONAL" → leave step at default "account_type"
+      } catch {
+        // no session / request failed — fall back to the start of the wizard
+      } finally {
+        setResuming(false);
       }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-      showSuccess("Account setup complete!");
-      setMainStep(4);
-    } catch (err: any) {
-      showError(
-        err?.response?.data?.message ?? "Setup failed. Please try again.",
+  const merge = (data: Record<string, unknown>) =>
+    setFormData((prev) => ({ ...prev, ...data }));
+
+  // ─── Account type selection ──────────────────────────────────────────────
+  // NEW — calls PATCH /profile/me/professional-role immediately on selection,
+  // before the plans screen ever shows. Re-callable/idempotent per the API,
+  // so no need to guard against repeat calls if the user switches type.
+  const handleAccountType = async (type: AccountType) => {
+    setIsLoading(true);
+    try {
+      await profileService.setProfessionalRole(
+        type === "firm" ? "FIRM" : "LAWYER",
       );
+      setAccountType(type);
+      setStep("membership");
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Couldn't save your selection. Please try again.";
+      showError(message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getStepStatus = (stepId: number) => {
-    if (stepId < mainStep) return "complete";
-    if (stepId === mainStep) return "active";
-    return "pending";
-  };
+  // ─── Back ────────────────────────────────────────────────────────────────
   const handleBack = () => {
-    if (mainStep === 3) {
-      // Back from verification → last sub-step of step 2
-      setMainStep(2);
-      setSubStep(3);
-      return;
-    }
-    if (mainStep === 2) {
-      if (subStep > 1) {
-        // Back within sub-steps
-        setSubStep(subStep - 1);
+    const prev = prevStep(step, accountType, locked);
+    if (prev) setStep(prev);
+  };
+  // Derives visibility from prevStep itself, so a locked user resumed on
+  // personal_info (whose filtered flow starts there) correctly gets no button.
+  const canGoBack =
+    step !== "success" && prevStep(step, accountType, locked) !== null;
+
+  // ─── Submit (last step, lawyers — with cert upload) ─────────────────────
+  const handleFinish = async (file: File) => {
+    if (!accountType) return;
+    setIsLoading(true);
+
+    const practiceAreas = (formData.fees as AreaFeeEntry[] | undefined) ?? [];
+
+    try {
+      if (accountType === "lawyer") {
+        await registerService.lawyerSetup({
+          firstName: String(formData.firstName ?? ""),
+          lastName: String(formData.lastName ?? ""),
+          whatsappNumber: `+234${formData.phone}`,
+          callToBarYear: parseInt(String(formData.callToBarYear), 10),
+          locationCity: String(formData.locationCity ?? ""),
+          officeAddress: String(formData.locationCity ?? ""),
+          locationCountry: "Nigeria",
+          practiceAreas,
+        });
+        await registerService.uploadDocument(file, "call_to_bar_cert");
       } else {
-        // Back from sub-step 1 → step 1 (account type)
-        setMainStep(1);
-        setAccountType(null);
+        await registerService.firmSetup({
+          firmName: String(formData.firmName ?? ""),
+          whatsappNumber: `+234${formData.phone}`,
+          officeAddress: String(formData.locationCity ?? ""),
+          firmEstablishmentYear: parseInt(
+            String(formData.firmEstablishmentYear),
+            10,
+          ),
+          locationCity: String(formData.locationCity ?? ""),
+          locationCountry: "Nigeria",
+          practiceAreas,
+        });
+        await registerService.uploadDocument(file, "cac_cert");
       }
-      return;
+      showSuccess("Registration complete!");
+      setStep("success");
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Setup failed. Please try again.";
+      showError(message);
+    } finally {
+      setIsLoading(false);
     }
-    // mainStep === 1 — nowhere to go back to
   };
 
-  const canGoBack = mainStep > 1;
-  // ✅ Mobile menu — vertical steps list shown in drawer
-  const mobileStepsList = (
-    <div className="flex flex-col gap-1 pt-2">
-      {MAIN_STEPS.map((s) => {
-        const status = getStepStatus(s.id);
-        return (
-          <div
-            key={s.id}
-            className="flex gap-3 py-3 border-b border-[#E5E7EB] last:border-0"
-          >
-            <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                status === "complete"
-                  ? "bg-[#1A56DB] text-white"
-                  : status === "active"
-                    ? "border-2 border-[#1A56DB] bg-white"
-                    : "border-2 border-gray-200 bg-white"
-              }`}
-            >
-              {status === "complete" ? (
-                <CheckCircle2 className="w-3.5 h-3.5" />
-              ) : status === "active" ? (
-                <div className="w-2 h-2 rounded-full bg-[#1A56DB]" />
-              ) : (
-                <div className="w-2 h-2 rounded-full bg-gray-200" />
-              )}
-            </div>
-            <div>
-              <p
-                className={`text-[13px] font-medium ${
-                  status === "pending" ? "text-gray-400" : "text-gray-900"
-                }`}
-              >
-                {s.title}
-              </p>
-              <p
-                className={`text-[12px] mt-0.5 ${
-                  status === "pending" ? "text-gray-300" : "text-gray-500"
-                }`}
-              >
-                {s.subtitle}
-              </p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+  // ─── Firm submit (no verification doc) ──────────────────────────────────
+  // Accepts an optional override so callers that just merged fees into state
+  // can pass them directly, instead of reading back a stale `formData` closure.
+  const handleFirmFinish = async (practiceAreasOverride?: AreaFeeEntry[]) => {
+    if (!accountType) return;
+    setIsLoading(true);
+    const practiceAreas =
+      practiceAreasOverride ??
+      (formData.fees as AreaFeeEntry[] | undefined) ??
+      [];
+    try {
+      await registerService.firmSetup({
+        firmName: String(formData.firmName ?? ""),
+        whatsappNumber: `+234${formData.phone}`,
+        officeAddress: String(formData.locationCity ?? ""),
+        firmEstablishmentYear: parseInt(
+          String(formData.firmEstablishmentYear),
+          10,
+        ),
+        locationCity: String(formData.locationCity ?? ""),
+        locationCountry: "Nigeria",
+        practiceAreas,
+      });
+      showSuccess("Registration complete!");
+      setStep("success");
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Setup failed. Please try again.";
+      showError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // ─── Success screen ────────────────────────────────────────────────────────
-  if (mainStep === 4) {
+  // ─── Resuming guard ──────────────────────────────────────────────────────
+  if (resuming) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="border-b border-[#E5E7EB] px-6 py-4">
-          <img src="/tls-logo-dark.png" alt="TLS" className="h-6" />
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      </div>
+    );
+  }
 
-        {/* All steps complete */}
-        <div className="flex items-center justify-center py-6 border-b border-[#E5E7EB] px-4">
-          {MAIN_STEPS.map((s, i) => (
-            <div key={s.id} className="flex items-center">
-              <div className="flex flex-col items-center px-4 md:px-8">
-                <div className="w-7 h-7 rounded-full bg-[#1A56DB] flex items-center justify-center mb-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-white" />
-                </div>
-                <p className="text-[11px] md:text-[12px] font-medium text-gray-900 text-center max-w-[100px] md:max-w-[120px]">
-                  {s.title}
-                </p>
-                <p className="hidden md:block text-[11px] text-gray-400 text-center max-w-[140px]">
-                  {s.subtitle}
-                </p>
-              </div>
-              {i < MAIN_STEPS.length - 1 && (
-                <div className="w-8 md:w-20 h-0.5 bg-[#1A56DB] shrink-0" />
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-center px-4 py-20">
-          <div className="w-full max-w-sm border border-[#E5E7EB] rounded-2xl p-8 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 className="w-7 h-7 text-green-500" />
-            </div>
-            <h2 className="text-[20px] font-semibold text-gray-900 mb-2">
-              You're all set
-            </h2>
-            <p className="text-[13px] text-gray-500 leading-relaxed mb-6">
-              Your verification is complete. You can now start using your
-              account.
-            </p>
-            <button
-              onClick={() => router.replace("/dashboard/feeds")}
-              className="w-full py-3 bg-[#1A56DB] text-white text-[14px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors"
-            >
-              Go to Dashboard
-            </button>
-          </div>
+  // ─── Success screen ──────────────────────────────────────────────────────
+  if (step === "success") {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+        <div className="w-full max-w-md text-center">
+          <h2 className="text-[28px] sm:text-[32px] font-semibold text-gray-900 mb-3 font-dmSans">
+            Registration Complete 🎉
+          </h2>
+          <p className="text-[14px] text-gray-500 leading-relaxed mb-6 font-dmSans">
+            Your profile has been submitted successfully and is currently under
+            review. We&apos;ll notify you once verification is complete and your
+            account has been approved.
+          </p>
+          <p className="text-[14px] text-gray-500 leading-relaxed mb-8 font-dmSans">
+            In the meantime, you can start exploring the community, articles,
+            and opportunities available on the platform.
+          </p>
+          <button
+            onClick={() => router.replace("/dashboard/feeds")}
+            className="w-full py-3.5 bg-[#1A56DB] text-white text-[14px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors font-dmSans"
+          >
+            Go to Feed
+          </button>
         </div>
       </div>
     );
   }
 
-  // ─── Main layout ───────────────────────────────────────────────────────────
+  // ─── Main layout ─────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <div className="border-b border-[#E5E7EB] px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {/* ✅ Back arrow */}
-          {canGoBack && (
-            <button
-              onClick={handleBack}
-              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-4 h-4 text-gray-600" />
-            </button>
-          )}
-          <img src="/tls-logo-dark.png" alt="TLS" className="h-6" />
-        </div>
-
-        {/* Mobile hamburger */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-1.5 text-gray-400 hover:text-gray-600"
-        >
-          {mobileMenuOpen ? (
-            <X className="w-5 h-5" />
-          ) : (
-            <Menu className="w-5 h-5" />
-          )}
-        </button>
+    <div className="min-h-screen w-full flex flex-col lg:flex-row">
+      {/* Illustration — left half, desktop only */}
+      <div className="hidden lg:block lg:w-1/2 relative">
+        <Image
+          src={signupIllustration}
+          alt="The Legal Space"
+          fill
+          className="object-cover"
+          priority
+        />
       </div>
 
-      {/* ✅ Mobile drawer — steps only, no sidebar on desktop */}
-      {mobileMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/30 z-30"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          <div className="fixed top-0 left-0 h-full w-72 bg-white z-40 px-6 py-6 shadow-xl">
-            <div className="flex items-center justify-between mb-6">
-              <img src="/tls-logo-dark.png" alt="TLS" className="h-6" />
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-1.5 text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            {mobileStepsList}
-          </div>
-        </>
-      )}
-
-      {/* ✅ Horizontal stepper — top, both mobile and desktop */}
-      <div className="flex items-center justify-center py-5 border-b border-[#E5E7EB] px-4">
-        {MAIN_STEPS.map((s, i) => {
-          const status = getStepStatus(s.id);
-          return (
-            <div key={s.id} className="flex items-center">
-              <div className="flex flex-col items-center px-3 md:px-8">
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center mb-1.5 transition-colors ${
-                    status === "complete"
-                      ? "bg-[#1A56DB]"
-                      : status === "active"
-                        ? "border-2 border-[#1A56DB] bg-white"
-                        : "border-2 border-gray-200 bg-white"
-                  }`}
-                >
-                  {status === "complete" ? (
-                    <CheckCircle2 className="w-4 h-4 text-white" />
-                  ) : status === "active" ? (
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#1A56DB]" />
-                  ) : (
-                    <div className="w-2.5 h-2.5 rounded-full bg-gray-200" />
-                  )}
-                </div>
-                {/* Hide text on small screens — just show dots */}
-                <p
-                  className={`hidden md:block text-[12px] font-medium text-center max-w-[130px] ${
-                    status === "pending" ? "text-gray-400" : "text-gray-900"
-                  }`}
-                >
-                  {s.title}
-                </p>
-                <p
-                  className={`hidden md:block text-[11px] text-center max-w-[150px] mt-0.5 ${
-                    status === "pending" ? "text-gray-300" : "text-gray-400"
-                  }`}
-                >
-                  {s.subtitle}
-                </p>
+      {/* Right panel */}
+      <div className="flex-1 flex flex-col min-h-screen lg:min-h-0 overflow-y-auto">
+        {/* Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 lg:px-14 py-8">
+          <div className="w-full max-w-md">
+            {(canGoBack || (accountType && step !== "account_type")) && (
+              <div className="flex items-center justify-between mb-6 sm:mb-9">
+                {canGoBack ? (
+                  <button
+                    onClick={handleBack}
+                    className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                    aria-label="Go back"
+                  >
+                    <ArrowLeft className="w-5 h-5 text-gray-700" />
+                  </button>
+                ) : (
+                  <div />
+                )}
+                {accountType && step !== "account_type" && (
+                  <span className="px-3 py-1.5 bg-[#FFFFFF] border border-[#D1D5DB] text-[#060B13] text-[12px] font-medium rounded-full font-dmSans">
+                    {accountType === "lawyer" ? "Lawyer" : "Law Firm"}
+                  </span>
+                )}
               </div>
-              {i < MAIN_STEPS.length - 1 && (
-                <div
-                  className={`w-8 md:w-16 h-0.5 shrink-0 transition-colors ${
-                    status === "complete" ? "bg-[#1A56DB]" : "bg-gray-200"
-                  }`}
-                />
-              )}
-            </div>
-          );
-        })}
-      </div>
+            )}
 
-      {/* ✅ Main content — full width, no sidebar */}
-      <div className="flex-1 flex flex-col items-center px-4 py-8 overflow-y-auto">
-        {/* Account type badge */}
-        {accountType && mainStep > 1 && (
-          <div className="flex justify-center mb-4 w-full max-w-sm">
-            <span className="px-3 py-1.5 bg-blue-50 border border-blue-200 text-[#2563EB] text-[12px] font-medium rounded-full">
-              {accountType === "lawyer" ? "Independent Lawyer" : "Law Firm"}
-            </span>
+            {step === "account_type" && (
+              <Step1AccountType
+                onNext={handleAccountType}
+                isLoading={isLoading}
+              />
+            )}
+
+            {step === "membership" && accountType && (
+              <StepMembership
+                accountType={accountType}
+                onCommunity={() => setStep("personal_info")}
+              />
+            )}
+
+            {step === "personal_info" && accountType && (
+              <StepPersonalInfo
+                accountType={accountType}
+                email={user?.email ?? ""}
+                isLoading={isLoading}
+                onNext={(data) => {
+                  merge(data);
+                  setStep("practice_areas");
+                }}
+              />
+            )}
+
+            {step === "practice_areas" && accountType && (
+              <StepPracticeAreas
+                accountType={accountType}
+                isSaving={isLoading}
+                onNext={(data) => {
+                  merge(data);
+                  setStep("fees");
+                }}
+              />
+            )}
+
+            {step === "fees" && (
+              <StepProfessionalFees
+                practiceAreaIds={(formData.practiceAreaIds as string[]) ?? []}
+                isLoading={isLoading}
+                onNext={(fees) => {
+                  merge({ fees });
+                  if (accountType === "lawyer") {
+                    setStep("verification");
+                  } else {
+                    // Firms: no cert upload — submit directly. Pass fees straight
+                    // through instead of relying on the just-merged state.
+                    handleFirmFinish(fees);
+                  }
+                }}
+              />
+            )}
+
+            {step === "verification" && accountType === "lawyer" && (
+              <StepVerification
+                accountType={accountType}
+                onFinish={handleFinish}
+                isLoading={isLoading}
+              />
+            )}
           </div>
-        )}
-
-        {/* Step 1 */}
-        {mainStep === 1 && (
-          <Step1AccountType onNext={handleAccountTypeSelect} />
-        )}
-
-        {/* Step 2 — lawyer */}
-        {mainStep === 2 && accountType === "lawyer" && (
-          <Step2LawyerInfo
-            subStep={subStep}
-            email={user?.email ?? ""}
-            onNext={handleSubStepComplete}
-          />
-        )}
-
-        {/* Step 2 — firm */}
-        {mainStep === 2 && accountType === "firm" && (
-          <Step2FirmInfo
-            subStep={subStep}
-            email={user?.email ?? ""}
-            onNext={handleSubStepComplete}
-          />
-        )}
-
-        {/* Step 3 */}
-        {mainStep === 3 && accountType && (
-          <Step3Verification
-            accountType={accountType}
-            onFinish={handleFinishSetup}
-            isLoading={isLoading}
-          />
-        )}
+        </div>
       </div>
     </div>
   );

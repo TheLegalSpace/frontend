@@ -1,6 +1,8 @@
 // services/profile.service.ts
 import { api } from "./api";
 import { AuthResponse } from "./auth.services";
+import type { PracticeAreaFee } from "./settings.services";
+export type ProfessionalRole = "LAWYER" | "FIRM"; // NEW
 
 export type PracticeAreaRef =
   | string
@@ -10,6 +12,9 @@ export type PracticeAreaRef =
       slug?: string;
       isActive?: boolean;
       createdAt?: string;
+      // Backend now returns a fee range (in kobo) per practice area.
+      minFee?: number;
+      maxFee?: number;
     };
 
 export type ProfileData = AuthResponse["data"]["account"] & {
@@ -93,6 +98,11 @@ export const profileService = {
   updateMe: (payload: Record<string, unknown>) =>
     api.patch<ProfileResponse>("/profile/me", payload),
 
+  // NEW — call the moment the user picks Lawyer or Firm, before showing plans.
+  // Re-callable and idempotent — safe to call again if they switch selection.
+  setProfessionalRole: (role: ProfessionalRole) =>
+    api.patch<ProfileResponse>("/profile/me/professional-role", { role }),
+
   uploadAvatar: (file: File) => {
     const form = new FormData();
     form.append("file", file);
@@ -112,8 +122,8 @@ export const profileService = {
   toggleAnonymous: (isAnonymous: boolean) =>
     api.patch("/profile/me/anonymous", { isAnonymous }),
 
-  updatePracticeAreas: (practiceAreaIds: string[]) =>
-    api.patch("/profile/me/practice-areas", { practiceAreaIds }),
+  updatePracticeAreas: (practiceAreas: PracticeAreaFee[]) =>
+    api.patch("/profile/me/practice-areas", { practiceAreas }),
 
   getConnections: (accountId: string, page = 1, limit = 20) =>
     api.get(`/profile/${accountId}/connections`, { params: { page, limit } }),

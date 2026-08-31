@@ -15,7 +15,8 @@ interface FeedProps {
 
 export default function Feed({ activeTab }: FeedProps) {
   const { data: posts = [], isLoading } = useFeed(activeTab);
-  const { updatePostReaction, invalidateFeed } = useFeedCache();
+  const { updatePostReaction, removePostFromFeed, invalidateFeed } =
+    useFeedCache();
 
   async function handleReact(id: string, reaction: "like" | "dislike") {
     const post = posts.find((p) => p.id === id);
@@ -66,16 +67,26 @@ export default function Feed({ activeTab }: FeedProps) {
     }
   }
 
+  // Optimistic removal after reporting — postHidden is always true on success
+  function handleReported(id: string) {
+    removePostFromFeed(activeTab, id);
+  }
+
   return (
-    <div className="w-full bg-white mt-[72px]">
+    <div className="w-full bg-white ">
       {isLoading ? (
         <div className="text-center py-10 text-gray-400">Loading feed...</div>
       ) : posts.length === 0 ? (
         <div className="text-center py-10 text-gray-400">Nothing here yet.</div>
       ) : (
-        <div className="flex flex-col items-center w-full" >
+        <div className="flex flex-col items-center w-full">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} onReact={handleReact} />
+            <PostCard
+              key={post.id}
+              post={post}
+              onReact={handleReact}
+              onReported={handleReported}
+            />
           ))}
         </div>
       )}

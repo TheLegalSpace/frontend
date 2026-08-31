@@ -10,6 +10,7 @@ import ConversationList from "./ConversationList";
 import ChatWindow from "./ChatWindow";
 import { useAuth } from "@/app/context/AuthContext";
 import { useConversationCache, useConversations } from "@/hooks/useMessages";
+import { useLeadsCache } from "@/hooks/useLeads";
 import ReviewButton from "./ReviewButton";
 import ReviewModal from "./ReviewModal";
 
@@ -34,7 +35,7 @@ function storeAnonymous(conversationId: string, role: string, value: boolean) {
 }
 
 export default function MessagesPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const isLawyer = user?.role === "LAWYER";
   const searchParams = useSearchParams();
 
@@ -46,6 +47,7 @@ export default function MessagesPage() {
     patchConversation,
     invalidateConversations,
   } = useConversationCache();
+  const { patchLeadVisibility, invalidateLeads } = useLeadsCache();
 
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -242,12 +244,22 @@ export default function MessagesPage() {
 
         refreshConversation(activeId);
       }
+
+      if (!val && user?.id) {
+        patchLeadVisibility(user.id, false);
+        invalidateLeads();
+        void refreshUser();
+      }
     },
     [
       activeConvo,
       activeId,
+      invalidateLeads,
+      patchLeadVisibility,
       refreshConversation,
+      refreshUser,
       upsertConversation,
+      user?.id,
       user?.role,
     ],
   );
@@ -261,6 +273,10 @@ export default function MessagesPage() {
 
   function getParticipantName(convo: Conversation): string {
     if (!convo.otherParty) return "Anonymous User";
+    // Lawyers and firms are never anonymous
+    if (convo.otherParty.role && convo.otherParty.role !== "USER") {
+      return convo.otherParty.fullName || "Unknown";
+    }
     if (convo.otherParty.isAnonymous !== false) return "Anonymous User";
     return convo.otherParty.fullName || "Anonymous User";
   }
@@ -287,8 +303,8 @@ export default function MessagesPage() {
             </span>
           </div>
 
-          <div className="hidden md:flex md:gap-2 pe-4 h-[74px] w-full md:items-center justify-between border-l-0 border-b border-[#E6EAED]">
-            <div className="flex items-center mx-[15px] gap-2 h-full">
+          <div className="hidden md:flex md:gap-2 pe-4 h-18.5 w-full md:items-center justify-between border-l-0 border-b border-[#E6EAED]">
+            <div className="flex items-center mx-3.75 gap-2 h-full">
               {activeConvo && (
                 <span className="text-[20px] font-medium font-['Instrument_Serif'] text-gray-900">
                   {getParticipantName(activeConvo)}
@@ -346,8 +362,6 @@ export default function MessagesPage() {
                 onHasReviewedChange={setHasReviewed}
                 conversationId={activeId}
                 participantName={getParticipantName(activeConvo)}
-                participantPhone={activeConvo.otherParty?.phone ?? null}
-                participantEmail={activeConvo.otherParty?.email ?? null}
                 currentAccountId={user?.id ?? ""}
                 conversationStatus={activeConvo.status}
                 onConversationClosed={handleConversationClosed}

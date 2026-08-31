@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText, Search } from "lucide-react";
+import CreditsBar from "./CreditsBar";
 
 const SUGGESTIONS = [
   "Find cases on wrongful termination",
@@ -243,14 +244,19 @@ export default function ResearchLanding({
     <div className="flex-1 overflow-y-auto bg-white font-['Geist'] flex flex-col">
       {/* Sticky header */}
       <div className="sticky top-0 z-10 bg-white">
-        <h1 className="font-[Instrument_Serif] px-4 text-[20px] leading-none font-light text-[#1F2937] pt-[27px] pb-[27px]">
+        <h1 className="font-[Instrument_Serif] px-4 text-[20px] leading-none font-light text-[#1F2937] pt-6.75 pb-6.75">
           TLS Research
         </h1>
         <div className="w-full h-px bg-[#E6EAED]" />
       </div>
 
+      {/* Credits bar */}
+      {/* <div className="w-full px-4 pt-6">
+        <CreditsBar />
+      </div> */}
+
       {/* Composer section */}
-      <div className="w-full px-6 pt-8 pb-4 flex flex-col items-center bg-white sticky top-[70px]">
+      <div className="w-full px-6 pt-8 pb-4 flex flex-col items-center bg-white sticky top-17.5">
         <div className="flex w-full max-w-2xl items-center gap-2 border border-gray-200 rounded-2xl px-4 py-3 bg-white shadow-sm mb-4 cursor-text hover:border-gray-300 transition">
           <FileText size={16} className="text-gray-400 shrink-0" />
           <span
@@ -284,13 +290,13 @@ export default function ResearchLanding({
             <button
               key={s}
               onClick={() => onSuggestion(s)}
-              className="px-3 py-1.5 border border-gray-200 rounded-full text-[12px] text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition"
+              className="px-3 py-1.5 border border-gray-200 rounded-full text-[12px] text-gray-600 hover:bg-white hover:border-gray-300 transition"
             >
               {s}
             </button>
           ))}
         </div>
-        <div className="w-full h-px! bg-[#E6EAED] mt-[44px]" />
+        <div className="w-full h-px! bg-[#E6EAED] mt-11" />
       </div>
 
       <div className="w-full px-4 py-8 pt-0">

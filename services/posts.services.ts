@@ -1,4 +1,8 @@
 import { api } from "./api";
+import type {
+  ReportReasonsResponse,
+  ReportSubmitResponse,
+} from "@/app/types/posts";
 
 export const postsService = {
   async createPost(body: string) {
@@ -6,10 +10,11 @@ export const postsService = {
     return data;
   },
 
-  async createArticlePost(body: string, pdf: File) {
+  async createArticlePost(body: string, pdf: File, title: string) {
     const form = new FormData();
     form.append("body", body);
     form.append("pdf", pdf);
+    form.append("title", title);
     const { data } = await api.post("/posts/article", form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -33,6 +38,25 @@ export const postsService = {
 
   async unreactToPost(id: string) {
     const { data } = await api.delete(`/posts/${id}/reactions`);
+    return data;
+  },
+
+  // ── Post Reporting ──
+
+  async getReportReasons(): Promise<ReportReasonsResponse> {
+    const { data } = await api.get("/posts/report-reasons");
+    return data;
+  },
+
+  async reportPost(
+    postId: string,
+    reason: string,
+    details?: string,
+  ): Promise<ReportSubmitResponse> {
+    const { data } = await api.post(`/posts/${postId}/reports`, {
+      reason,
+      ...(details ? { details } : {}),
+    });
     return data;
   },
 };

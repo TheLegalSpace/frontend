@@ -2,25 +2,37 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, CheckCircle } from "lucide-react";
+import Link from "next/link";
+import Navbar from "../Navbar";
+import Footer from "../Footer";
+import signupIllustration from "@/public/signupillustration.png";
+import Image from "next/image";
 
 interface Props {
   email: string;
   onVerify: (otp: string) => Promise<void>;
   onResend: () => Promise<void>;
   initialError?: string;
+  isLoading?: boolean;
 }
 
 const OTP_LENGTH = 8;
 const RESEND_COOLDOWN = 30;
 
-export default function StepOtp({ email, onVerify, onResend, initialError = "" }: Props) {
+export default function StepOtp({
+  email,
+  onVerify,
+  onResend,
+  initialError = "",
+  isLoading = false,
+}: Props) {
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(RESEND_COOLDOWN);
-  const [error, setError] = useState(initialError); // ✅ seed with initialError
-  // ... rest stays same
+  const [error, setError] = useState(initialError);
+  const [isSuccess, setIsSuccess] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Countdown timer
@@ -32,8 +44,10 @@ export default function StepOtp({ email, onVerify, onResend, initialError = "" }
 
   // Auto focus first input
   useEffect(() => {
-    inputRefs.current[0]?.focus();
-  }, []);
+    if (!isSuccess) {
+      inputRefs.current[0]?.focus();
+    }
+  }, [isSuccess]);
 
   const handleChange = (index: number, value: string) => {
     // Handle paste of full code
@@ -67,15 +81,18 @@ export default function StepOtp({ email, onVerify, onResend, initialError = "" }
   const handleVerify = async () => {
     const otp = digits.join("");
     if (otp.length < OTP_LENGTH) {
-      setError("Please enter the complete 6-digit code.");
+      setError("Please enter the complete 8-digit verification code.");
       return;
     }
     setError("");
     setIsVerifying(true);
     try {
       await onVerify(otp);
+      setIsSuccess(true);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? "Invalid code. Please try again.");
+      setError(
+        err?.response?.data?.message ?? "Invalid code. Please try again.",
+      );
       setDigits(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
     } finally {
@@ -84,122 +101,196 @@ export default function StepOtp({ email, onVerify, onResend, initialError = "" }
   };
 
   const handleResend = async () => {
-  if (countdown > 0 || isResending) return;
-  setIsResending(true);
-  setError("");
-  try {
-    await onResend();
-    setCountdown(RESEND_COOLDOWN);
-    setDigits(Array(OTP_LENGTH).fill(""));
-    inputRefs.current[0]?.focus();
-  } catch (err: any) {
-    const msg = err?.response?.data?.message ?? "";
-
-    // ✅ Rate limit — show longer cooldown message
-    if (
-      msg.toLowerCase().includes("rate limit") ||
-      msg.toLowerCase().includes("too many") ||
-      err?.response?.status === 429
-    ) {
-      setError("Too many attempts. Please wait a few minutes before requesting a new code.");
-      setCountdown(120); // ✅ Force 2 min cooldown on rate limit
-    } else {
-      setError(msg || "Failed to resend code. Please try again.");
+    if (countdown > 0 || isResending) return;
+    setIsResending(true);
+    setError("");
+    try {
+      await onResend();
+      setCountdown(RESEND_COOLDOWN);
+      setDigits(Array(OTP_LENGTH).fill(""));
+      setIsSuccess(false);
+      inputRefs.current[0]?.focus();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? "";
+      if (
+        msg.toLowerCase().includes("rate limit") ||
+        msg.toLowerCase().includes("too many") ||
+        err?.response?.status === 429
+      ) {
+        setError(
+          "Too many attempts. Please wait a few minutes before requesting a new code.",
+        );
+        setCountdown(120);
+      } else {
+        setError(msg || "Failed to resend code. Please try again.");
+      }
+    } finally {
+      setIsResending(false);
     }
-  } finally {
-    setIsResending(false);
-  }
-};
+  };
 
   const formatTime = (s: number) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
+  // Mask email for display
+  const maskedEmail = email
+    ? email.replace(
+        /(.{2})(.*)(@.*)/,
+        (_, a, b, c) => a + "*".repeat(Math.min(b.length, 4)) + c,
+      )
+    : "";
+
   return (
-    <div
-      className="min-h-screen w-full flex flex-col"
-      style={{
-        backgroundImage: "url('/signinbg.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundColor: "#000000d3",
-        backgroundBlendMode: "darken",
-      }}
-    >
-      {/* Logo */}
-      <div className="px-8 py-6">
-        <img src="/tls-logo-white.png" alt="The Legal Space" className="h-9 w-auto" />
-      </div>
+    <div className="min-h-screen w-full flex flex-col bg-white text-black">
+      <Navbar />
+      <main className="flex-1 w-full flex items-center">
+        <div className="w-full h-[90vh]">
+          <div className="w-full mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+              {/* Illustration */}
+              <div className="hidden lg:block">
+                <Image
+                  src={signupIllustration}
+                  alt="The Legal Space community illustration"
+                  className="w-full h-auto object-cover"
+                  priority
+                />
+              </div>
 
-      <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-sm bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-8 py-8 text-center">
-          <h1 className="text-[22px] font-light text-white mb-2">
-            Verify your email
-          </h1>
-          <p className="text-[13px] text-white/60 mb-1">
-            We've sent a 6-digit code to your email.
-          </p>
-          <p className="text-[13px] text-white/80 font-medium mb-6 truncate px-2">
-            {email}
-          </p>
+              {/* Form */}
+              <div className="w-full px-4 lg:mx-0 text-left">
+                {isSuccess ? (
+                  // Success State
+                  <div className="flex flex-col items-center ">
+                    <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mb-6">
+                      <CheckCircle className="w-10 h-10 text-green-500" />
+                    </div>
+                    <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
+                      Email Verified 🎉{" "}
+                    </h1>
+                    <p className="text-base sm:text-lg text-gray-500 mb-8 leading-relaxed font-dmSans">
+                      Your email has been successfully verified. Let's continue
+                      setting up your professional account.
+                    </p>
+                    <button
+                      onClick={handleVerify}
+                      className="w-full py-3 bg-[#1A56DB] hover:bg-[#1648b8] text-white text-[14px] font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                    >
+                      Continue to Profile Setup
+                    </button>
+                  </div>
+                ) : (
+                  // OTP Form
+                  <>
+                    <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">
+                      Verify Your Email
+                    </h1>
+                    <p className="text-base sm:text-lg text-gray-500 mb-8 leading-relaxed font-dmSans">
+                      We've sent a verification code to{" "}
+                      <span className="text-black font-medium">
+                        {maskedEmail}
+                      </span>
+                      . Enter the code below to continue your registration.
+                    </p>
 
-          {error && (
-            <div className="mb-4 px-3 py-2.5 bg-red-500/20 border border-red-400/30 rounded-xl">
-              <p className="text-[12px] text-red-300">{error}</p>
+                    {error && (
+                      <div className="mb-6 px-3 py-2.5 bg-red-500/10 border border-red-400/30 rounded-xl">
+                        <p className="text-[12px] text-red-500">{error}</p>
+                      </div>
+                    )}
+
+                    {/* OTP inputs */}
+                    <div className="flex gap-3 mb-8 justify-center sm:justify-start">
+                      {digits.map((digit, i) => (
+                        <input
+                          key={i}
+                          ref={(el) => {
+                            inputRefs.current[i] = el;
+                          }}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={OTP_LENGTH}
+                          value={digit}
+                          onChange={(e) => handleChange(i, e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(i, e)}
+                          disabled={isVerifying || isLoading}
+                          className={`w-12 h-14 text-center text-[18px] font-semibold rounded-xl text-black outline-none transition-all border ${
+                            digit
+                              ? "border-[#1A56DB] bg-[#1A56DB]/5"
+                              : "border-gray-200 focus:border-gray-400"
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Verify Button */}
+                    <button
+                      onClick={handleVerify}
+                      disabled={
+                        isVerifying ||
+                        isLoading ||
+                        digits.join("").length < OTP_LENGTH
+                      }
+                      className="w-full py-3 bg-[#1A56DB] hover:bg-[#1648b8] text-white text-[14px] font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mb-4"
+                    >
+                      {isVerifying && (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      )}
+                      {isVerifying ? "Verifying..." : "Verify & Continue"}
+                    </button>
+
+                    {/* Divider */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex-1 h-px bg-gray-200" />
+                      <span className="text-[12px] text-gray-400">
+                        Didn't receive the code?
+                      </span>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+
+                    {/* Resend Button */}
+                    <button
+                      onClick={handleResend}
+                      disabled={countdown > 0 || isResending}
+                      className="w-full py-2.5 border border-gray-200 rounded-xl text-[13px] text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isResending ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Resending...
+                        </>
+                      ) : (
+                        <>
+                          Resend code
+                          {countdown > 0 && (
+                            <span className="text-gray-400">
+                              ({formatTime(countdown)})
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </button>
+
+                    {/* Back to Login */}
+                    <div className="mt-6 text-center">
+                      <p className="text-[13px] text-gray-400">
+                        Changed your mind?{" "}
+                        <Link
+                          href="/signin"
+                          className="text-[#1A56DB] hover:text-[#1648b8] transition-colors font-medium"
+                        >
+                          Back to Sign In
+                        </Link>
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          )}
-
-          {/* OTP inputs */}
-          <div className="flex items-center justify-center gap-2 mb-6">
-            {digits.map((digit, i) => (
-              <input
-                key={i}
-                ref={(el) => { inputRefs.current[i] = el; }}
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                value={digit}
-                onChange={(e) => handleChange(i, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(i, e)}
-                className={`w-11 h-12 text-center text-[18px] font-semibold rounded-xl text-white outline-none transition-all border ${
-                  digit
-                    ? "bg-white/20 border-white/60"
-                    : "bg-white/10 border-white/20 focus:border-white/50"
-                }`}
-              />
-            ))}
           </div>
-
-          {/* Verify */}
-          <button
-            onClick={handleVerify}
-            disabled={isVerifying || digits.join("").length < OTP_LENGTH}
-            className="w-full py-3 bg-[#1A56DB] text-white text-[14px] font-medium rounded-xl hover:bg-[#1648b8] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mb-5"
-          >
-            {isVerifying && <Loader2 className="w-4 h-4 animate-spin" />}
-            {isVerifying ? "Verifying..." : "Verify & Continue"}
-          </button>
-
-          {/* Resend row */}
-          <div className="flex items-center gap-2 text-[12px] text-white/40 mb-3">
-            <div className="h-px flex-1 bg-white/10" />
-            <span>
-              Didn't receive the code? Resend in{" "}
-              <span className="text-[#1A56DB] font-medium">
-                {formatTime(countdown)}
-              </span>
-            </span>
-            <div className="h-px flex-1 bg-white/10" />
-          </div>
-
-          <button
-            onClick={handleResend}
-            disabled={countdown > 0 || isResending}
-            className="w-full py-2.5 border border-white/10 rounded-xl text-[13px] text-white/40 hover:text-white/60 hover:border-white/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            {isResending ? "Resending..." : "Resend code"}
-          </button>
         </div>
-      </div>
+      </main>
+      <Footer visible={false} />
     </div>
   );
 }

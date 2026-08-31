@@ -27,6 +27,7 @@ import {
   Loader2,
   AlertTriangle,
   User,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Image from "next/image";
@@ -46,7 +47,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: "Requests", href: "/dashboard/requests", icon: Briefcase },
     {
       label: "TLS Services",
-      href: "/dashboard/tls-services",
+      href: "/dashboard/TLS-Services",
       icon: PackageSearch,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
@@ -71,8 +72,13 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     // },
     {
       label: "TLS Services",
-      href: "/dashboard/tls-services",
+      href: "/dashboard/TLS-Services",
       icon: PackageSearch,
+    },
+    {
+      label: "Membership",
+      href: "/dashboard/membership",
+      icon: ShieldCheck,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { label: "Settings", href: "/dashboard/settings", icon: Settings },
@@ -96,8 +102,13 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     // },
     {
       label: "TLS Services",
-      href: "/dashboard/tls-services",
+      href: "/dashboard/TLS-Services",
       icon: PackageSearch,
+    },
+    {
+      label: "Membership",
+      href: "/dashboard/membership",
+      icon: ShieldCheck,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { label: "Settings", href: "/dashboard/settings", icon: Settings },
@@ -121,7 +132,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     // },
     {
       label: "TLS Services",
-      href: "/dashboard/tls-services",
+      href: "/dashboard/TLS-Services",
       icon: PackageSearch,
     },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
@@ -133,7 +144,7 @@ const FOOTER_CTA: Record<
   UserRole,
   { label: string; href: string; icon: React.ElementType } | null
 > = {
-  USER: { label: "Get a lawyer", href: "/dashboard/find-lawyer", icon: Scale },
+  USER: { label: "Find a Lawyer", href: "/dashboard/find-lawyer", icon: Scale },
   LAWYER: null,
   FIRM: null,
   ADMIN: null,
@@ -185,7 +196,7 @@ function LogoutModal({
           <button
             onClick={onCancel}
             disabled={isLoggingOut}
-            className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-[13px] font-medium rounded-xl transition-colors disabled:opacity-50"
+            className="w-full py-2.5 bg-white hover:bg-gray-100 text-gray-700 text-[13px] font-medium rounded-xl transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
@@ -238,11 +249,11 @@ function SidebarSkeleton() {
       </div>
       <nav className="flex-1 px-3 pt-3 flex flex-col gap-1">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-8 bg-gray-50 rounded-lg animate-pulse" />
+          <div key={i} className="h-8 bg-white rounded-lg animate-pulse" />
         ))}
       </nav>
       <div className="p-3 border-t border-[#E5E7EB]">
-        <div className="h-8 bg-gray-50 rounded-lg animate-pulse" />
+        <div className="h-8 bg-white rounded-lg animate-pulse" />
       </div>
     </aside>
   );
@@ -259,12 +270,17 @@ export default function Sidebar() {
   const [researchThreadActive, setResearchThreadActive] = useState(false);
 
   const role: UserRole = (user?.role as UserRole) ?? "USER";
+  const unreadMessageCount = user?.unreadMessageCount as number;
+  const pendingLeadCount = user?.pendingLeadCount as number;
+  const unreadNotificationCount = user?.unreadNotificationCount as number;
+  // console.log(unreadMessageCount);
   const navItems = NAV_ITEMS[role] ?? NAV_ITEMS.USER;
   const footerCta = FOOTER_CTA[role];
 
   const initials =
     user?.fullName
-      ?.split(" ")
+      ?.split(/\s+/)
+      .filter((part: string) => /[A-Za-z]/.test(part))
       .map((n: string) => n[0])
       .join("")
       .toUpperCase()
@@ -297,10 +313,11 @@ export default function Sidebar() {
   }, [pathname]);
 
   useEffect(() => {
+    const prev = document.body.style.overflow;
     document.body.style.overflow =
-      mobileOpen || showLogoutModal ? "hidden" : "";
+      mobileOpen || showLogoutModal ? "hidden" : prev || "";
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = prev;
     };
   }, [mobileOpen, showLogoutModal]);
 
@@ -358,15 +375,12 @@ export default function Sidebar() {
               initials
             )}
           </div>
-          <p className="text-[13px] font-medium text-gray-900">
-            {user?.fullName}
-          </p>
-          <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
-            <p className="text-[11px] text-gray-400 truncate">{user?.email}</p>
-          </div>
-          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border mb-2.5 bg-gray-50 text-gray-500 border-gray-200">
+          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border mb-2.5 bg-white text-gray-500 border-gray-200">
             {role.charAt(0) + role.slice(1).toLowerCase()}
           </span>
+          <p className="text-[13px] font-medium text-gray-900 mb-3">
+            {user?.fullName}
+          </p>
           <div className="flex flex-col gap-1 mb-3">
             <div className="flex justify-between text-xs">
               <span className="text-gray-500">Reviews</span>
@@ -402,7 +416,7 @@ export default function Sidebar() {
           </div>
           <Link
             href="/dashboard/profile"
-            className="w-full py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-800 flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors"
+            className="w-full py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-800 flex items-center justify-center gap-1.5 hover:bg-white transition-colors"
           >
             Visit Profile <ArrowRight className="w-3 h-3" />
           </Link>
@@ -420,13 +434,34 @@ export default function Sidebar() {
               className={`flex items-center gap-2.5 px-2.5 py-[12px]  text-[14px] mb-[14px]  transition-colors ${
                 isActive
                   ? "bg-blue-50 text-blue-700 font-medium"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  : "text-gray-500 hover:bg-white hover:text-gray-900"
               }`}
             >
               <Icon
                 className={`w-4 h-4 shrink-0 ${isActive ? "text-blue-600" : "text-gray-400"}`}
               />
               {label}
+              {label === "Messages" && unreadMessageCount > 0 && (
+                <span
+                  className={`ml-auto  text-white text-xs font-medium px-2 py-0.5 rounded-full ${isActive ? "bg-red-500" : "bg-gray-500"}`}
+                >
+                  {unreadMessageCount}
+                </span>
+              )}
+              {label === "Leads" && pendingLeadCount > 0 && (
+                <span
+                  className={`ml-auto  text-white text-xs font-medium px-2 py-0.5 rounded-full ${isActive ? "bg-red-500" : "bg-gray-500"}`}
+                >
+                  {pendingLeadCount}
+                </span>
+              )}
+              {label === "Notifications" && unreadNotificationCount > 0 && (
+                <span
+                  className={`ml-auto  text-white text-xs font-medium px-2 py-0.5 rounded-full ${isActive ? "bg-red-500" : "bg-gray-500"}`}
+                >
+                  {unreadNotificationCount}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -451,7 +486,7 @@ export default function Sidebar() {
         )}
         <button
           onClick={() => setShowLogoutModal(true)}
-          className="w-full py-2 bg-red-50 border border-red-100 rounded-2xl text-[14px] font-medium text-red-500 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+          className="w-full py-2 bg-red-50 text-[14px] font-medium text-red-500 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
         >
           <LogOut className="w-4 h-4" />
           Logout

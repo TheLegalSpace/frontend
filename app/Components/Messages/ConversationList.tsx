@@ -7,7 +7,8 @@ import { Conversation } from "@/app/types/message";
 function getInitials(name: string) {
   if (!name) return "??";
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
@@ -46,6 +47,10 @@ function avatarColor(name: string) {
  */
 function getDisplayName(convo: Conversation): string {
   if (!convo.otherParty) return "Anonymous User";
+  // Lawyers and firms are never anonymous
+  if (convo.otherParty.role && convo.otherParty.role !== "USER") {
+    return convo.otherParty.fullName || "Unknown";
+  }
   if (convo.otherParty.isAnonymous !== false) return "Anonymous User";
   return convo.otherParty.fullName || "Unknown";
 }
@@ -111,7 +116,7 @@ const ConversationList = memo(function ConversationList({
               <button
                 key={convo.id}
                 onClick={() => onSelect(convo.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 border-b border-[#E5E7EB] hover:bg-gray-50 transition text-left ${
+                className={`w-full flex items-center gap-3 px-4 py-3 border-b border-[#E5E7EB] hover:bg-white transition text-left ${
                   activeId === convo.id ? "bg-gray-100" : ""
                 }`}
               >
@@ -144,9 +149,9 @@ const ConversationList = memo(function ConversationList({
                     </span>
                   </div>
                   <p className="text-[12px] text-gray-500 truncate mt-0.5">
-                    {convo.status === "closed" && convo.matterName
-                      ? convo.matterName
-                      : (convo.lastMessagePreview ?? "No messages yet")}
+                    {convo.matterName?.trim() ||
+                      convo.lastMessagePreview ||
+                      "No messages yet"}
                   </p>
                 </div>
               </button>

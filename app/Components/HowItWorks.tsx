@@ -61,17 +61,14 @@ export default function HowItWorks() {
     }
   };
   return (
-    <section
-      id="how-it-works"
-      className="py-24 bg-[#F9FAFB] px-4 sm:px-8 lg:px-16"
-    >
-      <div className="max-w-[1440px] mx-auto" ref={ref}>
+    <section id="how-it-works" className="py-24 bg-white px-4 sm:px-8 lg:px-16">
+      <div className="max-w-360 mx-auto" ref={ref}>
         {/* Tabs — centered */}
         <div className="flex items-center w-full justify-center">
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.4, delay: 0.1 }}
+          <div
+            // initial={{ opacity: 0, y: 8 }}
+            // animate={inView ? { opacity: 1, y: 0 } : {}}
+            // transition={{ duration: 0.4, delay: 0.1 }}
             className="flex gap-1 bg-white border border-[#E5E7EB] rounded-xl p-1 w-fit mb-12"
           >
             {(["individuals", "lawyers"] as const).map((t) => (
@@ -84,7 +81,7 @@ export default function HowItWorks() {
               >
                 {tab === t && (
                   <motion.span
-                    layoutId="tab-bg"
+                    layoutId="how-it-works-tab-bg"
                     className="absolute inset-0 bg-gray-900 rounded-lg"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
@@ -94,7 +91,7 @@ export default function HowItWorks() {
                 </span>
               </button>
             ))}
-          </motion.div>
+          </div>
         </div>
 
         {/* Header */}
@@ -173,7 +170,7 @@ export default function HowItWorks() {
               onClick={() => handleLandingNav(tab)}
             >
               {tab === "individuals" ? (
-                "Login to find a lawyer today!"
+                "Login to Find a Lawyer today!"
               ) : (
                 <>
                   Create a profile today! <MoveRight className="w-4 h-4" />
