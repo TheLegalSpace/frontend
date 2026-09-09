@@ -18,39 +18,95 @@ import StepProfessionalFees, {
   type AreaFeeEntry,
 } from "./StepProfessionalFees";
 import StepVerification from "./StepVerification";
+import StepBarDetails from "./StepBarDetails";
+import StepBarCollision from "./StepBarCollision";
+import StepDispute from "./StepDispute";
+import StepDisputeReview from "./StepDisputeReview";
+import StepCertUpload from "./StepCertUpload";
+import StepIdentity from "./StepIdentity";
+import StepUnderReview from "./StepUnderReview";
+import StepVerifiedTransition from "./StepVerifiedTransition";
 import { profileService } from "@/services/profile.services";
+import type { BarDetailsResponse } from "@/services/profile.services";
 import { membershipService } from "@/services/membership.services";
 
 export type AccountType = "lawyer" | "firm";
 
 // ─── Step identifiers ────────────────────────────────────────────────────────
+// Lawyer order (redesigned, per the integration guide):
+//   account_type → bar_details → (bar_collision → dispute → dispute_review)
+//   → cert_upload → identity → under_review → verified → membership
+//   → personal_info → practice_areas → fees → success
+// Firm order (unchanged — the firm equivalents of bar-details/identity don't
+// exist in the design yet):
+//   account_type → membership(pay) → personal_info → practice_areas → fees
+//   → verification(cac cert) → success
 type Step =
-  | "account_type" // 1 — Lawyer / Law Firm
-  | "membership" // 2 — Professional (pay) / Community (free)
-  | "personal_info" // 3 — Tell Us About Yourself
-  | "practice_areas" // 4 — Professional Information
-  | "fees" // 5 — Professional Fees
-  | "verification" // 6 — Verify Professional Status (lawyers only)
-  | "success"; // 7 — Registration Complete
+  | "account_type"
+  | "bar_details"
+  | "bar_collision"
+  | "dispute"
+  | "dispute_review"
+  | "cert_upload"
+  | "identity"
+  | "under_review"
+  | "verified"
+  | "membership"
+  | "personal_info"
+  | "practice_areas"
+  | "fees"
+  | "verification" // firm-only cert/cac upload
+  | "success";
 
-// Step order for Back navigation (firms skip verification; locked users can't
-// reach account_type/membership once they've paid for Professional)
+const lawyerFlow: Step[] = [
+  "account_type",
+  "bar_details",
+  "cert_upload",
+  "identity",
+  "under_review",
+  "verified",
+  "membership",
+  "personal_info",
+  "practice_areas",
+  "fees",
+  "success",
+];
+const firmFlow: Step[] = [
+  "account_type",
+  "membership",
+  "personal_info",
+  "practice_areas",
+  "fees",
+  "verification",
+  "success",
+];
+
+// Maps the backend's onboarding.nextStep onto the step this wizard should
+// resume at. Used both on initial load and right after login/payment.
+function stepFromNextStep(nextStep: string | null | undefined): Step | null {
+  switch (nextStep) {
+    case "bar_details": return "bar_details";
+    case "identity": return "identity";
+    case "submit_application": return "identity"; // StepIdentity re-fetches verification and lands on the ready-to-submit panel
+    case "await_review": return "under_review";
+    case "await_dispute": return "dispute_review";
+    case "rejected": return "under_review"; // same screen shows a distinct message once status is rejected
+    case "select_plan": return "membership";
+    case "profile_setup": return "personal_info";
+    default: return null;
+  }
+}
+
 function prevStep(
   step: Step,
   accountType: AccountType | null,
   locked: boolean,
 ): Step | null {
-  const allSteps: Step[] = [
-    "account_type",
-    "membership",
-    "personal_info",
-    "practice_areas",
-    "fees",
-    "verification",
-    "success",
-  ];
-  const lawyerFlow = allSteps;
-  const firmFlow = allSteps.filter((s) => s !== "verification");
+  if (step === "bar_collision") return "bar_details";
+  if (step === "dispute") return "bar_collision";
+  if (step === "dispute_review" || step === "under_review" || step === "verified") {
+    return null; // no back once submitted / while waiting on review
+  }
   let flow = accountType === "firm" ? firmFlow : lawyerFlow;
   if (locked) {
     flow = flow.filter((s) => s !== "account_type" && s !== "membership");
@@ -69,10 +125,17 @@ export default function LawyerSignup() {
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [isLoading, setIsLoading] = useState(false);
 
+  // Bar-details collision state (only populated on the already_registered branch)
+  const [collision, setCollision] = useState<{
+    scn: string;
+    existingAccount: BarDetailsResponse["data"]["existingAccount"];
+  } | null>(null);
+  const [dispute, setDispute] = useState<{ id: string; caseReference: string } | null>(null);
+
   const [locked, setLocked] = useState(false); // true once Professional payment is confirmed
   const [resuming, setResuming] = useState(true); // true while we check for a half-finished user
 
-  // Detect a returning half-finished user (per Plan Selection & Payment Flow doc)
+  // Detect a returning half-finished user and resume at the right step.
   useEffect(() => {
     (async () => {
       try {
@@ -86,20 +149,40 @@ export default function LawyerSignup() {
           const type: AccountType = account.role === "FIRM" ? "firm" : "lawyer";
           setAccountType(type);
 
-          const hasProfile =
-            type === "lawyer" ? !!account.lawyerProfile : !!account.firmProfile;
-
-          if (hasProfile) {
-            router.replace("/dashboard/feeds"); // fully onboarded, shouldn't be here
+          if (account.onboarding?.nextStep === "complete") {
+            router.replace("/dashboard/feeds");
             return;
           }
 
+          const resumeStep = stepFromNextStep(account.onboarding?.nextStep);
+          if (resumeStep) {
+            // Community/professional payment lock only matters once we're
+            // past the membership step in the resumed flow.
+            const membershipIdx = (type === "firm" ? firmFlow : lawyerFlow).indexOf("membership");
+            const resumeIdx = (type === "firm" ? firmFlow : lawyerFlow).indexOf(resumeStep);
+            if (resumeIdx > membershipIdx) {
+              const membership = await membershipService.getMembership();
+              if (membership.data?.tier === "professional") setLocked(true);
+            }
+            setStep(resumeStep);
+            setResuming(false);
+            return;
+          }
+
+          // Backend hasn't shipped `onboarding` yet, or account predates it —
+          // fall back to the old profile-presence heuristic.
+          const hasProfile =
+            type === "lawyer" ? !!account.lawyerProfile : !!account.firmProfile;
+          if (hasProfile) {
+            router.replace("/dashboard/feeds");
+            return;
+          }
           const membership = await membershipService.getMembership();
           if (membership.data?.tier === "professional") {
             setLocked(true);
-            setStep("personal_info"); // already paid — skip account_type + membership
+            setStep("personal_info");
           } else {
-            setStep("membership"); // type already picked, still on Community
+            setStep(type === "lawyer" ? "bar_details" : "membership");
           }
         }
         // role === "PENDING_PROFESSIONAL" → leave step at default "account_type"
@@ -116,9 +199,6 @@ export default function LawyerSignup() {
     setFormData((prev) => ({ ...prev, ...data }));
 
   // ─── Account type selection ──────────────────────────────────────────────
-  // NEW — calls PATCH /profile/me/professional-role immediately on selection,
-  // before the plans screen ever shows. Re-callable/idempotent per the API,
-  // so no need to guard against repeat calls if the user switches type.
   const handleAccountType = async (type: AccountType) => {
     setIsLoading(true);
     try {
@@ -126,7 +206,7 @@ export default function LawyerSignup() {
         type === "firm" ? "FIRM" : "LAWYER",
       );
       setAccountType(type);
-      setStep("membership");
+      setStep(type === "lawyer" ? "bar_details" : "membership");
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
@@ -142,46 +222,25 @@ export default function LawyerSignup() {
     const prev = prevStep(step, accountType, locked);
     if (prev) setStep(prev);
   };
-  // Derives visibility from prevStep itself, so a locked user resumed on
-  // personal_info (whose filtered flow starts there) correctly gets no button.
   const canGoBack =
     step !== "success" && prevStep(step, accountType, locked) !== null;
 
-  // ─── Submit (last step, lawyers — with cert upload) ─────────────────────
+  // ─── Firm submit (unchanged — still cert upload via StepVerification) ───
   const handleFinish = async (file: File) => {
-    if (!accountType) return;
+    if (!accountType || accountType !== "firm") return;
     setIsLoading(true);
-
     const practiceAreas = (formData.fees as AreaFeeEntry[] | undefined) ?? [];
-
     try {
-      if (accountType === "lawyer") {
-        await registerService.lawyerSetup({
-          firstName: String(formData.firstName ?? ""),
-          lastName: String(formData.lastName ?? ""),
-          whatsappNumber: `+234${formData.phone}`,
-          callToBarYear: parseInt(String(formData.callToBarYear), 10),
-          locationCity: String(formData.locationCity ?? ""),
-          officeAddress: String(formData.locationCity ?? ""),
-          locationCountry: "Nigeria",
-          practiceAreas,
-        });
-        await registerService.uploadDocument(file, "call_to_bar_cert");
-      } else {
-        await registerService.firmSetup({
-          firmName: String(formData.firmName ?? ""),
-          whatsappNumber: `+234${formData.phone}`,
-          officeAddress: String(formData.locationCity ?? ""),
-          firmEstablishmentYear: parseInt(
-            String(formData.firmEstablishmentYear),
-            10,
-          ),
-          locationCity: String(formData.locationCity ?? ""),
-          locationCountry: "Nigeria",
-          practiceAreas,
-        });
-        await registerService.uploadDocument(file, "cac_cert");
-      }
+      await registerService.firmSetup({
+        firmName: String(formData.firmName ?? ""),
+        whatsappNumber: `+234${formData.phone}`,
+        officeAddress: String(formData.locationCity ?? ""),
+        firmEstablishmentYear: parseInt(String(formData.firmEstablishmentYear), 10),
+        locationCity: String(formData.locationCity ?? ""),
+        locationCountry: "Nigeria",
+        practiceAreas,
+      });
+      await registerService.uploadDocument(file, "cac_cert");
       showSuccess("Registration complete!");
       setStep("success");
     } catch (err: unknown) {
@@ -194,26 +253,47 @@ export default function LawyerSignup() {
     }
   };
 
-  // ─── Firm submit (no verification doc) ──────────────────────────────────
-  // Accepts an optional override so callers that just merged fees into state
-  // can pass them directly, instead of reading back a stale `formData` closure.
+  // ─── Firm submit (Community — no card on file) ──────────────────────────
   const handleFirmFinish = async (practiceAreasOverride?: AreaFeeEntry[]) => {
     if (!accountType) return;
     setIsLoading(true);
     const practiceAreas =
-      practiceAreasOverride ??
-      (formData.fees as AreaFeeEntry[] | undefined) ??
-      [];
+      practiceAreasOverride ?? (formData.fees as AreaFeeEntry[] | undefined) ?? [];
     try {
       await registerService.firmSetup({
         firmName: String(formData.firmName ?? ""),
         whatsappNumber: `+234${formData.phone}`,
         officeAddress: String(formData.locationCity ?? ""),
-        firmEstablishmentYear: parseInt(
-          String(formData.firmEstablishmentYear),
-          10,
-        ),
+        firmEstablishmentYear: parseInt(String(formData.firmEstablishmentYear), 10),
         locationCity: String(formData.locationCity ?? ""),
+        locationCountry: "Nigeria",
+        practiceAreas,
+      });
+      showSuccess("Registration complete!");
+      setStep("success");
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Setup failed. Please try again.";
+      showError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ─── Lawyer submit (verification already done earlier in the flow) ──────
+  const handleLawyerFinish = async (practiceAreasOverride?: AreaFeeEntry[]) => {
+    setIsLoading(true);
+    const practiceAreas =
+      practiceAreasOverride ?? (formData.fees as AreaFeeEntry[] | undefined) ?? [];
+    try {
+      await registerService.lawyerSetup({
+        firstName: String(formData.firstName ?? ""),
+        lastName: String(formData.lastName ?? ""),
+        whatsappNumber: `+234${formData.phone}`,
+        callToBarYear: parseInt(String(formData.callToBarYear), 10),
+        locationCity: String(formData.locationCity ?? ""),
+        officeAddress: String(formData.locationCity ?? ""),
         locationCountry: "Nigeria",
         practiceAreas,
       });
@@ -266,6 +346,9 @@ export default function LawyerSignup() {
     );
   }
 
+  // Steps that render their own full-bleed layout (no image panel / back-arrow chrome)
+  const isBareStep = step === "under_review" || step === "dispute_review" || step === "verified";
+
   // ─── Main layout ─────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
@@ -282,10 +365,9 @@ export default function LawyerSignup() {
 
       {/* Right panel */}
       <div className="flex-1 flex flex-col min-h-screen lg:min-h-0 overflow-y-auto">
-        {/* Content */}
         <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 lg:px-14 py-8">
           <div className="w-full max-w-md">
-            {(canGoBack || (accountType && step !== "account_type")) && (
+            {!isBareStep && (canGoBack || (accountType && step !== "account_type")) && (
               <div className="flex items-center justify-between mb-6 sm:mb-9">
                 {canGoBack ? (
                   <button
@@ -307,12 +389,64 @@ export default function LawyerSignup() {
             )}
 
             {step === "account_type" && (
-              <Step1AccountType
-                onNext={handleAccountType}
+              <Step1AccountType onNext={handleAccountType} isLoading={isLoading} />
+            )}
+
+            {/* ── Lawyer-only verification stages ───────────────────────── */}
+            {step === "bar_details" && (
+              <StepBarDetails
                 isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                onContinue={() => setStep("cert_upload")}
+                onCollision={(existingAccount, scn) => {
+                  setCollision({ scn, existingAccount });
+                  setStep("bar_collision");
+                }}
               />
             )}
 
+            {step === "bar_collision" && collision && (
+              <StepBarCollision
+                scn={collision.scn}
+                existingAccount={collision.existingAccount}
+                onEditDetails={() => { setCollision(null); setStep("bar_details"); }}
+                onFlagged={(id, caseReference) => {
+                  setDispute({ id, caseReference });
+                  setStep("dispute");
+                }}
+              />
+            )}
+
+            {step === "dispute" && dispute && (
+              <StepDispute
+                disputeId={dispute.id}
+                caseReference={dispute.caseReference}
+                onSubmitted={() => setStep("dispute_review")}
+              />
+            )}
+
+            {step === "dispute_review" && <StepDisputeReview />}
+
+            {step === "cert_upload" && (
+              <StepCertUpload onContinue={() => setStep("identity")} />
+            )}
+
+            {step === "identity" && (
+              <StepIdentity onComplete={() => setStep("under_review")} />
+            )}
+
+            {step === "under_review" && (
+              <StepUnderReview onVerified={() => setStep("verified")} />
+            )}
+
+            {step === "verified" && (
+              <StepVerifiedTransition
+                firstName={typeof user?.fullName === "string" ? user.fullName.split(" ")[0] : undefined}
+                onContinue={() => setStep("membership")}
+              />
+            )}
+
+            {/* ── Shared tail (both account types) ──────────────────────── */}
             {step === "membership" && accountType && (
               <StepMembership
                 accountType={accountType}
@@ -350,17 +484,17 @@ export default function LawyerSignup() {
                 onNext={(fees) => {
                   merge({ fees });
                   if (accountType === "lawyer") {
-                    setStep("verification");
+                    // Cert + identity already handled earlier — go straight
+                    // to profile setup, no separate verification step.
+                    handleLawyerFinish(fees);
                   } else {
-                    // Firms: no cert upload — submit directly. Pass fees straight
-                    // through instead of relying on the just-merged state.
                     handleFirmFinish(fees);
                   }
                 }}
               />
             )}
 
-            {step === "verification" && accountType === "lawyer" && (
+            {step === "verification" && accountType === "firm" && (
               <StepVerification
                 accountType={accountType}
                 onFinish={handleFinish}

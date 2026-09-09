@@ -9,7 +9,7 @@ import Navbar from "../Navbar";
 import Image from "next/image";
 import WaitlistPlaceholder from "../WaitlistPlaceholder";
 
-import signupIllustration from "@/public/signupillustration.png";
+import signupHeroImage from "@/public/signup-hero.png";
 import { AuthError, useAuth } from "@/app/context/AuthContext";
 
 /**
@@ -161,8 +161,8 @@ export default function StepEmail({
             {/* Illustration */}
             <div className="hidden lg:block  overflow-hidden">
               <Image
-                src={signupIllustration}
-                alt="The Legal Space community illustration"
+                src={signupHeroImage}
+                alt="Scales of justice on a desk"
                 className="w-full h-full object-cover "
                 priority
               />

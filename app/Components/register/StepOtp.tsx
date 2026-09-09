@@ -6,7 +6,9 @@ import { Loader2, ArrowLeft, Mail, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import Navbar from "../Navbar";
 import Footer from "../Footer";
-import signupIllustration from "@/public/signupillustration.png";
+// Uses the same updated illustration as StepEmail — the two are consecutive
+// steps in the /signup flow and must stay visually consistent.
+import signupIllustration from "@/public/signup-hero.png";
 import Image from "next/image";
 
 interface Props {
@@ -17,7 +19,7 @@ interface Props {
   isLoading?: boolean;
 }
 
-const OTP_LENGTH = 8;
+const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 30;
 
 export default function StepOtp({
@@ -81,7 +83,7 @@ export default function StepOtp({
   const handleVerify = async () => {
     const otp = digits.join("");
     if (otp.length < OTP_LENGTH) {
-      setError("Please enter the complete 8-digit verification code.");
+      setError("Please enter the complete 6-digit verification code.");
       return;
     }
     setError("");

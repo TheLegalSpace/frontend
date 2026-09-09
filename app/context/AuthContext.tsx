@@ -62,6 +62,12 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 // ✅ Routing helper — shared between login and register
+//
+// Routes on onboarding.nextStep, per the integration guide's core rule:
+// do NOT infer progress from lawyerProfile/firmProfile being null — the
+// profile is now created early in the flow, so that stopped meaning
+// "not finished". The null-profile checks below only run as a fallback
+// for accounts/backends that predate the `onboarding` field.
 export function getPostAuthRoute(
   account: AuthResponse["data"]["account"],
 ): string {
@@ -71,11 +77,22 @@ export function getPostAuthRoute(
   if (account.role === "PENDING_PROFESSIONAL") {
     return "/register/lawyer-setup";
   }
-  if (account.role === "LAWYER" && !account.lawyerProfile) {
-    return "/register/lawyer-setup";
-  }
-  if (account.role === "FIRM" && !account.firmProfile) {
-    return "/register/lawyer-setup";
+  if (account.role === "LAWYER" || account.role === "FIRM") {
+    const nextStep = account.onboarding?.nextStep;
+    if (nextStep && nextStep !== "complete") {
+      return "/register/lawyer-setup";
+    }
+    if (nextStep === "complete") {
+      return "/dashboard/feeds";
+    }
+    // No onboarding field at all (older backend) — fall back to the old
+    // heuristic rather than assuming completion.
+    if (account.role === "LAWYER" && !account.lawyerProfile) {
+      return "/register/lawyer-setup";
+    }
+    if (account.role === "FIRM" && !account.firmProfile) {
+      return "/register/lawyer-setup";
+    }
   }
   return "/dashboard/feeds";
 }
@@ -236,16 +253,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const classifyError = (err: unknown): AuthError => {
+    // If the error is already an AuthError carrying a known AuthErrorCode
+    // (e.g. the "Unexpected response." thrown inside login), pass it through
+    // unchanged instead of re-deriving a generic message. This also guards the
+    // google/register flows that re-classify errors they just built.
+    const KNOWN_CODES: AuthErrorCode[] = [
+      "INVALID_CREDENTIALS",
+      "ACCOUNT_NOT_FOUND",
+      "ACCOUNT_EXISTS",
+      "REGISTRATION_FAILED",
+      "SESSION_EXPIRED",
+      "NETWORK_ERROR",
+      "SERVER_ERROR",
+      "UNKNOWN_ERROR",
+    ];
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      typeof (err as AuthError).message === "string" &&
+      KNOWN_CODES.includes((err as AuthError).code as AuthErrorCode)
+    ) {
+      return err as AuthError;
+    }
     const { status, message, code } = parseApiError(err);
+    // Prefer the backend's own message from the network response so the user
+    // sees exactly what the API returned (these messages are written to be
+    // shown as-is). The friendly text below is only a fallback when the
+    // server supplied no message of its own.
+    const backendMessage = (() => {
+      if (typeof err === "object" && err !== null) {
+        const msg = (err as { response?: { data?: { message?: unknown } } })
+          ?.response?.data?.message;
+        if (typeof msg === "string" && msg.trim()) return msg.trim();
+      }
+      return null;
+    })();
     if (code === "NETWORK_ERROR")
       return { code: "NETWORK_ERROR", message: "No internet connection." };
     if (status >= 500)
       return {
         code: "SERVER_ERROR",
-        message: "Server error. Please try again.",
+        message: backendMessage ?? "Server error. Please try again.",
       };
     if (status === 404 || message.toLowerCase().includes("not found"))
-      return { code: "ACCOUNT_NOT_FOUND", message: "Account not found." };
+      return {
+        code: "ACCOUNT_NOT_FOUND",
+        message: backendMessage ?? "Account not found.",
+      };
     if (
       status === 401 ||
       message.toLowerCase().includes("invalid") ||
@@ -253,16 +307,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     )
       return {
         code: "INVALID_CREDENTIALS",
-        message: "Incorrect email or password.",
+        message: backendMessage ?? "Incorrect email or password.",
       };
     if (status === 409 || message.toLowerCase().includes("already exists"))
       return {
         code: "ACCOUNT_EXISTS",
-        message: "An account with this email already exists.",
+        message: backendMessage ?? "An account with this email already exists.",
       };
     return {
       code: "UNKNOWN_ERROR",
-      message: message || "Something went wrong.",
+      message: (backendMessage ?? message) || "Something went wrong.",
     };
   };
 
@@ -303,7 +357,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const route = resolveRedirect(getPostAuthRoute(data.account));
       router.replace(route);
     } catch (err: unknown) {
-      if (typeof err === "object" && err !== null && "code" in err) throw err;
+      // Always classify so the backend message from the network response is
+      // surfaced. (Axios errors carry a `code` property, so an unconditional
+      // "if it has a code, rethrow raw" check would swallow the real message.)
       throw classifyError(err);
     }
   };
