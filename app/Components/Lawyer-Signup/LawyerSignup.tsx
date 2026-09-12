@@ -237,6 +237,11 @@ export default function LawyerSignup() {
       await profileService.setProfessionalRole(
         type === "firm" ? "FIRM" : "LAWYER",
       );
+      // The backend promotes the role from PENDING_PROFESSIONAL to LAWYER/FIRM
+      // on this call. Refresh before moving on, otherwise the cached `user` in
+      // localStorage still says PENDING_PROFESSIONAL and the dashboard guard
+      // would bounce the now-promoted account back here.
+      await refreshUser();
       setAccountType(type);
       setStep(type === "lawyer" ? "bar_details" : "membership");
     } catch (err: unknown) {

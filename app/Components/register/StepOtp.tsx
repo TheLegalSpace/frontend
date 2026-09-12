@@ -143,18 +143,23 @@ export default function StepOtp({
     : "";
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-white text-black">
+    <div className="min-h-screen w-full flex flex-col bg-white text-black ">
       <Navbar />
       <main className="flex-1 w-full flex items-center">
-        <div className="w-full h-[90vh]">
+        {/* `min-h` instead of a fixed `h-[90vh]`: a hard height clamped this
+            box, so once the illustration's intrinsic height pushed the grid
+            row past 90vh on large desktops, the form column overflowed the
+            container and the resend button rendered under the footer. */}
+        <div className="w-full min-h-[90vh] py-8 lg:py-12">
           <div className="w-full mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-              {/* Illustration */}
-              <div className="hidden lg:block">
+              {/* Illustration — capped so it can never drive the row taller
+                  than the viewport on ultra-wide/large desktop screens. */}
+              <div className="hidden lg:flex items-center justify-center">
                 <Image
                   src={signupIllustration}
                   alt="The Legal Space community illustration"
-                  className="w-full h-auto object-cover"
+                  className="w-full h-auto max-h-[80vh] object-contain"
                   priority
                 />
               </div>
