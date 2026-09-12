@@ -224,6 +224,18 @@ export const profileService = {
   getVerification: () =>
     api.get<VerificationStatusResponse>("/profile/me/verification"),
 
+  // Steps 11–13 — the wizard draft. Shallow-merged server-side, Redis-backed,
+  // 7-day TTL. GET on wizard mount to rehydrate (survives the Paystack
+  // round-trip / a closed tab); DELETE for an explicit "start over".
+  getOnboardingDraft: () =>
+    api.get<{ data: Record<string, unknown> }>("/profile/me/onboarding-draft"),
+  saveOnboardingDraft: (payload: Record<string, unknown>) =>
+    api.post<{ data: Record<string, unknown> }>(
+      "/profile/me/onboarding-draft",
+      payload,
+    ),
+  clearOnboardingDraft: () => api.delete("/profile/me/onboarding-draft"),
+
   getById: (accountId: string) =>
     api.get<ProfileResponse>(`/profile/${accountId}`),
 
