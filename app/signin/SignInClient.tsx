@@ -155,7 +155,7 @@ export default function SignInClient() {
             {/* Sign-in content */}
             {/* Waitlist variant is a placeholder and will be redesigned. */}
             {WAITLIST_ENABLED ? (
-              <WaitlistPlaceholder />
+              <WaitlistPlaceholder variant="lawyer" />
             ) : (
               <div className="w-full px-8 md:px-20 text-left">
                 <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight font-dmSans">

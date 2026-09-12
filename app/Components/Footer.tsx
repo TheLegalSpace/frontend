@@ -4,22 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+import { usePathname, useRouter } from "next/navigation";
+
 // import the images
 import x from "@/public/x.png";
 import insta from "@/public/insta.png";
 import tiktok from "@/public/tiktok.png";
 import link from "@/public/link.png";
 import face from "@/public/face.png";
-
-function scrollToSection(href: string) {
-  const id = href.replace("#", "");
-  const el = document.getElementById(id);
-  if (!el) return;
-  window.scrollTo({
-    top: el.getBoundingClientRect().top + window.scrollY - 90,
-    behavior: "smooth",
-  });
-}
 
 const faqs = [
   {
@@ -54,6 +46,22 @@ interface FooterProps {
 }
 
 export default function Footer({ visible = true }: FooterProps) {
+  const router = useRouter();
+  const usePathName = usePathname();
+
+  const scrollToSection = (href: string) => {
+    const id = href.replace("#", "");
+    if (usePathName !== "/") {
+      router.push(`/#${id}`);
+      return;
+    }
+    const el = document.getElementById(id);
+    if (!el) return;
+    window.scrollTo({
+      top: el.getBoundingClientRect().top + window.scrollY - 90,
+      behavior: "smooth",
+    });
+  };
   return (
     <>
       {/* FAQ Section */}
@@ -212,18 +220,35 @@ export default function Footer({ visible = true }: FooterProps) {
               </h5>
               <ul className="space-y-3">
                 {[
-                  "Instagram",
-                  "X (Twitter)",
-                  "TikTok",
-                  "LinkedIn",
-                  "Facebook",
+                  {
+                    name: "Instagram",
+                    href: "https://www.instagram.com/p/DcvUq7ojGuD/?utm_source=ig_web_copy_link&igsi=MzRlODBiNWFlZA==",
+                  },
+                  {
+                    name: "X (Twitter)",
+                    href: "https://x.com/thelegalspace_/status/2094717239236653355?s=20",
+                  },
+                  {
+                    name: "TikTok",
+                    href: "https://www.tiktok.com/@thelegalspace_/photo/7680494542734347537?is_from_webapp=1&sender_device=pc",
+                  },
+                  {
+                    name: "LinkedIn",
+                    href: "https://www.linkedin.com/feed/update/urn:li:activity:7500483901908492288",
+                  },
+                  {
+                    name: "Facebook",
+                    href: "#",
+                  },
                 ].map((item) => (
-                  <li key={item}>
+                  <li key={item.name}>
                     <Link
-                      href="#"
+                      href={item.href}
+                      target={item.href.startsWith("http") ? "_blank" : undefined}
+                      rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
                       className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
                     >
-                      {item}
+                      {item.name}
                     </Link>
                   </li>
                 ))}
@@ -262,26 +287,31 @@ export default function Footer({ visible = true }: FooterProps) {
                 {
                   icon: insta,
                   label: "Instagram",
-                  link: "https://www.instagram.com/thelegalspace_/",
+                  link: "https://www.instagram.com/p/DcvUq7ojGuD/?utm_source=ig_web_copy_link&igsi=MzRlODBiNWFlZA==",
                 },
                 {
                   icon: x,
-                  label: "Twitter",
-                  link: "https://x.com/thelegalspace_",
+                  label: "X (Twitter)",
+                  link: "https://x.com/thelegalspace_/status/2094717239236653355?s=20",
                 },
                 {
                   icon: tiktok,
                   label: "TikTok",
-                  link: "https://www.tiktok.com/@thelegalspace_?lang=en-GB",
+                  link: "https://www.tiktok.com/@thelegalspace_/photo/7680494542734347537?is_from_webapp=1&sender_device=pc",
                 },
-                { icon: link, label: "LinkedIn", link: "#" },
+                {
+                  icon: link,
+                  label: "LinkedIn",
+                  link: "https://www.linkedin.com/feed/update/urn:li:activity:7500483901908492288",
+                },
                 { icon: face, label: "Facebook", link: "#" },
               ].map(({ icon, label, link }) => (
                 <Link
                   key={label}
                   href={link ? link : "#"}
                   aria-label={label}
-                  target="_blank"
+                  target={link.startsWith("http") ? "_blank" : undefined}
+                  rel={link.startsWith("http") ? "noopener noreferrer" : undefined}
                   className="w-8 h-8 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-sm hover:border-[#1A56DB] hover:bg-[#E8F0FE] transition-all"
                 >
                   <Image src={icon} alt={label} width={20} height={20} />
