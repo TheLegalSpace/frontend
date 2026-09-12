@@ -159,7 +159,7 @@ export default function StepOtp({
                 <Image
                   src={signupIllustration}
                   alt="The Legal Space community illustration"
-                  className="w-full h-auto max-h-[80vh] object-contain"
+                  className="w-full h-auto max-h-[80vh] object-cover"
                   priority
                 />
               </div>
