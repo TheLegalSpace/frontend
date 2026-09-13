@@ -19,7 +19,7 @@ interface Props {
   isLoading?: boolean;
 }
 
-const OTP_LENGTH = 8;
+const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 50;
 
 export default function StepOtp({
