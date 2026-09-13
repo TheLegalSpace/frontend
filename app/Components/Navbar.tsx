@@ -93,7 +93,7 @@ export default function Navbar({ strongBlur = false }: NavbarProps) {
             aria-label="Go to top"
           >
             <Image
-              src="/logoblack.png"
+              src="/logoblack8k.png"
               alt="The Legal Space"
               width={120}
               height={32}
