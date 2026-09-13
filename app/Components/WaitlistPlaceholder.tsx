@@ -87,9 +87,10 @@ export default function WaitlistPlaceholder({
     }
     setLoading(true);
     try {
-      // Mint a reCAPTCHA v3 token for the waitlist action. `getRecaptchaToken`
-      // returns `undefined` when no site key is configured (local/preview), so
-      // this is a no-op until reCAPTCHA is switched on for the deployment. The
+      // Mint a reCAPTCHA v3 token for the waitlist action. With no site key
+      // configured (local/preview) this resolves to `undefined` and is a no-op;
+      // once reCAPTCHA is switched on it throws if the challenge can't be
+      // completed, and the catch below surfaces that message to the user. The
       // /api/waitlist route verifies the token (score + action) server-side.
       const captchaToken = await getRecaptchaToken(
         CAPTCHA_ACTIONS.waitlistSignup,

@@ -28,6 +28,7 @@ const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 const SCRIPT_ID = "recaptcha-v3";
 const DEFAULT_ACTION = CAPTCHA_ACTIONS.professionalSignup;
 const LOAD_TIMEOUT_MS = 10_000;
+const MINT_TIMEOUT_MS = 10_000;
 
 function loadScript(): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -66,26 +67,49 @@ function loadScript(): Promise<void> {
 
 /**
  * Returns a reCAPTCHA token when captcha is configured, otherwise `undefined`.
- * Never throws: a captcha hiccup must not block the form — if a token was truly
- * required the server returns a clear, user-safe message.
+ *
+ * With no site key set, captcha is deliberately off and this resolves to
+ * `undefined` — that is not an error. Once a site key *is* set, failing to mint a
+ * token is a real failure: this throws rather than returning `undefined` and
+ * letting the server reject with an opaque "missing token".
  *
  * @param action Endpoint-specific action, e.g. `CAPTCHA_ACTIONS.waitlistSignup`.
  *               Defaults to the professional-signup action for backward compat.
+ * @throws Error with a user-safe message when the challenge can't be completed.
  */
 export async function getRecaptchaToken(
   action: string = DEFAULT_ACTION,
 ): Promise<string | undefined> {
+  // Captcha disabled (no site key configured) — not an error, just no token.
   if (!SITE_KEY) return undefined;
+
   try {
     await loadScript();
+
     const grecaptcha = window.grecaptcha;
-    if (!grecaptcha) return undefined;
-    return await new Promise<string>((resolve, reject) => {
-      grecaptcha.ready(() => {
-        grecaptcha.execute(SITE_KEY, { action }).then(resolve).catch(reject);
-      });
-    });
-  } catch {
-    return undefined;
+    if (!grecaptcha) throw new Error("grecaptcha unavailable after load");
+
+    const token = await Promise.race([
+      new Promise<string>((resolve, reject) => {
+        grecaptcha.ready(() => {
+          grecaptcha.execute(SITE_KEY, { action }).then(resolve).catch(reject);
+        });
+      }),
+      // Don't let a hung challenge leave the submit button spinning forever.
+      new Promise<never>((_, reject) =>
+        window.setTimeout(
+          () => reject(new Error("execute timed out")),
+          MINT_TIMEOUT_MS,
+        ),
+      ),
+    ]);
+
+    if (!token) throw new Error("empty token returned");
+    return token;
+  } catch (err) {
+    console.error("[captcha] token minting failed:", err);
+    throw new Error(
+      "We couldn't complete the security check. Please refresh the page and try again.",
+    );
   }
 }

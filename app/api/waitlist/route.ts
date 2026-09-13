@@ -11,7 +11,11 @@ import path from "path";
 import { getStore } from "@netlify/blobs";
 import { google, sheets_v4 } from "googleapis";
 import { CAPTCHA_ACTIONS } from "@/lib/captcha/actions";
-import { verifyRecaptchaToken } from "@/lib/captcha/server";
+import {
+  CaptchaError,
+  verifyRecaptchaToken,
+  type CaptchaVerification,
+} from "@/lib/captcha/server";
 
 export const runtime = "nodejs";
 
@@ -56,6 +60,34 @@ const GOOGLE_SHEET_NAME = process.env.GOOGLE_SHEET_NAME || "Sheet1";
 const GOOGLE_CONFIGURED = Boolean(
   GOOGLE_SHEET_ID && GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY,
 );
+
+// The three Google values must arrive together. A deploy that receives only some
+// of them would silently fall through to Blobs / a local CSV, so signups would
+// land somewhere nobody is looking — treat a partial config as fatal.
+const GOOGLE_VARS = {
+  GOOGLE_SHEET_ID,
+  GOOGLE_SERVICE_ACCOUNT_EMAIL,
+  GOOGLE_PRIVATE_KEY,
+} as const;
+const GOOGLE_VARS_PRESENT = Object.values(GOOGLE_VARS).filter(Boolean).length;
+
+/**
+ * Throw when the storage env is partially set. Wholly unset is fine — that is
+ * the documented fallback path (Netlify Blobs, or ./data locally).
+ */
+function assertStorageConfig(): void {
+  const total = Object.keys(GOOGLE_VARS).length;
+  if (GOOGLE_VARS_PRESENT === 0 || GOOGLE_VARS_PRESENT === total) return;
+
+  const missing = Object.entries(GOOGLE_VARS)
+    .filter(([, value]) => !value)
+    .map(([name]) => name);
+
+  throw new Error(
+    `Google Sheets storage is half-configured — missing ${missing.join(", ")}. ` +
+      `Set GOOGLE_SHEET_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY together, or none of them.`,
+  );
+}
 
 // Netlify sets NETLIFY=true on its build/function runtime; locally it is unset.
 const IS_NETLIFY = process.env.NETLIFY === "true";
@@ -243,10 +275,31 @@ export async function POST(request: NextRequest) {
 
   // Reject bots before touching storage, so a flood of requests can't turn into
   // a flood of Google Sheets reads/writes.
-  const captcha = await verifyRecaptchaToken(
-    body.captchaToken,
-    CAPTCHA_ACTIONS.waitlistSignup,
-  );
+  let captcha: CaptchaVerification;
+  try {
+    captcha = await verifyRecaptchaToken(
+      body.captchaToken,
+      CAPTCHA_ACTIONS.waitlistSignup,
+    );
+  } catch (err) {
+    if (err instanceof CaptchaError) {
+      console.error("[waitlist] captcha error:", err.code, err.message);
+      // config → the deployment is broken and someone must fix it.
+      // unavailable → the provider is down; the request may succeed later.
+      return NextResponse.json(
+        {
+          error:
+            err.code === "config"
+              ? "The security check is misconfigured on this deployment."
+              : "We couldn't complete the security check. Please try again in a moment.",
+          captchaUnavailable: true,
+        },
+        { status: err.code === "config" ? 500 : 503 },
+      );
+    }
+    throw err;
+  }
+
   if (!captcha.ok) {
     return NextResponse.json(
       {
@@ -255,6 +308,18 @@ export async function POST(request: NextRequest) {
         captchaFailed: true,
       },
       { status: 400 },
+    );
+  }
+
+  // Fail loudly on a partial Google config rather than quietly falling back to
+  // Blobs / a local CSV and writing signups somewhere unexpected.
+  try {
+    assertStorageConfig();
+  } catch (err) {
+    console.error("[waitlist]", err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      { error: "Waitlist storage is misconfigured on this deployment." },
+      { status: 500 },
     );
   }
 
@@ -336,6 +401,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
+    assertStorageConfig();
+
     let csv: string;
     if (GOOGLE_CONFIGURED) {
       csv = entriesToCsv(await googleRows());
