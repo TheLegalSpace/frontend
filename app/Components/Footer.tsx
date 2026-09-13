@@ -222,23 +222,19 @@ export default function Footer({ visible = true }: FooterProps) {
                 {[
                   {
                     name: "Instagram",
-                    href: "https://www.instagram.com/p/DcvUq7ojGuD/?utm_source=ig_web_copy_link&igsi=MzRlODBiNWFlZA==",
+                    href: "https://www.instagram.com/thelegalspace_/",
                   },
                   {
                     name: "X (Twitter)",
-                    href: "https://x.com/thelegalspace_/status/2094717239236653355?s=20",
+                    href: "https://x.com/thelegalspace",
                   },
                   {
                     name: "TikTok",
-                    href: "https://www.tiktok.com/@thelegalspace_/photo/7680494542734347537?is_from_webapp=1&sender_device=pc",
+                    href: "https://www.tiktok.com/@thelegalspace",
                   },
                   {
                     name: "LinkedIn",
-                    href: "https://www.linkedin.com/feed/update/urn:li:activity:7500483901908492288",
-                  },
-                  {
-                    name: "Facebook",
-                    href: "#",
+                    href: "https://www.linkedin.com/company/the-legal-space-ltd/",
                   },
                 ].map((item) => (
                   <li key={item.name}>
@@ -287,24 +283,23 @@ export default function Footer({ visible = true }: FooterProps) {
                 {
                   icon: insta,
                   label: "Instagram",
-                  link: "https://www.instagram.com/p/DcvUq7ojGuD/?utm_source=ig_web_copy_link&igsi=MzRlODBiNWFlZA==",
+                  link: "https://www.instagram.com/thelegalspace_/",
                 },
                 {
                   icon: x,
                   label: "X (Twitter)",
-                  link: "https://x.com/thelegalspace_/status/2094717239236653355?s=20",
+                  link: "https://x.com/thelegalspace",
                 },
                 {
                   icon: tiktok,
                   label: "TikTok",
-                  link: "https://www.tiktok.com/@thelegalspace_/photo/7680494542734347537?is_from_webapp=1&sender_device=pc",
+                  link: "https://www.tiktok.com/@thelegalspace",
                 },
                 {
                   icon: link,
                   label: "LinkedIn",
-                  link: "https://www.linkedin.com/feed/update/urn:li:activity:7500483901908492288",
+                  link: "https://www.linkedin.com/company/the-legal-space-ltd/",
                 },
-                { icon: face, label: "Facebook", link: "#" },
               ].map(({ icon, label, link }) => (
                 <Link
                   key={label}
