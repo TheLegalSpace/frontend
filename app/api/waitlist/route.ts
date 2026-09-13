@@ -10,6 +10,8 @@ import { promises as fs } from "fs";
 import path from "path";
 import { getStore } from "@netlify/blobs";
 import { google, sheets_v4 } from "googleapis";
+import { CAPTCHA_ACTIONS } from "@/lib/captcha/actions";
+import { verifyRecaptchaToken } from "@/lib/captcha/server";
 
 export const runtime = "nodejs";
 
@@ -19,6 +21,7 @@ interface WaitlistPayload {
   fullName?: string;
   email?: string;
   variant?: WaitlistVariant;
+  captchaToken?: string;
 }
 
 interface WaitlistEntry {
@@ -234,6 +237,23 @@ export async function POST(request: NextRequest) {
   if (!fullName || !emailValid(email)) {
     return NextResponse.json(
       { error: "Please provide a valid full name and email." },
+      { status: 400 },
+    );
+  }
+
+  // Reject bots before touching storage, so a flood of requests can't turn into
+  // a flood of Google Sheets reads/writes.
+  const captcha = await verifyRecaptchaToken(
+    body.captchaToken,
+    CAPTCHA_ACTIONS.waitlistSignup,
+  );
+  if (!captcha.ok) {
+    return NextResponse.json(
+      {
+        error:
+          "We couldn't verify you're not a robot. Please refresh the page and try again.",
+        captchaFailed: true,
+      },
       { status: 400 },
     );
   }

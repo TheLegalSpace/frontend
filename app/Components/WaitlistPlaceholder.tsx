@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Loader2, Mail, User } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { getRecaptchaToken, CAPTCHA_ACTIONS } from "../utils/captcha";
 
 export type WaitlistVariant = "lawyer" | "user";
 
@@ -86,12 +87,25 @@ export default function WaitlistPlaceholder({
     }
     setLoading(true);
     try {
+      // Mint a reCAPTCHA v3 token for the waitlist action. `getRecaptchaToken`
+      // returns `undefined` when no site key is configured (local/preview), so
+      // this is a no-op until reCAPTCHA is switched on for the deployment. The
+      // /api/waitlist route verifies the token (score + action) server-side.
+      const captchaToken = await getRecaptchaToken(
+        CAPTCHA_ACTIONS.waitlistSignup,
+      );
+
       // Persist the signup server-side (frontend /api/waitlist route) into the
       // waitlist spreadsheet, then show the success state.
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, variant }),
+        body: JSON.stringify({
+          fullName,
+          email,
+          variant,
+          ...(captchaToken ? { captchaToken } : {}),
+        }),
       });
       const data = await res.json().catch(() => null);
       // The API returns HTTP 200 with a `duplicate: true` flag when this email
@@ -197,7 +211,9 @@ export default function WaitlistPlaceholder({
           <p className="text-[13px] text-gray-500">{copy.social}</p>
         </div>
 
-        {/* Not a robot (placeholder — swap for real reCAPTCHA) */}
+        {/* Not a robot — visible consent affordance; the real gate is the
+            invisible reCAPTCHA v3 token sent with the POST and verified in
+            /api/waitlist. */}
         <label className="flex items-center justify-between gap-3 px-4 py-3 border border-gray-200 rounded-xl cursor-pointer select-none">
           <span className="flex items-center gap-3">
             <input
@@ -207,7 +223,9 @@ export default function WaitlistPlaceholder({
               disabled={loading}
               className="w-5 h-5 rounded border-gray-300 accent-[#1A56DB]"
             />
-            <span className="text-[14px] text-gray-700">I'm not a robot</span>
+            <span className="text-[14px] text-gray-700">
+              {"I'm not a robot"}
+            </span>
           </span>
           <span className="text-[10px] text-gray-400 text-right leading-tight">
             reCAPTCHA
