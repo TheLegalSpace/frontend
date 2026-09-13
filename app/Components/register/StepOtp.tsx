@@ -20,7 +20,7 @@ interface Props {
 }
 
 //otp_length has been changed from 6 to 8
-const OTP_LENGTH = 6;
+const OTP_LENGTH = 8;
 const RESEND_COOLDOWN = 50;
 
 export default function StepOtp({
