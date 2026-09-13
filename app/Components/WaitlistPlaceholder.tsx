@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Loader2, Mail, User } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 export type WaitlistVariant = "lawyer" | "user";
 
@@ -28,24 +29,40 @@ const COPY: Record<
   },
 };
 
+interface WaitlistPlaceholderProps {
+  variant?: WaitlistVariant;
+}
+
 /**
  * Reusable waitlist form shown while the redesigned landing page is in flight.
  *
- * It reads the audience preference from `localStorage` key `loginType`
- * ("lawyer" | "user") and renders the matching waitlist form + captcha. Drop
- * it into any page — StepEmail, SignInClient, etc. — and it adapts to the
- * logged-in/preferred audience automatically.
+ * It accepts an optional `variant` ("lawyer" | "user") or reads from URL/localStorage
+ * and renders the matching waitlist form.
  */
-export default function WaitlistPlaceholder() {
-  const [variant, setVariant] = useState<WaitlistVariant>("lawyer");
+export default function WaitlistPlaceholder({
+  variant: initialVariant,
+}: WaitlistPlaceholderProps = {}) {
+  const [variant, setVariant] = useState<WaitlistVariant>(
+    initialVariant ?? "lawyer",
+  );
+  const searchParams = useSearchParams();
 
-  // Pick the form content from the stored audience preference.
+  // Pick the form content from the provided prop, search param, or stored audience preference.
   useEffect(() => {
+    if (initialVariant) {
+      setVariant(initialVariant);
+      return;
+    }
+    const paramType = searchParams?.get("type");
+    if (paramType === "lawyer" || paramType === "user") {
+      setVariant(paramType);
+      return;
+    }
     const stored = localStorage.getItem("loginType");
     if (stored === "lawyer" || stored === "user") {
       setVariant(stored);
     }
-  }, []);
+  }, [initialVariant, searchParams]);
 
   const copy = COPY[variant];
 
@@ -99,16 +116,16 @@ export default function WaitlistPlaceholder() {
 
   if (submitted) {
     return (
-      <div className="w-full flex flex-col justify-center py-8 lg:py-0 max-w-160 mx-auto mt-30 lg:pr-10 lg:mt-0 lg:mx-0">
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight">
+      <div className="w-full flex flex-col justify-center py-8 lg:py-0 max-w-160 mx-auto mt-30 lg:px-10 lg:mt-0 lg:mx-0 font-dmSans">
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight font-dmSans text-gray-900">
           Thanks, {fullName.split(" ")[0] || "there"} 😊.
         </h1>
-        <p className="text-[15px] text-gray-500 mb-8 leading-relaxed">
+        <p className="text-[15px] sm:text-base text-gray-500 mb-8 leading-relaxed font-dmSans">
           {copy.success}
         </p>
         <Link
           href="/"
-          className="w-full py-3 bg-[#1A56DB] hover:bg-[#1648b8] text-white text-[14px] font-medium rounded-xl transition-colors flex items-center justify-center"
+          className="w-full py-3 bg-[#1A56DB] hover:bg-[#1648b8] text-white text-[14px] font-medium rounded-xl transition-colors flex items-center justify-center font-dmSans shadow-sm"
         >
           Continue
         </Link>
@@ -117,20 +134,20 @@ export default function WaitlistPlaceholder() {
   }
 
   return (
-    <div className="w-full flex flex-col justify-center py-8 lg:py-0 max-w-160 mx-auto mt-30 lg:px-10 lg:mt-0 lg:mx-0">
-      <span className="inline-block w-fit mb-6 px-3 py-1.5 bg-blue-50 text-[#1A56DB] text-[12px] font-medium rounded-full">
+    <div className="w-full flex flex-col justify-center py-8 lg:py-0 max-w-160 mx-auto mt-30 lg:px-10 lg:mt-0 lg:mx-0 font-dmSans">
+      <span className="inline-block w-fit mb-6 px-3 py-1.5 bg-blue-50 text-[#1A56DB] text-[12px] font-medium rounded-full font-dmSans">
         THE LEGAL SPACE IS LAUNCHING SOON!!! 🎉
       </span>
-      <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight">
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-3 leading-tight font-dmSans text-gray-900">
         {copy.heading}
       </h1>
-      <p className="text-[15px] text-gray-500 mb-8 leading-relaxed">
+      <p className="text-[15px] sm:text-base text-gray-500 mb-8 leading-relaxed font-dmSans">
         {copy.subheading}
       </p>
 
       {error && (
         <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl">
-          <p className="text-[12px] text-red-600">{error}</p>
+          <p className="text-[12px] text-red-600 font-dmSans">{error}</p>
         </div>
       )}
 
