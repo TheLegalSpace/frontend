@@ -19,6 +19,7 @@ interface Props {
   isLoading?: boolean;
 }
 
+//otp_length has been changed from 6 to 8
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 50;
 
