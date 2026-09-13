@@ -202,7 +202,7 @@ export default function StepEmail({
             <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 pointer-events-none" />
             <input
               type="email"
-              placeholder="Enter your Nigerian Bar email (username@nigerianbar.ng)"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
