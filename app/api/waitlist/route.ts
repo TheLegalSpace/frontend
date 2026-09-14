@@ -5,17 +5,16 @@
 // account. If the Google env vars aren't configured yet, it falls back to
 // Netlify Blobs (on Netlify) or a local CSV under ./data (for `npm run dev`).
 // A GET to this route streams the full spreadsheet back as a downloadable file.
+//
+// Bot protection: a Cloudflare Turnstile token is required on every POST and is
+// verified against Cloudflare's siteverify endpoint before any storage is
+// touched. The routine fails closed — without a secret the route returns 503
+// rather than accepting unverified signups.
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import { getStore } from "@netlify/blobs";
 import { google, sheets_v4 } from "googleapis";
-import { CAPTCHA_ACTIONS } from "@/lib/captcha/actions";
-import {
-  CaptchaError,
-  verifyRecaptchaToken,
-  type CaptchaVerification,
-} from "@/lib/captcha/server";
 
 export const runtime = "nodejs";
 
@@ -25,7 +24,7 @@ interface WaitlistPayload {
   fullName?: string;
   email?: string;
   variant?: WaitlistVariant;
-  captchaToken?: string;
+  turnstileToken?: string;
 }
 
 interface WaitlistEntry {
@@ -49,6 +48,7 @@ const CSV_HEADERS: (keyof WaitlistEntry)[] = [
 //   GOOGLE_SERVICE_ACCOUNT_EMAIL – client_email from the service account JSON
 //   GOOGLE_PRIVATE_KEY          – private_key from the service account JSON
 //   GOOGLE_SHEET_NAME           – optional, defaults to "Sheet1"
+//   TURNSTILE_SECRET_KEY        – Cloudflare Turnstile secret (server-only)
 const GOOGLE_SHEET_ID = process.env.GOOGLE_SHEET_ID ?? "";
 const GOOGLE_SERVICE_ACCOUNT_EMAIL =
   process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ?? "";
@@ -57,6 +57,10 @@ const GOOGLE_PRIVATE_KEY = (process.env.GOOGLE_PRIVATE_KEY ?? "").replace(
   "\n",
 );
 const GOOGLE_SHEET_NAME = process.env.GOOGLE_SHEET_NAME || "Sheet1";
+
+// Server-only. Never prefix with NEXT_PUBLIC_ — that would inline it into the
+// browser bundle.
+const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY ?? "";
 
 const GOOGLE_CONFIGURED = Boolean(
   GOOGLE_SHEET_ID && GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY,
@@ -228,6 +232,50 @@ function storageNotConfiguredResponse() {
   );
 }
 
+// Returned when TURNSTILE_SECRET_KEY is absent. Failing closed here means a
+// deploy that forgot the secret rejects signups loudly instead of accepting
+// unverified ones.
+function botProtectionNotConfiguredResponse() {
+  return NextResponse.json(
+    {
+      error:
+        "Bot protection isn't configured on this deployment. Add TURNSTILE_SECRET_KEY to Vercel and redeploy.",
+    },
+    { status: 503 },
+  );
+}
+
+/**
+ * Exchange a Turnstile token for a verdict via Cloudflare's siteverify call.
+ * A single-use token: Cloudflare rejects a token that has already been consumed,
+ * so the client must reset the widget after any failed submit.
+ */
+async function verifyTurnstileToken(
+  token: string,
+  remoteip?: string,
+): Promise<boolean> {
+  const params = new URLSearchParams();
+  params.append("secret", TURNSTILE_SECRET_KEY);
+  params.append("response", token);
+  if (remoteip) params.append("remoteip", remoteip);
+
+  const res = await fetch(
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    { method: "POST", body: params },
+  );
+  const data = (await res.json()) as {
+    success: boolean;
+    "error-codes"?: string[];
+  };
+  if (!data.success) {
+    console.warn(
+      "[waitlist] Turnstile verification failed:",
+      data["error-codes"],
+    );
+  }
+  return data.success === true;
+}
+
 async function fallbackEntries(): Promise<WaitlistEntry[]> {
   if (IS_NETLIFY) {
     const raw = await readBlobCsv();
@@ -263,6 +311,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
+  // ── Bot protection ─────────────────────────────────────────────────────────
+  // Reject bots before validating or touching storage, so a flood of requests
+  // can't turn into a flood of Google Sheets reads/writes.
+  if (!TURNSTILE_SECRET_KEY) {
+    return botProtectionNotConfiguredResponse();
+  }
+
+  const turnstileToken = (body.turnstileToken ?? "").trim();
+  if (!turnstileToken) {
+    return NextResponse.json(
+      { error: "Please complete the verification challenge." },
+      { status: 400 },
+    );
+  }
+
+  const remoteip = request.headers
+    .get("x-forwarded-for")
+    ?.split(",")[0]
+    ?.trim();
+  const isHuman = await verifyTurnstileToken(turnstileToken, remoteip);
+  if (!isHuman) {
+    return NextResponse.json(
+      { error: "We couldn't verify you're human. Please retry the challenge." },
+      { status: 403 },
+    );
+  }
+
   const fullName = (body.fullName ?? "").trim();
   const email = (body.email ?? "").trim().toLowerCase();
   const type: WaitlistVariant = body.variant === "user" ? "user" : "lawyer";
@@ -270,44 +345,6 @@ export async function POST(request: NextRequest) {
   if (!fullName || !emailValid(email)) {
     return NextResponse.json(
       { error: "Please provide a valid full name and email." },
-      { status: 400 },
-    );
-  }
-
-  // Reject bots before touching storage, so a flood of requests can't turn into
-  // a flood of Google Sheets reads/writes.
-  let captcha: CaptchaVerification;
-  try {
-    captcha = await verifyRecaptchaToken(
-      body.captchaToken,
-      CAPTCHA_ACTIONS.waitlistSignup,
-    );
-  } catch (err) {
-    if (err instanceof CaptchaError) {
-      console.error("[waitlist] captcha error:", err.code, err.message);
-      // config → the deployment is broken and someone must fix it.
-      // unavailable → the provider is down; the request may succeed later.
-      return NextResponse.json(
-        {
-          error:
-            err.code === "config"
-              ? "The security check is misconfigured on this deployment."
-              : "We couldn't complete the security check. Please try again in a moment.",
-          captchaUnavailable: true,
-        },
-        { status: err.code === "config" ? 500 : 503 },
-      );
-    }
-    throw err;
-  }
-
-  if (!captcha.ok) {
-    return NextResponse.json(
-      {
-        error:
-          "We couldn't verify you're not a robot. Please refresh the page and try again.",
-        captchaFailed: true,
-      },
       { status: 400 },
     );
   }
