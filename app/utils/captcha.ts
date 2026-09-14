@@ -1,14 +1,20 @@
 // app/utils/captcha.ts
 //
-// CLIENT-ONLY reCAPTCHA v3 token minting for browser forms — professional signup
-// and the waitlist. This module runs in the browser, so it reads only
-// NEXT_PUBLIC_* values; the matching secret, score and action checks live
-// server-side in lib/captcha/server.ts and must never be referenced here.
+// CLIENT-ONLY reCAPTCHA token minting for browser forms — professional signup and
+// the waitlist. This module runs in the browser, so it reads only NEXT_PUBLIC_*
+// values; the matching secret, score and action checks live server-side in
+// lib/captcha/server.ts and must never be referenced here.
+//
+// reCAPTCHA Enterprise is the default. Keys minted in the Google Cloud reCAPTCHA
+// console are served by enterprise.js and driven through grecaptcha.enterprise —
+// loading api.js or calling grecaptcha.execute() against one of those yields no
+// token at all. Set NEXT_PUBLIC_RECAPTCHA_ENTERPRISE=false only for a legacy
+// classic v3 key, which uses api.js and grecaptcha.execute. The executor is
+// resolved at call time, so either surface works once the script is loaded.
 //
 // Each caller passes a distinct `action` so a token minted for one form can't be
-// replayed against another. The helper returns `undefined` when no site key is
-// present (the local/preview path), so the token is simply omitted and the
-// request is sent as before — no behaviour change when captcha is off.
+// replayed against another. With no site key the helper resolves to `undefined`
+// (captcha deliberately off); once a site key is set, failing to mint throws.
 import { CAPTCHA_ACTIONS } from "@/lib/captcha/actions";
 
 // Re-exported so callers can keep importing the action names from this module.
@@ -18,17 +24,50 @@ export type { CaptchaAction } from "@/lib/captcha/actions";
 declare global {
   interface Window {
     grecaptcha?: {
-      ready: (cb: () => void) => void;
-      execute: (siteKey: string, opts: { action: string }) => Promise<string>;
+      ready?: (cb: () => void) => void;
+      execute?: (siteKey: string, opts: { action: string }) => Promise<string>;
+      enterprise?: {
+        ready: (cb: () => void) => void;
+        execute: (siteKey: string, opts: { action: string }) => Promise<string>;
+      };
     };
   }
 }
 
 const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-const SCRIPT_ID = "recaptcha-v3";
+// Enterprise unless explicitly turned off, since that is what the Google Cloud
+// console issues today.
+const IS_ENTERPRISE = process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE !== "false";
+const SCRIPT_ID = IS_ENTERPRISE ? "recaptcha-enterprise" : "recaptcha-v3";
 const DEFAULT_ACTION = CAPTCHA_ACTIONS.professionalSignup;
 const LOAD_TIMEOUT_MS = 10_000;
 const MINT_TIMEOUT_MS = 10_000;
+
+interface CaptchaExecutor {
+  ready: (cb: () => void) => void;
+  execute: (siteKey: string, opts: { action: string }) => Promise<string>;
+}
+
+/**
+ * reCAPTCHA Enterprise exposes grecaptcha.enterprise.{ready,execute}; the classic
+ * v3 script exposes grecaptcha.{ready,execute}. Prefer Enterprise when present so
+ * a key works regardless of which script actually served it.
+ */
+function getExecutor(): CaptchaExecutor | null {
+  const grecaptcha = window.grecaptcha;
+  if (!grecaptcha) return null;
+
+  if (grecaptcha.enterprise) return grecaptcha.enterprise;
+
+  if (
+    typeof grecaptcha.ready === "function" &&
+    typeof grecaptcha.execute === "function"
+  ) {
+    return { ready: grecaptcha.ready, execute: grecaptcha.execute };
+  }
+
+  return null;
+}
 
 function loadScript(): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -54,9 +93,12 @@ function loadScript(): Promise<void> {
       }, 100);
       return;
     }
+
     const script = document.createElement("script");
     script.id = SCRIPT_ID;
-    script.src = `https://www.google.com/recaptcha/api.js?render=${SITE_KEY}`;
+    script.src = IS_ENTERPRISE
+      ? `https://www.google.com/recaptcha/enterprise.js?render=${SITE_KEY}`
+      : `https://www.google.com/recaptcha/api.js?render=${SITE_KEY}`;
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();
@@ -86,13 +128,13 @@ export async function getRecaptchaToken(
   try {
     await loadScript();
 
-    const grecaptcha = window.grecaptcha;
-    if (!grecaptcha) throw new Error("grecaptcha unavailable after load");
+    const executor = getExecutor();
+    if (!executor) throw new Error("grecaptcha unavailable after load");
 
     const token = await Promise.race([
       new Promise<string>((resolve, reject) => {
-        grecaptcha.ready(() => {
-          grecaptcha.execute(SITE_KEY, { action }).then(resolve).catch(reject);
+        executor.ready(() => {
+          executor.execute(SITE_KEY, { action }).then(resolve).catch(reject);
         });
       }),
       // Don't let a hung challenge leave the submit button spinning forever.
