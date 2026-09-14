@@ -277,7 +277,7 @@ export default function WaitlistPlaceholder({
         {/* Social proof */}
         <div className="flex items-center gap-2">
           <div className="flex -space-x-2">
-            {["/avatar1.png", "/avatar2.png", "/avatar3.png"].map((src, i) => (
+            {["/avatar01.webp", "/avatar02.webp", "/avatar03.webp"].map((src, i) => (
               <Image
                 key={i}
                 src={src}
