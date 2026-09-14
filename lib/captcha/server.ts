@@ -5,8 +5,14 @@
 //
 // This module holds credentials and the service-account key (directly or by
 // reference). It must never be imported from a file that carries "use client",
-// or those references get pulled toward the browser bundle. Client-side token
-// minting lives in app/utils/captcha.ts.
+// or those references get pulled toward the browser bundle.
+//
+// Two key types go through here, selected by RECAPTCHA_INTEGRATION:
+//   checkbox (default) — a visible widget; the token exists only once the user
+//                        solves it and no risk score is returned, so token
+//                        validity is the whole check. Client: lib/captcha/widget.ts
+//   score              — invisible; execute() mints the token and the assessment
+//                        returns a score to threshold. Client: app/utils/captcha.ts
 //
 // Unlike the legacy siteverify endpoint, there is no shared secret here. The
 // token is exchanged for an assessment using a Google Cloud credential that has
@@ -60,6 +66,14 @@ const MIN_SCORE_VALID =
   PARSED_MIN_SCORE >= 0 &&
   PARSED_MIN_SCORE <= 1;
 const RECAPTCHA_MIN_SCORE = MIN_SCORE_VALID ? PARSED_MIN_SCORE : 0.5;
+
+// Which Enterprise integration the key uses. Checkbox keys do not return a risk
+// score at all, so the threshold below is meaningless for them.
+const INTEGRATION = (
+  process.env.RECAPTCHA_INTEGRATION ?? "checkbox"
+).toLowerCase();
+const IS_CHECKBOX = INTEGRATION === "checkbox";
+const INTEGRATION_VALID = INTEGRATION === "checkbox" || INTEGRATION === "score";
 
 const HAS_SITE_KEY = Boolean(SITE_KEY);
 const HAS_PROJECT = Boolean(PROJECT_ID);
@@ -124,7 +138,13 @@ export function assertCaptchaConfig(): void {
   const problems: string[] = [];
   if (!HAS_SITE_KEY) problems.push("NEXT_PUBLIC_RECAPTCHA_SITE_KEY is missing");
   if (!HAS_PROJECT) problems.push("RECAPTCHA_PROJECT_ID is missing");
-  if (RAW_MIN_SCORE !== undefined && !MIN_SCORE_VALID) {
+  if (!INTEGRATION_VALID) {
+    problems.push(
+      `RECAPTCHA_INTEGRATION must be "checkbox" or "score" (got "${INTEGRATION}")`,
+    );
+  }
+  // Only meaningful for score-based keys — a checkbox key returns no score.
+  if (!IS_CHECKBOX && RAW_MIN_SCORE !== undefined && !MIN_SCORE_VALID) {
     problems.push(
       `RECAPTCHA_MIN_SCORE must be a number between 0 and 1 (got "${RAW_MIN_SCORE}")`,
     );
@@ -165,8 +185,10 @@ function isConfigError(message: string): boolean {
  * closed.
  *
  * @param token          Token returned by getRecaptchaToken() in the browser.
- * @param expectedAction Action the token must have been minted for. A token from
- *                       another form is rejected so it can't be replayed here.
+ * @param expectedAction Action the token must have been minted for. Ignored for
+ *                       checkbox keys (which carry no action); for score keys a
+ *                       token from another form is rejected so it can't be
+ *                       replayed here.
  */
 export async function verifyRecaptchaToken(
   token: string | null | undefined,
@@ -206,7 +228,12 @@ export async function verifyRecaptchaToken(
     return { ok: false, reason: "failed" };
   }
 
-  // A token minted for another form (e.g. signup) must not be replayable here.
+  // A checkbox key issues its token only after the user solves the widget, and
+  // the assessment carries neither an action nor a score — `valid` above is the
+  // entire judgement, so there is nothing further to enforce.
+  if (IS_CHECKBOX) return { ok: true };
+
+  // Score-based keys: the action and the risk score are the signal.
   const action = tokenProperties.action ?? "";
   if (action && action !== expectedAction) {
     console.warn(

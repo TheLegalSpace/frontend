@@ -43,7 +43,8 @@ const CSV_HEADERS: (keyof WaitlistEntry)[] = [
 ];
 
 // ── Config ────────────────────────────────────────────────────────────────────
-// Set these in Netlify (or .env locally):
+// Set these in the deploy environment (Vercel → Settings → Environment
+// Variables) or in .env locally:
 //   GOOGLE_SHEET_ID             – the id from your spreadsheet URL
 //   GOOGLE_SERVICE_ACCOUNT_EMAIL – client_email from the service account JSON
 //   GOOGLE_PRIVATE_KEY          – private_key from the service account JSON
@@ -214,14 +215,14 @@ function emailsFromCsv(raw: string): Set<string> {
 }
 
 // Returned when this deployment has no working storage backend (e.g. Netlify
-// Blobs is not configured on the deployed site). The Google Sheets env vars
-// must be set on the host (Netlify → Site settings → Environment variables)
-// for signups to persist.
+// Blobs on a Netlify deploy, or a read-only filesystem elsewhere). The Google
+// Sheets env vars must be set on the host (Vercel → Settings → Environment
+// Variables) for signups to persist.
 function storageNotConfiguredResponse() {
   return NextResponse.json(
     {
       error:
-        "Waitlist storage isn't configured on this deployment. Add the Google Sheets env vars (GOOGLE_SHEET_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY) to Netlify and redeploy.",
+        "Waitlist storage isn't configured on this deployment. Add the Google Sheets env vars (GOOGLE_SHEET_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY) to your deploy environment and redeploy.",
     },
     { status: 503 },
   );

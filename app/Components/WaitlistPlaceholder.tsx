@@ -6,7 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Loader2, Mail, User } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { getRecaptchaToken, CAPTCHA_ACTIONS } from "../utils/captcha";
+import RecaptchaCheckbox from "./RecaptchaCheckbox";
+import { CHECKBOX_ENABLED } from "@/lib/captcha/widget";
 
 export type WaitlistVariant = "lawyer" | "user";
 
@@ -70,6 +71,7 @@ export default function WaitlistPlaceholder({
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [notARobot, setNotARobot] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -81,21 +83,20 @@ export default function WaitlistPlaceholder({
       setError("Please fill in your name and email.");
       return;
     }
-    if (!notARobot) {
-      setError("Please confirm you're not a robot.");
+    // With a site key configured the real widget owns this check; without one,
+    // fall back to the local confirmation so dev/preview still submits.
+    if (CHECKBOX_ENABLED ? !captchaToken : !notARobot) {
+      setError(
+        CHECKBOX_ENABLED
+          ? "Please complete the reCAPTCHA check."
+          : "Please confirm you're not a robot.",
+      );
       return;
     }
     setLoading(true);
     try {
-      // Mint a reCAPTCHA v3 token for the waitlist action. With no site key
-      // configured (local/preview) this resolves to `undefined` and is a no-op;
-      // once reCAPTCHA is switched on it throws if the challenge can't be
-      // completed, and the catch below surfaces that message to the user. The
-      // /api/waitlist route verifies the token (score + action) server-side.
-      const captchaToken = await getRecaptchaToken(
-        CAPTCHA_ACTIONS.waitlistSignup,
-      );
-
+      // The token came from the widget's callback and is sent as-is; the
+      // /api/waitlist route verifies it via the Enterprise assessments API.
       // Persist the signup server-side (frontend /api/waitlist route) into the
       // waitlist spreadsheet, then show the success state.
       const res = await fetch("/api/waitlist", {
@@ -212,28 +213,45 @@ export default function WaitlistPlaceholder({
           <p className="text-[13px] text-gray-500">{copy.social}</p>
         </div>
 
-        {/* Not a robot — visible consent affordance; the real gate is the
-            invisible reCAPTCHA v3 token sent with the POST and verified in
-            /api/waitlist. */}
-        <label className="flex items-center justify-between gap-3 px-4 py-3 border border-gray-200 rounded-xl cursor-pointer select-none">
-          <span className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={notARobot}
-              onChange={(e) => setNotARobot(e.target.checked)}
-              disabled={loading}
-              className="w-5 h-5 rounded border-gray-300 accent-[#1A56DB]"
+        {/* The real reCAPTCHA Enterprise checkbox when a site key is
+            configured; otherwise the local affordance so dev/preview submits. */}
+        {CHECKBOX_ENABLED ? (
+          <div className="flex justify-center px-4 py-3 border border-gray-200 rounded-xl">
+            <RecaptchaCheckbox
+              onToken={(token) => {
+                setCaptchaToken(token);
+                setError("");
+              }}
+              onExpired={() => setCaptchaToken("")}
+              onError={() => {
+                setCaptchaToken("");
+                setError(
+                  "We couldn't load the security check. Please refresh the page.",
+                );
+              }}
             />
-            <span className="text-[14px] text-gray-700">
-              {"I'm not a robot"}
+          </div>
+        ) : (
+          <label className="flex items-center justify-between gap-3 px-4 py-3 border border-gray-200 rounded-xl cursor-pointer select-none">
+            <span className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={notARobot}
+                onChange={(e) => setNotARobot(e.target.checked)}
+                disabled={loading}
+                className="w-5 h-5 rounded border-gray-300 accent-[#1A56DB]"
+              />
+              <span className="text-[14px] text-gray-700">
+                {"I'm not a robot"}
+              </span>
             </span>
-          </span>
-          <span className="text-[10px] text-gray-400 text-right leading-tight">
-            reCAPTCHA
-            <br />
-            Privacy · Terms
-          </span>
-        </label>
+            <span className="text-[10px] text-gray-400 text-right leading-tight">
+              reCAPTCHA
+              <br />
+              Privacy · Terms
+            </span>
+          </label>
+        )}
 
         {/* Submit */}
         <button
