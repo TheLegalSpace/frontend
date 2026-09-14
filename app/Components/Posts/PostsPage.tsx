@@ -79,7 +79,7 @@ export default function PostsPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Top tab bar */}
-      <div className="flex items-center justify-between border-b border-[#E5E7EB] px-[16px] py-[19.3px] sticky top-0 bg-white z-10">
+      <div className="flex items-center justify-between border-b border-[#E5E7EB] px-4 py-[19.3px] sticky top-0 bg-white z-10">
         <div className="flex gap-1">
           <button
             onClick={() => setActiveTab("posts")}

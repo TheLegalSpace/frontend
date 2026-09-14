@@ -101,7 +101,7 @@ export default function SpecializationPricing({
           {/* Add new */}
           <button
             onClick={() => addRow(areaId)}
-            className="w-full py-2 border border-[#E5E7EB] rounded-lg text-[12px] text-gray-500 hover:bg-gray-50 flex items-center justify-center gap-1 transition-colors"
+            className="w-full py-2 border border-[#E5E7EB] rounded-lg text-[12px] text-gray-500 hover:bg-white flex items-center justify-center gap-1 transition-colors"
           >
             Add New <Plus className="w-3.5 h-3.5" />
           </button>

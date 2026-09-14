@@ -1,0 +1,424 @@
+"use client";
+
+import { useState, useRef } from "react";
+import { Geist } from "next/font/google";
+import {
+  SectionBadge,
+  FieldLabel,
+  TextInput,
+  Checkbox,
+  Divider,
+  SubmitButton,
+  ErrorMessage,
+  SuccessState,
+} from "./FormKit";
+import {
+  submitEventPromotion,
+  computeEventPromotionPricing,
+} from "../../../services/servicesApi.services";
+
+const geist = Geist({ subsets: ["latin"] });
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+export default function EventPromotionForm() {
+  const [flyer, setFlyer] = useState<File | null>(null);
+  const [flyerPreview, setFlyerPreview] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [location, setLocation] = useState("");
+  const [links, setLinks] = useState("");
+  const [startAt, setStartAt] = useState("");
+  const [endAt, setEndAt] = useState("");
+  const [shareOnSocial, setShareOnSocial] = useState(false);
+
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [firmName, setFirmName] = useState("");
+
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const pricing = computeEventPromotionPricing(startAt, endAt, shareOnSocial);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      setError("Invalid image format. Please upload a standard image file (PNG, JPG, or WEBP).");
+      setFlyer(null);
+      setFlyerPreview(null);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setError("Image file size is too large. Flyer image must be 10MB or smaller.");
+      setFlyer(null);
+      setFlyerPreview(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    const img = new window.Image();
+    img.src = objectUrl;
+
+    img.onload = () => {
+      setError(null);
+      setFlyer(file);
+      setFlyerPreview(objectUrl);
+    };
+
+    img.onerror = () => {
+      setError("The uploaded file is not a valid standard image or is corrupted. Please upload a clean PNG or JPG image.");
+      setFlyer(null);
+      setFlyerPreview(null);
+      URL.revokeObjectURL(objectUrl);
+    };
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (!flyer) {
+      setError("Please upload a flyer image.");
+      return;
+    }
+    if (!title.trim()) {
+      setError("Please enter an event title.");
+      return;
+    }
+    if (!startAt || !endAt) {
+      setError("Please select a start and end date.");
+      return;
+    }
+    if (new Date(endAt) < new Date(startAt)) {
+      setError("End date must be on or after the start date.");
+      return;
+    }
+    if (!contactEmail.trim()) {
+      setError("Email address is required for payment confirmation.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await submitEventPromotion({
+        flyer,
+        title: title.trim(),
+        location: location || undefined,
+        startAt: new Date(startAt).toISOString(),
+        endAt: new Date(endAt).toISOString(),
+        shareOnSocial,
+        links,
+        contactName: contactName || undefined,
+        contactEmail: contactEmail || undefined,
+        contactPhone: contactPhone || undefined,
+        firmName: firmName || undefined,
+      });
+
+      const authorizationUrl = res?.data?.authorizationUrl;
+
+      if (!authorizationUrl) {
+        setError("Payment could not be initialized. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Redirect to Paystack's hosted checkout page.
+      // Paystack will redirect back to your configured callback URL
+      // after payment, where you should verify the transaction
+      // (using the `reference`) and show the success state there.
+      window.location.href = authorizationUrl;
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ??
+          err?.message ??
+          "Something went wrong. Please try again.",
+      );
+      setLoading(false);
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className={geist.className}>
+        <SuccessState
+          title="Event submitted"
+          message="Your event has been published and will appear on The Legal Space feed and 'On The Docket' for its scheduled dates."
+        />
+      </div>
+    );
+  }
+
+  const formatNaira = (kobo: number) => `₦${kobo.toLocaleString("en-NG")}`;
+
+  return (
+    <div className={geist.className}>
+      <form
+        onSubmit={handleSubmit}
+        className="px-6 py-6 flex flex-col max-w-full"
+      >
+        <div>
+          <SectionBadge>Promotion Assets</SectionBadge>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full rounded-xl border border-gray-200 px-4 py-4 flex items-center gap-3 text-left hover:border-blue-300 transition"
+          >
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "#eff6ff" }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#2563eb"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="M21 15l-5-5L5 21" />
+              </svg>
+            </div>
+            <div>
+              <p
+                className="text-[13px] font-medium"
+                style={{ color: "#2563eb" }}
+              >
+                {flyer ? flyer.name : "Click to upload flyer"}
+              </p>
+              <p className="text-[11px] text-gray-400">
+                PNG, JPG (max. 800x400px)
+              </p>
+            </div>
+          </button>
+
+          {flyerPreview && (
+            <div className="mt-3 rounded-xl overflow-hidden border border-gray-100 w-1/2">
+              <img
+                src={flyerPreview}
+                alt="Flyer preview"
+                className="w-full h-auto object-contain"
+              />
+            </div>
+          )}
+
+          {error && <div className="mt-2"><ErrorMessage message={error} /></div>}
+
+          <div className="mt-4">
+            <FieldLabel>Event Title</FieldLabel>
+            <TextInput
+              required
+              placeholder="e.g. NBA Ikeja Law Week 2026"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+
+          <div className="mt-4">
+            <FieldLabel>Event Address</FieldLabel>
+            <TextInput
+              placeholder="e.g. Nigerian Bar Association, Lagos"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <Divider />
+
+        <div>
+          <SectionBadge>Additional Information</SectionBadge>
+          <FieldLabel>
+            Add links for attendees: WhatsApp group, ticket page, event website,
+            Linktree, registration form, or social media.
+          </FieldLabel>
+          <TextInput
+            placeholder="Paste a link or leave blank"
+            value={links}
+            onChange={(e) => setLinks(e.target.value)}
+          />
+          <p className="text-[11px] text-gray-400 mt-1.5">
+            Separate multiple links with commas. The first link becomes the
+            event's registration link.
+          </p>
+        </div>
+
+        <Divider />
+
+        <div>
+          <SectionBadge>Promotion Options</SectionBadge>
+          <FieldLabel>
+            Pick how many days you want TLS to promote your event (₦1,000 a day)
+          </FieldLabel>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+            <div>
+              <FieldLabel>Select Date</FieldLabel>
+              <TextInput
+                type="date"
+                required
+                value={startAt}
+                onChange={(e) => setStartAt(e.target.value)}
+              />
+            </div>
+            <div>
+              <FieldLabel>End Date</FieldLabel>
+              <TextInput
+                type="date"
+                required
+                min={startAt || undefined}
+                value={endAt}
+                onChange={(e) => setEndAt(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <FieldLabel>
+            Where would you like your event to be promoted?
+          </FieldLabel>
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+            <Checkbox
+              label="TLS Platform Listing (Included)"
+              checked
+              onChange={() => {}}
+            />
+            <Checkbox
+              label="Share on TLS Social Media (+₦5,000)"
+              checked={shareOnSocial}
+              onChange={() => setShareOnSocial((v) => !v)}
+            />
+          </div>
+        </div>
+
+        <Divider />
+
+        <div>
+          <SectionBadge>Contact Information</SectionBadge>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <FieldLabel>Law Firm Name</FieldLabel>
+              <TextInput
+                placeholder="What is your firm's name? Leave blank if not."
+                value={firmName}
+                onChange={(e) => setFirmName(e.target.value)}
+              />
+            </div>
+            <div>
+              <FieldLabel>Full Name</FieldLabel>
+              <TextInput
+                placeholder="What is your fullname?"
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="h-4" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <FieldLabel>
+                Email Address <span className="text-red-500">*</span>
+              </FieldLabel>
+              <TextInput
+                type="email"
+                required
+                placeholder="What is your email?"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <FieldLabel>Phone Number</FieldLabel>
+              <TextInput
+                type="tel"
+                placeholder="Enter your phone number"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <Divider />
+
+        <div>
+          <SectionBadge>Payment Summary</SectionBadge>
+          <div className="rounded-xl border border-gray-100 overflow-hidden">
+            <SummaryRow
+              label="Promotion Period"
+              value={`${pricing.days} Days`}
+            />
+            <SummaryRow
+              label="Promotion Fee"
+              value={formatNaira(pricing.promotionFee)}
+            />
+            <SummaryRow
+              label="Social Media Promotion"
+              value={
+                shareOnSocial ? formatNaira(pricing.socialFee) : "Not Included"
+              }
+            />
+            <SummaryRow
+              label="Total"
+              value={`${formatNaira(pricing.total)}.00`}
+              bold
+              last
+            />
+          </div>
+        </div>
+
+        <ErrorMessage message={error} />
+
+        <SubmitButton loading={loading}>Make Payment</SubmitButton>
+      </form>
+    </div>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  bold,
+  last,
+}: {
+  label: string;
+  value: string;
+  bold?: boolean;
+  last?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center justify-between px-4 py-3 text-[13px] ${
+        !last ? "border-b border-gray-100" : ""
+      } ${bold ? "bg-white" : "bg-white"}`}
+    >
+      <span className={bold ? "text-gray-900 font-medium" : "text-gray-400"}>
+        {label}
+      </span>
+      <span
+        className={
+          bold ? "text-gray-900 font-semibold" : "text-gray-900 font-medium"
+        }
+      >
+        {value}
+      </span>
+    </div>
+  );
+}

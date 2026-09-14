@@ -21,7 +21,7 @@ export default function NotFound() {
 
       {/* Center content */}
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-[360px] bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-8 py-10 text-center">
+        <div className="w-full max-w-90 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-8 py-10 text-center">
 
           {/* 404 */}
           <p className="text-[72px] font-light text-white/20 leading-none mb-2">

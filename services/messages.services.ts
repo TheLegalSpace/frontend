@@ -45,7 +45,9 @@ export const messagesService = {
 
   async markRead(id: string, messageId: string) {
     log("markRead", "→ PATCH", { conversationId: id, messageId });
-    const res = await api.patch(`/conversations/${id}/messages/${messageId}/read`);
+    const res = await api.patch(
+      `/conversations/${id}/messages/${messageId}/read`,
+    );
     log("markRead", "← status", res.status);
     log("markRead", "← data", res.data);
     return res.data;
@@ -67,10 +69,7 @@ export const messagesService = {
     return res.data;
   },
 
-  async submitReview(
-    id: string,
-    payload: { rating: number; body?: string }
-  ) {
+  async submitReview(id: string, payload: { rating: number; body?: string }) {
     log("submitReview", "→ POST", id, payload);
     const res = await api.post(`/conversations/${id}/reviews`, payload);
     log("submitReview", "← status", res.status);

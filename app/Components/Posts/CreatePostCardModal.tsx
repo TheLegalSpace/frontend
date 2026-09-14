@@ -15,6 +15,9 @@ import {
   Eye,
 } from "lucide-react";
 import { postsService } from "@/services/posts.services";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import clsx from "clsx";
 import { useAuth } from "@/app/context/AuthContext";
 
 type Tab = "caption" | "article";
@@ -24,7 +27,8 @@ type ModalState = "compose" | "preview" | "success";
 function getInitials(name: string) {
   if (!name) return "??";
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
@@ -42,6 +46,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
 
   const [tab, setTab] = useState<Tab>("caption");
   const [body, setBody] = useState("");
+  const [title, setTitle] = useState("");
   const [audience, setAudience] = useState<Audience>("everyone");
   const [audienceOpen, setAudienceOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -51,6 +56,37 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [pdfDragOver, setPdfDragOver] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
+
+  function wrapSelection(wrapper: string, placeholder?: string) {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart ?? 0;
+    const end = ta.selectionEnd ?? 0;
+    const selected = body.slice(start, end);
+    let newText: string;
+    let selStart = start;
+    let selEnd = end;
+
+    if (selected.length > 0) {
+      newText = body.slice(0, start) + wrapper + selected + wrapper + body.slice(end);
+      selStart = start + wrapper.length;
+      selEnd = end + wrapper.length;
+    } else {
+      const ph = placeholder ?? (wrapper === "**" ? "bold text" : "italic text");
+      newText = body.slice(0, start) + wrapper + ph + wrapper + body.slice(end);
+      selStart = start + wrapper.length;
+      selEnd = selStart + ph.length;
+    }
+
+    setBody(newText);
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(selStart, selEnd);
+      ta.style.height = "auto";
+      ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`;
+    });
+  }
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -83,6 +119,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
 
   function resetCompose() {
     setBody("");
+    setTitle("");
     clearPdf();
     setError("");
   }
@@ -115,6 +152,10 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
       setError("Add a caption for your article.");
       return;
     }
+    if (!title.trim()) {
+      setError("Please add an article name.");
+      return;
+    }
     if (!pdfFile) {
       setError("Please attach a PDF.");
       return;
@@ -122,7 +163,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
 
     setSubmitting(true);
     try {
-      await postsService.createArticlePost(body.trim(), pdfFile);
+      await postsService.createArticlePost(body.trim(), pdfFile, title.trim());
       onCreated();
       setModalState("success");
     } catch (err: unknown) {
@@ -164,7 +205,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
                   setModalState("compose");
                   resetCompose();
                 }}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition"
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-white transition"
               >
                 Post again
               </button>
@@ -218,7 +259,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
   const canSubmit =
     tab === "caption"
       ? body.trim().length > 0
-      : body.trim().length > 0 && pdfFile !== null;
+      : body.trim().length > 0 && title.trim().length > 0 && pdfFile !== null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -275,7 +316,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
             <div className="relative">
               <button
                 onClick={() => setAudienceOpen((v) => !v)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 text-[12px] text-gray-600 hover:bg-gray-50 transition"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 text-[12px] text-gray-600 hover:bg-white transition"
               >
                 {audience === "everyone" ? (
                   <Globe size={12} />
@@ -294,7 +335,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
                         setAudience(opt);
                         setAudienceOpen(false);
                       }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-[12px] hover:bg-gray-50 transition ${
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-[12px] hover:bg-white transition ${
                         audience === opt
                           ? "text-blue-600 font-medium"
                           : "text-gray-700"
@@ -314,26 +355,96 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
           </div>
 
           {/* Caption textarea */}
-          <textarea
-            ref={textareaRef}
-            value={body}
-            onChange={(e) => {
-              setBody(e.target.value);
-              e.target.style.height = "auto";
-              e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
-            }}
-            placeholder={
-              tab === "article"
-                ? "Write a caption for your article…"
-                : "What do you wanna talk about?"
-            }
-            rows={3}
-            className="w-full resize-none outline-none text-[13px] text-gray-800 leading-relaxed placeholder:text-gray-400 mb-3"
-          />
+          <div className="mb-2 flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPreviewMode(false)}
+                className={clsx(
+                  "px-3 py-1 rounded-full text-[12px] transition",
+                  !previewMode ? "bg-gray-900 text-white" : "text-gray-500 hover:text-gray-700",
+                )}
+              >
+                Write
+              </button>
+              <button
+                onClick={() => setPreviewMode(true)}
+                className={clsx(
+                  "px-3 py-1 rounded-full text-[12px] transition",
+                  previewMode ? "bg-gray-900 text-white" : "text-gray-500 hover:text-gray-700",
+                )}
+              >
+                Preview
+              </button>
+            </div>
 
-          {/* Article tab — PDF only */}
+            {/* Formatting toolbar */}
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => wrapSelection("**", "bold text")}
+                title="Bold (Ctrl/Cmd+B)"
+                className="px-2 py-1 rounded-md text-[13px] font-semibold border border-gray-200 bg-white hover:bg-gray-50"
+              >
+                B
+              </button>
+              <button
+                type="button"
+                onClick={() => wrapSelection("*", "italic text")}
+                title="Italic (Ctrl/Cmd+I)"
+                className="px-2 py-1 rounded-md text-[13px] italic border border-gray-200 bg-white hover:bg-gray-50"
+              >
+                I
+              </button>
+            </div>
+          </div>
+
+          {!previewMode ? (
+            <textarea
+              ref={textareaRef}
+              value={body}
+              onChange={(e) => {
+                setBody(e.target.value);
+                e.target.style.height = "auto";
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+              }}
+              onKeyDown={(e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+                  e.preventDefault();
+                  wrapSelection("**", "bold text");
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "i") {
+                  e.preventDefault();
+                  wrapSelection("*", "italic text");
+                }
+              }}
+              placeholder={
+                tab === "article"
+                  ? "Write a caption for your article…"
+                  : "What do you wanna talk about?"
+              }
+              rows={3}
+              className="w-full resize-none outline-none text-[13px] text-gray-800 leading-relaxed placeholder:text-gray-400 mb-3"
+            />
+          ) : (
+            <div className="w-full mb-3">
+              <div className="prose max-w-full">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{body || "*Nothing to preview*"}</ReactMarkdown>
+              </div>
+            </div>
+          )}
+
+          {/* Article tab */}
           {tab === "article" && (
             <>
+              {/* Article name field */}
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Article name"
+                className="w-full px-0 py-1.5 outline-none text-[13px] text-gray-800 placeholder:text-gray-400 border-b border-gray-200 focus:border-gray-400 transition bg-transparent mb-3"
+              />
+
               <div className="border-t border-[#E5E7EB] pt-3 mb-3" />
 
               {!pdfFile ? (
@@ -353,7 +464,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
                   className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition ${
                     pdfDragOver
                       ? "border-blue-400 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                      : "border-gray-200 hover:border-gray-300 hover:bg-white"
                   }`}
                 >
                   <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mx-auto mb-3">
@@ -369,7 +480,7 @@ export default function CreatePostModal({ onClose, onCreated }: Props) {
                 </div>
               ) : (
                 // File pill with preview button
-                <div className="flex items-center justify-between gap-2 bg-gray-50 border border-[#E5E7EB] rounded-xl px-3 py-2.5">
+                <div className="flex items-center justify-between gap-2 bg-white border border-[#E5E7EB] rounded-xl px-3 py-2.5">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
                       <FileText size={16} className="text-red-500" />

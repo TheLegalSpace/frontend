@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 
 const resources = [
   {
@@ -11,6 +12,7 @@ const resources = [
     desc: "Explore expert perspectives, practical guidance, and thought leadership from legal professionals across a wide range of practice areas.",
     cta: "Explore Articles",
     preview: "article",
+    action: "user",
   },
   {
     num: "02",
@@ -19,6 +21,7 @@ const resources = [
     desc: "Stay engaged with conferences, networking events, workshops, and professional gatherings happening across the legal community.",
     cta: "View Events",
     preview: "events",
+    action: "lawyer",
   },
   {
     num: "03",
@@ -27,6 +30,7 @@ const resources = [
     desc: "Conduct legal research, analyse documents, and access source backed responses designed to support more efficient legal practice.",
     cta: "Explore TLS Research",
     preview: "research",
+    action: "user",
   },
   {
     num: "04",
@@ -35,8 +39,9 @@ const resources = [
     desc: "We're exploring a dedicated legal news experience and would love your input. Tell us if legal news is something you'd actively use on The Legal Space.",
     cta: "Take Survey 🥺",
     preview: "news",
+    action: "user",
   },
-];
+] as const;
 
 const previews: Record<string, string> = {
   article: "/chisom-article-image.png",
@@ -46,10 +51,21 @@ const previews: Record<string, string> = {
 };
 
 export default function LegalInsights() {
+  const router = useRouter();
+
+  const usePathName = usePathname();
+
+  const loginType = (type: "lawyer" | "user") => {
+    localStorage.setItem("loginType", type);
+    if (usePathName === "/signin") {
+      window.location.reload();
+      return;
+    }
+    router.replace("/signin");
+  };
   return (
     <section id="resources" className="py-24 bg-white px-4 sm:px-8 lg:px-16">
-      <div className="max-w-[1440px] mx-auto">
-
+      <div className="max-w-360 mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -119,9 +135,13 @@ export default function LegalInsights() {
                     {r.desc}
                   </p>
 
-                  <button className="px-5 py-2.5 border border-[#E5E7EB] rounded-full text-sm font-medium text-gray-700 hover:border-[#1A56DB] hover:text-[#1A56DB] transition-colors duration-200">
-                    {r.cta} →
-                  </button>
+                  <button onClick={() => {
+                    loginType(r.action);
+                  }}
+                  className="px-5 py-2.5 border border-[#E5E7EB] rounded-full text-sm font-medium text-gray-700 hover:border-[#1A56DB] hover:text-[#1A56DB] transition-colors duration-200"
+                >
+                  {r.cta} →
+                </button>
                 </div>
               </motion.div>
             );

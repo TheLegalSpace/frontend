@@ -4,15 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-function scrollToSection(href: string) {
-  const id = href.replace("#", "");
-  const el = document.getElementById(id);
-  if (!el) return;
-  window.scrollTo({
-    top: el.getBoundingClientRect().top + window.scrollY - 90,
-    behavior: "smooth",
-  });
-}
+import { usePathname, useRouter } from "next/navigation";
+
+// import the images
+import x from "@/public/x.png";
+import insta from "@/public/insta.png";
+import tiktok from "@/public/tiktok.png";
+import link from "@/public/link.png";
+import face from "@/public/face.png";
 
 const faqs = [
   {
@@ -22,7 +21,7 @@ const faqs = [
   },
   {
     icon: "🔍",
-    q: "How do I find a lawyer?",
+    q: "How do I Find a Lawyer?",
     a: "Simply describe your legal matter to TLS AI. Based on your needs, practice area, location, and other relevant factors, we help connect you with suitable lawyers.",
   },
   {
@@ -47,13 +46,29 @@ interface FooterProps {
 }
 
 export default function Footer({ visible = true }: FooterProps) {
+  const router = useRouter();
+  const usePathName = usePathname();
+
+  const scrollToSection = (href: string) => {
+    const id = href.replace("#", "");
+    if (usePathName !== "/") {
+      router.push(`/#${id}`);
+      return;
+    }
+    const el = document.getElementById(id);
+    if (!el) return;
+    window.scrollTo({
+      top: el.getBoundingClientRect().top + window.scrollY - 90,
+      behavior: "smooth",
+    });
+  };
   return (
     <>
       {/* FAQ Section */}
       {visible && (
         <section
           id="faqs"
-          className="max-w-[1440px]  mx-auto py-24 bg-white px-4 sm:px-8 lg:px-16 xl:px-0 section-alignment"
+          className="max-w-360  mx-auto py-24 bg-white px-4 sm:px-8 lg:px-16 xl:px-0 section-alignment"
         >
           <p className="text-[12px] font-semibold tracking-[2px] uppercase text-[#1A56DB] ">
             SUPPORT
@@ -129,7 +144,7 @@ export default function Footer({ visible = true }: FooterProps) {
                 height={32}
                 className="h-8 w-auto mb-4"
               />
-              <p className="text-[14px] text-gray-400 leading-relaxed max-w-[200px] mb-2">
+              <p className="text-[14px] text-gray-400 leading-relaxed max-w-50 mb-2">
                 Connecting legal professionals, legal knowledge, and opportunity
                 through one trusted network.
               </p>
@@ -164,21 +179,37 @@ export default function Footer({ visible = true }: FooterProps) {
             {/* Resources */}
             <div>
               <h5 className="text-[13px] font-semibold text-gray-900 mb-4">
-                Resources
+                Legal
               </h5>
               <ul className="space-y-3">
-                {["Articles", "Events", "TLS Research", "Legal News"].map(
-                  (item) => (
-                    <li key={item}>
-                      <Link
-                        href="#"
-                        className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
-                      >
-                        {item}
-                      </Link>
-                    </li>
-                  ),
-                )}
+                {[
+                  "Privacy Policy",
+                  "Terms of Services",
+                  "Membership Terms",
+                  "Verification Policy",
+                  "Contact Support",
+                ].map((item) => (
+                  <li key={item}>
+                    <Link
+                      href={
+                        item === "Contact Support"
+                          ? "/support"
+                          : item === "Privacy Policy"
+                            ? "/privacy-policy"
+                            : item === "Terms of Services"
+                              ? "/terms-of-use"
+                              : item === "Membership Terms"
+                                ? "/membership-terms"
+                                : item === "Verification Policy"
+                                  ? "/verification-policy"
+                                  : "#"
+                      }
+                      className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
+                    >
+                      {item}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -188,18 +219,35 @@ export default function Footer({ visible = true }: FooterProps) {
                 Socials
               </h5>
               <ul className="space-y-3">
-                {["Instagram", "X (Twitter)", "TikTok", "LinkedIn"].map(
-                  (item) => (
-                    <li key={item}>
-                      <Link
-                        href="#"
-                        className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
-                      >
-                        {item}
-                      </Link>
-                    </li>
-                  ),
-                )}
+                {[
+                  {
+                    name: "Instagram",
+                    href: "https://www.instagram.com/thelegalspace_/",
+                  },
+                  {
+                    name: "X (Twitter)",
+                    href: "https://x.com/thelegalspace",
+                  },
+                  {
+                    name: "TikTok",
+                    href: "https://www.tiktok.com/@thelegalspace",
+                  },
+                  {
+                    name: "LinkedIn",
+                    href: "https://www.linkedin.com/company/the-legal-space-ltd/",
+                  },
+                ].map((item) => (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      target={item.href.startsWith("http") ? "_blank" : undefined}
+                      rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                      className="text-[14px] text-gray-400 hover:text-[#1A56DB] transition-colors"
+                    >
+                      {item.name}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -226,25 +274,43 @@ export default function Footer({ visible = true }: FooterProps) {
           </div>
 
           {/* Bottom bar */}
-          <div className="border-t border-[#E5E7EB] py-5 flex items-center justify-between">
+          <div id="footer-socials" className="border-t border-[#E5E7EB] py-5 flex items-center justify-between">
             <p className="text-[13px] text-gray-400">
               © 2026 The Legal Space. All rights reserved.
             </p>
             <div className="flex gap-2">
               {[
-                { icon: "📷", label: "Instagram" },
-                { icon: "🐦", label: "Twitter" },
-                { icon: "🎵", label: "TikTok" },
-                { icon: "💼", label: "LinkedIn" },
-              ].map(({ icon, label }) => (
-                <a
+                {
+                  icon: insta,
+                  label: "Instagram",
+                  link: "https://www.instagram.com/thelegalspace_/",
+                },
+                {
+                  icon: x,
+                  label: "X (Twitter)",
+                  link: "https://x.com/thelegalspace",
+                },
+                {
+                  icon: tiktok,
+                  label: "TikTok",
+                  link: "https://www.tiktok.com/@thelegalspace",
+                },
+                {
+                  icon: link,
+                  label: "LinkedIn",
+                  link: "https://www.linkedin.com/company/the-legal-space-ltd/",
+                },
+              ].map(({ icon, label, link }) => (
+                <Link
                   key={label}
-                  href="#"
+                  href={link ? link : "#"}
                   aria-label={label}
+                  target={link.startsWith("http") ? "_blank" : undefined}
+                  rel={link.startsWith("http") ? "noopener noreferrer" : undefined}
                   className="w-8 h-8 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-sm hover:border-[#1A56DB] hover:bg-[#E8F0FE] transition-all"
                 >
-                  {icon}
-                </a>
+                  <Image src={icon} alt={label} width={20} height={20} />
+                </Link>
               ))}
             </div>
           </div>

@@ -27,6 +27,15 @@ export const useMe = () =>
     staleTime: 1000 * 60 * 5, // cache for 5 min
   });
 
+/** Fetch another account's public profile (returns isFollowing). */
+export const useProfileById = (accountId: string, enabled = true) =>
+  useQuery({
+    queryKey: ["profile", accountId],
+    queryFn: () => profileService.getById(accountId).then((r) => r.data),
+    enabled: enabled && !!accountId,
+    staleTime: 1000 * 60 * 2,
+  });
+
 export const useProfileArticles = (
   accountId: string,
   page = 1,

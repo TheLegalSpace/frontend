@@ -131,7 +131,7 @@ export default function ResetPasswordClient() {
           <img src="/tls-logo-white.png" alt="TLS" className="h-9" />
         </div>
         <div className="flex-1 flex items-center justify-center px-4">
-          <div className="w-full max-w-[400px] bg-[#111111]/50 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-14 text-center">
+          <div className="w-full max-w-100 bg-[#111111]/50 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-14 text-center">
             <div className="w-16 h-16 rounded-2xl bg-green-500/20 border border-green-500/30 flex items-center justify-center mx-auto mb-5">
               <CheckCircle2 className="w-7 h-7 text-green-400" />
             </div>
@@ -174,7 +174,7 @@ export default function ResetPasswordClient() {
 
       {/* Card */}
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-[400px] bg-[#111111]/50 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-14">
+        <div className="w-full max-w-100 bg-[#111111]/50 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-14">
           {/* Back */}
           <Link
             href="/verify-reset-code"

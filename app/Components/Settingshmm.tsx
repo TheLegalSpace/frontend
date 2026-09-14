@@ -142,7 +142,7 @@ export default function SettingsPage() {
 
   // ✅ Shared disabled field style
   const disabledField =
-    "w-full px-3 py-2.5 pr-10 text-[13px] border border-gray-200 rounded-xl outline-none bg-gray-50 text-gray-400 cursor-not-allowed select-none";
+    "w-full px-3 py-2.5 pr-10 text-[13px] border border-gray-200 rounded-xl outline-none bg-white text-gray-400 cursor-not-allowed select-none";
   const activeField =
     "w-full px-3 py-2.5 pr-10 text-[13px] border border-gray-200 rounded-xl outline-none focus:border-gray-400 transition-colors bg-white text-gray-900";
 
@@ -230,7 +230,7 @@ export default function SettingsPage() {
                 <input
                   type="email"
                   value={phone ?? ""}
-                  className={`w-full px-3 py-2.5 pr-10 text-[13px] border border-gray-200 rounded-xl outline-none bg-gray-50 text-black  select-none pl-9`}
+                  className={`w-full px-3 py-2.5 pr-10 text-[13px] border border-gray-200 rounded-xl outline-none bg-white text-black  select-none pl-9`}
                   placeholder="Phone Number"
                 />
                 {/* ✅ Black lock icon signals disabled */}
@@ -384,7 +384,7 @@ export default function SettingsPage() {
                   setShowDeleteConfirm(false);
                   setDeleteConfirmText("");
                 }}
-                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-[13px] text-gray-600 hover:bg-gray-50 transition-colors"
+                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-[13px] text-gray-600 hover:bg-white transition-colors"
               >
                 Cancel
               </button>

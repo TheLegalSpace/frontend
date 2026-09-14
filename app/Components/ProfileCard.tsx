@@ -21,6 +21,7 @@ import {
   type ProfileArticle,
 } from "@/services/profile.services";
 import { useProfileArticles, useProfileReviews } from "@/hooks/useProfile";
+import { useToggleFollow } from "@/hooks/useFollows";
 
 import type { Review } from "@/services/profile.services";
 import { useAuth } from "../context/AuthContext";
@@ -34,8 +35,10 @@ interface LawyerProfile {
   scn: string;
   callToBarYear: number;
   nbaBranch: string;
-  feeRangeMin: number;
-  feeRangeMax: number;
+  // Fees are never returned to clients anymore (only the account itself and
+  // admins see them), so these are absent on any viewed profile.
+  feeRangeMin?: number;
+  feeRangeMax?: number;
   verificationStatus: "verified" | "pending" | "rejected";
 }
 
@@ -82,7 +85,8 @@ interface ProfileCardProps {
 function getInitials(name: string): string {
   if (!name) return "?";
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .toUpperCase()
@@ -250,7 +254,7 @@ function ReviewCard({ review }: { review: Review }) {
       <div className="flex items-start justify-between gap-4 mb-2">
         <div className="flex items-center gap-3 ps-2">
           <div
-            className={`h-9 w-9 overflow-hidden rounded-full border-[3px] border-white shadow-sm transition-all duration-300 ${
+            className={`h-9 w-9 overflow-hidden rounded-full border-[3px] border-white bg-[#D1D5DB] transition-all duration-300 ${
               review.reviewer.isAnonymous ? "blur-sm" : ""
             }`}
           >
@@ -313,8 +317,11 @@ export default function ProfileCard({
   const [showTooltip, setShowTooltip] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(!!profile.isFollowing);
+  const [showFollowTip, setShowFollowTip] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const toggleFollow = useToggleFollow();
 
   const isLawyer = profile.role === USER_ROLES.LAWYER;
   const isFirm = profile.role === USER_ROLES.FIRM;
@@ -348,6 +355,29 @@ export default function ProfileCard({
     setIsAnonymous(profile.isAnonymous);
   }, [profile.isAnonymous]);
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsFollowing(!!profile.isFollowing);
+  }, [profile.isFollowing]);
+
+  const handleToggleFollow = async () => {
+    if (isOwnProfile || toggleFollow.isPending) return;
+    const wasFollowing = isFollowing;
+    setIsFollowing(!wasFollowing); // optimistic
+    if (!wasFollowing) {
+      setShowFollowTip(true);
+      setTimeout(() => setShowFollowTip(false), 3000);
+    }
+    try {
+      await toggleFollow.mutateAsync({
+        accountId: profile.id,
+        isFollowing: wasFollowing,
+      });
+    } catch {
+      setIsFollowing(wasFollowing); // revert on failure
+    }
+  };
+
   const handleToggleAnonymous = async () => {
     if (!isOwnProfile) return;
     setIsToggling(true);
@@ -372,27 +402,29 @@ export default function ProfileCard({
     <div className="w-full">
       <div className="overflow-hidden rounded-2xl  bg-white">
         {/* Cover */}
-        <div className="relative h-44 w-full overflow-hidden bg-[#E5E7EB]">
-          {profile.coverUrl ? (
-            <img
-              src={profile.coverUrl}
-              alt="cover"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="h-full w-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-              <span>No Cover Photo</span>
-            </div>
-          )}
-        </div>
+        {/* {isFirm && (
+          <div className="relative h-44 w-full overflow-hidden bg-[#E5E7EB]">
+            {profile.coverUrl ? (
+              <img
+                src={profile.coverUrl}
+                alt="cover"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                <span>No Cover Photo</span>
+              </div>
+            )}
+          </div>
+        )} */}
 
         {/* Profile header */}
-        <div className="px- pt-4 pb-5 border-b border-[#E5E7EB]">
+        <div className="px-4 pt-4 pb-5 border-b border-[#E5E7EB]">
           <div className="flex gap-4">
             {/* Avatar */}
             <div className="mt-1 shrink-0">
               <div
-                className={`h-20 w-20 overflow-hidden rounded-full border-[3px] border-white shadow-sm transition-all duration-300 ${
+                className={`h-20 w-20 overflow-hidden rounded-full border-[3px] border-white bg-[#374151] transition-all duration-300 ${
                   isAnonymous ? "blur-sm" : ""
                 }`}
               >
@@ -403,7 +435,7 @@ export default function ProfileCard({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-[#D1D5DB] text-4xl font-bold tracking-wider text-[#374151]">
+                  <div className="flex h-full w-full items-center justify-center text-4xl font-bold tracking-wider text-white">
                     {isAnonymous ? "??" : getInitials(profile.fullName)}
                   </div>
                 )}
@@ -417,8 +449,13 @@ export default function ProfileCard({
                   <h1 className="text-[20px] font-semibold text-[#1F2937] leading-tight truncate">
                     {displayName}
                   </h1>
+                  {displayEmail && (
+                    <p className="text-[12px] text-[#6B7280] mt-0.5 truncate">
+                      {displayEmail}
+                    </p>
+                  )}
                   {profile.bio && (
-                    <p className="text-[13px] text-[#6B7280] mt-0.5 line-clamp-2">
+                    <p className="text-[13px] text-[#6B7280] mt-1 line-clamp-2">
                       {profile.bio}
                     </p>
                   )}
@@ -473,12 +510,25 @@ export default function ProfileCard({
                     </>
                   ) : (
                     (isLawyer || isFirm) && (
-                      <Link
-                        href="/dashboard/find-lawyer"
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E5F5EA] text-[#16A34A] text-[12px] font-medium rounded-full hover:opacity-90 transition-opacity"
-                      >
-                        Get a lawyer
-                      </Link>
+                      <div className="relative">
+                        <button
+                          onClick={handleToggleFollow}
+                          disabled={toggleFollow.isPending}
+                          className="text-[12px] font-medium text-[#2563EB] hover:underline whitespace-nowrap cursor-pointer disabled:opacity-50"
+                        >
+                          {isFollowing ? "Unfollow" : "Follow"}
+                        </button>
+
+                        {showFollowTip && (
+                          <div className="absolute right-0 top-7 z-20 w-52 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-md">
+                            <div className="absolute -top-1 right-4 h-2 w-2 rotate-45 border-l border-t border-gray-100 bg-white" />
+                            <p className="text-[12px] text-[#4b5563] text-center leading-normal">
+                              You&apos;ll be seeing more of this account&apos;s
+                              content!
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     )
                   )}
                 </div>
@@ -518,7 +568,7 @@ export default function ProfileCard({
 
         {/* Call to bar — lawyers only */}
         {isLawyer && profile.lawyerProfile && (
-          <div className="px- py-4 border-b border-[#E5E7EB]">
+          <div className="px-4 py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center justify-between">
               <span className="text-[13px] font-medium text-[#1F2937]">
                 Call to bar
@@ -530,9 +580,9 @@ export default function ProfileCard({
           </div>
         )}
         {isFirm && profile.firmProfile && (
-          <div className="px- py-4 border-b border-[#E5E7EB]">
+          <div className="px-4 py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center justify-between">
-              <span className="text-[14px] font-semibold text-[#000000]">
+              <span className="text-[13px] font-medium text-[#1F2937]">
                 Firm Establishment
               </span>
               <span className="text-[11px] text-[#000000] font-['Geist']">
@@ -544,7 +594,7 @@ export default function ProfileCard({
 
         {/* Practice Areas */}
         {practiceAreaNames.length > 0 && (
-          <div className="px- py-4 border-b border-[#E5E7EB]">
+          <div className="px-4 py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[13px] font-medium text-[#1F2937]">
                 Practice Areas
@@ -574,7 +624,7 @@ export default function ProfileCard({
 
         {/* Recent Articles — lawyers & firms only */}
         {showArticles && (
-          <div className="px- py-4 border-b border-[#E5E7EB]">
+          <div className="px-4 py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[13px] font-medium text-[#1F2937]">
                 Recent Articles
@@ -628,7 +678,7 @@ export default function ProfileCard({
         )}
 
         {/* Ratings & Reviews */}
-        <div className="px- py-4">
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <span className="text-[13px] font-medium text-[#1F2937]">
               Ratings & Reviews

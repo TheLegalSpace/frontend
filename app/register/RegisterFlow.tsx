@@ -3,8 +3,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
 import { registerService } from "@/services/auth.register.services";
+import { getRecaptchaToken } from "@/app/utils/captcha";
 import { useAuth, getPostAuthRoute } from "@/app/context/AuthContext";
 import StepEmail from "@/app/Components/register/StepEmail";
 import StepOtp from "@/app/Components/register/StepOtp";
@@ -29,12 +29,21 @@ export default function RegisterFlow() {
     setOtpError("");
     setIsLoading(true);
     try {
-      await registerService.start(payload);
+      // Only present when NEXT_PUBLIC_RECAPTCHA_SITE_KEY is configured; the
+      // backend ignores it unless CAPTCHA_ENABLED=true.
+      const captchaToken = await getRecaptchaToken();
+      await registerService.start({
+        ...payload,
+        ...(captchaToken ? { captchaToken } : {}),
+      });
       setEmail(payload.email);
       setStep("otp");
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? "";
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const apiErr = err as {
+        response?: { status?: number; data?: { message?: string } };
+      };
+      const msg = apiErr?.response?.data?.message ?? "";
+      const status = apiErr?.response?.status;
 
       if (
         status === 429 ||
@@ -45,7 +54,7 @@ export default function RegisterFlow() {
         setOtpError(
           "A code was already sent to this email. Please check your inbox or wait before requesting a new one.",
         );
-        setStep("otp"); // ✅ still go to OTP screen
+        setStep("otp");
       } else if (
         status === 409 ||
         msg.toLowerCase().includes("already exists")
@@ -63,7 +72,7 @@ export default function RegisterFlow() {
 
   const handleVerify = async (otp: string) => {
     setError("");
-    setOtpError(""); // clear OTP-specific errors
+    setOtpError("");
     const res = await registerService.verify({ email, otp });
     const { account, session } = res.data.data;
     saveSession({ account, session });

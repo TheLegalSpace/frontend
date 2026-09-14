@@ -4,7 +4,7 @@
 import { useState } from "react";
 
 export default function NotificationsSection() {
-  const [whatsappAlert, setWhatsappAlert] = useState(false);
+  const [responseAlert, setResponseAlert] = useState(false);
 
   return (
     <div className="py-6 border-b border-[#E5E7EB]">
@@ -13,18 +13,18 @@ export default function NotificationsSection() {
       </h2>
       <div className="flex items-center justify-between">
         <p className="text-[13px] text-gray-600 flex-1 pr-4">
-          Get a WhatsApp message if you don't respond to a client in 1 hour.
+          Get an instant notification if you don&apos;t respond to a client in 1 hour.
         </p>
         <button
-          onClick={() => setWhatsappAlert(!whatsappAlert)}
+          onClick={() => setResponseAlert(!responseAlert)}
           className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
-            whatsappAlert ? "bg-[#2563EB] " : "bg-gray-200 "
+            responseAlert ? "bg-[#2563EB] " : "bg-gray-200 "
           }`}
-          aria-label="Toggle WhatsApp alerts"
+          aria-label="Toggle response alerts"
         >
           <span
             className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
-              whatsappAlert ? "right-0" : "left-1"
+              responseAlert ? "right-0" : "left-1"
             }`}
           />
         </button>

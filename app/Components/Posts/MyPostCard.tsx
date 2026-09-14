@@ -9,15 +9,19 @@ import {
   Loader2,
   FileText,
   X,
+  BookOpen,
 } from "lucide-react";
 import { MyPost } from "@/app/types/posts";
 import { postsService } from "@/services/posts.services";
 import Image from "next/image";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 function getInitials(name: string) {
   if (!name) return "??";
   return name
-    .split(" ")
+    .split(/\s+/)
+    .filter((part) => /[A-Za-z]/.test(part))
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
@@ -45,6 +49,17 @@ function timeAgo(dateStr: string) {
   const days = Math.floor(hrs / 24);
   if (days === 1) return "1 day ago";
   return `${days} days ago`;
+}
+function formatArticleDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  } catch {
+    return "";
+  }
 }
 
 interface Props {
@@ -165,28 +180,52 @@ export default function MyPostCard({
         </div>
 
         {/* Body */}
-        <p className="text-[14px] text-gray-700 leading-relaxed mb-3 font-[Geist]">
-          {post.body}
-        </p>
+        <div className="mb-3">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              p: ({ node, ...props }) => (
+                <p className="text-[15px] text-gray-800 leading-6 whitespace-pre-line mb-3 font-['Geist']" {...props} />
+              ),
+            }}
+          >
+            {post.body}
+          </ReactMarkdown>
+        </div>
 
         {/* Article pill */}
         {post.pdfUrl && (
-          <button
-            onClick={() => setViewingPdf(true)}
-            className="w-full flex items-center gap-2.5 mt-2 mb-3 p-3 rounded-xl border border-[#E5E7EB] hover:bg-gray-50 transition group text-left"
-          >
-            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
-              <FileText size={15} className="text-red-500" />
+          <div className="border border-[#E5E7EB] rounded-xl overflow-hidden mb-3">
+            <div className="flex items-center gap-3 p-3">
+              <div className="w-12 h-12 bg-[#1F2937] rounded-lg flex items-center justify-center shrink-0">
+                <span className="text-white text-[9px] font-bold tracking-wide">
+                  ARTICLE
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-medium text-[#1F2937] leading-tight line-clamp-2">
+                  {post.title ?? post.pdfName ?? "Attached Article"}
+                </p>
+                {post.createdAt && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <Clock className="w-3 h-3 text-[#9CA3AF]" />
+                    <span className="text-[11px] text-[#9CA3AF]">
+                      {formatArticleDate(post.createdAt)}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-[12px] font-semibold text-gray-800 truncate group-hover:text-blue-600 transition">
-                {post.pdfName ?? "Attached PDF Article"}
-              </p>
-              <p className="text-[11px] text-gray-400">
-                PDF Article · tap to read
-              </p>
+            <div className="flex items-center justify-between px-3 py-2 border-t border-[#F3F4F6]">
+              <button
+                onClick={() => setViewingPdf(true)}
+                className="flex items-center gap-1 text-[11px] text-[#6B7280] hover:text-[#1F2937] transition-colors cursor-pointer"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                Read Article
+              </button>
             </div>
-          </button>
+          </div>
         )}
 
         {/* Actions */}
@@ -246,7 +285,7 @@ export default function MyPostCard({
             <div className="flex items-center gap-2 min-w-0">
               <FileText size={15} className="text-gray-400 shrink-0" />
               <span className="text-[13px] text-gray-200 font-medium truncate">
-                {post.pdfName ?? "Article PDF"}
+                {post.title ?? post.pdfName ?? "Article PDF"}
               </span>
             </div>
             <button
@@ -261,7 +300,7 @@ export default function MyPostCard({
           <iframe
             src={post.pdfUrl}
             className="flex-1 w-full border-0 bg-white"
-            title={post.pdfName ?? "Article PDF"}
+            title={post.title ?? post.pdfName ?? "Article PDF"}
           />
         </div>
       )}
